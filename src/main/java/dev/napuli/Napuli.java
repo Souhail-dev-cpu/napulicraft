@@ -140,10 +140,12 @@ public class Napuli implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(NapoliScenes::tick);
 		ServerTickEvents.END_SERVER_TICK.register(Carabinieri::tick);
 		Carabinieri.register();
+		ServerTickEvents.END_SERVER_TICK.register(GiorgiaMeloni::tick);
 		CommandRegistrationCallback.EVENT.register((d, ctx, sel) -> {
 			NapuliCommand.register(d);
 			NapoliDialogue.register(d);
 			NapoliStreet.commands(d);
+			GiorgiaMeloni.register(d);
 		});
 		LOGGER.info("Napulicraft: jamme ja!");
 	}

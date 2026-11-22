@@ -49,9 +49,11 @@ public class GenResidentTextures {
 			look("tifoso", false, 0xc58e65, 0x2a1d14, 0x3a2a20, NAPOLI, WHITE, NAPOLI, 0xf2f2f2, WHITE, i -> { number10(i, WHITE); stripesArm(i, WHITE); stubble(i, 0x2a1d14); }),
 			look("scugnizzo", false, 0xd1a07a, 0x2b1d14, 0x4a3a2d, 0xe53935, WHITE, 0x3d5f8f, 0xf2f2f2, 0xe53935, i -> tee(i)),
 			look("presepaio", false, 0xd1a487, 0x9a9a94, 0x364c34, 0x5d4037, 0xf2efe6, 0x55575c, 0x352d30, 0x8d6e63, i -> { apron(i, 0xd7ccc8, 23); glasses(i); mustache(i, 0x9a9a94); }),
-			look("pizzaiolo", false, 0xc79a78, 0x2a211c, 0x3a2a20, WHITE, 0xc0392b, 0x2b2b30, 0x1e1e1e, WHITE, i -> { neckerchief(i, 0xc0392b); apron(i, 0xfafafa, 24); flour(i); mustache(i, 0x2a211c); })
+			look("pizzaiolo", false, 0xc79a78, 0x2a211c, 0x3a2a20, WHITE, 0xc0392b, 0x2b2b30, 0x1e1e1e, WHITE, i -> { neckerchief(i, 0xc0392b); apron(i, 0xfafafa, 24); flour(i); mustache(i, 0x2a211c); }),
+			look("giorgia_meloni", true, 0xe0b496, 0xb28a50, 0x587a91, 0x202127, WHITE, 0x24252b, 0x121318, 0xb28a50, GenResidentTextures::meloni)
 		};
 		for (Look l : looks) {
+			if (args.length > 0 && !l.name.equals(args[0])) continue;
 			BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
 			base(img, l);
 			l.extra().accept(img);
@@ -170,6 +172,19 @@ public class GenResidentTextures {
 		rect(i, 22, 20, 26, 22, 0xc68a62); // neckline
 	}
 	static void highlights(BufferedImage i, int c) { for (int x = 64; x < 126; x += 3) rect(i, x, 48, x + 1, 62, c); for (int x = 1; x < 21; x += 3) rect(i, x, 90, x + 1, 102, c); px(i, 9, 8, c); px(i, 13, 8, c); }
+	/** Reference outfit: black trouser suit, open white shirt, shoulder-length blonde hair. */
+	static void meloni(BufferedImage i) {
+		rect(i, 22, 20, 26, 29, WHITE);
+		rect(i, 23, 20, 25, 22, 0xe0b496); // open collar
+		rect(i, 21, 21, 22, 25, 0x3c3e46); rect(i, 26, 21, 27, 25, 0x3c3e46); // jacket lapels
+		px(i, 22, 25, 0x3c3e46); px(i, 25, 25, 0x3c3e46);
+		rect(i, 22, 29, 26, 32, 0x202127); px(i, 24, 29, 0x929398); // jacket button
+		rect(i, 44, 28, 48, 29, WHITE); // shirt cuffs
+		rect(i, 20, 28, 22, 29, 0x111217); rect(i, 26, 28, 28, 29, 0x111217); // pockets
+		highlights(i, 0xd7b879);
+		for (int x = 65; x < 102; x += 3) rect(i, x, 5, x + 1, 20, 0xc6a361);
+		rect(i, 8, 8, 11, 9, 0xd7b879); rect(i, 14, 8, 16, 10, 0xd7b879);
+	}
 	static void dots(BufferedImage i, int x1, int y1, int x2, int y2, int c) { for (int y = y1; y < y2; y += 2) for (int x = x1 + (y % 4 == 0 ? 0 : 1); x < x2; x += 3) px(i, x, y, c); }
 
 	/** Carabiniere: dark navy tunic, silver buttons, red stripe on the trousers, black boots */

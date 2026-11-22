@@ -1,11 +1,15 @@
 package dev.napuli;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
@@ -52,10 +56,16 @@ public final class Carabinieri {
 		int gravity; long lastSeen; int grip; Crime crime;
 		Wanted(Crime c, long now) { crime = c; gravity = c.gravity; lastSeen = now; }
 	}
-	private record Jail(long until, GameType previous, BlockPos cell) {}
+	private record Jail(long until, GameType previous, BlockPos cell) {
+		static final Codec<Jail> CODEC = RecordCodecBuilder.create(i -> i.group(
+				Codec.LONG.fieldOf("until").forGetter(Jail::until),
+				GameType.CODEC.fieldOf("previous").forGetter(Jail::previous),
+				BlockPos.CODEC.fieldOf("cell").forGetter(Jail::cell)).apply(i, Jail::new));
+	}
 
 	private static final Map<UUID, Wanted> WANTED = new HashMap<>();
-	private static final Map<UUID, Jail> JAILED = new HashMap<>();
+	private static final AttachmentType<Jail> JAIL = AttachmentRegistry.<Jail>builder()
+			.persistent(Jail.CODEC).copyOnDeath().buildAndRegister(Napuli.id("jail"));
 	/** the scooter boys locked up after a helmet stop: let out (despawned) after a while */
 	private static final Map<UUID, Long> JAILED_NPC = new HashMap<>();
 	private static int nextCell;
@@ -95,7 +105,7 @@ public final class Carabinieri {
 		return w == null ? 0 : (int) Math.max(0, 20 - (p.level().getGameTime() - w.lastSeen) / 20);
 	}
 	static int jailSecondsLeft(ServerPlayer p) {
-		Jail j = JAILED.get(p.getUUID());
+		Jail j = p.getAttached(JAIL);
 		return j == null ? 0 : (int) Math.max(0, (j.until() - p.level().getGameTime()) / 20);
 	}
 
@@ -105,7 +115,7 @@ public final class Carabinieri {
 			if (WANTED.containsKey(p.getUUID()) && p.distanceToSqr(cc) < 36 * 36) return true;
 		return false;
 	}
-	public static boolean isJailed(ServerPlayer p) { return JAILED.containsKey(p.getUUID()); }
+	public static boolean isJailed(ServerPlayer p) { return p.hasAttached(JAIL); }
 
 	/** A crime happened. Was it seen? Then they're coming. */
 	public static void crime(ServerPlayer p, Crime c) {
@@ -153,9 +163,13 @@ public final class Carabinieri {
 		if (city == null) return;
 		long now = city.getGameTime();
 		if (now % 40 == 0 && !city.players().isEmpty()) NapoliMap.upgradeIfBuilt(city);
+		// A logout, death, server restart or dimension change must not erase a prison sentence.
+		for (ServerPlayer p : List.copyOf(server.getPlayerList().getPlayers())) {
+			Jail j = p.getAttached(JAIL);
+			if (j != null && p.isAlive()) serve(city, p, j, now);
+		}
 		for (ServerPlayer p : List.copyOf(city.players())) {
-			Jail j = JAILED.get(p.getUUID());
-			if (j != null) { serve(city, p, j, now); continue; }
+			if (isJailed(p)) continue;
 			Wanted w = WANTED.get(p.getUUID());
 			if (w != null) chase(city, p, w, now);
 		}
@@ -204,23 +218,46 @@ public final class Carabinieri {
 		for (Item weapon : new Item[] {Napuli.PISTOL, Napuli.KNIFE, Napuli.KNUCKLES})
 			for (int i = 0; i < p.getInventory().getContainerSize(); i++)
 				if (p.getInventory().getItem(i).is(weapon)) { p.getInventory().setItem(i, ItemStack.EMPTY); taken++; }
-		BlockPos cell = CELLS.get(p.getRandom().nextInt(CELLS.size()));
 		int seconds = JAIL_SECONDS * Math.max(1, w.gravity - 1);
-		JAILED.put(p.getUUID(), new Jail(city.getGameTime() + 20L * seconds, p.gameMode(), cell));
-		p.setGameMode(GameType.ADVENTURE);
-		p.teleportTo(city, cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, Set.of(), cell.getX() < 136 ? -90 : 90, 0, true); // facing the bars
+		if (!imprison(city, p, seconds)) return;
 		title(p, "napuli.cc.jail.title", "napuli.cc.jail");
 		p.sendSystemMessage(Component.translatable("napuli.cc.jail.chat", seconds, taken));
 		Napuli.LOGGER.info("[cc] {} jailed for {} s ({} weapons taken)", p.getName().getString(), seconds, taken);
 	}
 
+	/** Tax refusal is explicit, and never confiscates weapons, armor or tools. */
+	static boolean jailForTaxEvasion(ServerPlayer p) {
+		ServerLevel city = p.level().getServer().getLevel(NapoliMap.LEVEL);
+		if (city == null) {
+			p.sendSystemMessage(Component.translatable("napuli.city.unavailable"));
+			return false;
+		}
+		NapoliMap.ensureBuilt(city);
+		if (!imprison(city, p, JAIL_SECONDS)) return false;
+		WANTED.remove(p.getUUID());
+		title(p, "napuli.cc.jail.title", "napuli.tax.evasion");
+		p.sendSystemMessage(Component.translatable("napuli.tax.jailed", JAIL_SECONDS));
+		return true;
+	}
+
+	private static boolean imprison(ServerLevel city, ServerPlayer p, int seconds) {
+		BlockPos cell = CELLS.get(p.getRandom().nextInt(CELLS.size()));
+		city.getChunkAt(cell);
+		GameType previous = p.gameMode();
+		if (!p.teleportTo(city, cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5,
+				Set.of(), cell.getX() < 136 ? -90 : 90, 0, true)) return false;
+		p.setAttached(JAIL, new Jail(city.getGameTime() + 20L * seconds, previous, cell));
+		p.setGameMode(GameType.ADVENTURE);
+		return true;
+	}
+
 	private static void serve(ServerLevel city, ServerPlayer p, Jail j, long now) {
-		if (p.blockPosition().distSqr(j.cell()) > 9) // no escaping: back in the cell
+		if (p.level() != city || p.blockPosition().distSqr(j.cell()) > 9) // no escaping: back in the cell
 			p.teleportTo(city, j.cell().getX() + 0.5, j.cell().getY(), j.cell().getZ() + 0.5, Set.of(), p.getYRot(), 0, true);
 		long left = (j.until() - now) / 20;
 		if (now % 20 == 0) p.sendOverlayMessage(Component.translatable("napuli.cc.jail.left", left));
 		if (now < j.until()) return;
-		JAILED.remove(p.getUUID());
+		p.removeAttached(JAIL);
 		p.setGameMode(j.previous());
 		p.teleportTo(city, RELEASE.getX() + 0.5, RELEASE.getY(), RELEASE.getZ() + 0.5, Set.of(), 180, 0, true);
 		title(p, "napuli.cc.free.title", "napuli.cc.free");
@@ -238,10 +275,10 @@ public final class Carabinieri {
 
 	/** for /napuli libera: out of the cell now */
 	public static boolean release(ServerPlayer p) {
-		Jail j = JAILED.get(p.getUUID());
-		if (j == null || !(p.level() instanceof ServerLevel city)) return false;
-		JAILED.put(p.getUUID(), new Jail(0, j.previous(), j.cell()));
-		serve(city, p, JAILED.get(p.getUUID()), city.getGameTime());
+		Jail j = p.getAttached(JAIL);
+		ServerLevel city = p.level().getServer().getLevel(NapoliMap.LEVEL);
+		if (j == null || city == null) return false;
+		serve(city, p, new Jail(0, j.previous(), j.cell()), city.getGameTime());
 		return true;
 	}
 

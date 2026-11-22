@@ -66,7 +66,7 @@ public final class NapoliMap {
             player.sendSystemMessage(Component.translatable("napuli.city.guide"));
             return 1;
         }
-        new NapoliMap(city).build();
+        ensureBuilt(city);
         var origin = GlobalPos.of(player.level().dimension(), player.blockPosition());
         Music.stop(player);
         if (!player.teleportTo(city, ENTRANCE.getX() + 0.5, ENTRANCE.getY(), ENTRANCE.getZ() + 0.5,
@@ -76,6 +76,8 @@ public final class NapoliMap {
         player.sendSystemMessage(Component.translatable("napuli.city.guide"));
         return 1;
     }
+
+    static void ensureBuilt(ServerLevel city) { new NapoliMap(city).build(); }
 
     private static final AttachmentType<Boolean> WELCOMED = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).copyOnDeath().buildAndRegister(Napuli.id("napoli_welcomed"));

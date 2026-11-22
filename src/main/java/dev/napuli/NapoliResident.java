@@ -27,7 +27,8 @@ public final class NapoliResident extends PathfinderMob {
         // added later: keep new roles at the END, saved worlds store the ordinal
         CARABINIERE, CARMELA, GIUSY, SOFIA,
         // the people of the centro storico (v8)
-        NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO;
+        NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
+        GIORGIA_MELONI;
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
@@ -36,9 +37,9 @@ public final class NapoliResident extends PathfinderMob {
         public boolean street() { return ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter(); }
         public boolean fighter() { return this == NICO || this == ANTONIO; }
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
-        public boolean people() { return ordinal() >= NONNA.ordinal(); }
+        public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
@@ -63,7 +64,9 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected void registerGoals() {
+        goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
         goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(this, 1.05, true));
+        goalSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
         goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 9, 1));
     }
 
@@ -126,6 +129,7 @@ public final class NapoliResident extends PathfinderMob {
     public void aiStep() {
         super.aiStep();
         if (level().isClientSide()) return;
+        if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
         if (role().spirit() && --spiritLife <= 0) discard();
         if (isNoAi() || isPassenger() || role().spirit() || role().fighter()) return;
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
@@ -197,6 +201,10 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && role() == Role.GIORGIA_MELONI) {
+            if (player instanceof ServerPlayer sp) GiorgiaMeloni.open(sp, this);
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && role() == Role.CARABINIERE) {
             if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
                     Carabinieri.isWanted(sp) ? "napuli.cc.talk.wanted" : "napuli.cc.talk." + random.nextInt(4)));

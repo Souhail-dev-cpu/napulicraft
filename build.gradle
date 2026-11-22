@@ -6,6 +6,12 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+		taxtest {
+			client()
+			name "Napuli tax visit test"
+			vmArg "-Dnapuli.taxtest=true"
+			runDir "run-autotest"
+		}
 		cityTest {
 			client()
 			name "Napoli city play-test"
@@ -81,4 +87,13 @@ tasks.withType(JavaCompile).configureEach {
 java {
 	sourceCompatibility = JavaVersion.VERSION_25
 	targetCompatibility = JavaVersion.VERSION_25
+}
+
+def taxTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runTaxtest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[TAXTEST] ALL PASSED')) {
+			throw new GradleException('Tax integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
 }

@@ -40,6 +40,7 @@ public class NapuliClient implements ClientModInitializer {
 		RadioTest.register();
 		CentroTest.register();
 		SpawnTest.register();
+		dev.napuli.TaxVisitTest.register();
 	}
 
 	/** Small hooded monk, holds what he stole in his hand (so you see your diamond pick running away). */

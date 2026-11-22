@@ -45,6 +45,7 @@ public final class NapuliCommand {
 				.then(Commands.literal("corteo").executes(c -> NapoliScenes.motorino(c.getSource().getPlayerOrException())))
 				.then(Commands.literal("stop").executes(c -> { Music.stop(c.getSource().getPlayerOrException()); return 1; }))
 				.then(carabinieri())
+				.then(Commands.literal("meloni").executes(c -> GiorgiaMeloni.summon(c.getSource().getPlayerOrException())))
 				.then(Commands.literal("libera").executes(c -> Carabinieri.release(c.getSource().getPlayerOrException()) ? 1 : 0))
 				.then(Commands.literal("munaciello").executes(c -> {
 					ServerPlayer p = c.getSource().getPlayerOrException();

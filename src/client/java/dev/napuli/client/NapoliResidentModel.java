@@ -109,6 +109,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case CARMELA -> Set.of("long_hair", "hairband", "earrings");
 			case GIUSY -> Set.of("waves", "long_hair", "earrings", "skirt");
 			case SOFIA -> Set.of("side_part", "long_hair", "bag");
+			case GIORGIA_MELONI -> Set.of("side_part", "bob", "long_hair");
 			case NONNA -> Set.of("headscarf", "skirt", "bag");
 			case PARCHEGGIATORE -> Set.of("cap");
 			case TIFOSO -> Set.of("curls", "scarf");

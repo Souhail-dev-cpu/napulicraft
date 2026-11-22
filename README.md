@@ -43,6 +43,26 @@ Choices are saved in `.minecraft/config/napulicraft-canzoni.json`. You can also 
 | **R** (hold, on the scooter) | Radio wheel: point at a station, release R. Tap R = next station |
 | **J** | Canzoni: pick your songs |
 
+## Giorgia Meloni and the weekly tax
+
+A fictional Giorgia Meloni NPC, with blonde hair, a black suit and a white shirt, visits each Survival/Adventure
+player every **3 Minecraft days** (72,000 day-clock ticks, including nights skipped by sleeping).
+She appears about **50 blocks away**, finds a safe walking route and approaches you with a **weekly tax** dialog.
+
+- **Pay:** up to **15 individual items in total**, preferring building blocks, then ores and other materials/consumables.
+  Weapons, armor, tools, equipment and portable containers are protected, including the mod's weapons and ciabatta.
+- **No taxable materials:** confirm the exemption; there is no penalty for having nothing eligible to pay with.
+- **Refuse:** **90 seconds in the Napoli prison for tax evasion**, in Adventure mode. Your equipment stays with you;
+  your previous game mode is restored when the sentence ends.
+
+Closing the dialog leaves the request pending; right-click her to reopen it. The next visit is due three days after
+payment, exemption or refusal. Pending taxes and prison sentences survive death and server restarts; changing
+dimensions does not escape a sentence. Creative and Spectator players are exempt from visits.
+
+Operators can use **`/napuli meloni`** to trigger a visit immediately while in Survival/Adventure mode.
+The opt-in integration test **`./gradlew runTaxtest`** creates a disposable world, checks the schedule, approach,
+inventory protection, payment limit, refusal and release, saves screenshots in `run-autotest/screenshots`, and exits.
+
 ## Building
 
 Every push to GitHub (on any branch or tag) runs the **Build and publish beta** workflow:

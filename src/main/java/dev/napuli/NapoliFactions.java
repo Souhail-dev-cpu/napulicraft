@@ -42,6 +42,10 @@ public final class NapoliFactions {
     private static final int REPORT = 3;
     private static final int REPORT_CLASH = 4;
     private static final int LEVY = 5, CACHE = 6, REPORT_LEVY = 7, REPORT_CACHE = 8;
+    private static final int MINE = 9, SURVEY = 10, REPORT_MINE = 11, REPORT_SURVEY = 12;
+    private static final int ORE_QUOTA = 4;
+    private static final AttachmentType<Integer> ORE_COUNT = AttachmentRegistry.<Integer>builder()
+            .persistent(Codec.INT).copyOnDeath().buildAndRegister(Napuli.id("mission_ore_count"));
     static final int LEVY_REPUTATION = 4, CACHE_REPUTATION = 8;
     private static final AttachmentType<Long> NEXT_REACTION = AttachmentRegistry.create(Napuli.id("rival_reaction"));
     private static final AttachmentType<Integer> DISTRICT = AttachmentRegistry.create(Napuli.id("recognized_district"));
@@ -101,6 +105,42 @@ public final class NapoliFactions {
         return 1;
     }
 
+    static int districtJob(ServerPlayer player, Side side, boolean mining) {
+        int accepted = start(player, side, mining ? MINE : SURVEY);
+        if (accepted != 0) {
+            player.removeAttached(ORE_COUNT);
+            say(player, mining ? (side == Side.LANTERNE ? "mine_iron" : "mine_copper") : "survey");
+        }
+        return accepted;
+    }
+
+    static void mine(ServerPlayer player, net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.Block block) {
+        Progress p = get(player);
+        if (p.stage() != MINE || p.selected() == null || !NapoliMunicipio.vein(pos, block)) return;
+        var expected = p.selected() == Side.LANTERNE ? net.minecraft.world.level.block.Blocks.IRON_ORE
+                : net.minecraft.world.level.block.Blocks.COPPER_ORE;
+        if (block != expected) return;
+        int total = player.getAttachedOrElse(ORE_COUNT, 0) + 1;
+        player.setAttached(ORE_COUNT, total);
+        say(player, "ore_progress", total, ORE_QUOTA);
+        if (total >= ORE_QUOTA) districtReady(player, p, REPORT_MINE);
+    }
+
+    static void explore(ServerPlayer player) {
+        Progress p = get(player);
+        if (p.stage() == SURVEY && p.selected() != null
+                && player.blockPosition().distSqr(survey(p.selected())) < 36) districtReady(player, p, REPORT_SURVEY);
+    }
+
+    private static net.minecraft.core.BlockPos survey(Side side) {
+        return side == Side.LANTERNE ? NapoliMunicipio.CASTLE : NapoliMunicipio.PIER;
+    }
+
+    private static void districtReady(ServerPlayer player, Progress p, int report) {
+        player.setAttached(DATA, new Progress(p.lanterns(), p.tides(), p.side(), report, 0));
+        say(player, "report_" + p.selected().id);
+    }
+
     static int accept(ServerPlayer player, Side side, boolean clash) {
         int result = start(player, side, clash ? CLASH : SUPPLY);
         if (result == 1) {
@@ -145,12 +185,12 @@ public final class NapoliFactions {
 
     static int finish(ServerPlayer player, Side side) {
         Progress p = get(player);
-        if (side == null || p.selected() != side || (p.stage() != REPORT && p.stage() != REPORT_CLASH && p.stage() != REPORT_LEVY && p.stage() != REPORT_CACHE)) {
+        if (side == null || p.selected() != side || (p.stage() != REPORT && p.stage() != REPORT_CLASH && p.stage() != REPORT_LEVY && p.stage() != REPORT_CACHE && p.stage() != REPORT_MINE && p.stage() != REPORT_SURVEY)) {
             say(player, "unfinished");
             return 0;
         }
-        int reputation = switch (p.stage()) { case REPORT_CACHE -> 9; case REPORT_CLASH, REPORT_LEVY -> 7; default -> 4; };
-        int payout = switch (p.stage()) { case REPORT_CACHE -> 32; case REPORT_LEVY -> 25; case REPORT_CLASH -> 20; default -> 16; };
+        int reputation = switch (p.stage()) { case REPORT_CACHE -> 9; case REPORT_CLASH, REPORT_LEVY -> 7; case REPORT_MINE -> 6; case REPORT_SURVEY -> 5; default -> 4; };
+        int payout = switch (p.stage()) { case REPORT_CACHE -> 32; case REPORT_LEVY -> 25; case REPORT_CLASH -> 20; case REPORT_MINE -> 22; case REPORT_SURVEY -> 18; default -> 16; };
         int lanterns = Math.clamp(p.lanterns() + (side == Side.LANTERNE ? reputation : -2), -100, 100);
         int tides = Math.clamp(p.tides() + (side == Side.MAREE ? reputation : -2), -100, 100);
         player.setAttached(DATA, new Progress(lanterns, tides, -1, 0, player.level().getGameTime() + 20 * 35));
@@ -174,7 +214,9 @@ public final class NapoliFactions {
             case CLASH -> new Objective("clash", MUOLO);
             case LEVY -> new Objective("levy", NapoliDistrict.PUTECA);
             case CACHE -> new Objective("cache", NapoliDistrict.SARTORIA);
-            case REPORT, REPORT_CLASH, REPORT_LEVY, REPORT_CACHE -> new Objective(l ? "report_lanterne" : "report_maree", l ? ADA : TORE);
+            case MINE -> new Objective(l ? "mine_iron" : "mine_copper", NapoliMunicipio.MINE);
+            case SURVEY -> new Objective(l ? "survey_castle" : "survey_pier", survey(s));
+            case REPORT, REPORT_CLASH, REPORT_LEVY, REPORT_CACHE, REPORT_MINE, REPORT_SURVEY -> new Objective(l ? "report_lanterne" : "report_maree", l ? ADA : TORE);
             default -> new Objective(player.level().getGameTime() < p.nextMission() ? "cooldown" : "none", null);
         };
     }

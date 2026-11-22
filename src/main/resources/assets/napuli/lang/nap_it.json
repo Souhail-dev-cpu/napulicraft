@@ -510,5 +510,20 @@
 	"napuli.people.pizzaiolo.3": "Margherita, comme 'a regina. Basilico, mozzarella e pummarola.",
 	"napuli.people.pizzaiolo.sold": "Ecco a te, 'na margherita fumante. Accorto, ca scotta!",
 	"napuli.people.broke": "Senza sorde nun se cantano messe.",
-	"napuli.people.buy_hint": "Accuovete e clicca pe' accattà (%s €)"
+	"napuli.people.buy_hint": "Accuovete e clicca pe' accattà (%s €)",
+  "napuli.radio.skip_hint": "Ddoje clic ncopp'a stessa radio: canzone appriesso",
+  "napuli.resident.motor_dealer": "Peppe d’ 'a ll'officina",
+  "napuli.resident.armorer": "Mimmo d’ 'a l'armeria",
+  "napuli.street.motor_dealer": "Ccà truove 'o casco e 'o motorino.",
+  "napuli.street.armorer": "Tengo equipaggiamento p' 'o juoco.",
+  "napuli.street.mine_job": "Va' a scavà dint' 'a galleria",
+  "napuli.street.survey_job": "Fa' nu sopralluogo a Municipio",
+  "napuli.factions.mine_iron": "Scava quatto blocche 'e fierro dint' 'a galleria (272, 64, -29), po' tuorna da Ada.",
+  "napuli.factions.mine_copper": "Scava quatto blocche 'e ramme dint' 'a galleria (272, 64, -29), po' tuorna da Tore.",
+  "napuli.factions.survey": "Và a Municipio. 'O diario t' 'o dice addó turnà.",
+  "napuli.factions.ore_progress": "Minerale scavato: %1$s/%2$s",
+  "napuli.hud.obj.mine_iron": "Scava 4 minerali 'e fierro",
+  "napuli.hud.obj.mine_copper": "Scava 4 minerali 'e ramme",
+  "napuli.hud.obj.survey_castle": "Visita Castel Nuovo",
+  "napuli.hud.obj.survey_pier": "Va' 'o Beverello"
 }

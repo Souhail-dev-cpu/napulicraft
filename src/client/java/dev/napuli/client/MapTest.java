@@ -83,7 +83,55 @@ final class MapTest {
 						city.getEntities(net.minecraft.world.level.entity.EntityTypeTest.forClass(net.minecraft.world.entity.monster.Monster.class),
 								m -> !"napuli".equals(net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(m.getType()).getNamespace())).size());
 			});
-			case 460 -> { PoliceTest.log("done"); mc.stop(); }
+			case 460 -> PoliceTest.tp(server, 202, 104, 5, -51, 27);
+			case 498 -> PoliceTest.shot(mc, "municipio_castello_beverello");
+			case 500 -> PoliceTest.tp(server, 269, 51, -54, 150, 0);
+			case 534 -> PoliceTest.shot(mc, "municipio_miniera");
+			case 540 -> server.execute(() -> {
+				var city = PoliceTest.city(server);
+				if (!city.getBlockState(new net.minecraft.core.BlockPos(250, 50, -65)).is(net.minecraft.world.level.block.Blocks.IRON_ORE)
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(250, 50, -46)).is(net.minecraft.world.level.block.Blocks.COPPER_ORE)
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(221, 76, 29)).is(net.minecraft.world.level.block.Blocks.QUARTZ_PILLAR))
+					throw new IllegalStateException("Municipio or the mine was not built");
+				PoliceTest.log("Municipio, castle and both mine ores: true");
+			});
+			case 545 -> PoliceTest.tp(server, 193, 65, -8, 180, 7);
+			case 578 -> PoliceTest.shot(mc, "municipio_officina");
+			case 580 -> server.execute(() -> {
+				var p = PoliceTest.player(server);
+				var residents = p.level().getEntitiesOfClass(dev.napuli.NapoliResident.class, p.getBoundingBox().inflate(30));
+				for (var role : new dev.napuli.NapoliResident.Role[] {dev.napuli.NapoliResident.Role.MOTOR_DEALER,
+						dev.napuli.NapoliResident.Role.ARMORER, dev.napuli.NapoliResident.Role.CARABINIERE})
+					if (residents.stream().noneMatch(npc -> npc.role() == role)) throw new IllegalStateException("Missing NPC " + role);
+				PoliceTest.log("both shopkeepers and a patrol: true");
+			});
+			case 583 -> PoliceTest.tp(server, 193.5, 64.15, -10.4, 180, 0);
+			case 592 -> PoliceTest.shot(mc, "peppe_modello");
+			case 597 -> PoliceTest.tp(server, 37, 88, -182, 90, 16);
+			case 638 -> PoliceTest.shot(mc, "vedute_piazza_dante");
+			case 642 -> PoliceTest.tp(server, 27, 73, -176, 0, 7);
+			case 678 -> PoliceTest.shot(mc, "vedute_port_alba");
+			case 681 -> PoliceTest.tp(server, 118, 79, -40, 0, 87);
+			case 715 -> PoliceTest.shot(mc, "vedute_galleria");
+			case 718 -> PoliceTest.tp(server, -55, 78, 55, -67, 12);
+			case 758 -> PoliceTest.shot(mc, "vedute_lungomare");
+			case 760 -> server.execute(() -> {
+				var city = PoliceTest.city(server);
+				if (!city.getBlockState(new net.minecraft.core.BlockPos(-14, 72, -181))
+						.is(net.minecraft.world.level.block.Blocks.CHISELED_QUARTZ_BLOCK)
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(27, 64, -161)).isAir()
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(21, 75, -161))
+						.is(net.minecraft.world.level.block.Blocks.TUFF_BRICKS)
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(127, 63, -40))
+						.is(net.minecraft.world.level.block.Blocks.CHISELED_QUARTZ_BLOCK)
+						|| !city.getBlockState(new net.minecraft.core.BlockPos(160, 63, 120))
+						.is(net.minecraft.world.level.block.Blocks.WATER))
+					throw new IllegalStateException("Missing Dante, Port'Alba, Galleria or the extended bay");
+				PoliceTest.log("Dante, Port'Alba, Galleria and connected bay: true");
+			});
+			case 778 -> PoliceTest.tp(server, -26, 67, -48, 90, 3);
+			case 813 -> PoliceTest.shot(mc, "vedute_quartieri");
+			case 818 -> { PoliceTest.log("done"); mc.stop(); }
 			default -> {}
 		}
 	}

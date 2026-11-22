@@ -22,10 +22,12 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	static final ModelLayerLocation LAYER = new ModelLayerLocation(Napuli.id("residente"), "main");
 
 	private final ModelPart curls, ponytail, cap, scarf, fringe, bob, braid, curlsTop, earrings, hood, bag, waves, sidePart;
+	private final ModelPart peppePortrait;
 	private final ModelPart toque, coppola, mandolin, headscarf, longHair, bun, hairband, skirt, ccCap, beret, bandana;
 
 	NapoliResidentModel(ModelPart root) {
 		super(root);
+		peppePortrait = head.getChild("peppe_portrait");
 		curls = head.getChild("curls"); ponytail = head.getChild("ponytail"); cap = head.getChild("cap");
 		scarf = body.getChild("scarf"); fringe = head.getChild("fringe"); bob = head.getChild("bob");
 		braid = head.getChild("braid"); curlsTop = head.getChild("curls_top"); earrings = head.getChild("earrings");
@@ -81,6 +83,18 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 				.texOffs(0, 117).addBox(-3.5f, -7.4f, -6.3f, 7, 0.8f, 2), PartPose.ZERO);                  // carabiniere cap + visor
 		head.addOrReplaceChild("beret", CubeListBuilder.create().texOffs(40, 104).addBox(-4.6f, -9.3f, -4.6f, 9.2f, 1.6f, 9.2f), PartPose.rotation(0, 0, -0.12f));
 		head.addOrReplaceChild("bandana", CubeListBuilder.create().texOffs(80, 104).addBox(-4.4f, -8.7f, -4.4f, 8.8f, 2, 8.8f), PartPose.ZERO);
+		// A narrower face with double-resolution texels, receding curls and a small raised nose.
+		head.addOrReplaceChild("peppe_portrait", CubeListBuilder.create()
+				.texOffs(0, 64).addBox(-7, -20, -7, 14, 20, 14)
+				.texOffs(58, 64).addBox(-1.5f, -10, -8.2f, 3, 5, 2)
+				.texOffs(74, 64).addBox(-9.2f, -15.5f, -3.1f, 3.5f, 8, 8)
+				.texOffs(74, 64).addBox(5.7f, -15, -3.6f, 3.2f, 8, 8)
+				.texOffs(74, 64).addBox(-8.8f, -9.1f, 0, 3.5f, 4.5f, 6)
+				.texOffs(74, 64).addBox(5.9f, -9.2f, 0.9f, 3, 4, 6)
+				.texOffs(74, 64).addBox(-5.4f, -20.9f, -2.4f, 3.5f, 2.6f, 5)
+				.texOffs(74, 64).addBox(1.8f, -20.4f, 1.5f, 3.7f, 2.6f, 4)
+				.texOffs(74, 64).addBox(-7.3f, -17.7f, 5.5f, 14.3f, 6.0f, 2.8f),
+				PartPose.ZERO.withScale(0.5f));
 		return LayerDefinition.create(mesh, 128, 128);
 	}
 
@@ -96,7 +110,8 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case PARTENOPE -> Set.of("long_hair", "ponytail");
 			case ANIMA -> Set.of("hood");
 			case VENDOR -> Set.of("toque");
-			case TAILOR -> Set.of("coppola");
+			case TAILOR, ARMORER -> Set.of("coppola");
+			case MOTOR_DEALER -> Set.of();
 			case BUSKER -> Set.of("curls", "mandolin");
 			case PORTER -> Set.of("headscarf", "earrings", "skirt");
 			case ADA -> Set.of("long_hair", "hairband", "earrings");
@@ -134,6 +149,10 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	@Override
 	public void setupAnim(State state) {
 		super.setupAnim(state);
+		boolean peppe = state.role == Role.MOTOR_DEALER;
+		head.skipDraw = peppe;
+		hat.visible = !peppe;
+		peppePortrait.visible = peppe;
 		Set<String> on = parts(state.role, state.variant);
 		curls.visible = on.contains("curls"); ponytail.visible = on.contains("ponytail"); cap.visible = on.contains("cap");
 		scarf.visible = on.contains("scarf"); fringe.visible = on.contains("fringe"); bob.visible = on.contains("bob");

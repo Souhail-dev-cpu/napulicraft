@@ -296,5 +296,20 @@
 	"napuli.people.pizzaiolo.3": "Margherita, come la regina. Basilico, mozzarella e pomodoro.",
 	"napuli.people.pizzaiolo.sold": "Ecco a te, una margherita fumante. Attento che scotta!",
 	"napuli.people.broke": "Senza soldi non si cantano messe.",
-	"napuli.people.buy_hint": "Accovacciati e clicca per comprare (%s €)"
+	"napuli.people.buy_hint": "Accovacciati e clicca per comprare (%s €)",
+  "napuli.radio.skip_hint": "Doppio clic sulla stessa stazione per il brano successivo",
+  "napuli.resident.motor_dealer": "Peppe dell’officina",
+  "napuli.resident.armorer": "Mimmo dell’armeria",
+  "napuli.street.motor_dealer": "Qui puoi comprare casco e motorino.",
+  "napuli.street.armorer": "Qui trovi l’equipaggiamento per gli scontri di gioco.",
+  "napuli.street.mine_job": "Accetta la missione in miniera",
+  "napuli.street.survey_job": "Accetta il sopralluogo a Municipio",
+  "napuli.factions.mine_iron": "Estrai quattro blocchi di minerale di ferro nella galleria (272, 64, -29), poi torna da Ada.",
+  "napuli.factions.mine_copper": "Estrai quattro blocchi di minerale di rame nella galleria (272, 64, -29), poi torna da Salvatore.",
+  "napuli.factions.survey": "Vai a Municipio. Il diario indica il punto del sopralluogo.",
+  "napuli.factions.ore_progress": "Minerale estratto: %1$s/%2$s",
+  "napuli.hud.obj.mine_iron": "Estrai 4 minerali di ferro",
+  "napuli.hud.obj.mine_copper": "Estrai 4 minerali di rame",
+  "napuli.hud.obj.survey_castle": "Visita Castel Nuovo",
+  "napuli.hud.obj.survey_pier": "Vai al Molo Beverello"
 }

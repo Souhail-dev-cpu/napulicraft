@@ -162,7 +162,31 @@ final class RadioTest {
 			case 415 -> PoliceTest.shot(mc, "r05_ruota_radio");
 			case 418 -> mc.gui.setScreen(new dev.napuli.client.music.SongsScreen(null));
 			case 424 -> PoliceTest.shot(mc, "r05b_schermata_canzoni");
-			case 428 -> mc.gui.setScreen(null);
+			case 428 -> {
+				mc.gui.setScreen(null);
+				int station = java.util.stream.IntStream.range(0, RadioClient.stations().size())
+						.filter(i -> RadioClient.stations().get(i).songs().size() >= 2).findFirst()
+						.orElseThrow(() -> new IllegalStateException("Radio test requires a station with two tracks"));
+				RadioClient.tune(station);
+			}
+			case 445 -> {
+				int station = RadioClient.currentStation();
+				int before = RadioClient.currentTrack();
+				if (station < 0 || before < 0) throw new IllegalStateException("Radio is not playing");
+				var wheel = new RadioWheelScreen();
+				mc.gui.setScreen(wheel);
+				double angle = -Math.PI / 2 + (station + 1) * 2 * Math.PI / (RadioClient.stations().size() + 1);
+				var click = new net.minecraft.client.input.MouseButtonEvent(wheel.width / 2.0 + 50 * Math.cos(angle),
+						wheel.height / 2.0 + 50 * Math.sin(angle), new net.minecraft.client.input.MouseButtonInfo(0, 0));
+				wheel.mouseClicked(click, false);
+				if (mc.gui.screen() != wheel || RadioClient.currentTrack() != before) throw new IllegalStateException("First click must keep playing");
+				wheel.mouseClicked(click, true);
+				int expected = (before + 1) % RadioClient.stations().get(station).songs().size();
+				if (RadioClient.currentTrack() != expected || RadioClient.currentStation() != station)
+					throw new IllegalStateException("Double click did not advance within the station");
+				PoliceTest.log("double click advances the current station: true");
+				mc.gui.setScreen(null);
+			}
 			case 722 -> server.execute(() -> {
 				// no helmet, a carabiniere right there: that's the CASCO crime for the player
 				var p = PoliceTest.player(server);

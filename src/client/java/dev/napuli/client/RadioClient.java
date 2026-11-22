@@ -51,6 +51,7 @@ public final class RadioClient {
 	private static final Map<Integer, Tuned> PLAYING = new HashMap<>();
 	private static int heldTicks;
 	private static boolean wasDown;
+	private static int pendingSkip = -1, pendingBike, skipTicks;
 
 	// the GTA-style banner
 	private static String bannerName, bannerSong;
@@ -109,6 +110,11 @@ public final class RadioClient {
 		for (Iterator<Map.Entry<Integer, Tuned>> it = PLAYING.entrySet().iterator(); it.hasNext(); ) {
 			var e = it.next();
 			if (!near.containsKey(e.getKey())) { if (e.getValue().sound != null) e.getValue().sound.halt(); it.remove(); }
+		}
+
+		if (skipTicks > 0) {
+			if (mc.player.getVehicle() instanceof Motorino bike && bike.getId() == pendingBike && !skip(pendingSkip)) skipTicks--;
+			else skipTicks = 0;
 		}
 
 		// the radio wheel: hold R on the scooter (as the driver); a quick tap tunes to the next station
@@ -187,7 +193,41 @@ public final class RadioClient {
 		return sb.length() == 0 ? "nothing playing" : sb.toString();
 	}
 
+	static void requestSkip(int station) {
+		var player = Minecraft.getInstance().player;
+		if (player == null || !(player.getVehicle() instanceof Motorino bike) || bike.getFirstPassenger() != player
+				|| bike.inParade() || station < 0 || station >= stations().size() || stations().get(station).songs().size() < 2) return;
+		if (!skip(station)) {
+			pendingSkip = station;
+			pendingBike = bike.getId();
+			skipTicks = 20;
+		}
+	}
+
+	static int currentTrack() {
+		var player = Minecraft.getInstance().player;
+		if (player == null || !(player.getVehicle() instanceof Motorino bike)) return -1;
+		var tuned = PLAYING.get(bike.getId());
+		return tuned == null ? -1 : tuned.song;
+	}
+
+	private static boolean skip(int station) {
+		Minecraft mc = Minecraft.getInstance();
+		if (station < 0 || station >= stations().size() || mc.player == null
+				|| !(mc.player.getVehicle() instanceof Motorino bike) || bike.getFirstPassenger() != mc.player
+				|| bike.inParade() || bike.station() != station || stations().get(station).songs().size() < 2) return false;
+		Tuned t = PLAYING.get(bike.getId());
+		if (t == null || t.station != station || t.song < 0) return false;
+		if (t.sound != null) {
+			t.sound.halt();
+			mc.getSoundManager().stop(t.sound);
+		}
+		next(mc, bike, t, false);
+		return true;
+	}
+
 	static void tune(int station) {
+		skipTicks = 0;
 		ClientPlayNetworking.send(new Radio.Tune(station));
 		if (station == Radio.OFF) { bannerName = "Radio spenta"; bannerSong = ""; bannerColor = 0xFFAAAAAA; bannerTicks = 50; }
 	}

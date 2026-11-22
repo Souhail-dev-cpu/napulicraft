@@ -50,6 +50,7 @@ public class GenResidentTextures {
 			look("scugnizzo", false, 0xd1a07a, 0x2b1d14, 0x4a3a2d, 0xe53935, WHITE, 0x3d5f8f, 0xf2f2f2, 0xe53935, i -> tee(i)),
 			look("presepaio", false, 0xd1a487, 0x9a9a94, 0x364c34, 0x5d4037, 0xf2efe6, 0x55575c, 0x352d30, 0x8d6e63, i -> { apron(i, 0xd7ccc8, 23); glasses(i); mustache(i, 0x9a9a94); }),
 			look("pizzaiolo", false, 0xc79a78, 0x2a211c, 0x3a2a20, WHITE, 0xc0392b, 0x2b2b30, 0x1e1e1e, WHITE, i -> { neckerchief(i, 0xc0392b); apron(i, 0xfafafa, 24); flour(i); mustache(i, 0x2a211c); }),
+			look("motor_dealer", false, 0xdfb49e, 0x302925, 0x503328, 0x343c3c, WHITE, 0x373a39, 0x292827, 0x343c3c, GenResidentTextures::peppe),
 			look("giorgia_meloni", true, 0xe0b496, 0xb28a50, 0x587a91, 0x202127, WHITE, 0x24252b, 0x121318, 0xb28a50, GenResidentTextures::meloni)
 		};
 		for (Look l : looks) {
@@ -173,6 +174,53 @@ public class GenResidentTextures {
 	}
 	static void highlights(BufferedImage i, int c) { for (int x = 64; x < 126; x += 3) rect(i, x, 48, x + 1, 62, c); for (int x = 1; x < 21; x += 3) rect(i, x, 90, x + 1, 102, c); px(i, 9, 8, c); px(i, 13, 8, c); }
 	/** Reference outfit: black trouser suit, open white shirt, shoulder-length blonde hair. */
+	static void peppe(BufferedImage i) {
+		int skin = 0xe8bda7, hair = 0x352d29;
+		// Face UV: fourteen columns, twenty rows. Features are placed from the front edge of that face.
+		cubeShaded(i, 0, 64, 14, 20, 14, skin);
+		for (int y = 0; y < 20; y++) for (int x = 0; x < 14; x++) {
+			int color = x == 0 || x == 13 ? 0xc69581 : x == 1 || x == 12 ? 0xdbac95 : skin;
+			if (y <= 5 && x > 2 && x < 11) color = 0xeec7ae;
+			if (y >= 11 && (x == 2 || x == 11)) color = 0xd49c87;
+			if (y >= 18 && (x < 3 || x > 10)) color = 0xc38e79;
+			px(i, 14 + x, 78 + y, color);
+		}
+		for (int x : new int[] {14, 27}) rect(i, x, 78, x + 1, 83, hair);
+		rect(i, 15, 78, 17, 79, hair);
+		rect(i, 25, 78, 27, 79, hair);
+		rect(i, 16, 84, 20, 85, 0x806052);
+		rect(i, 22, 84, 26, 85, 0x806052);
+		rect(i, 16, 85, 20, 88, 0xbd8a77);
+		rect(i, 22, 85, 26, 88, 0xbd8a77);
+		for (int x : new int[] {17, 23}) {
+			rect(i, x, 86, x + 3, 87, 0xf2dcd0);
+			px(i, x + 1, 86, 0x4f3026);
+			px(i, x + 1, 87, 0x795044);
+		}
+		rect(i, 20, 88, 22, 92, 0xf0c8ad);
+		px(i, 19, 91, 0xba836f); px(i, 22, 91, 0xba836f);
+		rect(i, 18, 93, 24, 94, 0xb9675c);
+		rect(i, 18, 94, 24, 96, 0x71362d);
+		rect(i, 19, 94, 23, 95, 0xd7b5a2);
+		rect(i, 19, 96, 23, 97, 0xc47766);
+		cubeShaded(i, 58, 64, 3, 5, 2, 0xecc0a6);
+		for (int y = 64; y < 85; y++) for (int x = 74; x < 112; x++) {
+			int pattern = Math.floorMod(x * 7 + y * 11 + (x / 3) * (y / 2), 13);
+			px(i, x, y, pattern < 3 ? 0x58473d : pattern < 8 ? hair : 0x282320);
+		}
+		for (int y = 20; y < 29; y++) for (int x = 16; x < 40; x++)
+			px(i, x, y, (Math.floorMod(x * 3 + y * 7 + (x / 3) * (y / 2), 11) < 4) ? 0x68716c : 0x37413f);
+		for (int y = 20; y < 29; y++) for (int x = 40; x < 56; x++)
+			px(i, x, y, (Math.floorMod(x * 5 + y * 7, 13) < 4) ? 0x69726d : 0x384340);
+		// White open shirt framed by the cardigan's dark ribbed edges.
+		rect(i, 21, 20, 27, 22, 0xf6f0e7);
+		rect(i, 22, 22, 26, 24, 0xf2eee8);
+		rect(i, 23, 24, 25, 32, 0xeeeae1);
+		rect(i, 20, 21, 21, 24, 0x242e2c); rect(i, 27, 21, 28, 24, 0x242e2c);
+		rect(i, 22, 24, 23, 32, 0x28322f); rect(i, 25, 24, 26, 32, 0x28322f);
+		px(i, 23, 20, 0xdcae96); px(i, 24, 20, 0xdcae96);
+	}
+
 	static void meloni(BufferedImage i) {
 		rect(i, 22, 20, 26, 29, WHITE);
 		rect(i, 23, 20, 25, 22, 0xe0b496); // open collar

@@ -28,13 +28,14 @@ public final class NapoliResident extends PathfinderMob {
         CARABINIERE, CARMELA, GIUSY, SOFIA,
         // the people of the centro storico (v8)
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
-        GIORGIA_MELONI;
+        GIORGIA_MELONI, MOTOR_DEALER, ARMORER;
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
         public boolean social() { return this == TERESA || this == LUCIA || this == CARMELA || this == GIUSY || this == SOFIA; }
         public boolean spirit() { return this == MBRIANA || this == PARTENOPE || this == ANIMA; }
-        public boolean street() { return ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter(); }
+        public boolean street() { return (ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter())
+                || this == MOTOR_DEALER || this == ARMORER; }
         public boolean fighter() { return this == NICO || this == ANTONIO; }
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }

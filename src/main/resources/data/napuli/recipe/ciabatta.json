@@ -1,0 +1,12 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"category": "misc",
+	"ingredients": [
+		"minecraft:leather",
+		"minecraft:blue_dye"
+	],
+	"result": {
+		"id": "napuli:ciabatta",
+		"count": 2
+	}
+}

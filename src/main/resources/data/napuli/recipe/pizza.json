@@ -1,0 +1,14 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"category": "misc",
+	"ingredients": [
+		"minecraft:bread",
+		"minecraft:beetroot",
+		"minecraft:beetroot",
+		"minecraft:milk_bucket"
+	],
+	"result": {
+		"id": "napuli:pizza",
+		"count": 2
+	}
+}

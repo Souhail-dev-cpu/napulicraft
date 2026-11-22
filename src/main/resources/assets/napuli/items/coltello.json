@@ -1,0 +1,8 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [ { "when": ["gui", "ground", "fixed"], "model": { "type": "minecraft:model", "model": "napuli:item/coltello" } } ],
+    "fallback": { "type": "minecraft:model", "model": "napuli:item/coltello_3d" }
+  }
+}

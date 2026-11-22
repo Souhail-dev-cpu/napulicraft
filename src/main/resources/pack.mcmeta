@@ -1,0 +1,6 @@
+{
+	"pack": { "description": "Napulicraft", "min_format": 82, "max_format": 9999 },
+	"language": {
+		"nap_it": { "region": "Napule", "name": "Napulitano", "bidirectional": false }
+	}
+}

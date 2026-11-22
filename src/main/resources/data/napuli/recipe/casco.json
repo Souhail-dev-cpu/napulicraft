@@ -1,0 +1,17 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "equipment",
+	"pattern": [
+		"IBI",
+		"L L"
+	],
+	"key": {
+		"I": "minecraft:iron_ingot",
+		"B": "minecraft:light_blue_dye",
+		"L": "minecraft:leather"
+	},
+	"result": {
+		"id": "napuli:casco",
+		"count": 1
+	}
+}

@@ -1,0 +1,58 @@
+# gradle
+
+.gradle/
+build/
+out/
+classes/
+
+# eclipse
+
+*.launch
+
+# idea
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# macos
+
+*.DS_Store
+
+# fabric
+
+run/
+
+# java
+
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
+.mcsrc/
+*.log
+run-autotest/
+.ref/
+run-autotest/
+*.log
+
+# never publish music: each player brings their own (napulicraft/canzoni)
+*.mp3
+*.ogg
+*.wav
+*.flac
+*.m4a
+napulicraft/
+canzoni/
+# local logs and previews
+verifica-*.log
+esportazione-*.log

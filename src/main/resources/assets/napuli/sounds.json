@@ -1,0 +1,63 @@
+{
+	"radio": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"notte": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"morte": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"ospedale": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"furto": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"lite": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"amore": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"diamanti": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"risveglio": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"nether": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"vittoria": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"gigante": {
+		"subtitle": "subtitles.napuli.canzone",
+		"sounds": []
+	},
+	"urlo": {
+		"subtitle": "subtitles.napuli.urlo",
+		"sounds": []
+	},
+	"risata": {
+		"subtitle": "subtitles.napuli.risata",
+		"sounds": [
+			{
+				"name": "entity.witch.celebrate",
+				"type": "event"
+			}
+		]
+	}
+}

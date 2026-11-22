@@ -1,0 +1,215 @@
+package dev.napuli;
+
+import java.util.List;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * 'O Motorino. Steer with the mouse, W to go. Up to THREE people on it, like in real life.
+ * Sneak + right click to pick it up. Riding it turns the radio on.
+ */
+public class Motorino extends Mob {
+	private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> STATION =
+			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+	private int paradeTicks;
+	private int lastStation = 0;
+	// the carabiniere who stopped the parade (boys without a helmet) and how long the stop has lasted
+	private NapoliResident stoppedBy;
+	private int stopTicks;
+
+	public void startParade() {
+		paradeTicks = 200;
+		setNoAi(true);
+		setStation(Radio.PARADE);
+	}
+
+	public boolean inParade() { return paradeTicks > 0; }
+	public int station() { return this.entityData.get(STATION); }
+	public void setStation(int s) {
+		if (s >= 0 && s != Radio.PARADE) lastStation = s;
+		this.entityData.set(STATION, s);
+	}
+	public boolean radioOn() { return station() != Radio.OFF; }
+
+	@Override
+	protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder b) {
+		super.defineSynchedData(b);
+		b.define(STATION, Radio.OFF);
+	}
+
+	/** every rider wears something on the head */
+	boolean ridersHelmeted() {
+		for (Entity e : getPassengers())
+			if (e instanceof LivingEntity l && l.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD).isEmpty()) return false;
+		return true;
+	}
+
+	@Override
+	protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
+		super.addAdditionalSaveData(out);
+		out.putInt("napuli_parade_ticks", paradeTicks);
+		out.putInt("napuli_station", station());
+		out.putInt("napuli_last_station", lastStation);
+	}
+
+	@Override
+	protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
+		super.readAdditionalSaveData(in);
+		paradeTicks = in.getIntOr("napuli_parade_ticks", 0);
+		lastStation = in.getIntOr("napuli_last_station", 0);
+		this.entityData.set(STATION, in.getIntOr("napuli_station", Radio.OFF));
+	}
+
+	@Override
+	public void aiStep() {
+		super.aiStep();
+		if (level().isClientSide() || paradeTicks <= 0) return;
+		ServerLevel sl = (ServerLevel) level();
+		// three on a scooter and no helmet, right in front of a carabiniere: they get stopped
+		if (stoppedBy == null && tickCount % 10 == 0 && !ridersHelmeted()) {
+			for (NapoliResident cc : Carabinieri.carabinieri(sl, blockPosition(), 22)) {
+				if (!cc.hasLineOfSight(this)) continue;
+				stoppedBy = cc;
+				setStation(Radio.OFF);  // the music stops dead
+				Carabinieri.stopParade(sl, this, cc);
+				break;
+			}
+		}
+		if (stoppedBy != null) {
+			stopTicks++;
+			if (stopTicks % 10 == 1) stoppedBy.getNavigation().moveTo(this, 1.25);
+			stoppedBy.getLookControl().setLookAt(this, 30, 30);
+			for (Entity e : getPassengers()) if (e instanceof Mob m) m.getLookControl().setLookAt(stoppedBy, 30, 30);
+			if (stopTicks > 200 || !stoppedBy.isAlive() || (stopTicks > 30 && stoppedBy.distanceToSqr(this) < 3.2 * 3.2)) {
+				Carabinieri.jailRiders(sl, this, stoppedBy);
+				paradeTicks = 0;
+				discard();  // the scooter is seized
+			}
+			return;
+		}
+		if (--paradeTicks == 0) {
+			// the boys are gone: the scooter takes its song with it (the sound is bound to the scooter on the clients)
+			NapoliScenes.removeRiders(this);
+			discard();
+			return;
+		}
+		Vec3 direction = Vec3.directionFromRotation(0, getYRot());
+		move(net.minecraft.world.entity.MoverType.SELF, direction.scale(0.19));
+	}
+
+	public Motorino(EntityType<? extends Motorino> type, Level level) {
+		super(type, level);
+		this.setPersistenceRequired();
+	}
+
+	public static AttributeSupplier.Builder attributes() {
+		return Mob.createMobAttributes()
+				.add(Attributes.MAX_HEALTH, 20)
+				.add(Attributes.MOVEMENT_SPEED, 0.32)
+				.add(Attributes.STEP_HEIGHT, 1.0);
+	}
+
+	@Override
+	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+		if (paradeTicks > 0) return InteractionResult.PASS;
+		if (player.isSecondaryUseActive()) {
+			if (!this.level().isClientSide()) {
+				this.ejectPassengers();
+				if (!player.getAbilities().instabuild) player.getInventory().add(new ItemStack(Napuli.MOTORINO_ITEM));
+				this.discard();
+			}
+			return InteractionResult.SUCCESS;
+		}
+		if (this.getPassengers().size() >= 2) return InteractionResult.PASS;
+		if (!this.level().isClientSide()) {
+			player.startRiding(this);
+			this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 1f, 1.6f);
+			if (this.getPassengers().size() == 3)
+				for (Entity e : this.getPassengers())
+					if (e instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("napuli.motorino.tre"));
+			if (player instanceof ServerPlayer sp && this.getFirstPassenger() == sp) {
+				// the radio comes on with the engine, on the last station you listened to
+				setStation(lastStation);
+				sp.sendOverlayMessage(Component.translatable("napuli.radio.hint"));
+			}
+		}
+		return InteractionResult.SUCCESS;
+	}
+
+	@Override
+	protected boolean canAddPassenger(Entity passenger) { return this.getPassengers().size() < (paradeTicks > 0 ? 3 : 2); }
+
+	@Override
+	public LivingEntity getControllingPassenger() {
+		return this.getFirstPassenger() instanceof Player p ? p : null;
+	}
+
+	@Override
+	protected void tickRidden(Player controller, Vec3 input) {
+		super.tickRidden(controller, input);
+		this.setRot(controller.getYRot(), controller.getXRot() * 0.5f);
+		this.yRotO = this.yBodyRot = this.yHeadRot = this.getYRot();
+	}
+
+	@Override
+	protected Vec3 getRiddenInput(Player controller, Vec3 selfInput) {
+		float forward = controller.zza;
+		if (forward < 0) forward *= 0.3f;
+		return new Vec3(0, 0, forward);
+	}
+
+	@Override
+	protected float getRiddenSpeed(Player controller) { return (float) this.getAttributeValue(Attributes.MOVEMENT_SPEED); }
+
+	@Override
+	protected void positionRider(Entity passenger, Entity.MoveFunction move) {
+		int i = this.getPassengers().indexOf(passenger);
+		double alongSeat = 0.11 - Math.max(0, i) * (paradeTicks > 0 ? 0.46 : 0.65);
+		double yaw = Math.toRadians(this.getYRot());
+		double x = this.getX() - Math.sin(yaw) * alongSeat;
+		double z = this.getZ() + Math.cos(yaw) * alongSeat;
+		move.accept(passenger, x, this.getY() + 0.30, z);
+	}
+
+	@Override
+	protected void removePassenger(Entity passenger) {
+		boolean wasDriver = this.getFirstPassenger() == passenger;
+		super.removePassenger(passenger);
+		if (wasDriver && passenger instanceof Player && paradeTicks <= 0 && !level().isClientSide()) setStation(Radio.OFF);
+	}
+
+	@Override
+	public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+		// only /kill and the void destroy it; to take it back: sneak + right click
+		if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return super.hurtServer(level, source, amount);
+		return false;
+	}
+
+	@Override
+	public boolean causeFallDamage(double distance, float multiplier, DamageSource source) { return false; }
+
+	@Override
+	public boolean isPushable() { return false; }
+
+	@Override
+	public boolean removeWhenFarAway(double d) { return false; }
+
+	public List<Entity> riders() { return this.getPassengers(); }
+}

@@ -1,0 +1,17 @@
+{
+	"schemaVersion": 1,
+	"id": "napuli",
+	"version": "${version}",
+	"name": "Napulicraft",
+	"description": "Minecraft in napulitano: Napoli intera, 'o Munaciello, carabiniere, motorino cu 'a radio e 'a musica ca sciglie tu (nisciuna canzone inclusa).",
+	"authors": ["Demae"],
+	"license": "MIT",
+	"contact": { "sources": "https://github.com/Souhail-dev-cpu/napulicraft", "issues": "https://github.com/Souhail-dev-cpu/napulicraft/issues" },
+	"environment": "*",
+	"mixins": ["napuli.mixins.json", {"config": "napuli.client.mixins.json", "environment": "client"}],
+	"entrypoints": {
+		"main": ["dev.napuli.Napuli"],
+		"client": ["dev.napuli.client.NapuliClient"]
+	},
+	"depends": { "fabricloader": ">=0.20.1", "minecraft": "~26.3", "java": ">=25", "fabric-api": "*" }
+}

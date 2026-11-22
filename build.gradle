@@ -24,6 +24,12 @@ loom {
 			vmArg "-Dnapuli.radiotest=true"
 			runDir "run-autotest"
 		}
+		centrotest {
+			client()
+			name "Napoli centro test"
+			vmArg "-Dnapuli.centrotest=true"
+			runDir "run-autotest"
+		}
 		maptest {
 			client()
 			name "Napoli map test"

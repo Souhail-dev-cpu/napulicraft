@@ -32,11 +32,13 @@ public class NapuliClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(NapoliResidentModel.LAYER, NapoliResidentModel::layer);
 		EntityRendererRegistry.register(Napuli.RESIDENT, ResidentRenderer::new);
 		RadioClient.register();
+		HudClient.register();
 		AutoTest.register();
 		CityTest.register();
 		PoliceTest.register();
 		MapTest.register();
 		RadioTest.register();
+		CentroTest.register();
 		SpawnTest.register();
 	}
 
@@ -86,6 +88,10 @@ public class NapuliClient implements ClientModInitializer {
 
 		@Override public Identifier getTextureLocation(NapoliResidentModel.State state) { return texture(state.role, state.variant); }
 		@Override public NapoliResidentModel.State createRenderState() { return new NapoliResidentModel.State(); }
+		@Override
+		protected void scale(NapoliResidentModel.State s, PoseStack pose) {
+			if (s.role == dev.napuli.NapoliResident.Role.SCUGNIZZO) pose.scale(0.74f, 0.74f, 0.74f); // 'o scugnizzo is a kid
+		}
 		@Override
 		protected int getBlockLightLevel(dev.napuli.NapoliResident npc, net.minecraft.core.BlockPos pos) {
 			return npc.role().spirit() ? 13 : super.getBlockLightLevel(npc, pos);

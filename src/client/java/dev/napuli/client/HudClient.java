@@ -1,0 +1,153 @@
+package dev.napuli.client;
+
+import dev.napuli.Hud;
+import dev.napuli.Napuli;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
+
+/**
+ * Right side of the screen, GTA/RP style:
+ *  - the panel: your name, your money, carabinieri stars, reputation with both clans, your clan and rank in it
+ *  - under it the mission tracker: the objective, an arrow towards it and how far it is
+ * Key H hides/shows it.
+ */
+final class HudClient {
+	private HudClient() {}
+
+	static final KeyMapping TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.napuli.hud",
+			InputConstants.KEY_H, KeyMapping.Category.register(Napuli.id("hud"))));
+	private static Hud.State state;
+	private static boolean hidden;
+	private static int shownCash = -1;
+	private static int cashFlash, cashDelta;
+
+	/** clan ranks by reputation with your clan */
+	static final int[] RANK_AT = {4, 12, 24, 40, 60, 85};
+	static final String[] RANKS = {"Muschillo", "Guaglione", "Soldato", "Capozona", "Braccio destro", "'O Boss"};
+
+	static String rank(int rep) {
+		String r = null;
+		for (int i = 0; i < RANK_AT.length; i++) if (rep >= RANK_AT[i]) r = RANKS[i];
+		return r;
+	}
+
+	static int nextRankAt(int rep) {
+		for (int at : RANK_AT) if (rep < at) return at;
+		return -1;
+	}
+
+	static void register() {
+		ClientPlayNetworking.registerGlobalReceiver(Hud.State.TYPE, (s, ctx) -> {
+			if (shownCash >= 0 && s.cash() != shownCash) { cashDelta = s.cash() - shownCash; cashFlash = 60; }
+			shownCash = s.cash();
+			state = s;
+		});
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+			while (TOGGLE.consumeClick()) hidden = !hidden;
+			if (cashFlash > 0) cashFlash--;
+			if (mc.level == null) { state = null; shownCash = -1; }
+		});
+		HudElementRegistry.addLast(Napuli.id("napoli_panel"), HudClient::draw);
+	}
+
+	static Hud.State state() { return state; }
+
+	private static void draw(GuiGraphicsExtractor g, DeltaTracker delta) {
+		Minecraft mc = Minecraft.getInstance();
+		Hud.State s = state;
+		if (hidden || s == null || mc.player == null || !s.inCity()) return;
+		Font f = mc.font;
+		int w = 156, x = g.guiWidth() - w - 4, y = 54;   // under the status effect icons
+		int lh = 11;
+
+		// ---------------- the panel
+		int lines = 6 + (s.stars() > 0 ? 1 : 0) + (s.ally() >= 0 ? 2 : 1);
+		g.fill(x - 4, y - 4, x + w, y + lines * lh + 2, 0x90000000);
+		g.fill(x - 4, y - 4, x - 2, y + lines * lh + 2, 0xFF29A9E1);          // Napoli azure stripe
+		g.text(f, mc.player.getName().getString(), x, y, 0xFFFFFFFF, true);
+		y += lh + 2;
+		g.text(f, "€ " + s.cash(), x, y, 0xFF66BB6A, true);
+		if (cashFlash > 0) {
+			String d = (cashDelta > 0 ? "+" : "") + cashDelta;
+			g.text(f, d, x + f.width("€ " + s.cash()) + 6, y, (cashDelta > 0 ? 0x66BB6A : 0xEF5350) | (Math.min(255, cashFlash * 8) << 24), true);
+		}
+		y += lh;
+		if (s.stars() > 0) {
+			StringBuilder st = new StringBuilder();
+			for (int i = 0; i < 3; i++) st.append(i < s.stars() ? '★' : '☆');
+			boolean blink = (mc.player.tickCount / 8) % 2 == 0;
+			g.text(f, st + " " + s.wantedLeft() + "s", x, y, blink ? 0xFFFF5252 : 0xFF448AFF, true);
+			y += lh;
+		}
+		y += 3;
+		g.text(f, "Reputazione", x, y, 0xFFBDBDBD, false);
+		y += lh;
+		bar(g, f, x, y, w - 4, "Lanterne", s.lanterns(), 0xFFFFB300);
+		y += lh;
+		bar(g, f, x, y, w - 4, "Maree", s.tides(), 0xFF29B6F6);
+		y += lh + 2;
+		if (s.ally() >= 0) {
+			int rep = s.ally() == 0 ? s.lanterns() : s.tides();
+			String clan = s.ally() == 0 ? "'E Lanterne" : "'E Maree";
+			g.text(f, clan, x, y, s.ally() == 0 ? 0xFFFFB300 : 0xFF29B6F6, true);
+			y += lh;
+			int next = nextRankAt(rep);
+			String r = rank(rep) + (next > 0 ? "  (" + rep + "/" + next + ")" : "");
+			g.text(f, "Rango: " + r, x, y, 0xFFFFFFFF, true);
+		} else {
+			g.text(f, "Senza clan", x, y, 0xFF9E9E9E, true);
+		}
+		y += lh + 8;
+
+		// ---------------- the mission tracker
+		String title, line;
+		boolean jailed = s.jail() > 0;
+		if (jailed) {
+			title = "IN GALERA";
+			line = "Esci tra " + s.jail() + " s";
+		} else {
+			title = "MISSIONE";
+			line = Component.translatable("napuli.hud.obj." + s.objective(), s.cooldown()).getString();
+		}
+		var wrapped = f.split(Component.literal(line), w - 6);
+		int th = 14 + wrapped.size() * 10 + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
+		g.fill(x - 4, y - 4, x + w, y + th, 0x90000000);
+		g.fill(x - 4, y - 4, x - 2, y + th, jailed ? 0xFFEF5350 : 0xFFFFD54F);
+		g.text(f, title, x, y, jailed ? 0xFFEF5350 : 0xFFFFD54F, true);
+		y += 12;
+		for (var l : wrapped) { g.text(f, l, x, y, 0xFFFFFFFF, true); y += 10; }
+		if (s.tx() != Hud.NO_TARGET && !jailed) {
+			double dx = s.tx() + 0.5 - mc.player.getX(), dz = s.tz() + 0.5 - mc.player.getZ();
+			int dist = (int) Math.round(Math.hypot(dx, dz));
+			// angle of the target relative to where you look: 0 = straight ahead
+			double targetYaw = Math.toDegrees(Math.atan2(-dx, dz));
+			double rel = net.minecraft.util.Mth.wrapDegrees(targetYaw - mc.player.getYRot());
+			String arrow = dist < 4 ? "●" : ARROWS[(int) Math.floorMod(Math.round(rel / 45.0), 8)];
+			g.text(f, arrow + " " + (dist < 4 ? "Sì arrivato" : dist + " m"), x, y + 1, dist < 4 ? 0xFF66BB6A : 0xFFFFD54F, true);
+		}
+	}
+
+	// straight ahead, ahead-right, right, behind-right, behind, behind-left, left, ahead-left
+	private static final String[] ARROWS = {"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"};
+
+	private static void bar(GuiGraphicsExtractor g, Font f, int x, int y, int w, String name, int rep, int color) {
+		g.text(f, name, x, y, 0xFFE0E0E0, false);
+		int bx = x + 52, bw = w - 52 - 26, mid = bx + bw / 2;
+		g.fill(bx, y + 2, bx + bw, y + 7, 0xFF333333);
+		int len = (int) Math.round(Math.abs(rep) / 100.0 * (bw / 2.0));
+		if (rep >= 0) g.fill(mid, y + 2, mid + len, y + 7, color);
+		else g.fill(mid - len, y + 2, mid, y + 7, 0xFFEF5350);
+		g.fill(mid, y + 1, mid + 1, y + 8, 0xFFFFFFFF);
+		String v = String.valueOf(rep);
+		g.text(f, v, x + w - f.width(v), y, rep >= 0 ? 0xFFFFFFFF : 0xFFEF5350, false);
+	}
+}

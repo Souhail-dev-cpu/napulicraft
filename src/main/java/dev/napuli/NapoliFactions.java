@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-final class NapoliFactions {
+public final class NapoliFactions {
     enum Side {
         LANTERNE("lanterne"), MAREE("maree");
         final String id;
@@ -157,6 +157,35 @@ final class NapoliFactions {
         NapoliStreet.credit(player, payout);
         say(player, "payout", payout, reputation, side.label());
         return 1;
+    }
+
+    /** what the mission tracker shows: the objective's text key and where to go (null = nowhere in particular) */
+    record Objective(String key, net.minecraft.core.BlockPos target) {}
+
+    static final net.minecraft.core.BlockPos ADA = new net.minecraft.core.BlockPos(-33, 64, -3), MICHELE = new net.minecraft.core.BlockPos(-48, 64, -6),
+            TORE = new net.minecraft.core.BlockPos(26, 64, 75), ROSA = new net.minecraft.core.BlockPos(32, 64, 75), MUOLO = new net.minecraft.core.BlockPos(13, 64, 52);
+
+    static Objective objective(ServerPlayer player) {
+        Progress p = get(player);
+        Side s = p.selected();
+        boolean l = s == Side.LANTERNE;
+        return switch (p.stage()) {
+            case SUPPLY -> new Objective(l ? "supply_lanterne" : "supply_maree", l ? MICHELE : ROSA);
+            case CLASH -> new Objective("clash", MUOLO);
+            case LEVY -> new Objective("levy", NapoliDistrict.PUTECA);
+            case CACHE -> new Objective("cache", NapoliDistrict.SARTORIA);
+            case REPORT, REPORT_CLASH, REPORT_LEVY, REPORT_CACHE -> new Objective(l ? "report_lanterne" : "report_maree", l ? ADA : TORE);
+            default -> new Objective(player.level().getGameTime() < p.nextMission() ? "cooldown" : "none", null);
+        };
+    }
+
+    static int cooldownSeconds(ServerPlayer player) {
+        return (int) Math.max(0, (get(player).nextMission() - player.level().getGameTime()) / 20);
+    }
+
+    /** dev play-tests only: put a player in a clan, on a mission stage */
+    public static void debugSet(ServerPlayer player, int lanterns, int tides, int side, int stage) {
+        player.setAttached(DATA, new Progress(lanterns, tides, side, stage, 0));
     }
 
     private static void say(ServerPlayer player, String key, Object... args) {

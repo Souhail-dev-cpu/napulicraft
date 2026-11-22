@@ -87,6 +87,18 @@ public final class Carabinieri {
 
 	public static boolean isWanted(ServerPlayer p) { return WANTED.containsKey(p.getUUID()); }
 
+	/** for the HUD: 0 = not wanted, else the gravity (stars) */
+	static int wantedStars(ServerPlayer p) { Wanted w = WANTED.get(p.getUUID()); return w == null ? 0 : w.gravity; }
+	/** seconds before the carabinieri give up (they lose you after 20 s out of sight) */
+	static int wantedSecondsLeft(ServerPlayer p) {
+		Wanted w = WANTED.get(p.getUUID());
+		return w == null ? 0 : (int) Math.max(0, 20 - (p.level().getGameTime() - w.lastSeen) / 20);
+	}
+	static int jailSecondsLeft(ServerPlayer p) {
+		Jail j = JAILED.get(p.getUUID());
+		return j == null ? 0 : (int) Math.max(0, (j.until() - p.level().getGameTime()) / 20);
+	}
+
 	/** is this carabiniere busy chasing someone (then he doesn't wander around) */
 	static boolean chasing(ServerLevel level, NapoliResident cc) {
 		for (ServerPlayer p : level.players())

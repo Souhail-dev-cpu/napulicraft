@@ -71,7 +71,7 @@ public class Napuli implements ModInitializer {
 	}
 
 	// ------------------------------------------------------------ items
-	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, CASCO;
+	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, CASCO, MUNACIELLO_EGG, GIGANTE_EGG, NAPULETANO_EGG;
 
 	private static Item item(String name, Function<Item.Properties, Item> factory, Item.Properties props) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id(name));
@@ -115,6 +115,18 @@ public class Napuli implements ModInitializer {
 				.component(net.minecraft.core.component.DataComponents.EQUIPPABLE, net.minecraft.world.item.equipment.Equippable.builder(net.minecraft.world.entity.EquipmentSlot.HEAD)
 						.setEquipSound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_TURTLE).setAsset(net.minecraft.resources.ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, id("casco"))).build()));
 		Radio.register();
+		Hud.register();
+		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
+		GIGANTE_EGG = item("munaciello_gigante_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(GIGANTE));
+		NAPULETANO_EGG = item("napuletano_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(RESIDENT));
+		// the mod's own page in the creative inventory (before, the items were only reachable with /give)
+		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, id("napulicraft"), net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab.builder()
+				.title(net.minecraft.network.chat.Component.translatable("itemGroup.napuli.napulicraft"))
+				.icon(() -> new net.minecraft.world.item.ItemStack(CORNICELLO))
+				.displayItems((params, out) -> {
+					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
+							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
+				}).build());
 
 		FabricDefaultAttributeRegistry.register(MUNACIELLO, Munaciello.attributes());
 		FabricDefaultAttributeRegistry.register(GIGANTE, MunacielloGigante.attributes());

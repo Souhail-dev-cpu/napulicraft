@@ -42,7 +42,14 @@ public class GenResidentTextures {
 			look("carabiniere_1", false, 0xa8785a, 0x1c1714, 0x2a2018, 0x1a2233, 0xc0c4c8, 0x1a2233, 0x0e0e10, 0x1a2233, i -> carabiniere(i, true)),
 			look("carmela", true, 0xd2a07e, 0x24180f, 0x5a3a20, 0xb3262a, WHITE, 0x2b2b30, 0x2b2420, WHITE, i -> { apron(i, 0xfafafa, 24); flour(i); }),
 			look("giusy", true, 0xc68a62, 0x6b4a2e, 0x3d2a1c, 0xd1a467, 0x2a1d14, 0x141414, 0x141414, 0x141414, i -> { leopard(i); highlights(i, 0xd9b26a); }),
-			look("sofia", true, 0xe2b694, 0x3b2a20, 0x4b6b3a, 0x4a6fa5, WHITE, 0x2f3e57, 0xe8e8e8, 0x8a5a2e, i -> { tee(i); glasses(i); })
+			look("sofia", true, 0xe2b694, 0x3b2a20, 0x4b6b3a, 0x4a6fa5, WHITE, 0x2f3e57, 0xe8e8e8, 0x8a5a2e, i -> { tee(i); glasses(i); }),
+			// v8: the people of the centro storico
+			look("nonna", true, 0xc9a084, 0xc8c8c2, 0x3a3a3a, 0x262628, 0x6e6352, 0x262628, 0x111111, 0x6e6352, i -> { apron(i, 0x7a8a9a, 24); dots(i, 20, 25, 28, 32, 0xd9708e); }),
+			look("parcheggiatore", false, 0xb07a58, 0x1f1a17, 0x3a2a20, 0xd4e157, 0xff9800, 0x3d5f8f, 0x2b2420, 0xd4e157, i -> { sash(i, 0xd8dde0); stubble(i, 0x1f1a17); }),
+			look("tifoso", false, 0xc58e65, 0x2a1d14, 0x3a2a20, NAPOLI, WHITE, NAPOLI, 0xf2f2f2, WHITE, i -> { number10(i, WHITE); stripesArm(i, WHITE); stubble(i, 0x2a1d14); }),
+			look("scugnizzo", false, 0xd1a07a, 0x2b1d14, 0x4a3a2d, 0xe53935, WHITE, 0x3d5f8f, 0xf2f2f2, 0xe53935, i -> tee(i)),
+			look("presepaio", false, 0xd1a487, 0x9a9a94, 0x364c34, 0x5d4037, 0xf2efe6, 0x55575c, 0x352d30, 0x8d6e63, i -> { apron(i, 0xd7ccc8, 23); glasses(i); mustache(i, 0x9a9a94); }),
+			look("pizzaiolo", false, 0xc79a78, 0x2a211c, 0x3a2a20, WHITE, 0xc0392b, 0x2b2b30, 0x1e1e1e, WHITE, i -> { neckerchief(i, 0xc0392b); apron(i, 0xfafafa, 24); flour(i); mustache(i, 0x2a211c); })
 		};
 		for (Look l : looks) {
 			BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);

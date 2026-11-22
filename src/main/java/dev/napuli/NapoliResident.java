@@ -25,7 +25,9 @@ public final class NapoliResident extends PathfinderMob {
     public enum Role {
         GENNARO, CIRO, ENZO, TERESA, LUCIA, MBRIANA, PARTENOPE, ANIMA, VENDOR, TAILOR, BUSKER, PORTER, PASSERBY, ADA, MICHELE, NICO, SALVATORE, ROSA, ANTONIO,
         // added later: keep new roles at the END, saved worlds store the ordinal
-        CARABINIERE, CARMELA, GIUSY, SOFIA;
+        CARABINIERE, CARMELA, GIUSY, SOFIA,
+        // the people of the centro storico (v8)
+        NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO;
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
@@ -33,8 +35,10 @@ public final class NapoliResident extends PathfinderMob {
         public boolean spirit() { return this == MBRIANA || this == PARTENOPE || this == ANIMA; }
         public boolean street() { return ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter(); }
         public boolean fighter() { return this == NICO || this == ANTONIO; }
+        /** everyday Neapolitans with their own little interaction (NapoliPeople) */
+        public boolean people() { return ordinal() >= NONNA.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE; }
+        public boolean female() { return social() || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
@@ -140,11 +144,30 @@ public final class NapoliResident extends PathfinderMob {
         return switch (role()) {
             case PASSERBY -> 9;
             case CARABINIERE -> 12;
-            case VENDOR, TAILOR, PORTER -> 3;
+            case VENDOR, TAILOR, PORTER, PRESEPAIO, PIZZAIOLO -> 3;
+            case NONNA -> 2;
+            case PARCHEGGIATORE -> 5;
+            case TIFOSO, SCUGNIZZO -> 10;
             case BUSKER -> 4;
             case TERESA, LUCIA, CARMELA, GIUSY, SOFIA -> 4;
             default -> 6;
         };
+    }
+
+    /** the Neapolitan spawn egg: a random everyday Neapolitan instead of always the first role */
+    @Override
+    public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor level,
+            net.minecraft.world.DifficultyInstance difficulty, EntitySpawnReason reason, net.minecraft.world.entity.SpawnGroupData data) {
+        var out = super.finalizeSpawn(level, difficulty, reason, data);
+        if (reason == EntitySpawnReason.SPAWN_ITEM_USE || reason == EntitySpawnReason.DISPENSER) {
+            Role[] everyday = {Role.PASSERBY, Role.PASSERBY, Role.PASSERBY, Role.NONNA, Role.PARCHEGGIATORE, Role.TIFOSO, Role.SCUGNIZZO, Role.PIZZAIOLO, Role.PRESEPAIO};
+            Role r = everyday[random.nextInt(everyday.length)];
+            entityData.set(ROLE, r.ordinal());
+            entityData.set(VARIANT, random.nextInt(r.variants()));
+            setCustomName(r.displayName());
+            setHomeTo(blockPosition(), wanderRadius());
+        }
+        return out;
     }
 
     /** move an existing person to a new place (used when the map changes) */
@@ -177,6 +200,10 @@ public final class NapoliResident extends PathfinderMob {
         if (hand == InteractionHand.MAIN_HAND && role() == Role.CARABINIERE) {
             if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
                     Carabinieri.isWanted(sp) ? "napuli.cc.talk.wanted" : "napuli.cc.talk." + random.nextInt(4)));
+            return InteractionResult.SUCCESS;
+        }
+        if (hand == InteractionHand.MAIN_HAND && role().people()) {
+            if (player instanceof ServerPlayer sp) NapoliPeople.talk(sp, this);
             return InteractionResult.SUCCESS;
         }
         if (hand != InteractionHand.MAIN_HAND || (!role().social() && !role().street()))

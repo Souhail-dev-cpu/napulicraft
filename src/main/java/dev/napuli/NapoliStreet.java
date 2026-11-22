@@ -65,6 +65,12 @@ public final class NapoliStreet {
 
     private NapoliStreet() {}
 
+    /** the original spots plus the people of the centro storico and the extra Neapolitans around town (v8) */
+    private static final List<Spot> ALL_SPOTS = new java.util.ArrayList<>(SPOTS);
+    static {
+        for (Object[] o : NapoliCentro.SPOTS) ALL_SPOTS.add(new Spot((NapoliResident.Role) o[0], (BlockPos) o[1], (Float) o[2]));
+    }
+
     private static <T> AttachmentType<T> saved(String id, Codec<T> codec) {
         return AttachmentRegistry.<T>builder().persistent(codec).copyOnDeath().buildAndRegister(Napuli.id(id));
     }
@@ -119,7 +125,7 @@ public final class NapoliStreet {
         NapoliFactions.recognize(player);
         for (var ally : level.getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(35),
                 npc -> npc.getAttachedOrElse(ALLY_LIFE, Long.MAX_VALUE) <= now)) ally.discard();
-        for (Spot spot : SPOTS) {
+        for (Spot spot : ALL_SPOTS) {
             if (spot.pos().distSqr(player.blockPosition()) > 35 * 35 || !level.hasChunkAt(spot.pos())) continue;
             var around = new AABB(spot.pos()).inflate(10, 3, 10);
             if (level.getEntitiesOfClass(NapoliResident.class, around, npc -> npc.role() == spot.role()).isEmpty())

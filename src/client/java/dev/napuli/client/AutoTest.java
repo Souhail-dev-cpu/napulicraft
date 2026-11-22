@@ -59,17 +59,17 @@ public final class AutoTest {
 		MinecraftServer server = mc.getSingleplayerServer();
 		switch (tick) {
 			case 5 -> { if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); shot(mc, "00_pause_menu_check"); }
-			case 40 -> server.execute(() -> {
+			case 15 -> server.execute(() -> {
 				ServerLevel lvl = server.overworld();
 				y = lvl.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, 0, 0);
 				run(server, "time set noon", "weather clear", "gamerule advance_time false", "gamerule spawn_mobs false",
-						"gamerule spawn_monsters false", "tp @p 0 " + y + " 0 0 0", "effect give @p resistance infinite 4 true");
+						"gamerule spawn_monsters false", "execute in minecraft:overworld run tp @p 0 " + y + " 0 0 0", "effect give @p resistance infinite 4 true");
 				ServerPlayer p = player(server);
 				p.getInventory().clearContent();
 				p.getInventory().setItem(0, new ItemStack(Items.DIAMOND_PICKAXE));
 				log("menu string 'menu.singleplayer' in game language: '{}'", net.minecraft.network.chat.Component.translatable("menu.singleplayer").getString());
 				thief = Napuli.MUNACIELLO.create(lvl, EntitySpawnReason.COMMAND);
-				thief.snapTo(0.5, y, 8.5, 180, 0);
+				thief.snapTo(0.5, y, 1.5, 180, 0);
 				lvl.addFreshEntity(thief);
 			});
 			case 50 -> {
@@ -80,12 +80,12 @@ public final class AutoTest {
 				server.execute(() -> Spawner.playSong(server));
 			}
 			case 70 -> shot(mc, "01_munaciello_coming");
-			case 161 -> server.execute(() -> {
+			case 182 -> server.execute(() -> {
 				ServerPlayer p = player(server);
 				log("after approach: munaciello has loot={} holding='{}', player still has pickaxe={}",
 						thief.hasLoot(), thief.getMainHandItem().getHoverName().getString(), p.getInventory().contains(new ItemStack(Items.DIAMOND_PICKAXE)));
 			});
-			case 175 -> shot(mc, "02_munaciello_running_with_pick");
+			case 185 -> shot(mc, "02_munaciello_running_with_pick");
 			case 120, 140, 160, 180 -> server.execute(() -> log("t={} thief distance from player = {}", tick, (int) thief.distanceTo(player(server))));
 			case 190 -> server.execute(() -> {
 				ServerPlayer p = player(server);
@@ -112,6 +112,8 @@ public final class AutoTest {
 			case 330 -> server.execute(() -> log("looked at him: giant chasing={} darkness on player={}", giant.isChasing(),
 					player(server).hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS)));
 			case 332 -> shot(mc, "04_giant_stare");
+			case 365 -> server.execute(() -> log("pursuit: giant chasing={} darkness on player={}", giant.isChasing(),
+					player(server).hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS)));
 			case 380 -> shot(mc, "05_giant_chasing");
 			case 420 -> server.execute(() -> log("after 4 s chase: dist={} health player={}", (int) giant.distanceTo(player(server)), player(server).getHealth()));
 			case 430 -> { run(server, "time set noon"); }

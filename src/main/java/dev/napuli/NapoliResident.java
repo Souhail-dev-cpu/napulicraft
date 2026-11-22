@@ -206,6 +206,10 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && role().spirit()) {
+            if (isAlive() && player instanceof ServerPlayer sp) NapoliScenes.answerSpirit(sp, this);
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && role() == Role.GIORGIA_MELONI) {
             if (player instanceof ServerPlayer sp) GiorgiaMeloni.open(sp, this);
             return InteractionResult.SUCCESS;

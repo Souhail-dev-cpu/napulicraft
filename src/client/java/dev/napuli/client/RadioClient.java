@@ -74,10 +74,23 @@ public final class RadioClient {
 
 	static void reload() { UserMusic.rescan(); }
 
+	public static void suspendForScene() {
+		var mc = Minecraft.getInstance();
+		for (Tuned t : PLAYING.values()) stopTrack(mc, t);
+		mc.getSoundManager().stop(null, SoundSource.MUSIC);
+	}
+
+	private static void stopTrack(Minecraft mc, Tuned t) {
+		if (t.sound == null) return;
+		t.sound.halt();
+		mc.getSoundManager().stop(t.sound);
+		t.sound = null;
+	}
+
 	// ---------------------------------------------------------------- every tick
 	private static void tick(Minecraft mc) {
 		if (mc.level == null || mc.player == null) {
-			PLAYING.values().forEach(t -> { if (t.sound != null) t.sound.halt(); });
+			for (Tuned t : PLAYING.values()) stopTrack(mc, t);
 			PLAYING.clear();
 			return;
 		}
@@ -86,30 +99,44 @@ public final class RadioClient {
 		for (Motorino bike : mc.level.getEntitiesOfClass(Motorino.class, mc.player.getBoundingBox().inflate(RANGE)))
 			near.put(bike.getId(), bike);
 
+		boolean scenePlaying = UserMusic.scenePlaying();
+		Motorino parade = scenePlaying ? null : near.values().stream()
+				.filter(bike -> bike.station() == Radio.PARADE && bike.distanceToSqr(mc.player) < 40 * 40)
+				.filter(bike -> { Tuned t = PLAYING.get(bike.getId()); return t == null || t.station != Radio.PARADE || !t.finished; })
+				.min(java.util.Comparator.comparingDouble(bike -> bike.distanceToSqr(mc.player))).orElse(null);
+		if (scenePlaying || parade != null) sounds.stop(null, SoundSource.MUSIC);
+		for (var entry : PLAYING.entrySet()) {
+			if (scenePlaying || (parade != null && entry.getKey() != parade.getId()) || !near.containsKey(entry.getKey()))
+				stopTrack(mc, entry.getValue());
+		}
 		for (Motorino bike : near.values()) {
 			int st = bike.station();
+			boolean audible = !scenePlaying && (parade == null ? st != Radio.PARADE : bike == parade);
 			Tuned t = PLAYING.get(bike.getId());
 			if (st == Radio.OFF) {
-				if (t != null) { if (t.sound != null) t.sound.halt(); PLAYING.remove(bike.getId()); }
+				if (t != null) { stopTrack(mc, t); PLAYING.remove(bike.getId()); }
 				continue;
 			}
 			if (t == null || t.station != st) {
-				if (t != null && t.sound != null) t.sound.halt();
+				if (t != null) stopTrack(mc, t);
 				t = new Tuned();
 				t.station = st;
 				PLAYING.put(bike.getId(), t);
-				next(mc, bike, t, true);
+			}
+			if (!audible || t.finished) continue;
+			if (t.sound == null) {
+				next(mc, bike, t, false);
 				continue;
 			}
 			t.age++;
 			if (!t.finished && t.age > 40 && t.sound != null && !sounds.isActive(t.sound)) {
 				if (st == Radio.PARADE) { t.finished = true; continue; }  // the boys' song plays once
-				next(mc, bike, t, false);                                  // the radio goes on: next song
+				next(mc, bike, t, true);                                   // the radio goes on: next song
 			}
 		}
 		for (Iterator<Map.Entry<Integer, Tuned>> it = PLAYING.entrySet().iterator(); it.hasNext(); ) {
 			var e = it.next();
-			if (!near.containsKey(e.getKey())) { if (e.getValue().sound != null) e.getValue().sound.halt(); it.remove(); }
+			if (!near.containsKey(e.getKey())) it.remove();
 		}
 
 		if (skipTicks > 0) {
@@ -136,7 +163,7 @@ public final class RadioClient {
 		while (SONGS_KEY.consumeClick()) if (mc.gui.screen() == null) mc.gui.setScreen(new dev.napuli.client.music.SongsScreen(null));
 	}
 
-	private static void next(Minecraft mc, Motorino bike, Tuned t, boolean fresh) {
+	private static void next(Minecraft mc, Motorino bike, Tuned t, boolean advance) {
 		UserMusic.Song song;
 		String stationName;
 		int color, start = 0;
@@ -160,7 +187,8 @@ public final class RadioClient {
 			}
 			UserMusic.Station s = list.get(Math.floorMod(t.station, list.size()));
 			// like a live radio you tune in somewhere in the playlist, then it goes on in order
-			t.song = fresh ? mc.level.getRandom().nextInt(s.songs().size()) : (t.song + 1) % s.songs().size();
+			if (t.song < 0) t.song = mc.level.getRandom().nextInt(s.songs().size());
+			else t.song = Math.floorMod(t.song + (advance ? 1 : 0), s.songs().size());
 			song = s.songs().get(t.song);
 			stationName = s.name();
 			color = s.color();
@@ -218,11 +246,12 @@ public final class RadioClient {
 				|| bike.inParade() || bike.station() != station || stations().get(station).songs().size() < 2) return false;
 		Tuned t = PLAYING.get(bike.getId());
 		if (t == null || t.station != station || t.song < 0) return false;
-		if (t.sound != null) {
-			t.sound.halt();
-			mc.getSoundManager().stop(t.sound);
+		if (t.sound == null) {
+			t.song = (t.song + 1) % stations().get(station).songs().size();
+		} else {
+			stopTrack(mc, t);
+			next(mc, bike, t, true);
 		}
-		next(mc, bike, t, false);
 		return true;
 	}
 

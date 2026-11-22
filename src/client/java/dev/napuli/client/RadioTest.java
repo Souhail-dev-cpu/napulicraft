@@ -36,6 +36,7 @@ final class RadioTest {
 	private static Motorino parade, mine;
 	private static final List<NapoliResident> riders = new ArrayList<>();
 	private static String firstSoundPos;
+	private static dev.napuli.client.music.UserMusic.FileSound interruptedScene;
 
 	static void register() {
 		if (Boolean.getBoolean("napuli.radiotest")) ClientTickEvents.END_CLIENT_TICK.register(RadioTest::onTick);
@@ -89,7 +90,7 @@ final class RadioTest {
 			}
 			case 26 -> PoliceTest.run(server, "execute as @a run napuli canzone lite");
 			case 29 -> PoliceTest.log("situation lite: {}", dev.napuli.client.music.UserMusic.sceneDebug());
-			case 30 -> { PoliceTest.tp(server, 0, 65, -5, -20, 12); if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); }
+			case 30 -> { dev.napuli.client.music.UserMusic.stopScene(); PoliceTest.tp(server, 0, 65, -5, -20, 12); if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); }
 			case 45 -> server.execute(() -> {
 				var city = PoliceTest.city(server);
 				// any parade already running somewhere else goes away; ours comes up Via Toledo towards the camera
@@ -164,6 +165,7 @@ final class RadioTest {
 			case 424 -> PoliceTest.shot(mc, "r05b_schermata_canzoni");
 			case 428 -> {
 				mc.gui.setScreen(null);
+				dev.napuli.client.music.UserMusic.stopScene();
 				int station = java.util.stream.IntStream.range(0, RadioClient.stations().size())
 						.filter(i -> RadioClient.stations().get(i).songs().size() >= 2).findFirst()
 						.orElseThrow(() -> new IllegalStateException("Radio test requires a station with two tracks"));
@@ -195,11 +197,28 @@ final class RadioTest {
 				NapoliResident.spawn(PoliceTest.city(server), NapoliResident.Role.CARABINIERE, p.blockPosition().offset(0, 0, -4), 0);
 			});
 			case 762 -> server.execute(() -> PoliceTest.log("player without helmet seen on the scooter -> wanted: {}", Carabinieri.isWanted(PoliceTest.player(server))));
-			case 475 -> server.execute(() -> PoliceTest.player(server).stopRiding());
-			case 485 -> server.execute(() -> PoliceTest.log("radio after getting off: station {}", mine.station()));
-			case 490 -> PoliceTest.log("radio after getting off (client): {}", RadioClient.debug());
+			case 450 -> {
+				if (!RadioClient.debug().contains("active true")) throw new IllegalStateException("Radio must be playing before the encounter");
+				var song = dev.napuli.client.music.UserMusic.library().getFirst();
+				interruptedScene = dev.napuli.client.music.UserMusic.preview(song, 0);
+			}
+			case 458 -> dev.napuli.client.music.UserMusic.playSituation("urlo", 1);
+			case 463 -> {
+				if (!interruptedScene.isStopped() || !dev.napuli.client.music.UserMusic.scenePlaying()
+						|| RadioClient.debug().contains("active true"))
+					throw new IllegalStateException("The Giant's clip must replace the previous scene and suspend the radio");
+				PoliceTest.log("giant clip plays alone: true");
+			}
+			case 525 -> server.execute(() -> PoliceTest.player(server).stopRiding());
+			case 535 -> server.execute(() -> PoliceTest.log("radio after getting off: station {}", mine.station()));
+			case 513 -> {
+				if (dev.napuli.client.music.UserMusic.scenePlaying() || !RadioClient.debug().contains("active true"))
+					throw new IllegalStateException("The radio must return after the encounter clip: "
+							+ dev.napuli.client.music.UserMusic.sceneDebug() + " / " + RadioClient.debug());
+				PoliceTest.log("radio returns after encounter: true");
+			}
 			// ------------------------------------------------ Vesuvius
-			case 500 -> { if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); PoliceTest.run(server, "clear @a"); PoliceTest.tp(server, -34, 74, 48, -50, 4); }
+			case 536 -> { if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); PoliceTest.run(server, "clear @a"); PoliceTest.tp(server, -34, 74, 48, -50, 4); }
 			case 540 -> PoliceTest.shot(mc, "r06_vesuvio_da_partenope");
 			case 545 -> PoliceTest.tp(server, 2, 78, 108, -50, 0);
 			case 585 -> PoliceTest.shot(mc, "r07_vesuvio_dal_castello");

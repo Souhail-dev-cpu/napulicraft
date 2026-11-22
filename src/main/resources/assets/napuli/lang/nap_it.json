@@ -544,5 +544,15 @@
   "napuli.hud.obj.mine_iron": "Scava 4 minerali 'e fierro",
   "napuli.hud.obj.mine_copper": "Scava 4 minerali 'e ramme",
   "napuli.hud.obj.survey_castle": "Visita Castel Nuovo",
-  "napuli.hud.obj.survey_pier": "Va' 'o Beverello"
+  "napuli.hud.obj.survey_pier": "Va' 'o Beverello",
+  "napuli.horror.bargain": "Aggio visto 'o curniciello. Te torno %s.",
+  "napuli.horror.stalk": "Siente 'e passe? Quaccuno te sta appriesso.",
+  "napuli.horror.dropped": "'O Munaciello ha lassato %s. Cerca addó fernesceno 'e scie.",
+  "napuli.horror.giant_windup": "'O Gigante t'ha visto. Votta 'ncopp' a 'na luce!",
+  "napuli.horror.giant_lost": "'O Gigante t'ha perzo 'e vista.",
+  "napuli.horror.crypt_warning": "Dint'â cripta s'è stutata 'a luce. Siente comme suspira.",
+  "napuli.horror.anima_offer": "Tiene 'na cannela? Appicciala pe' chesta anima.",
+  "napuli.horror.answer_anima": "L'anema mo riposa. 'A paura se ne va.",
+  "napuli.horror.answer_partenope": "Partenope t'ha dato sciato sott'acqua.",
+  "napuli.horror.answer_mbriana": "'A bella 'Mbriana t'allumma 'a via."
 }

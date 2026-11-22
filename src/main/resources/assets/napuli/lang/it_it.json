@@ -330,5 +330,15 @@
   "napuli.hud.obj.mine_iron": "Estrai 4 minerali di ferro",
   "napuli.hud.obj.mine_copper": "Estrai 4 minerali di rame",
   "napuli.hud.obj.survey_castle": "Visita Castel Nuovo",
-  "napuli.hud.obj.survey_pier": "Vai al Molo Beverello"
+  "napuli.hud.obj.survey_pier": "Vai al Molo Beverello",
+  "napuli.horror.bargain": "Ho visto il cornicello. Ti restituisco %s.",
+  "napuli.horror.stalk": "Senti i passi? Qualcuno ti sta seguendo.",
+  "napuli.horror.dropped": "Il Munaciello ha lasciato %s. Cerca dove finisce la scia.",
+  "napuli.horror.giant_windup": "Il Gigante ti ha visto. Corri verso una luce!",
+  "napuli.horror.giant_lost": "Il Gigante ti ha perso di vista.",
+  "napuli.horror.crypt_warning": "La luce nella cripta si è spenta. Senti quel sospiro?",
+  "napuli.horror.anima_offer": "Offri una candela a quest'anima.",
+  "napuli.horror.answer_anima": "L'anima riposa. La paura svanisce.",
+  "napuli.horror.answer_partenope": "Partenope ti ha dato il respiro sott'acqua.",
+  "napuli.horror.answer_mbriana": "La Bella 'Mbriana ti illumina la via."
 }

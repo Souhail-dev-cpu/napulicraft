@@ -143,23 +143,44 @@ final class CityTest {
                 press(mc, "space");
                 server(mc, player -> view(player, -52.5, 58, -27, 180, 0));
             }
-            case 280 -> server(mc, player -> {
+            case 294 -> server(mc, player -> {
                 assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS), "crypt triggers darkness");
                 assertTrue(hasGhost(player, NapoliResident.Role.ANIMA), "wandering soul spawned");
             });
-            case 290 -> AutoTest.shot(mc, "napoli_v2_06_anema_pezzentella");
+            case 297 -> AutoTest.shot(mc, "napoli_v2_06_anema_pezzentella");
+            case 298 -> server(mc, player -> {
+                var ghost = player.level().getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(20))
+                        .stream().filter(npc -> npc.role() == NapoliResident.Role.ANIMA).findFirst();
+                ghost.ifPresent(npc -> {
+                    var previous = player.getMainHandItem();
+                    player.setItemInHand(InteractionHand.MAIN_HAND,
+                            new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE));
+                    npc.interact(player, InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO);
+                    assertTrue(npc.isRemoved() && !player.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS),
+                            "candle at the crypt puts the soul to rest");
+                    player.setItemInHand(InteractionHand.MAIN_HAND, previous);
+                });
+            });
             case 300 -> {
                 mc.player.connection.sendCommand("time set midnight");
                 server(mc, player -> view(player, 2.5, 64, 53, 0, 0));
             }
             case 327 -> server(mc, player -> assertTrue(hasGhost(player, NapoliResident.Role.PARTENOPE), "Partenope spawned"));
             case 330 -> AutoTest.shot(mc, "napoli_v2_07_partenope");
-            case 336 -> server(mc, player -> view(player, 33.5, 64, -8, -90, 0));
+            case 331 -> server(mc, player -> {
+                interactWithGhost(player, NapoliResident.Role.PARTENOPE);
+                assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING), "Partenope grants water breathing");
+            });
+            case 336 -> server(mc, player -> view(player, 116.5, 64, -43.5, -90, 0));
             case 365 -> server(mc, player -> {
                 assertTrue(hasGhost(player, NapoliResident.Role.MBRIANA), "Bella 'Mbriana spawned");
                 assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.REGENERATION), "guardian heals");
             });
             case 370 -> AutoTest.shot(mc, "napoli_v2_08_mbriana");
+            case 371 -> server(mc, player -> {
+                interactWithGhost(player, NapoliResident.Role.MBRIANA);
+                assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.NIGHT_VISION), "Bella 'Mbriana grants night vision");
+            });
             case 372 -> {
                 mc.player.connection.sendCommand("time set noon");
                 server(mc, player -> view(player, 36.5, 64, -6.5, 108, 9));
@@ -274,6 +295,12 @@ final class CityTest {
     private static boolean hasGhost(ServerPlayer p, NapoliResident.Role role) {
         return p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(20)).stream()
                 .anyMatch(npc -> npc.role() == role);
+    }
+
+    private static void interactWithGhost(ServerPlayer player, NapoliResident.Role role) {
+        player.level().getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(20)).stream()
+                .filter(npc -> npc.role() == role).findFirst()
+                .ifPresent(npc -> npc.interact(player, InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO));
     }
 
     private static void talk(ServerPlayer p, NapoliResident.Role role) {

@@ -1,6 +1,7 @@
 package dev.napuli;
 
 import java.util.Set;
+import dev.napuli.GiorgiaMeloni.Payment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.client.Minecraft;
@@ -29,7 +30,8 @@ public final class TaxVisitTest {
     private static volatile boolean captured, finished;
     private static NapoliResident collector;
     private static String paidToken;
-    private static long due;
+    private static long due, approachDeadline;
+    private static int approachCash, approachBlocks;
 
     private TaxVisitTest() {}
 
@@ -75,6 +77,12 @@ public final class TaxVisitTest {
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
     }
 
+    private static void nextVisit(ServerPlayer player) {
+        Minecraft.getInstance().execute(() -> Minecraft.getInstance().gui.setScreen(null));
+        check(GiorgiaMeloni.summon(player) == 1, "Cannot summon next visit");
+        player.getAttached(GiorgiaMeloni.COLLECTOR).relocate(player.blockPosition().offset(0, 0, 2), 180);
+    }
+
     private static void serverTick(MinecraftServer server) {
         if (finished || server.getPlayerList().getPlayers().isEmpty()) return;
         ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
@@ -98,6 +106,7 @@ public final class TaxVisitTest {
                     p.getInventory().setItem(3, new ItemStack(Napuli.CIABATTA_ITEM, 16));
                     p.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
                     p.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.DIAMOND_PICKAXE));
+                    NapoliStreet.credit(p, 100 - NapoliStreet.cash(p));
                     due = server.overworld().getOverworldClockTime() + GiorgiaMeloni.INTERVAL;
                     p.setAttached(GiorgiaMeloni.NEXT_VISIT, due);
                     run(server, "time add 71999");
@@ -122,6 +131,9 @@ public final class TaxVisitTest {
                 case 3 -> {
                     if (!p.hasAttached(GiorgiaMeloni.SESSION)) { check(elapsed < 900, "Collector never reached player"); return; }
                     check(p.distanceToSqr(collector) <= 36, "Dialog opened too far away");
+                    check(!p.hasAttached(GiorgiaMeloni.APPROACH_DEADLINE), "Approach timer remained after arrival");
+                    check(net.minecraft.network.chat.Component.translatable("napuli.tax.cash", 30).getString()
+                            .equals("Pagamento partita iva (30 €)"), "Wrong cash payment label");
                     float yaw = (float) Math.toDegrees(Math.atan2(-(collector.getX() - p.getX()), collector.getZ() - p.getZ()));
                     p.teleportTo(p.level(), p.getX(), p.getY(), p.getZ(), Set.of(), yaw, 0, true);
                     capture = 1;
@@ -132,8 +144,8 @@ public final class TaxVisitTest {
                     if (!captured || elapsed < 40) return;
                     var session = p.getAttached(GiorgiaMeloni.SESSION);
                     paidToken = session.token();
-                    check(GiorgiaMeloni.answer(p, "00000000-0000-0000-0000-000000000000", true) == 0, "Forged token accepted");
-                    check(GiorgiaMeloni.answer(p, paidToken, true) == 1, "Payment rejected");
+                    check(GiorgiaMeloni.answer(p, "00000000-0000-0000-0000-000000000000", Payment.ITEMS) == 0, "Forged token accepted");
+                    check(GiorgiaMeloni.answer(p, paidToken, Payment.ITEMS) == 1, "Payment rejected");
                     check(p.getInventory().getItem(0).getCount() == 49, "Tax was not exactly fifteen blocks");
                     check(p.getInventory().getItem(1).getCount() == 20, "Diamonds taken before blocks");
                     check(p.getInventory().getItem(2).is(Napuli.KNIFE), "Knife taxed");
@@ -141,45 +153,151 @@ public final class TaxVisitTest {
                     check(p.getItemBySlot(EquipmentSlot.HEAD).is(Items.DIAMOND_HELMET), "Armor taxed");
                     check(p.getItemBySlot(EquipmentSlot.OFFHAND).is(Items.DIAMOND_PICKAXE), "Tool taxed");
                     check(p.getAttached(GiorgiaMeloni.NEXT_VISIT) == server.overworld().getOverworldClockTime() + 72000, "Next visit not scheduled");
-                    check(GiorgiaMeloni.answer(p, paidToken, true) == 0, "Replayed payment accepted");
+                    check(GiorgiaMeloni.answer(p, paidToken, Payment.ITEMS) == 0, "Replayed payment accepted");
                     check(p.getInventory().getItem(0).getCount() == 49, "Duplicate tax collected");
+                    check(NapoliStreet.cash(p) == 100, "Item payment also charged money");
                     Napuli.LOGGER.info("[TAXTEST] Approach, dialog, payment cap, protected equipment and token replay passed");
-                    Minecraft.getInstance().execute(() -> Minecraft.getInstance().gui.setScreen(null));
-                    check(GiorgiaMeloni.summon(p) == 1, "Cannot summon second visit");
-                    p.getAttached(GiorgiaMeloni.COLLECTOR).relocate(p.blockPosition().offset(0, 0, 2), 180);
+                    nextVisit(p);
                     next(5);
                 }
                 case 5 -> {
                     var session = p.getAttached(GiorgiaMeloni.SESSION);
+                    if (session == null) { check(elapsed < 100, "Cash dialog not opened"); return; }
+                    check(session.cashTax() == 30, "Wrong cash quote for 100 euros");
+                    NapoliStreet.credit(p, 1);
+                    check(GiorgiaMeloni.answer(p, session.token(), Payment.CASH) == 0, "Changed balance charged without confirmation");
+                    check(NapoliStreet.cash(p) == 101, "Requote withdrew money");
+                    session = p.getAttached(GiorgiaMeloni.SESSION);
+                    check(session.cashTax() == 31, "Updated quote did not round up");
+                    String cashToken = session.token();
+                    server.getCommands().performPrefixedCommand(p.createCommandSourceStack(), "napulitassa " + cashToken + " soldi");
+                    check(NapoliStreet.cash(p) == 70, "Cash payment did not subtract 31 euros from 101");
+                    check(p.getInventory().getItem(0).getCount() == 49 && p.getInventory().getItem(1).getCount() == 20,
+                            "Cash payment also took inventory items");
+                    check(GiorgiaMeloni.answer(p, cashToken, Payment.CASH) == 0 && NapoliStreet.cash(p) == 70,
+                            "Replayed cash payment accepted");
+                    check(p.getAttached(GiorgiaMeloni.NEXT_VISIT) == server.overworld().getOverworldClockTime() + 72000,
+                            "Cash payment did not schedule next visit");
+                    Napuli.LOGGER.info("[TAXTEST] Cash command passed: 100 -> quote 30, changed balance 101 -> quote 31 -> remaining 70, no items taken");
+                    NapoliStreet.credit(p, -NapoliStreet.cash(p));
+                    nextVisit(p);
+                    next(6);
+                }
+                case 6 -> {
+                    var session = p.getAttached(GiorgiaMeloni.SESSION);
+                    if (session == null) { check(elapsed < 100, "Zero-balance dialog not opened"); return; }
+                    check(GiorgiaMeloni.answer(p, session.token(), Payment.CASH) == 0, "Zero money bypassed item tax");
+                    check(p.getInventory().getItem(0).getCount() == 49 && NapoliStreet.cash(p) == 0, "Zero-balance attempt charged payment");
+                    p.getInventory().setItem(0, ItemStack.EMPTY);
+                    p.getInventory().setItem(1, ItemStack.EMPTY);
+                    NapoliStreet.credit(p, 7);
+                    GiorgiaMeloni.open(p, p.getAttached(GiorgiaMeloni.COLLECTOR));
+                    session = p.getAttached(GiorgiaMeloni.SESSION);
+                    check(GiorgiaMeloni.answer(p, session.token(), Payment.ITEMS) == 0 && NapoliStreet.cash(p) == 7,
+                            "Missing materials bypassed cash tax");
+                    NapoliStreet.credit(p, -7);
+                    GiorgiaMeloni.open(p, p.getAttached(GiorgiaMeloni.COLLECTOR));
+                    session = p.getAttached(GiorgiaMeloni.SESSION);
+                    check(GiorgiaMeloni.answer(p, session.token(), Payment.ITEMS) == 1 && !Carabinieri.isJailed(p),
+                            "No materials and no money did not grant exemption");
+                    Napuli.LOGGER.info("[TAXTEST] Zero balance, unavailable payment methods and genuine exemption passed");
+                    p.getInventory().setItem(0, new ItemStack(Items.DIRT, 49));
+                    p.getInventory().setItem(1, new ItemStack(Items.DIAMOND, 20));
+                    NapoliStreet.credit(p, 100);
+                    nextVisit(p);
+                    next(7);
+                }
+                case 7 -> {
+                    var session = p.getAttached(GiorgiaMeloni.SESSION);
                     if (session == null) { check(elapsed < 100, "Refusal dialog not opened"); return; }
-                    check(GiorgiaMeloni.answer(p, session.token(), false) == 1, "Refusal rejected");
+                    check(GiorgiaMeloni.answer(p, session.token(), Payment.REFUSE) == 1, "Refusal rejected");
                     check(Carabinieri.isJailed(p), "Refusal did not cause prison");
                     check(p.gameMode() == GameType.ADVENTURE && p.level().dimension() == NapoliMap.LEVEL, "Wrong prison state");
                     check(p.getInventory().getItem(2).is(Napuli.KNIFE), "Tax imprisonment confiscated weapon");
                     check(p.getInventory().getItem(0).getCount() == 49, "Refusal charged materials");
+                    check(NapoliStreet.cash(p) == 100, "Refusal charged money");
                     p.teleportTo(server.overworld(), 0.5, 100, 0.5, Set.of(), 0, 0, true);
                     Minecraft.getInstance().execute(() -> Minecraft.getInstance().gui.setScreen(null));
-                    next(6);
+                    next(8);
                 }
-                case 6 -> {
+                case 8 -> {
                     if (elapsed < 40) return;
                     check(p.level().dimension() == NapoliMap.LEVEL && Carabinieri.isJailed(p), "Dimension escape bypassed prison");
                     capture = 2;
                     captured = false;
-                    next(7);
+                    next(9);
                 }
-                case 7 -> {
+                case 9 -> {
                     if (!captured || elapsed < 40) return;
                     run(server, "tick rate 200");
-                    next(8);
+                    next(10);
                 }
-                case 8 -> {
+                case 10 -> {
                     if (Carabinieri.isJailed(p)) { check(elapsed < 1900, "Prison sentence did not expire"); return; }
                     check(p.gameMode() == GameType.SURVIVAL, "Original game mode not restored");
                     check(p.getInventory().getItem(2).is(Napuli.KNIFE), "Equipment lost on release");
                     check(p.blockPosition().distSqr(NapoliDistrict.PRISON_GATE) < 9, "Not released at prison gate");
                     run(server, "tick rate 20");
-                    Napuli.LOGGER.info("[TAXTEST] ALL PASSED: refusal, prison, escape prevention and automatic release");
+                    Napuli.LOGGER.info("[TAXTEST] Refusal, prison, escape prevention and automatic release passed");
+                    p.teleportTo(server.overworld(), 0.5, 100, 0.5, Set.of(), 0, 0, true);
+                    approachCash = NapoliStreet.cash(p);
+                    approachBlocks = p.getInventory().getItem(0).getCount();
+                    // An enclosed player must not prevent a safe collector spawn or evade the deadline.
+                    for (BlockPos pos : BlockPos.betweenClosed(-2, 100, -2, 2, 104, 2))
+                        if (Math.abs(pos.getX()) == 2 || Math.abs(pos.getZ()) == 2)
+                            server.overworld().setBlock(pos, Blocks.GLASS.defaultBlockState(), 2);
+                    check(GiorgiaMeloni.summon(p) == 1, "Barricade prevented collector spawn");
+                    collector = p.getAttached(GiorgiaMeloni.COLLECTOR);
+                    var path = collector.getNavigation().createPath(p, 0);
+                    check(path == null || !path.canReach(), "Barricade did not block the approach");
+                    collector.setNoAi(true);
+                    collector.getNavigation().stop();
+                    approachDeadline = p.getAttached(GiorgiaMeloni.APPROACH_DEADLINE);
+                    check(approachDeadline - server.overworld().getGameTime() == 2400, "Approach limit is not two minutes");
+                    run(server, "time add 24000");
+                    check(p.getAttached(GiorgiaMeloni.APPROACH_DEADLINE) == approachDeadline, "Day-clock jump changed deadline");
+                    run(server, "tick rate 200");
+                    next(11);
+                }
+                case 11 -> {
+                    check(!Carabinieri.isJailed(p), "Approach timeout arrested too early");
+                    if (elapsed < 1000) return;
+                    collector.discard();
+                    next(12);
+                }
+                case 12 -> {
+                    NapoliResident replacement = p.getAttached(GiorgiaMeloni.COLLECTOR);
+                    if (replacement == null || replacement == collector || !replacement.isAlive()) {
+                        check(elapsed < 200, "Lost collector was not replaced");
+                        return;
+                    }
+                    collector = replacement;
+                    collector.setNoAi(true);
+                    collector.getNavigation().stop();
+                    check(p.getAttached(GiorgiaMeloni.APPROACH_DEADLINE) == approachDeadline, "Collector respawn reset the deadline");
+                    Napuli.LOGGER.info("[TAXTEST] Blocked approach: safe spawn, two-minute deadline, day-clock independence and respawn continuity passed");
+                    next(13);
+                }
+                case 13 -> {
+                    long gameTime = server.overworld().getGameTime();
+                    if (!Carabinieri.isJailed(p)) {
+                        check(gameTime <= approachDeadline + 20, "No arrest after two minutes");
+                        return;
+                    }
+                    check(gameTime >= approachDeadline, "Arrest before the two-minute deadline");
+                    check(collector.isRemoved(), "Collector did not disappear on timeout");
+                    check(!p.hasAttached(GiorgiaMeloni.COLLECTOR) && !p.hasAttached(GiorgiaMeloni.SESSION)
+                            && !p.hasAttached(GiorgiaMeloni.APPROACH_DEADLINE), "Timeout did not clear visit state");
+                    check(p.level().dimension() == NapoliMap.LEVEL && p.gameMode() == GameType.ADVENTURE,
+                            "Timeout did not send player to prison");
+                    check(p.getInventory().getItem(0).getCount() == approachBlocks && NapoliStreet.cash(p) == approachCash,
+                            "Timeout changed inventory/cash: " + approachBlocks + "/" + approachCash + " -> "
+                                    + p.getInventory().getItem(0).getCount() + "/" + NapoliStreet.cash(p));
+                    check(p.getAttached(GiorgiaMeloni.NEXT_VISIT) == server.overworld().getOverworldClockTime() + 72000,
+                            "Timeout did not schedule next visit");
+                    check(Carabinieri.release(p) && p.gameMode() == GameType.SURVIVAL, "Cannot release timed-out player");
+                    run(server, "tick rate 20");
+                    Napuli.LOGGER.info("[TAXTEST] ALL PASSED: payments, partita iva label, refusal, approach timeout, prison and release");
                     finished = true;
                 }
                 default -> throw new AssertionError("Unexpected phase");

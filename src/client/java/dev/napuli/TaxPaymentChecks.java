@@ -10,6 +10,10 @@ final class TaxPaymentChecks {
     private TaxPaymentChecks() {}
 
     static void run() {
+        int[][] cashCases = {{0, 0}, {1, 1}, {3, 1}, {4, 2}, {10, 3}, {100, 30}, {101, 31},
+                {99999, 30000}, {Integer.MAX_VALUE, 644245095}, {-1, 0}};
+        for (int[] cashCase : cashCases)
+            check(TaxPayment.cashAmount(cashCase[0]) == cashCase[1], "Wrong 30% cash levy for " + cashCase[0]);
         for (var item : List.of(Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.DIAMOND_PICKAXE,
                 Items.DIAMOND_SHOVEL, Items.DIAMOND_HOE, Items.BOW, Items.CROSSBOW, Items.TRIDENT,
                 Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS,
@@ -42,7 +46,7 @@ final class TaxPaymentChecks {
         check(TaxPayment.collect(List.of(ore, ItemStack.EMPTY, bread)) == 5, "Small payment failed");
         check(ore.isEmpty() && bread.isEmpty(), "Small payment not collected");
         check(TaxPayment.collect(List.of(ItemStack.EMPTY)) == 0, "Empty inventory charged");
-        Napuli.LOGGER.info("[TAXTEST] Payment checks passed: equipment, custom weapons, containers, cap, blocks, ores, food, empty inventory");
+        Napuli.LOGGER.info("[TAXTEST] Payment checks passed: 30% cash, rounding, equipment, containers, item cap, empty inventory");
     }
 
     private static void check(boolean condition, String message) {

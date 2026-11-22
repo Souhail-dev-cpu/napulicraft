@@ -11,11 +11,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
-/** The levy is at most fifteen individual materials, never equipment or its contents. */
+/** Alternative levies: at most fifteen materials, or thirty percent of the player's cash. */
 final class TaxPayment {
     static final int MAX_ITEMS = 15;
 
     private TaxPayment() {}
+
+    /** The wallet uses whole euros: round up, without charging more than a positive balance. */
+    static int cashAmount(int balance) {
+        return balance <= 0 ? 0 : (int) ((balance * 3L + 9) / 10);
+    }
 
     static boolean taxable(ItemStack stack) {
         if (stack.isEmpty() || stack.isDamageableItem() || stack.getItem() instanceof CiabattaItem) return false;

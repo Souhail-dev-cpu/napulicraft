@@ -48,10 +48,17 @@ Choices are saved in `.minecraft/config/napulicraft-canzoni.json`. You can also 
 A fictional Giorgia Meloni NPC, with blonde hair, a black suit and a white shirt, visits each Survival/Adventure
 player every **3 Minecraft days** (72,000 day-clock ticks, including nights skipped by sleeping).
 She appears about **50 blocks away**, finds a safe walking route and approaches you with a **weekly tax** dialog.
+If she cannot reach you within **2 minutes** (2,400 server ticks), she disappears and sends you to prison for tax
+evasion. A barricade does not prevent her visit: she can appear safely outside it while attempting to reach you.
+The approach deadline survives a collector respawn, logout, death or dimension change. Reaching you and opening
+the dialog cancels it; skipped nights and changes to the day clock do not shorten these two minutes.
 
-- **Pay:** up to **15 individual items in total**, preferring building blocks, then ores and other materials/consumables.
+- **Pay with items:** up to **15 individual items in total**, preferring building blocks, then ores and other materials/consumables.
   Weapons, armor, tools, equipment and portable containers are protected, including the mod's weapons and ciabatta.
-- **No taxable materials:** confirm the exemption; there is no penalty for having nothing eligible to pay with.
+- **Pagamento partita iva:** pay **30% of your current wallet balance**, rounded up to whole euros (100 € → 30 €;
+  101 € → 31 €). This option leaves your inventory intact. The dialog shows the amount before you confirm;
+  if your balance changes enough to change the tax, you must review the new amount before paying.
+- **No taxable materials and no money:** confirm the exemption. If only one payment method is available, use that one.
 - **Refuse:** **90 seconds in the Napoli prison for tax evasion**, in Adventure mode. Your equipment stays with you;
   your previous game mode is restored when the sentence ends.
 
@@ -61,7 +68,8 @@ dimensions does not escape a sentence. Creative and Spectator players are exempt
 
 Operators can use **`/napuli meloni`** to trigger a visit immediately while in Survival/Adventure mode.
 The opt-in integration test **`./gradlew runTaxtest`** creates a disposable world, checks the schedule, approach,
-inventory protection, payment limit, refusal and release, saves screenshots in `run-autotest/screenshots`, and exits.
+inventory protection, both payment methods, rounding, zero balance, approach timeout, refusal and release,
+saves screenshots in `run-autotest/screenshots`, and exits.
 
 ## Building
 

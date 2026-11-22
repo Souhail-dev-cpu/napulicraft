@@ -46,7 +46,7 @@ public final class NapoliStreet {
     private record Spot(NapoliResident.Role role, BlockPos pos, float yaw) {}
     private record Session(NapoliResident npc, String token, long expires, List<Action> allowed) {}
     private record Offer(ItemStack stack, int cost) {}
-    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE }
+    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE, HELMET, SCOOTER, MINE_JOB, SURVEY_JOB }
 
     private static final List<Spot> SPOTS = List.of(
         new Spot(NapoliResident.Role.PEPPE_FETISH, PeppeFetish.STALL, 0),
@@ -70,6 +70,15 @@ public final class NapoliStreet {
     private static final List<Spot> ALL_SPOTS = new java.util.ArrayList<>(SPOTS);
     static {
         for (Object[] o : NapoliCentro.SPOTS) ALL_SPOTS.add(new Spot((NapoliResident.Role) o[0], (BlockPos) o[1], (Float) o[2]));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.MOTOR_DEALER, NapoliMunicipio.GARAGE, 0));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.ARMORER, NapoliMunicipio.ARMORY, 180));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.CARABINIERE, new BlockPos(208, 64, 7), 180));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.CARABINIERE, new BlockPos(216, 64, 40), 0));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.CARABINIERE, new BlockPos(245, 64, 72), 90));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.PORTER, new BlockPos(236, 64, 70), 180));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.PASSERBY, new BlockPos(202, 64, 0), 90));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.PASSERBY, new BlockPos(213, 64, 27), 0));
+        ALL_SPOTS.add(new Spot(NapoliResident.Role.PASSERBY, new BlockPos(270, 64, -26), 90));
     }
 
     private static <T> AttachmentType<T> saved(String id, Codec<T> codec) {
@@ -78,6 +87,16 @@ public final class NapoliStreet {
 
     static void register() {
         NapoliFactions.register();
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+            if (level.dimension() == NapoliMap.LEVEL && player instanceof ServerPlayer serverPlayer && !player.isCreative())
+                NapoliFactions.mine(serverPlayer, pos, state.getBlock());
+        });
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTickCount() % 2400 != 0) return;
+            var city = server.getLevel(NapoliMap.LEVEL);
+            if (city != null && city.players().stream().anyMatch(player -> player.blockPosition().distSqr(NapoliMunicipio.MINE) < 64 * 64))
+                NapoliMunicipio.refill(city);
+        });
         ServerLivingEntityEvents.AFTER_DAMAGE.register((victim, source, base, dealt, blocked) -> {
             if (dealt <= 0 || !(victim instanceof ServerPlayer player) || player.level().dimension() != NapoliMap.LEVEL
                     || !(source.getEntity() instanceof NapoliResident rival) || !rival.role().fighter()) return;
@@ -124,6 +143,7 @@ public final class NapoliStreet {
         if (stored > 0 && level.getServer().getTickCount() % (20 * 60) == 0) player.setAttached(FULLNESS, stored - 1);
         applyWeight(player);
         NapoliFactions.recognize(player);
+        NapoliFactions.explore(player);
         for (var ally : level.getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(35),
                 npc -> npc.getAttachedOrElse(ALLY_LIFE, Long.MAX_VALUE) <= now)) ally.discard();
         for (Spot spot : ALL_SPOTS) {
@@ -230,15 +250,17 @@ public final class NapoliStreet {
             case VENDOR -> NapoliFactions.onErrand(player, false)
                     ? List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY, Action.COLLECT)
                     : List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY);
+            case MOTOR_DEALER -> List.of(Action.HELMET, Action.SCOOTER);
+            case ARMORER -> List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON);
             case TAILOR -> {
-                var gear = new java.util.ArrayList<>(List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON, Action.COAT, Action.CHARM));
+                var gear = new java.util.ArrayList<>(List.of(Action.COAT, Action.CHARM));
                 if (NapoliFactions.onErrand(player, true)) gear.add(Action.TAKE_LEDGER);
                 yield gear;
             }
             case PORTER -> List.of(Action.TURN_IN);
             case BUSKER -> List.of(Action.LEFT, Action.MIDDLE, Action.RIGHT);
             case ADA, SALVATORE -> {
-                var jobs = new java.util.ArrayList<>(List.of(Action.HELP_SUPPLY, Action.HELP_CLASH, Action.REPORT, Action.ABANDON));
+                var jobs = new java.util.ArrayList<>(List.of(Action.HELP_SUPPLY, Action.HELP_CLASH, Action.MINE_JOB, Action.SURVEY_JOB, Action.REPORT, Action.ABANDON));
                 int rank = NapoliFactions.reputation(player, NapoliFactions.Side.of(npc.role()));
                 if (rank >= NapoliFactions.LEVY_REPUTATION) jobs.add(Action.LEVY);
                 if (rank >= NapoliFactions.CACHE_REPUTATION) jobs.add(Action.CACHE);
@@ -298,6 +320,8 @@ public final class NapoliStreet {
             case KNIFE -> new Offer(new ItemStack(Napuli.KNIFE), 15);
             case PISTOL -> new Offer(new ItemStack(Napuli.PISTOL), 24);
             case BATON -> new Offer(new ItemStack(Napuli.BATON), 16);
+            case HELMET -> new Offer(new ItemStack(Napuli.CASCO), 12);
+            case SCOOTER -> new Offer(new ItemStack(Napuli.MOTORINO_ITEM), 42);
             case COAT -> new Offer(new ItemStack(Items.LEATHER_CHESTPLATE), 11);
             case CHARM -> new Offer(new ItemStack(Napuli.CORNICELLO), 18);
             default -> null;
@@ -323,6 +347,8 @@ public final class NapoliStreet {
         }
         var side = NapoliFactions.Side.of(session.npc().role());
         switch (action) {
+            case MINE_JOB -> { return NapoliFactions.districtJob(player, side, true); }
+            case SURVEY_JOB -> { return NapoliFactions.districtJob(player, side, false); }
             case HELP_SUPPLY -> { return NapoliFactions.accept(player, side, false); }
             case HELP_CLASH -> { return NapoliFactions.accept(player, side, true); }
             case CONTACT -> { return NapoliFactions.handoff(player, side); }

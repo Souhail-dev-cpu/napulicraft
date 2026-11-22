@@ -315,5 +315,20 @@
 	"napuli.people.pizzaiolo.3": "Margherita, like the queen. Basil, mozzarella and tomato.",
 	"napuli.people.pizzaiolo.sold": "Here you go, a steaming margherita. Careful, it's hot!",
 	"napuli.people.broke": "No money, no party.",
-	"napuli.people.buy_hint": "Sneak and click to buy (%s €)"
+	"napuli.people.buy_hint": "Sneak and click to buy (%s €)",
+  "napuli.radio.skip_hint": "Double-click a station for its next track",
+  "napuli.resident.motor_dealer": "Peppe the mechanic",
+  "napuli.resident.armorer": "Mimmo the armorer",
+  "napuli.street.motor_dealer": "Buy a helmet or a scooter here.",
+  "napuli.street.armorer": "Pick up equipment for in-game encounters here.",
+  "napuli.street.mine_job": "Take the mining job",
+  "napuli.street.survey_job": "Survey the Municipio district",
+  "napuli.factions.mine_iron": "Mine four iron ore blocks in the gallery (272, 64, -29), then report to Ada.",
+  "napuli.factions.mine_copper": "Mine four copper ore blocks in the gallery (272, 64, -29), then report to Salvatore.",
+  "napuli.factions.survey": "Head to Municipio. The journal shows the survey location.",
+  "napuli.factions.ore_progress": "Ore mined: %1$s/%2$s",
+  "napuli.hud.obj.mine_iron": "Mine 4 iron ore blocks",
+  "napuli.hud.obj.mine_copper": "Mine 4 copper ore blocks",
+  "napuli.hud.obj.survey_castle": "Visit Castel Nuovo",
+  "napuli.hud.obj.survey_pier": "Visit Molo Beverello"
 }

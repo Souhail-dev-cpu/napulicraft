@@ -15,6 +15,8 @@ import net.minecraft.network.chat.Component;
 final class RadioWheelScreen extends Screen {
 	private int hovered = -2; // -2 nothing, -1 = off, 0.. = station
 	private int mouseX, mouseY;
+	private int clicked = -2;
+	private long lastClick;
 
 	RadioWheelScreen() { super(Component.translatable("napuli.radio.wheel")); RadioClient.reload(); }
 
@@ -75,6 +77,7 @@ final class RadioWheelScreen extends Screen {
 		g.centeredText(font, name, width / 2, height / 2 - 10, 0xFFFFFFFF);
 		g.centeredText(font, line, width / 2, height / 2 + 4, 0xFFBBBBBB);
 		g.centeredText(font, Component.translatable("napuli.radio.wheel"), width / 2, 8, 0xFFFFD54F);
+		g.centeredText(font, Component.translatable("napuli.radio.skip_hint"), width / 2, height - 14, 0xFFEEEEEE);
 	}
 
 	private static int darker(int c) {
@@ -98,14 +101,24 @@ final class RadioWheelScreen extends Screen {
 
 	@Override
 	public boolean keyReleased(KeyEvent event) {
-		if (RadioClient.KEY.matches(event)) { choose(); return true; }
+		if (RadioClient.KEY.matches(event)) { if (clicked == -2) choose(); else onClose(); return true; }
 		return super.keyReleased(event);
 	}
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		mouseX = (int) event.x(); mouseY = (int) event.y();
-		choose();
+		if (event.button() != 0) return false;
+		int station = pick(event.x(), event.y());
+		if (station == -2) return false;
+		long now = System.nanoTime();
+		if (station >= 0 && station == clicked && now - lastClick <= 450_000_000L) {
+			RadioClient.requestSkip(station);
+			lastClick = 0;
+		} else {
+			lastClick = now;
+			if (station != RadioClient.currentStation()) RadioClient.tune(station);
+		}
+		clicked = station;
 		return true;
 	}
 }

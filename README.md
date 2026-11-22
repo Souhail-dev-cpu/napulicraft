@@ -45,6 +45,17 @@ Choices are saved in `.minecraft/config/napulicraft-canzoni.json`. You can also 
 
 ## Building
 
+Every push to GitHub (on any branch or tag) runs the **Build and publish beta** workflow:
+it builds the mod with Java 25 and publishes the installable JAR in a new
+[GitHub pre-release](https://github.com/Souhail-dev-cpu/napulicraft/releases).
+The beta version includes the workflow run number and attempt, for example
+`1.1.0-beta.42.1`, in the JAR filename, mod metadata, and release tag (`v1.1.0-beta.42.1`).
+Re-running a workflow creates a new beta, and a failed build does not publish a release.
+The workflow can also be started manually from **Actions → Build and publish beta → Run workflow**.
+It uses the automatic `GITHUB_TOKEN`; no extra secrets or manually created tags are needed.
+
+To build locally:
+
 ```
 ./gradlew build        # jar in build/libs
 ./gradlew runClient    # dev client

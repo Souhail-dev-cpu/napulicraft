@@ -6,6 +6,18 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+		motorinotest {
+			client()
+			name "Napuli multiplayer scooter test"
+			vmArg "-Dnapuli.motorinotest=true"
+			runDir "run-autotest"
+		}
+		peppetest {
+			client()
+			name "Napuli socks merchant test"
+			vmArg "-Dnapuli.peppetest=true"
+			runDir "run-autotest"
+		}
 		taxtest {
 			client()
 			name "Napuli tax visit test"
@@ -72,6 +84,17 @@ dependencies {
 	include(implementation("javazoom:jlayer:1.0.1"))
 }
 
+// A disposable headless server checks the same code used by dedicated multiplayer servers.
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = 'napuli-test'
+		enableGameTests = true
+		enableClientGameTests = false
+		eula = true
+	}
+}
+
 processResources {
 	def version = project.version
 	inputs.property "version", version
@@ -94,6 +117,25 @@ tasks.named('runTaxtest') {
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[TAXTEST] ALL PASSED')) {
 			throw new GradleException('Tax integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
+
+def peppeTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runPeppetest') {
+	doLast {
+		if (!peppeTestLog.asFile.exists() || !peppeTestLog.asFile.text.contains('[PEPPETEST] ALL PASSED')) {
+			throw new GradleException('Socks merchant integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
+
+def motorinoTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runMotorinotest') {
+	doLast {
+		def log = motorinoTestLog.asFile
+		if (!log.exists() || !log.text.contains('[MOTORINOTEST] ALL PASSED')) {
+			throw new GradleException('Multiplayer scooter client test failed; see run-autotest/logs/latest.log')
 		}
 	}
 }

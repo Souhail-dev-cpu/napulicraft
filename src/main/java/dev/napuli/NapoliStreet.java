@@ -46,9 +46,10 @@ public final class NapoliStreet {
     private record Spot(NapoliResident.Role role, BlockPos pos, float yaw) {}
     private record Session(NapoliResident npc, String token, long expires, List<Action> allowed) {}
     private record Offer(ItemStack stack, int cost) {}
-    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON }
+    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE }
 
     private static final List<Spot> SPOTS = List.of(
+        new Spot(NapoliResident.Role.PEPPE_FETISH, PeppeFetish.STALL, 0),
         new Spot(NapoliResident.Role.VENDOR, NapoliDistrict.PUTECA, 0),        // his own shop in the Galleria
         new Spot(NapoliResident.Role.TAILOR, NapoliDistrict.SARTORIA, 0),
         new Spot(NapoliResident.Role.BUSKER, NapoliDistrict.BUSKER_SPOT, 180),
@@ -225,6 +226,7 @@ public final class NapoliStreet {
     static void open(ServerPlayer player, NapoliResident npc) {
         if (player.level().dimension() != NapoliMap.LEVEL || !npc.role().street()) return;
         List<Action> options = switch (npc.role()) {
+            case PEPPE_FETISH -> List.of(Action.SOCKS, Action.CHEESE);
             case VENDOR -> NapoliFactions.onErrand(player, false)
                     ? List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY, Action.COLLECT)
                     : List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY);
@@ -258,7 +260,8 @@ public final class NapoliStreet {
         var body = new java.util.ArrayList<>(List.<net.minecraft.server.dialog.body.DialogBody>of(
             new PlainMessage(Component.translatable("napuli.street." + npc.role().id()), 270),
             new PlainMessage(Component.translatable("napuli.street.cash", cash(player)), 270),
-            new PlainMessage(NapoliFactions.status(player), 270)));
+            new PlainMessage(npc.role() == NapoliResident.Role.PEPPE_FETISH
+                    ? Component.translatable("napuli.peppe.shop_effects") : NapoliFactions.status(player), 270)));
         if (npc.role() == NapoliResident.Role.ADA || npc.role() == NapoliResident.Role.SALVATORE)
             body.add(new PlainMessage(Component.translatable("napuli.factions.thresholds"), 270));
         player.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(npc.getDisplayName(), Optional.empty(),
@@ -285,6 +288,8 @@ public final class NapoliStreet {
 
     private static Offer offer(Action action) {
         return switch (action) {
+            case SOCKS -> new Offer(new ItemStack(Napuli.CALZINI_SPORCHI), PeppeFetish.SOCKS_PRICE);
+            case CHEESE -> new Offer(new ItemStack(Napuli.FORMAGGIO_PIEDE), PeppeFetish.CHEESE_PRICE);
             case PIZZA -> new Offer(new ItemStack(Napuli.PIZZA), 5);
             case BREAD -> new Offer(new ItemStack(Items.BREAD, 2), 3);
             case COFFEE -> new Offer(new ItemStack(Napuli.CAFE), 3);

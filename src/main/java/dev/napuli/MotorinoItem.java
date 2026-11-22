@@ -21,7 +21,7 @@ public class MotorinoItem extends Item {
 			m.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
 			m.setYBodyRot(yaw);
 			m.setYHeadRot(yaw);
-			level.addFreshEntity(m);
+			if (!level.noCollision(m) || !level.addFreshEntity(m)) return InteractionResult.FAIL;
 			if (ctx.getPlayer() == null || !ctx.getPlayer().getAbilities().instabuild) ctx.getItemInHand().shrink(1);
 		}
 		return InteractionResult.SUCCESS;

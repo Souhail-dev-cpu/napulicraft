@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "napuli-test",
+  "version": "1.0.0",
+  "name": "Napulicraft server tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": ["dev.napuli.MotorinoGameTest"]
+  },
+  "depends": { "napuli": "*" }
+}

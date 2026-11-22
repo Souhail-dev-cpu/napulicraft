@@ -43,6 +43,55 @@ Choices are saved in `.minecraft/config/napulicraft-canzoni.json`. You can also 
 | **R** (hold, on the scooter) | Radio wheel: point at a station, release R. Tap R = next station |
 | **J** | Canzoni: pick your songs |
 
+## Multiplayer and three-seat scooters
+
+Install the **same Napulicraft beta and Fabric API** on the Fabric server and on every player's client
+(Minecraft 26.3, Java 25 or newer). You can also play together through **Open to LAN**.
+The server runs gameplay, wallets, shops, taxes and prison sentences; rendering and music run on each client.
+Each player supplies their own music files: the selected radio station is synchronized, while audio files stay local.
+
+Right-click a scooter to board, with a maximum of **three players** in boarding order:
+
+1. **First:** driver, using W and the mouse; only the driver can change the radio with R.
+2. **Second:** middle seat.
+3. **Third:** rear seat. A fourth player cannot board.
+
+Use **Shift** to dismount. When a rider leaves or disconnects, the remaining riders move forward in order;
+the next rider becomes the driver and keeps the selected radio station. The radio switches off when empty.
+**Shift + right-click** picks up an empty scooter; occupied scooters cannot be collected, and a full inventory
+leaves the scooter safely in the world.
+
+`./gradlew runGameTest` runs headless server tests with up to four simulated players, checking seat order and
+positions, passenger synchronization packets, driver promotion, radio permissions, capacity and safe pickup.
+These tests also run during `./gradlew build` and the GitHub beta workflow.
+The opt-in `./gradlew runMotorinotest` additionally runs a real client with two simulated remote players,
+checking synchronized seats, movement with three riders, rejected passenger radio packets, and taking over the
+controls after the driver dismounts. It creates a disposable world and saves a screenshot in `run-autotest/screenshots`.
+
+## Peppe Fetish and the dirty socks
+
+**Peppe Fetish** is an original adult fictional merchant on **Spaccanapoli**, near **(-4, 64, -125)**.
+He wears a grey hoodie over a blue T-shirt, jeans and trainers, and has a ginger beard. Right-click him to buy a pair
+of **dirty socks for 6 €** using your wallet balance.
+
+Hold **right-click for 1.2 seconds** with the socks in either hand to sniff their provolone aroma:
+
+- **Nausea I:** 15 seconds.
+- **Regeneration I:** 10 seconds, gradually restoring hearts.
+- The socks are **reusable** and have a **5-second cooldown**. Sniffing leaves hunger unchanged;
+  releasing the button early cancels the effects.
+
+They also appear in the mod's creative tab. Operators can use **`/napuli peppe`** to visit his stall.
+Peppe also sells **Foot-aroma cheese for 10 €**: a fictional cheese advertised as smelling of a woman's feet
+unwashed for three months. Eating one portion (even at full hunger) gives **Speed II for 10 seconds** and
+**Strength V for 3 seconds**. Once the 10-second rush ends, **Slowness I lasts 20 seconds** and
+**Weakness I lasts 6 seconds**. A portion is consumed, and the pending crash is saved with the player and pauses
+while logged out, like potion durations. A new portion restarts the countdown; death clears it.
+
+The opt-in **`./gradlew runPeppetest`** checks both real shop buttons, prices, insufficient funds, interrupted and
+completed sniffing, actual healing, cooldown, offhand reuse, cheese consumption at full hunger, timed bonuses and
+the delayed penalties through their expiry in a disposable world.
+
 ## Giorgia Meloni and the weekly tax
 
 A fictional Giorgia Meloni NPC, with blonde hair, a black suit and a white shirt, visits each Survival/Adventure

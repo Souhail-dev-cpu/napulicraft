@@ -1,7 +1,7 @@
 import java.awt.*; import java.awt.image.BufferedImage; import java.io.File; import javax.imageio.ImageIO;
 public class PreviewResidents { public static void main(String[] a) throws Exception {
  File dir = new File("src/main/resources/assets/napuli/textures/entity");
- String[] n = {"gennaro","ciro","enzo","teresa","lucia","vendor","tailor","busker","porter","ada","michele","nico","salvatore","rosa","antonio","carabiniere_0","carabiniere_1","carmela","giusy","sofia","passerby_0","passerby_1","passerby_2","passerby_3","passerby_4","passerby_5","mbriana","partenope","anima","giorgia_meloni"};
+ String[] n = {"gennaro","ciro","enzo","teresa","lucia","vendor","tailor","busker","porter","ada","michele","nico","salvatore","rosa","antonio","carabiniere_0","carabiniere_1","carmela","giusy","sofia","passerby_0","passerby_1","passerby_2","passerby_3","passerby_4","passerby_5","mbriana","partenope","anima","giorgia_meloni","peppe_fetish"};
  int S=6, cw=16*S+14, ch=32*S+34, cols=10;
  BufferedImage o=new BufferedImage(cols*cw, ((n.length+cols-1)/cols)*ch, BufferedImage.TYPE_INT_ARGB); Graphics2D g=o.createGraphics(); g.setColor(new Color(0x7c9a7c)); g.fillRect(0,0,o.getWidth(),o.getHeight()); g.setFont(new Font("SansSerif",Font.BOLD,11));
  int[][] F={{8,8,8,8,4,0},{20,20,8,12,4,8},{44,20,4,12,0,8},{44,20,4,12,12,8},{4,20,4,12,4,20},{4,20,4,12,8,20}};

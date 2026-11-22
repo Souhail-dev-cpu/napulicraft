@@ -28,13 +28,15 @@ public final class Radio {
 		Songs.register();
 		PayloadTypeRegistry.serverboundPlay().register(Tune.TYPE, Tune.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(Tune.TYPE, (payload, ctx) -> {
-			var p = ctx.player();
-			int s = payload.station();
-			if (s != OFF && (s < 0 || s >= MAX_STATIONS)) return;
-			if (p.getVehicle() instanceof Motorino bike && bike.getFirstPassenger() == p && !bike.inParade()) {
-				bike.setStation(s);
-				Napuli.LOGGER.info("[radio] {} tuned to {}", p.getName().getString(), s);
-			}
+			tune(ctx.player(), payload.station());
 		});
+	}
+
+	/** All clients, including passengers, must pass this server-side driver check. */
+	static boolean tune(net.minecraft.server.level.ServerPlayer player, int station) {
+		if (station != OFF && (station < 0 || station >= MAX_STATIONS)) return false;
+		if (!(player.getVehicle() instanceof Motorino bike) || bike.getControllingPassenger() != player) return false;
+		bike.setStation(station);
+		return true;
 	}
 }

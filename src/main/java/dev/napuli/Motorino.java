@@ -23,11 +23,15 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 'O Motorino. Steer with the mouse, W to go. Up to THREE people on it, like in real life.
- * Sneak + right click to pick it up. Riding it turns the radio on.
+ * Boarding order determines the driver, middle seat and rear seat on both sides.
+ * Sneak + right click to pick it up when empty. Riding it turns the radio on.
  */
 public class Motorino extends Mob {
+	public static final int MAX_PASSENGERS = 3;
 	private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> STATION =
 			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+	private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> PARADE =
+			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
 	private int paradeTicks;
 	private int lastStation = 0;
 	// the carabiniere who stopped the parade (boys without a helmet) and how long the stop has lasted
@@ -36,11 +40,12 @@ public class Motorino extends Mob {
 
 	public void startParade() {
 		paradeTicks = 200;
+		entityData.set(PARADE, true);
 		setNoAi(true);
 		setStation(Radio.PARADE);
 	}
 
-	public boolean inParade() { return paradeTicks > 0; }
+	public boolean inParade() { return entityData.get(PARADE); }
 	public int station() { return this.entityData.get(STATION); }
 	public void setStation(int s) {
 		if (s >= 0 && s != Radio.PARADE) lastStation = s;
@@ -52,6 +57,7 @@ public class Motorino extends Mob {
 	protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder b) {
 		super.defineSynchedData(b);
 		b.define(STATION, Radio.OFF);
+		b.define(PARADE, false);
 	}
 
 	/** every rider wears something on the head */
@@ -73,6 +79,7 @@ public class Motorino extends Mob {
 	protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
 		super.readAdditionalSaveData(in);
 		paradeTicks = in.getIntOr("napuli_parade_ticks", 0);
+		entityData.set(PARADE, paradeTicks > 0);
 		lastStation = in.getIntOr("napuli_last_station", 0);
 		this.entityData.set(STATION, in.getIntOr("napuli_station", Radio.OFF));
 	}
@@ -128,37 +135,62 @@ public class Motorino extends Mob {
 
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-		if (paradeTicks > 0) return InteractionResult.PASS;
+		if (inParade()) return InteractionResult.PASS;
 		if (player.isSecondaryUseActive()) {
+			if (isVehicle()) {
+				if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable("napuli.motorino.occupied"));
+				return InteractionResult.FAIL;
+			}
 			if (!this.level().isClientSide()) {
-				this.ejectPassengers();
-				if (!player.getAbilities().instabuild) player.getInventory().add(new ItemStack(Napuli.MOTORINO_ITEM));
+				if (!player.getAbilities().instabuild && !player.getInventory().add(new ItemStack(Napuli.MOTORINO_ITEM))) {
+					if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable("napuli.motorino.inventory_full"));
+					return InteractionResult.FAIL;
+				}
 				this.discard();
 			}
 			return InteractionResult.SUCCESS;
 		}
-		if (this.getPassengers().size() >= 2) return InteractionResult.PASS;
+		if (this.getPassengers().size() >= MAX_PASSENGERS) {
+			if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable("napuli.motorino.full"));
+			return InteractionResult.FAIL;
+		}
 		if (!this.level().isClientSide()) {
-			player.startRiding(this);
+			if (!player.startRiding(this)) return InteractionResult.FAIL;
 			this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 1f, 1.6f);
 			if (this.getPassengers().size() == 3)
 				for (Entity e : this.getPassengers())
 					if (e instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("napuli.motorino.tre"));
-			if (player instanceof ServerPlayer sp && this.getFirstPassenger() == sp) {
-				// the radio comes on with the engine, on the last station you listened to
-				setStation(lastStation);
-				sp.sendOverlayMessage(Component.translatable("napuli.radio.hint"));
-			}
 		}
 		return InteractionResult.SUCCESS;
 	}
 
 	@Override
-	protected boolean canAddPassenger(Entity passenger) { return this.getPassengers().size() < (paradeTicks > 0 ? 3 : 2); }
+	protected boolean canAddPassenger(Entity passenger) {
+		return getPassengers().size() < MAX_PASSENGERS && (!inParade() || !(passenger instanceof Player));
+	}
+
+	@Override
+	protected void addPassenger(Entity passenger) {
+		super.addPassenger(passenger);
+		if (level().isClientSide() || inParade()) return;
+		if (getPassengers().size() == 1 && getControllingPassenger() instanceof ServerPlayer) setStation(lastStation);
+		announceSeats();
+	}
+
+	private void announceSeats() {
+		for (int i = 0; i < getPassengers().size(); i++) {
+			if (getPassengers().get(i) instanceof ServerPlayer sp)
+				sp.sendOverlayMessage(Component.translatable(switch (i) {
+					case 0 -> "napuli.motorino.driver";
+					case 1 -> "napuli.motorino.middle";
+					default -> "napuli.motorino.rear";
+				}));
+		}
+	}
 
 	@Override
 	public LivingEntity getControllingPassenger() {
-		return this.getFirstPassenger() instanceof Player p ? p : null;
+		return !inParade() && this.getFirstPassenger() instanceof Player p ? p : null;
 	}
 
 	@Override
@@ -181,7 +213,7 @@ public class Motorino extends Mob {
 	@Override
 	protected void positionRider(Entity passenger, Entity.MoveFunction move) {
 		int i = this.getPassengers().indexOf(passenger);
-		double alongSeat = 0.11 - Math.max(0, i) * (paradeTicks > 0 ? 0.46 : 0.65);
+		double alongSeat = 0.11 - Math.max(0, i) * 0.46;
 		double yaw = Math.toRadians(this.getYRot());
 		double x = this.getX() - Math.sin(yaw) * alongSeat;
 		double z = this.getZ() + Math.cos(yaw) * alongSeat;
@@ -190,9 +222,10 @@ public class Motorino extends Mob {
 
 	@Override
 	protected void removePassenger(Entity passenger) {
-		boolean wasDriver = this.getFirstPassenger() == passenger;
 		super.removePassenger(passenger);
-		if (wasDriver && passenger instanceof Player && paradeTicks <= 0 && !level().isClientSide()) setStation(Radio.OFF);
+		if (level().isClientSide() || inParade()) return;
+		if (getControllingPassenger() == null) setStation(Radio.OFF);
+		announceSeats();
 	}
 
 	@Override

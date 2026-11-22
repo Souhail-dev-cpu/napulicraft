@@ -28,13 +28,13 @@ public final class NapoliResident extends PathfinderMob {
         CARABINIERE, CARMELA, GIUSY, SOFIA,
         // the people of the centro storico (v8)
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
-        GIORGIA_MELONI;
+        GIORGIA_MELONI, PEPPE_FETISH;
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
         public boolean social() { return this == TERESA || this == LUCIA || this == CARMELA || this == GIUSY || this == SOFIA; }
         public boolean spirit() { return this == MBRIANA || this == PARTENOPE || this == ANIMA; }
-        public boolean street() { return ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter(); }
+        public boolean street() { return this == PEPPE_FETISH || ordinal() >= VENDOR.ordinal() && ordinal() <= ANTONIO.ordinal() && !fighter(); }
         public boolean fighter() { return this == NICO || this == ANTONIO; }
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
@@ -112,6 +112,10 @@ public final class NapoliResident extends PathfinderMob {
             var speed = npc.getAttribute(Attributes.MOVEMENT_SPEED);
             if (speed != null) speed.setBaseValue(0.27);
         }
+        if (role == Role.PEPPE_FETISH) {
+            npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(Napuli.CALZINI_SPORCHI));
+            npc.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0f);
+        }
         if (role.spirit()) {
             npc.setNoAi(true);
             npc.setGlowingTag(true);
@@ -148,7 +152,7 @@ public final class NapoliResident extends PathfinderMob {
         return switch (role()) {
             case PASSERBY -> 9;
             case CARABINIERE -> 12;
-            case VENDOR, TAILOR, PORTER, PRESEPAIO, PIZZAIOLO -> 3;
+            case VENDOR, TAILOR, PORTER, PRESEPAIO, PIZZAIOLO, PEPPE_FETISH -> 3;
             case NONNA -> 2;
             case PARCHEGGIATORE -> 5;
             case TIFOSO, SCUGNIZZO -> 10;

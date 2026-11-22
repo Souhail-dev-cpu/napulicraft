@@ -71,7 +71,7 @@ public class Napuli implements ModInitializer {
 	}
 
 	// ------------------------------------------------------------ items
-	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, CASCO, MUNACIELLO_EGG, GIGANTE_EGG, NAPULETANO_EGG;
+	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, CASCO, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MUNACIELLO_EGG, GIGANTE_EGG, NAPULETANO_EGG;
 
 	private static Item item(String name, Function<Item.Properties, Item> factory, Item.Properties props) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id(name));
@@ -103,6 +103,16 @@ public class Napuli implements ModInitializer {
 						Consumables.defaultDrink().consumeSeconds(0.8f).onConsume(new ApplyStatusEffectsConsumeEffect(List.of(
 								new MobEffectInstance(MobEffects.SPEED, 20 * 90, 0), new MobEffectInstance(MobEffects.HASTE, 20 * 90, 1)))).build()));
 		CIABATTA_ITEM = item("ciabatta", CiabattaItem::new, new Item.Properties().stacksTo(16));
+		CALZINI_SPORCHI = item("calzini_sporchi", CalziniSporchiItem::new, new Item.Properties().stacksTo(1)
+				.component(net.minecraft.core.component.DataComponents.LORE, new net.minecraft.world.item.component.ItemLore(List.of(
+						net.minecraft.network.chat.Component.translatable("napuli.socks.hint"),
+						net.minecraft.network.chat.Component.translatable("napuli.socks.effects")))));
+		FORMAGGIO_PIEDE = item("formaggio_piede", FormaggioPiedeItem::new, new Item.Properties().stacksTo(16)
+				.food(new FoodProperties.Builder().nutrition(4).saturationModifier(0.4f).alwaysEdible().build())
+				.component(net.minecraft.core.component.DataComponents.LORE, new net.minecraft.world.item.component.ItemLore(List.of(
+						net.minecraft.network.chat.Component.translatable("napuli.cheese.flavour"),
+						net.minecraft.network.chat.Component.translatable("napuli.cheese.bonuses"),
+						net.minecraft.network.chat.Component.translatable("napuli.cheese.penalties")))));
 		MOTORINO_ITEM = item("motorino", MotorinoItem::new, new Item.Properties().stacksTo(1));
 		KNUCKLES = melee("tirapugni", 3, 2.5);
 		KNIFE = melee("coltello", 4, 2.1);
@@ -124,7 +134,7 @@ public class Napuli implements ModInitializer {
 				.title(net.minecraft.network.chat.Component.translatable("itemGroup.napuli.napulicraft"))
 				.icon(() -> new net.minecraft.world.item.ItemStack(CORNICELLO))
 				.displayItems((params, out) -> {
-					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
+					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
 				}).build());
 
@@ -141,6 +151,7 @@ public class Napuli implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(Carabinieri::tick);
 		Carabinieri.register();
 		ServerTickEvents.END_SERVER_TICK.register(GiorgiaMeloni::tick);
+		ServerTickEvents.END_SERVER_TICK.register(FormaggioPiedeItem::tick);
 		CommandRegistrationCallback.EVENT.register((d, ctx, sel) -> {
 			NapuliCommand.register(d);
 			NapoliDialogue.register(d);

@@ -83,6 +83,12 @@ public final class CityProperty {
         var updated = new ArrayList<>(existing); updated.add(home); level.setAttached(EXTRA_HOMES, List.copyOf(updated));
     }
 
+    static List<Home> authoredHomes(ServerLevel level) {
+        var homes = new ArrayList<>(CATALOGUE);
+        homes.addAll(level.getAttachedOrElse(EXTRA_HOMES, List.of()));
+        return homes;
+    }
+
     private static void classic(List<Home> homes, int x, int z, int index) {
         homes.add(new Home(new BlockPos(x, 63, z), new BlockPos(x + 10, 64 + 12 + Math.floorMod(index, 4) * 3, z + 11)));
     }

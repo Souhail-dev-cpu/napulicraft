@@ -21,6 +21,10 @@ public final class NapoliExpansion {
     static final int REVISION=1;
     private static final int BLOCK_SIZE=40;
     static final AttachmentType<Integer> GENERATED=AttachmentRegistry.<Integer>builder().persistent(Codec.INT).buildAndRegister(Napuli.id("atlas_chunk_revision"));
+    static final AttachmentType<Boolean> ARCHITECTURE = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_architecture_v1"));
+    static final AttachmentType<Boolean> INTERIORS = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_interiors_v1"));
     private static final Map<ServerLevel,Map<Long,LevelChunk>> PENDING=new WeakHashMap<>();
     private static final AttachmentType<Set<String>> WALKERS=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("atlas_walkers"));
     private static final int[][] COAST={{-2048,35},{-1920,65},{-1800,215},{-1700,455},{-1550,475},{-1400,450},{-1200,300},{-970,205},{-650,185},{-544,256},{480,135},{900,180},{1400,285},{1750,390},{2048,475}};
@@ -44,6 +48,8 @@ public final class NapoliExpansion {
         if(!intersects(chunk)||revision(chunk)>=REVISION)return false;
         // Old, unexplored saves may already contain player buildings outside the former town.
         if(CityProperty.playerBuiltInChunk(city,chunk.getPos())||custom(chunk)){
+            chunk.setAttached(ARCHITECTURE, true);
+            chunk.setAttached(INTERIORS, true);
             ((AttachmentTarget)chunk).setAttached(GENERATED,REVISION);return false;
         }
         var w=new Writer(city,chunk);
@@ -71,8 +77,60 @@ public final class NapoliExpansion {
         // Pocket gardens between blocks, rather than unbuilt sand at the map's edges.
         for(int x=w.minX;x<=w.maxX;x++)for(int z=w.minZ;z<=w.maxZ;z++)if(writable(x,z)&&!water(x,z)&&Math.floorMod(x,BLOCK_SIZE)==36&&Math.floorMod(z,BLOCK_SIZE)==36&&!nearPlace(x,z,15)&&!nearRoad(x,z,12))w.tree(x,height(x,z)+1,z);
         ((AttachmentTarget)chunk).setAttached(GENERATED,REVISION);
+        upgradeArchitecture(city, chunk);
+        upgradeInteriors(city, chunk);
         return true;
     }
+    static boolean upgradeArchitecture(ServerLevel city, LevelChunk chunk) {
+        if (!intersects(chunk) || revision(chunk) < REVISION || chunk.getAttachedOrElse(ARCHITECTURE, false)
+                || CityProperty.playerBuiltInChunk(city, chunk.getPos())) return false;
+        var w = new Writer(city, chunk);
+        for (int gx = Math.floorDiv(w.minX, BLOCK_SIZE) - 1; gx <= Math.floorDiv(w.maxX, BLOCK_SIZE); gx++) {
+            for (int gz = Math.floorDiv(w.minZ, BLOCK_SIZE) - 1; gz <= Math.floorDiv(w.maxZ, BLOCK_SIZE); gz++) {
+                int x = gx * BLOCK_SIZE + 9, z = gz * BLOCK_SIZE + 9;
+                if (!w.overlaps(x - 1, z - 1, x + 22, z + 26) || !houseAllowed(x, z)) continue;
+                int floors = 3 + Math.floorMod(gx * 31 + gz, 3);
+                w.palazzoTrim(x, height(x + 11, z + 24) + 1, z, floors, gx + gz);
+            }
+        }
+        for (var place : NapoliAtlas.PLACES) {
+            if (!place.original() && w.overlaps(place.x() - place.radius(), place.z() - place.radius(),
+                    place.x() + place.radius(), place.z() + place.radius())) w.landmarkTrim(place);
+        }
+        chunk.setAttached(ARCHITECTURE, true);
+        return true;
+    }
+
+    static boolean upgradeInteriors(ServerLevel city, LevelChunk chunk) {
+        if (!intersects(chunk) || revision(chunk) < REVISION || chunk.getAttachedOrElse(INTERIORS, false)
+                || CityProperty.playerBuiltInChunk(city, chunk.getPos())) return false;
+        var w = new Writer(city, chunk);
+        var design = new NapoliInteriorLayout((x, y, z, state) -> {
+            if (w.includes(x, z) && chunk.getBlockEntity(new BlockPos(x, y, z)) == null) w.put(x, y, z, state);
+        });
+        for (int gx = Math.floorDiv(w.minX, BLOCK_SIZE) - 1; gx <= Math.floorDiv(w.maxX, BLOCK_SIZE); gx++) {
+            for (int gz = Math.floorDiv(w.minZ, BLOCK_SIZE) - 1; gz <= Math.floorDiv(w.maxZ, BLOCK_SIZE); gz++) {
+                int x = gx * BLOCK_SIZE + 9, z = gz * BLOCK_SIZE + 9;
+                if (!w.overlaps(x, z, x + 21, z + 23) || !houseAllowed(x, z)) continue;
+                design.apartmentBlock(x, height(x + 11, z + 24) + 1, z, 3 + Math.floorMod(gx * 31 + gz, 3));
+            }
+        }
+        for (var place : NapoliAtlas.PLACES) {
+            if (!place.original() && w.overlaps(place.x() - place.radius(), place.z() - place.radius(),
+                    place.x() + place.radius(), place.z() + place.radius()))
+                design.atlasLandmark(place, height(place.x(), place.z()) + 1);
+        }
+        for (var home : DistrictLife.homes()) {
+            if (!w.includes(home.x() + 8, home.z() + 9)) continue;
+            BlockPos shower = CityLivingHomes.use(home, CityLivingHomes.Furniture.SHOWER).block();
+            if (w.includes(shower.getX(), shower.getZ()) && !CityProperty.playerPlaced(city, shower)
+                    && !CityProperty.playerPlaced(city, shower.above()) && chunk.getBlockEntity(shower) == null
+                    && city.isEmptyBlock(shower.above())) NapoliShower.place(city, shower);
+        }
+        chunk.setAttached(INTERIORS, true);
+        return true;
+    }
+
     private static boolean custom(LevelChunk c){for(int x=c.getPos().getMinBlockX();x<=c.getPos().getMaxBlockX();x++)for(int z=c.getPos().getMinBlockZ();z<=c.getPos().getMaxBlockZ();z++)if(writable(x,z)&&c.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15)>63)return true;return !c.getBlockEntities().isEmpty();}
     static boolean nearPlace(int x,int z,int radius){return NapoliAtlas.PLACES.stream().anyMatch(p->p.near(x,z,radius));}
     static boolean nearRoad(int x,int z,int radius){for(var r:NapoliAtlas.ROADS){var a=NapoliAtlas.find(r.from());var b=NapoliAtlas.find(r.to());if(x<Math.min(a.x(),b.x())-radius||x>Math.max(a.x(),b.x())+radius||z<Math.min(a.z(),b.z())-radius||z>Math.max(a.z(),b.z())+radius)continue;if(NapoliAtlas.distance(r,x,z)<radius)return true;}return false;}
@@ -86,7 +144,7 @@ public final class NapoliExpansion {
         ServerChunkEvents.CHUNK_LOAD.register((city,chunk,newlyGenerated)->{if(city.dimension()==NapoliMap.LEVEL&&NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(),chunk.getPos().getMinBlockZ()))PENDING.computeIfAbsent(city,k->new HashMap<>()).put(chunk.getPos().pack(),chunk);});
         ServerTickEvents.START_SERVER_TICK.register(server->{var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;var pending=PENDING.get(city);if(pending==null||pending.isEmpty())return;
             var batch=pending.values().stream().sorted(Comparator.comparingDouble(c->city.players().stream().mapToDouble(p->p.blockPosition().distSqr(c.getPos().getMiddleBlockPosition(64))).min().orElse(0))).limit(4).toList();
-            for(var chunk:batch){pending.remove(chunk.getPos().pack());if(city.getChunkSource().getChunkNow(chunk.getPos().x(),chunk.getPos().z())==chunk){generate(city,chunk);DistrictLife.fit(city,chunk);CityRailway.fit(city,chunk);}}
+            for(var chunk:batch){pending.remove(chunk.getPos().pack());if(city.getChunkSource().getChunkNow(chunk.getPos().x(),chunk.getPos().z())==chunk){generate(city,chunk);upgradeArchitecture(city,chunk);upgradeInteriors(city,chunk);DistrictLife.fit(city,chunk);CityRailway.fit(city,chunk);}}
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server->PENDING.clear());
     }
@@ -95,6 +153,158 @@ public final class NapoliExpansion {
         final ServerLevel city;final LevelChunk chunk;final int minX,maxX,minZ,maxZ;
         Writer(ServerLevel city,LevelChunk chunk){this.city=city;this.chunk=chunk;var p=chunk.getPos();minX=p.getMinBlockX();maxX=p.getMaxBlockX();minZ=p.getMinBlockZ();maxZ=p.getMaxBlockZ();}
         boolean includes(int x,int z){return x>=minX&&x<=maxX&&z>=minZ&&z<=maxZ;}
+        boolean overlaps(int x, int z, int endX, int endZ) {
+            return x <= maxX && endX >= minX && z <= maxZ && endZ >= minZ;
+        }
+
+        private void detail(int x, int y, int z, Block block) {
+            if (!includes(x, z) || !writable(x, z)) return;
+            BlockPos pos = new BlockPos(x, y, z);
+            if (city.isEmptyBlock(pos)) put(x, y, z, block);
+        }
+
+        private void detailBand(int x, int y, int z, int endX, Block block) {
+            for (int px = Math.max(x, minX); px <= Math.min(endX, maxX); px++) detail(px, y, z, block);
+        }
+
+        void palazzoTrim(int x, int y, int z, int floors, int variant) {
+            int front = z + 23, roof = y + floors * 5;
+            Block trim = variant % 3 == 0 ? Blocks.CUT_SANDSTONE_SLAB : Blocks.SMOOTH_STONE_SLAB;
+            Block shutters = variant % 2 == 0 ? Blocks.DARK_OAK_TRAPDOOR : Blocks.SPRUCE_TRAPDOOR;
+            detailBand(x - 1, roof, front + 1, x + 22, trim);
+            detailBand(x, y + 4, front + 1, x + 21, trim);
+            for (int f = 1; f < floors; f++) {
+                int level = y + f * 5;
+                for (int wx = x + 3; wx < x + 20; wx += 4) {
+                    detailBand(wx - 1, level, front + 1, wx + 1, trim);
+                    detailBand(wx - 1, level, front + 2, wx + 1, trim);
+                    detailBand(wx - 1, level + 1, front + 2, wx + 1, Blocks.IRON_BARS);
+                    for (int side : new int[]{-1, 1}) {
+                        var shutter = shutters.defaultBlockState().setValue(BlockStateProperties.OPEN, true)
+                                .setValue(BlockStateProperties.HORIZONTAL_FACING, side < 0 ? Direction.EAST : Direction.WEST);
+                        for (int row = 1; row <= 2; row++) {
+                            BlockPos pos = new BlockPos(wx + side, level + row, front + 1);
+                            if (includes(pos.getX(), pos.getZ()) && city.isEmptyBlock(pos)) put(pos.getX(), pos.getY(), pos.getZ(), shutter);
+                        }
+                    }
+                    if (Math.floorMod(wx + level, 3) == 0) detail(wx, level + 1, front + 1, Blocks.POTTED_FERN);
+                }
+            }
+            for (int px = x; px <= x + 21; px++) {
+                detail(px, roof + 1, z, Blocks.BRICK_WALL);
+                detail(px, roof + 1, front, Blocks.BRICK_WALL);
+            }
+            for (int pz = z + 1; pz < front; pz++) {
+                detail(x, roof + 1, pz, Blocks.BRICK_WALL);
+                detail(x + 21, roof + 1, pz, Blocks.BRICK_WALL);
+            }
+            for (int dy = 1; dy <= 4; dy++) detail(x + 3, roof + dy, z + 4, Blocks.BRICKS);
+            detail(x + 3, roof + 5, z + 4, Blocks.BRICK_SLAB);
+        }
+
+        void landmarkTrim(NapoliAtlas.Place place) {
+            int x = place.x(), z = place.z(), r = place.radius(), y = height(x, z) + 1;
+            switch (place.kind()) {
+                case PALACE -> {
+                    int width = place.id().equals("albergo") ? 96 : place.id().equals("capodimonte") ? 84 : 52;
+                    monumentalFront(x, y, z + 20, width, 23, Blocks.SMOOTH_QUARTZ);
+                    if (place.id().equals("donnanna")) {
+                        for (int wing : new int[]{-1, 1}) {
+                            int end = x + wing * 22;
+                            for (int row = 0; row < 3; row++)
+                                detailBand(end - 3, y + 24 + row, z + 16 - row, end + 3, Blocks.BRICK_SLAB);
+                        }
+                    }
+                }
+                case MUSEUM -> {
+                    monumentalFront(x, y, z + 19, (r - 6) * 2, 21, Blocks.CUT_SANDSTONE);
+                    if (place.id().equals("mann")) {
+                        for (int dx = -10; dx <= 10; dx++) {
+                            int crown = y + 22 + (10 - Math.abs(dx)) / 2;
+                            for (int yy = y + 22; yy < crown; yy++)
+                                detail(x + dx, yy, z + 20, Blocks.CUT_SANDSTONE);
+                            detail(x + dx, crown, z + 20, Blocks.SMOOTH_QUARTZ_SLAB);
+                        }
+                    }
+                }
+                case CHURCH -> {
+                    monumentalFront(x, y, z + 15, 32, 22, Blocks.SMOOTH_QUARTZ);
+                    if (place.id().equals("duomo")) {
+                        for (int dx : new int[]{-14, 14}) {
+                            for (int dy = 19; dy <= 31; dy++) detail(x + dx, y + dy, z + 16, Blocks.QUARTZ_PILLAR);
+                            detail(x + dx, y + 32, z + 16, Blocks.END_ROD);
+                        }
+                    }
+                }
+                case CLOISTER -> monumentalFront(x, y, z + 21, 50, 14, Blocks.CUT_SANDSTONE);
+                case STATION -> monumentalFront(x, y, z - r + 28, (r - 4) * 2, 13, Blocks.SMOOTH_QUARTZ);
+                case EXHIBITION -> monumentalFront(x, y, z - 8, 76, 16, Blocks.SMOOTH_SANDSTONE);
+                case SCIENCE -> monumentalFront(x, y, z + 17, 72, 14, Blocks.CUT_SANDSTONE);
+                case TOWERS -> {
+                    for (int dx : new int[]{-39, 0, 36}) for (int dz : new int[]{-30, 22}) {
+                        int roof = y + 28 + Math.floorMod(dx * 31 + dz, 24);
+                        for (int side : new int[]{-9, 8}) for (int dy = 1; dy <= 5; dy++)
+                            detail(x + dx + side, roof + dy, z + dz + 8, Blocks.IRON_BARS);
+                        detailBand(x + dx - 10, roof + 1, z + dz + 9, x + dx + 9, Blocks.SMOOTH_QUARTZ_SLAB);
+                    }
+                }
+                case STADIUM -> {
+                    for (int dx : new int[]{-r + 12, r - 12}) for (int dz : new int[]{-30, 30}) {
+                        for (int dy = 0; dy <= 24; dy++) detail(x + dx, y + dy, z + dz, Blocks.IRON_BARS);
+                        detailBand(x + dx - 2, y + 25, z + dz, x + dx + 2, Blocks.SEA_LANTERN);
+                    }
+                }
+                case CASTLE -> {
+                    if (!place.id().equals("santelmo")) break;
+                    for (int dx = -r + 6; dx <= r - 6; dx++) {
+                        for (int dz = -r + 6; dz <= r - 6; dz++) {
+                            double angle = Math.atan2(dz, dx);
+                            double limit = (r - 4) * (.78 + .20 * Math.cos(6 * angle));
+                            double margin = limit - Math.hypot(dx, dz);
+                            if (margin < 2 || margin >= 3.5 || (Math.abs(dx) <= 4 && dz > 0)) continue;
+                            detail(x + dx, y + 8, z + dz, Blocks.POLISHED_TUFF_SLAB);
+                            if (Math.floorMod(dx + dz, 3) == 0) detail(x + dx, y + 9, z + dz, Blocks.TUFF_BRICK_WALL);
+                        }
+                    }
+                }
+                case CATACOMBS -> {
+                    for (int dx : new int[]{-4, 4})
+                        for (int dy = 0; dy < 5; dy++) detail(x + dx, y + dy, z + 20, Blocks.CHISELED_TUFF_BRICKS);
+                    detailBand(x - 4, y + 5, z + 20, x + 4, Blocks.POLISHED_TUFF_SLAB);
+                }
+                case SQUARE, PARK, SEASIDE, RUINS -> {
+                    for (int side : new int[]{-1, 1}) {
+                        int px = x + side * (r - 5);
+                        if (water(px, z + r - 5)) continue;
+                        detail(px, y, z + r - 5, Blocks.OAK_STAIRS);
+                        detail(px + side, y, z + r - 5, Blocks.POTTED_FERN);
+                    }
+                }
+                case PIER -> {
+                    for (int dz = -r + 8; dz < r; dz++)
+                        for (int dx : new int[]{-5, 5}) detail(x + dx, 66, z + dz, Blocks.IRON_BARS);
+                }
+            }
+        }
+
+        private void monumentalFront(int x, int y, int z, int width, int height, Block stone) {
+            int a = x - width / 2, b = a + width - 1;
+            for (int level : new int[]{7, height - 1, height + 1})
+                detailBand(a - 1, y + level, z + 1, b + 1, Blocks.SMOOTH_STONE_SLAB);
+            for (int px = a + 2; px < b; px += 6) {
+                if (Math.abs(px - x) < 4) continue;
+                for (int dy = 0; dy <= height - 2; dy++) {
+                    if (dy == 7) continue;
+                    detail(px, y + dy, z + 1, dy == 1 ? Blocks.POLISHED_ANDESITE : stone);
+                }
+            }
+            for (int dx = -4; dx <= 4; dx++) {
+                int level = y + 6 + (4 - Math.abs(dx)) / 2;
+                detail(x + dx, level, z + 2, stone);
+                detail(x + dx, level + 1, z + 2, Blocks.SMOOTH_QUARTZ_SLAB);
+            }
+        }
+
         void put(int x,int y,int z,Block b){put(x,y,z,b.defaultBlockState());}
         void put(int x,int y,int z,BlockState s){if(!includes(x,z)||!writable(x,z))return;var p=new BlockPos(x,y,z);if(!CityProperty.playerPlaced(city,p))city.setBlock(p,s,Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);}
         void fill(int x,int y,int z,int xx,int yy,int zz,Block b){if(yy<y)return;for(int px=Math.max(x,minX);px<=Math.min(xx,maxX);px++)for(int pz=Math.max(z,minZ);pz<=Math.min(zz,maxZ);pz++)for(int py=y;py<=yy;py++)put(px,py,pz,b);}

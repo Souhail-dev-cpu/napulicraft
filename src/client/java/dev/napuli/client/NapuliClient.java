@@ -33,6 +33,7 @@ public class NapuliClient implements ClientModInitializer {
 		EntityRendererRegistry.register(Napuli.RESIDENT, ResidentRenderer::new);
 		RadioClient.register();
 		HudClient.register();
+		FootballScreen.register();
 		EmploymentScreen.register();
 		AutoTest.register();
 		CityTest.register();

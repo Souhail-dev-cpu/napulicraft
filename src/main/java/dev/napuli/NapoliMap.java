@@ -28,12 +28,14 @@ public final class NapoliMap {
     static final int STREET = 64;
     static final BlockPos CAFE = new BlockPos(16, 64, -25);
     static final BlockPos GALLERY = NapoliDistrict.GALLERIA; // the complete Galleria Umberto I (v3)
-    static final BlockPos CRYPT = new BlockPos(-53, 58, -34);
+    static final BlockPos CRYPT = new BlockPos(20, 42, -119);
     static final BlockPos WATERFRONT = new BlockPos(2, 64, 53);
     private static final AttachmentType<GlobalPos> RETURN = AttachmentRegistry.<GlobalPos>builder()
             .persistent(GlobalPos.CODEC).copyOnDeath().buildAndRegister(Napuli.id("napoli_return"));
     private static final AttachmentType<Boolean> BUILT = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("napoli_built"));
+    private static final AttachmentType<Boolean> TRACK_UNDERGROUND = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).copyOnDeath().buildAndRegister(Napuli.id("track_underground"));
     private static final BlockPos ENTRANCE = new BlockPos(0, 64, -37);
     private static final Block[] FACADES = {Blocks.SMOOTH_SANDSTONE, Blocks.TERRACOTTA,
             block("orange_terracotta"), block("yellow_terracotta"), block("white_terracotta")};
@@ -53,17 +55,32 @@ public final class NapoliMap {
     static void register(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> d) {
         d.register(net.minecraft.commands.Commands.literal("napoli")
                 .executes(c -> visit(c.getSource().getPlayerOrException()))
+                .then(net.minecraft.commands.Commands.literal("sotterranea").executes(c -> trackUnderground(c.getSource().getPlayerOrException())))
                 .then(net.minecraft.commands.Commands.literal("esci").executes(c -> leave(c.getSource().getPlayerOrException()))));
+    }
+
+    private static int trackUnderground(ServerPlayer player) {
+        boolean active = !player.getAttachedOrElse(TRACK_UNDERGROUND, false);
+        player.setAttached(TRACK_UNDERGROUND, active);
+        NapoliNotice.show(player, Component.translatable("napuli.hud.obj." + (active ? "underground_entry" : "underground_off")));
+        return 1;
+    }
+
+    static NapoliFactions.Objective undergroundObjective(ServerPlayer player) {
+        if (player.level().dimension() != LEVEL || !player.getAttachedOrElse(TRACK_UNDERGROUND, false)) return null;
+        boolean below = player.getY() < 50 && player.blockPosition().distSqr(CRYPT) < 70 * 70;
+        return below ? new NapoliFactions.Objective("underground_crypt", CRYPT)
+                : new NapoliFactions.Objective("underground_entry", NapoliLocalMap.TUNNEL_ENTRY);
     }
 
     public static int visit(ServerPlayer player) {
         ServerLevel city = player.level().getServer().getLevel(LEVEL);
         if (city == null) {
-            player.sendSystemMessage(Component.translatable("napuli.city.unavailable"));
+            NapoliNotice.show(player, Component.translatable("napuli.city.unavailable"));
             return 0;
         }
         if (player.level().dimension() == LEVEL) {
-            player.sendSystemMessage(Component.translatable("napuli.city.guide"));
+            NapoliNotice.show(player, Component.translatable("napuli.city.guide"));
             return 1;
         }
         ensureBuilt(city);
@@ -73,7 +90,7 @@ public final class NapoliMap {
                 Set.of(), 0, 0, true)) return 0;
         player.setAttached(RETURN, origin);
         NapoliScenes.motorino(player);
-        player.sendSystemMessage(Component.translatable("napuli.city.guide"));
+        NapoliNotice.show(player, Component.translatable("napuli.city.guide"));
         return 1;
     }
 
@@ -186,11 +203,9 @@ public final class NapoliMap {
         gallery();
         piazza();
         presepio();
-        crypt();
         waterfront();
         sign(0, 64, -42, "NAPULE", "Quartieri  ←", "Plebiscito  ↑", "Galleria  →");
         sign(11, 64, 47, "LUNGOMARE", "Castel dell'Ovo", "sul pontile");
-        sign(-48, 64, -8, "NAPOLI", "SOTTERRANEA", "Scala nei vicoli");
         NapoliResident.spawn(world, NapoliResident.Role.TERESA, CAFE, 20);
         NapoliResident.spawn(world, NapoliResident.Role.LUCIA, GALLERY, 130);
         world.setAttached(BUILT, true);
@@ -421,24 +436,47 @@ public final class NapoliMap {
         sign(-29, 64, -6, "PRESEPIO", "Te piace", "'o presepio?");
     }
 
-    private void crypt() {
-        fill(-64, 57, -40, -43, 62, -18, Blocks.TUFF_BRICKS);
-        fill(-63, 58, -39, -44, 61, -19, Blocks.AIR);
-        for (int step = 0; step <= 6; step++) {
-            int y = 63 - step;
-            int z = -12 - step;
-            fill(-53, y, z, -51, y, z, Blocks.POLISHED_TUFF);
-            fill(-53, y + 1, z, -51, Math.max(63, y + 3), z, Blocks.AIR);
+    static void relocateCrypt(ServerLevel level) {
+        NapoliMap map = new NapoliMap(level);
+        // Close the old stair at street level without altering adjacent homes.
+        if (level.getBlockState(new BlockPos(-53, 58, -36)).is(Blocks.CHISELED_TUFF_BRICKS)) {
+            for (BlockPos pos : BlockPos.betweenClosed(-53, 63, -18, -51, 63, -12)) {
+                BlockState state = level.getBlockState(pos);
+                if (state.isAir() || state.is(Blocks.POLISHED_TUFF))
+                    map.put(pos.getX(), pos.getY(), pos.getZ(), Blocks.STONE_BRICKS);
+            }
         }
-        fill(-53, 58, -19, -51, 61, -18, Blocks.AIR);
-        for (int z = -36; z <= -23; z += 4) {
-            fill(-62, 58, z, -62, 58, z + 1, Blocks.POLISHED_TUFF);
-            put(-62, 59, z, Blocks.SKELETON_SKULL);
-            put(-46, 58, z, Blocks.SOUL_LANTERN);
+        map.removeLegacyCryptSign(new BlockPos(-52, 64, -10), "SOTTERRANEA");
+        map.removeLegacyCryptSign(new BlockPos(-48, 64, -8), "NAPOLI");
+
+        // Connect the relocated crypt to the east side of the aqueduct.
+        map.fill(8, 41, -129, 31, 47, -107, Blocks.TUFF_BRICKS);
+        map.fill(9, 42, -128, 30, 46, -108, Blocks.AIR);
+        map.fill(5, 41, -120, 8, 45, -118, Blocks.TUFF_BRICKS);
+        map.fill(5, 42, -120, 8, 44, -118, Blocks.AIR);
+        for (int z = -126; z <= -110; z += 4) {
+            map.put(10, 42, z, Blocks.POLISHED_TUFF);
+            map.put(10, 43, z, Blocks.SKELETON_SKULL);
+            map.put(29, 42, z, Blocks.SOUL_LANTERN);
         }
-        fill(-56, 58, -37, -50, 58, -35, Blocks.CHISELED_TUFF_BRICKS);
-        put(-53, 59, -36, Blocks.SOUL_LANTERN);
-        sign(-52, 64, -10, "SOTTERRANEA", "Anime pezzentelle");
+        map.fill(23, 42, -121, 23, 42, -117, Blocks.CHISELED_TUFF_BRICKS);
+        map.put(23, 43, -119, Blocks.SOUL_LANTERN);
+        map.sign(4, 42, -121, "CRIPTA", "Anime pezzentelle");
+        BlockPos sign = NapoliLocalMap.TUNNEL_ENTRY.offset(1, 0, 1);
+        map.sign(sign.getX(), sign.getY(), sign.getZ(), "NAPOLI", "SOTTERRANEA", "Cisterna e cripta");
+    }
+
+    private void removeLegacyCryptSign(BlockPos pos, String heading) {
+        if (world.getBlockEntity(pos) instanceof SignBlockEntity sign
+                && sign.getText(SignTextSlot.FRONT).getMessages(false).getFirst().getString().equals(heading))
+            put(pos.getX(), pos.getY(), pos.getZ(), Blocks.AIR);
+    }
+
+    static boolean inClosedCrypt(ServerLevel level, BlockPos pos) {
+        return pos.getX() >= -63 && pos.getX() <= -44 && pos.getZ() >= -39 && pos.getZ() <= -12
+                && pos.getY() >= 58 && pos.getY() <= 62
+                && level.getBlockState(new BlockPos(-53, 58, -36)).is(Blocks.CHISELED_TUFF_BRICKS)
+                && level.getBlockState(new BlockPos(-52, 63, -16)).is(Blocks.STONE_BRICKS);
     }
 
     private void waterfront() {

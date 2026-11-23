@@ -59,7 +59,7 @@ public final class Situazioni {
 				Music.play(v, Situation.LITE);
 				Music.play(a, Situation.LITE);
 			} else if (victim instanceof Villager && atk instanceof ServerPlayer a) {
-				a.sendOverlayMessage(Component.translatable("napuli.paesano.botte"));
+				a.sendSystemMessage(Component.translatable("napuli.paesano.botte"));
 				Music.play(a, Situation.LITE);
 			}
 		});
@@ -68,7 +68,7 @@ public final class Situazioni {
 			ItemStack stack = player.getItemInHand(hand);
 			if (entity instanceof Animal a && !a.isBaby() && a.isFood(stack) && a.canFallInLove()) Music.play(p, Situation.AMORE);
 			if (entity instanceof Villager && p.getRandom().nextFloat() < 0.35f)
-				p.sendOverlayMessage(Component.translatable(PAESANI[p.getRandom().nextInt(PAESANI.length)]));
+				p.sendSystemMessage(Component.translatable(PAESANI[p.getRandom().nextInt(PAESANI.length)]));
 			return InteractionResult.PASS;
 		});
 		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, be) -> {

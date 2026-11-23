@@ -46,7 +46,7 @@ public final class NapoliStreet {
     private record Spot(NapoliResident.Role role, BlockPos pos, float yaw) {}
     private record Session(NapoliResident npc, String token, long expires, List<Action> allowed) {}
     private record Offer(ItemStack stack, int cost) {}
-    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE, HELMET, SCOOTER, MINE_JOB, SURVEY_JOB }
+    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE, HELMET, SCOOTER, MINE_JOB, SURVEY_JOB, BOMBA_CARTA }
 
     private static final List<Spot> SPOTS = List.of(
         new Spot(NapoliResident.Role.PEPPE_FETISH, PeppeFetish.STALL, 0),
@@ -130,7 +130,7 @@ public final class NapoliStreet {
         dispatcher.register(Commands.literal("portafoglio").executes(c -> {
             var p = c.getSource().getPlayerOrException();
             message(p, "stats", cash(p), p.getAttachedOrElse(FULLNESS, 0));
-            p.sendSystemMessage(NapoliFactions.status(p));
+            NapoliNotice.show(p, NapoliFactions.status(p));
             return 1;
         }));
         dispatcher.register(Commands.literal("napulistrada").then(Commands.argument("turno", StringArgumentType.word())
@@ -238,7 +238,7 @@ public final class NapoliStreet {
         if (before < 16 && after >= 16) message(player, "full");
         if (before < 50 && after >= 50) {
             KitchenEffects.effect(player, net.minecraft.world.effect.MobEffects.SLOWNESS, 10, 1);
-            player.sendSystemMessage(Component.translatable("napuli.kitchen.extreme"));
+            NapoliNotice.show(player, Component.translatable("napuli.kitchen.extreme"));
         }
     }
 
@@ -275,7 +275,7 @@ public final class NapoliStreet {
                     ? List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY, Action.COLLECT)
                     : List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY);
             case MOTOR_DEALER -> List.of(Action.HELMET, Action.SCOOTER);
-            case ARMORER -> List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON);
+            case ARMORER -> List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON, Action.BOMBA_CARTA);
             case TAILOR -> {
                 var gear = new java.util.ArrayList<>(List.of(Action.COAT, Action.CHARM));
                 if (NapoliFactions.onErrand(player, true)) gear.add(Action.TAKE_LEDGER);
@@ -294,12 +294,13 @@ public final class NapoliStreet {
             default -> List.of();
         };
         if (options.isEmpty()) { message(player, levelGreeting(player)); return; }
+        NeighbourMemory.greet(player, npc);
         String token = UUID.randomUUID().toString();
         player.setAttached(DIALOG, new Session(npc, token, player.level().getGameTime() + 1200, options));
         var actions = options.stream().map(action -> {
             Offer offer = offer(action);
             Component label = offer == null ? Component.translatable(key(action))
-                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), offer.cost());
+                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), NeighbourMemory.price(player, npc, offer.cost()));
             return new ActionButton(new CommonButtonData(label, 220),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/napulistrada " + token + " " + action.name()))));
         }).toList();
@@ -340,6 +341,7 @@ public final class NapoliStreet {
             case BREAD -> new Offer(new ItemStack(Items.BREAD, 2), 3);
             case COFFEE -> new Offer(new ItemStack(Napuli.CAFE), 3);
             case SWORD -> new Offer(new ItemStack(Items.IRON_SWORD), 14);
+            case BOMBA_CARTA -> new Offer(new ItemStack(Napuli.BOMBA_CARTA), 9);
             case KNUCKLES -> new Offer(new ItemStack(Napuli.KNUCKLES), 11);
             case KNIFE -> new Offer(new ItemStack(Napuli.KNIFE), 15);
             case PISTOL -> new Offer(new ItemStack(Napuli.PISTOL), 24);
@@ -361,8 +363,14 @@ public final class NapoliStreet {
                 || player.distanceToSqr(session.npc()) > 36 || now > session.expires()) return 0;
         Offer offer = offer(action);
         if (offer != null) {
-            if (cash(player) < offer.cost()) { message(player, "poor"); return 0; }
-            credit(player, -offer.cost());
+            int price = NeighbourMemory.price(player, session.npc(), offer.cost());
+            if (cash(player) < price) { message(player, "poor"); return 0; }
+            if (action == Action.BREAD && !BakeryStock.reserveBread(player.level(), offer.stack().getCount())) {
+                message(player, BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");
+                return 0;
+            }
+            credit(player, -price);
+            NeighbourMemory.remember(player, session.npc(), 2);
             player.addItem(offer.stack());
             if (!offer.stack().isEmpty()) player.spawnAtLocation(player.level(), offer.stack());
             message(player, "cash", cash(player));
@@ -385,7 +393,11 @@ public final class NapoliStreet {
                 if (done == 1) Carabinieri.crime(player, Carabinieri.Crime.PIZZO);
                 return done;
             }
-            case TAKE_LEDGER -> { return NapoliFactions.errand(player, true); }
+            case TAKE_LEDGER -> {
+                int result = NapoliFactions.errand(player, true);
+                if (result == 1) NeighbourMemory.remember(player, session.npc(), -5);
+                return result;
+            }
             case DELIVERY -> {
                 if (player.getAttachedOrElse(DELIVERY, 0L) > now) { message(player, "route"); return 0; }
                 player.setAttached(DELIVERY, now + 20 * 240);
@@ -399,6 +411,7 @@ public final class NapoliStreet {
                 }
                 player.removeAttached(DELIVERY);
                 credit(player, 12);
+                NeighbourMemory.remember(player, session.npc(), 4);
                 message(player, "reward", 12);
                 scheduleThief(player, now);
             }
@@ -422,6 +435,6 @@ public final class NapoliStreet {
     }
 
     private static void message(ServerPlayer player, String key, Object... arguments) {
-        player.sendSystemMessage(Component.translatable("napuli.street." + key, arguments));
+        NapoliNotice.show(player, Component.translatable("napuli.street." + key, arguments));
     }
 }

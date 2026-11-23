@@ -43,8 +43,32 @@ final class NapoliProperties {
                     if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer serverPlayer) open(serverPlayer, house);
                     return InteractionResult.SUCCESS;
                 }
+                BlockPos doorway = house.entrance().north();
+                if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer guest && hasAccess(guest, house)
+                        && !house.contains(guest.blockPosition()) && hit.getBlockPos().getX() == doorway.getX()
+                        && hit.getBlockPos().getZ() == doorway.getZ() && Math.abs(hit.getBlockPos().getY() - doorway.getY()) <= 1
+                        && !HousingCapacity.canEnter(guest.level(), house.inside(), guest.getUUID())) {
+                    NapoliNotice.show(guest, Component.translatable("napuli.property.wait_landing"));
+                    return InteractionResult.FAIL;
+                }
+                if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer guest
+                        && hit.getBlockPos().getX() == doorway.getX() && hit.getBlockPos().getZ() == doorway.getZ()
+                        && Math.abs(hit.getBlockPos().getY() - doorway.getY()) <= 1 && hasAccess(guest, house)) {
+                    var key = CityArrivals.keyHome(guest.getMainHandItem());
+                    if (!key.isEmpty() && !key.equals(house.id())) {
+                        NapoliNotice.show(guest, Component.translatable("napuli.property.wrong_key"));
+                        return InteractionResult.FAIL;
+                    }
+                }
                 if ((house.contains(hit.getBlockPos()) || house.contains(hit.getBlockPos().relative(hit.getDirection())))
                         && player instanceof ServerPlayer serverPlayer && !hasAccess(serverPlayer, house)) {
+                    BlockPos door = house.entrance().north();
+                    if (hand == InteractionHand.MAIN_HAND && hit.getBlockPos().getX() == door.getX()
+                            && hit.getBlockPos().getZ() == door.getZ()
+                            && Math.abs(hit.getBlockPos().getY() - door.getY()) <= 1) {
+                        ring(serverPlayer, house);
+                        return InteractionResult.SUCCESS;
+                    }
                     say(serverPlayer, "private");
                     return InteractionResult.FAIL;
                 }
@@ -86,6 +110,10 @@ final class NapoliProperties {
                                 .executes(c -> buy(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "id")))))
                         .then(Commands.literal("vai").then(Commands.argument("id", StringArgumentType.word())
                                 .executes(c -> go(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "id")))))));
+    }
+
+    private static void ring(ServerPlayer visitor, NapoliMergellina.House house) {
+        CityArrivals.ring(visitor,house.id());
     }
 
     private static int list(ServerPlayer player) {
@@ -136,8 +164,8 @@ final class NapoliProperties {
         var owners = new HashMap<>(player.level().getAttachedOrElse(OWNERS, Map.of()));
         owners.put(id, player.getUUID());
         player.level().setAttached(OWNERS, Map.copyOf(owners));
-        CityHousingFinance.ownOutright(player.level(),id,player.getUUID());
-        player.sendSystemMessage(Component.translatable("napuli.property.bought", house.address()));
+        CityHousingFinance.ownOutright(player.level(), id, player.getUUID());
+        NapoliNotice.show(player, Component.translatable("napuli.property.bought", house.address()));
         return 1;
     }
 
@@ -145,6 +173,10 @@ final class NapoliProperties {
         var house = find(id);
         if (house == null || player.level().dimension() != NapoliMap.LEVEL || !hasAccess(player, house)
                 || player.isSpectator() || Carabinieri.isJailed(player) || Carabinieri.isWanted(player)) return 0;
+        if (!HousingCapacity.canEnter(player.level(), house.inside(), player.getUUID())) {
+            NapoliNotice.show(player, Component.translatable("napuli.property.wait_landing"));
+            return 0;
+        }
         visit(player, house.entrance().south());
         return 1;
     }

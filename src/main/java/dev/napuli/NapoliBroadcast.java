@@ -88,14 +88,16 @@ final class NapoliBroadcast {
                 var city = viewer.level();
                 Channel current = channel(city, television);
                 Channel chosen = player.isShiftKeyDown() ? current.next()
-                        : current == Channel.SPORT || current == Channel.OFF ? Channel.SPORT : Channel.OFF;
+                        : current == Channel.OFF ? Channel.SPORT : current;
                 var channels = new HashMap<>(city.getAttachedOrElse(CHANNELS, Map.of()));
                 channels.put(television.asLong(), chosen.ordinal());
                 city.setAttached(CHANNELS, Map.copyOf(channels));
                 NapoliHouseholds.paintTelevision(city, television);
-                if (!player.isShiftKeyDown() && chosen == Channel.SPORT && openFootball(viewer, television))
-                    return InteractionResult.SUCCESS;
-                showProgram(viewer, chosen);
+                if (player.isShiftKeyDown()) {
+                    NapoliNotice.show(viewer, Component.translatable("napuli.tv.selected." + chosen.name().toLowerCase(java.util.Locale.ROOT)));
+                } else if (chosen != Channel.SPORT || !openFootball(viewer, television)) {
+                    showProgram(viewer, chosen);
+                }
             }
             return InteractionResult.SUCCESS;
         });
@@ -170,13 +172,14 @@ final class NapoliBroadcast {
                     ? Component.translatable("napuli.tv.schedule", day + Math.floorMod(-day, 7))
                     : time < FINAL ? Component.translatable("napuli.tv.live") : result(match);
         };
-        player.sendSystemMessage(content);
         if(channel!=Channel.OFF && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player,TelevisionProgram.TYPE)) {
             var f=fixture(day);boolean football=channel==Channel.SPORT&&f!=null&&time>=f.kickoff;
             int minute=football?(int)Math.clamp((time-f.kickoff)*90/(f.fullTime-f.kickoff),0,90):0;
             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,new TelevisionProgram(channel.name(),
                     football?f.opponent:channel==Channel.WEATHER?(level.isRaining()?"Pioggia: porta l'ombrello.":"Sereno sul Golfo."):"",
                     football?match.napoli():0,football?match.juventus():0,minute,level.getGameTime(),football?f.fullTime-f.kickoff:2000));
+        } else {
+            NapoliNotice.show(player, content);
         }
         if (channel != Channel.OFF) player.sendOverlayMessage(Component.translatable("napuli.tv.controls"));
     }
@@ -198,8 +201,8 @@ final class NapoliBroadcast {
         if (day > level.getAttachedOrElse(ANNOUNCED, Long.MIN_VALUE)) {
             level.setAttached(ANNOUNCED, day);
             for (ServerPlayer player : level.players()) {
-                player.sendSystemMessage(result(match));
-                player.sendSystemMessage(Component.translatable(match.win() ? "napuli.tv.forza" : "napuli.tv.quiet"));
+                NapoliNotice.show(player, result(match));
+                NapoliNotice.show(player, Component.translatable(match.win() ? "napuli.tv.forza" : "napuli.tv.quiet"));
             }
         }
         long pulse = level.getOverworldClockTime() / 100;

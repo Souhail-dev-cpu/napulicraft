@@ -30,7 +30,7 @@ public final class NapoliResident extends PathfinderMob {
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
         GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER,
         BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE,
-        FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN;
+        FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN, EMPLOYMENT_CLERK, SHIFT_LEAD, SHIFT_WORKER, FOOTBALL_CLERK, FOOTBALL_COACH;
 
         boolean civic() { return this == CIVIC_WOMAN || this == CIVIC_MAN; }
 
@@ -44,9 +44,9 @@ public final class NapoliResident extends PathfinderMob {
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN || this == EMPLOYMENT_CLERK; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
-        public int variants() { return civic() ? 12 : this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
+        public int variants() { return civic() ? 12 : this == PASSERBY ? 18 : this == SHIFT_LEAD || this == SHIFT_WORKER ? 3 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
     }
 
@@ -70,6 +70,10 @@ public final class NapoliResident extends PathfinderMob {
     private int commuteTicks;
 
     public int variant() { return entityData.get(VARIANT); }
+    void setEmploymentAppearance(Role role, int look) {
+        entityData.set(ROLE, role.ordinal());
+        entityData.set(VARIANT, look);
+    }
     void setCivicAppearance(int variant) { entityData.set(VARIANT,Math.floorMod(variant,12)); }
 
     public NapoliResident(EntityType<? extends NapoliResident> type, Level level) {
@@ -111,6 +115,7 @@ public final class NapoliResident extends PathfinderMob {
         out.putInt("napuli_role", role().ordinal());
         out.putInt("napuli_spirit_life", spiritLife);
         out.putInt("napuli_variant", variant());
+        out.putBoolean("napuli_passers_v2", true);
         if (dayPost != null) out.store("napuli_day_post", BlockPos.CODEC, dayPost);
         out.putBoolean("napuli_return_home", returningHome);
     }
@@ -124,6 +129,8 @@ public final class NapoliResident extends PathfinderMob {
         returningHome = in.getBooleanOr("napuli_return_home", false);
         // old saves had no variant: give passers-by a random look instead of all the same one
         int v = in.getIntOr("napuli_variant", -1);
+        if (role() == Role.PASSERBY && !in.getBooleanOr("napuli_passers_v2", false))
+            v = Math.floorMod(getUUID().hashCode(), Role.PASSERBY.variants());
         entityData.set(VARIANT, v >= 0 ? v % role().variants() : random.nextInt(role().variants()));
     }
 
@@ -166,6 +173,10 @@ public final class NapoliResident extends PathfinderMob {
         if (level().isClientSide()) return;
         if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
         if (role().spirit() && --spiritLife <= 0) discard();
+        if (getVehicle() instanceof CityVehicle && level() instanceof ServerLevel city && role().civic()) {
+            CitySimulation.tickEntity(this, city);
+            return;
+        }
         if (isNoAi() || isPassenger() || role().spirit() || role().fighter()) return;
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
         if (level() instanceof ServerLevel city) {
@@ -299,6 +310,8 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && FootballPractice.interact(this, player)) return InteractionResult.SUCCESS;
+        if (hand == InteractionHand.MAIN_HAND && NapoliEmployment.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {
             if (player instanceof ServerPlayer sp) NapoliCivicLife.describe(sp, this);
             return InteractionResult.SUCCESS;

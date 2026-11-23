@@ -87,9 +87,14 @@ public final class CityBehaviorGameTest {
     @GameTest public void calendarScaleChangePreservesAgesAndFamilyIdentities(GameTestHelper helper){
         var city=helper.getLevel();var previous=city.removeAttached(NapoliCivicLife.CENSUS);var ratio=city.removeAttached(CityCalendar.RATIO);int original=CityLifeConfig.settings.daysPerYear;
         try{
-            var c=citizen(city,UUID.randomUUID(),"public_0");city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(NapoliBroadcast.day(city),List.of(c)));city.setAttached(CityCalendar.RATIO,original);
+            var c=citizen(city,UUID.randomUUID(),"public_0");long day=NapoliBroadcast.day(city);int childhood=original*2;
+            var child=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Bambina",true,day-5L*childhood,3,-1,"","public_0",c.id().toString(),false,childhood);
+            var grown=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Figlio adulto",false,day-18L*childhood-3L*original,20,0,"","public_0",c.id().toString(),false,childhood);
+            city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(day,List.of(c,child,grown)));city.setAttached(CityCalendar.RATIO,original);
             CityLifeConfig.settings.daysPerYear=original==7?3:7;CityCalendar.sync(city);
             var changed=NapoliCivicLife.census(city).people().getFirst();helper.assertTrue(changed.age(NapoliBroadcast.day(city))==30&&changed.id().equals(c.id())&&changed.balance()==c.balance(),"A slower calendar cannot turn adults into children or change their savings");
+            var young=NapoliCivicLife.profile(city,child.id());var adult=NapoliCivicLife.profile(city,grown.id());
+            helper.assertTrue(young.age(day)==5&&adult.age(day)==21&&young.childhoodDays()==childhood&&adult.childhoodDays()==childhood,"A fixed childhood rate survives calendar changes before and after adulthood");
             var same=NapoliCivicLife.census(city);CityCalendar.sync(city);helper.assertTrue(NapoliCivicLife.census(city).equals(same),"Calendar conversion runs once");
             helper.assertTrue(new CityLifeConfig.Settings().daysPerYear==7,"New installations have a longer childhood by default");
         }finally{CityLifeConfig.settings.daysPerYear=original;restore(city,NapoliCivicLife.CENSUS,previous);restore(city,CityCalendar.RATIO,ratio);}helper.succeed();

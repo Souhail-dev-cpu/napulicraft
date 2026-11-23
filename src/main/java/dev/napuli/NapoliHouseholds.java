@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public final class NapoliHouseholds {
     public enum Activity { REST, COOK, MATCH, PLAY, WASH, EAT, SLEEP, WORK, SCHOOL, STUDY, SHOP, SOCIAL, CELEBRATE, CARE,
-        FETCH, PREPARE, SET_TABLE, CLEAN, WAIT, COMMUTE }
+        FETCH, PREPARE, SET_TABLE, CLEAN, WAIT, COMMUTE, FRIDGE, DISHES, WAIT_TRANSIT }
     private static final List<BlockPos> HOUSES = List.of(new BlockPos(-173, 64, 12), new BlockPos(-201, 64, 28));
     private static final List<NapoliResident.Role> ROLES = List.of(NapoliResident.Role.FAMILY_MOTHER,
             NapoliResident.Role.FAMILY_FATHER, NapoliResident.Role.FAMILY_CHILD, NapoliResident.Role.FAMILY_CHILD_TWO);

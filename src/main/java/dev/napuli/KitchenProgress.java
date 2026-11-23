@@ -26,7 +26,7 @@ public final class KitchenProgress {
         if (amount <= 0 || !NapoliKitchen.pizza(stack)) return;
         int before = helpers(player);
         player.setAttached(PIZZAS, Math.min(1000000, pizzas(player) + Math.min(amount, 64)));
-        if (helpers(player) > before) player.sendSystemMessage(Component.translatable("napuli.kitchen.chef", pizzas(player), helpers(player)));
+        if (helpers(player) > before) NapoliNotice.show(player, Component.translatable("napuli.kitchen.chef", pizzas(player), helpers(player)));
     }
     static void questStarted(ServerPlayer player) {
         int count = helpers(player);
@@ -40,7 +40,7 @@ public final class KitchenProgress {
             npc.setDropChance(EquipmentSlot.MAINHAND, 0);
         }
         NapoliKitchen.give(player, new ItemStack(Napuli.PIZZA, count));
-        player.sendSystemMessage(Component.translatable("napuli.kitchen.help", count));
+        NapoliNotice.show(player, Component.translatable("napuli.kitchen.help", count));
     }
     static void register() {
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, dealt, blocked) -> {

@@ -1,6 +1,8 @@
 package dev.napuli;
 
 import java.util.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -8,6 +10,49 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffects;
 
 public final class CityLifeGameTest {
+    @GameTest public void footballLineupFillsBothTeamsAndReusesVacancies(GameTestHelper helper) {
+        var occupied = new HashSet<Integer>();
+        for (int i = 0; i < 5; i++) {
+            int seat = FootballLineup.available(4, 0, occupied::contains);
+            helper.assertTrue(seat >= 0 && seat < 5 && occupied.add(seat), "Each Napoli player gets a unique seat");
+        }
+        helper.assertTrue(FootballLineup.available(4, 0, occupied::contains) == -1, "A full side rejects another player");
+        for (int i = 0; i < 5; i++) {
+            int seat = FootballLineup.available(4, -1, occupied::contains);
+            helper.assertTrue(seat >= 5 && occupied.add(seat), "Auto join fills the visiting side");
+        }
+        helper.assertTrue(FootballLineup.available(4, -1, occupied::contains) == -1, "Ten human seats are the limit");
+        occupied.remove(7);
+        helper.assertTrue(FootballLineup.available(1, 5, occupied::contains) == 7, "A departing player frees only their seat");
+        helper.succeed();
+    }
+
+
+    @GameTest public void cryptMigrationClosesTheOldStairsAndOpensTheAqueductPassage(GameTestHelper helper) {
+        var world = helper.getLevel();
+        var altar = new BlockPos(-53, 58, -36);
+        var stairs = new BlockPos(-52, 63, -16);
+        var facade = stairs.above().west(2);
+        world.setBlockAndUpdate(altar, Blocks.CHISELED_TUFF_BRICKS.defaultBlockState());
+        world.removeBlock(stairs, false);
+        world.setBlockAndUpdate(facade, Blocks.TERRACOTTA.defaultBlockState());
+
+        NapoliMap.relocateCrypt(world);
+
+        helper.assertTrue(world.getBlockState(stairs).is(Blocks.STONE_BRICKS),
+                "The old entrance is paved over");
+        helper.assertTrue(world.getBlockState(facade).is(Blocks.TERRACOTTA),
+                "The neighboring facade survives the migration");
+        helper.assertTrue(NapoliMap.inClosedCrypt(world, altar.above()), "Players in the old crypt can be relocated");
+        for (int x = 5; x <= NapoliMap.CRYPT.getX(); x++) {
+            var step = new BlockPos(x, 42, -119);
+            helper.assertTrue(world.getBlockState(step).isAir() && world.getBlockState(step.above()).isAir()
+                    && world.getBlockState(step.below()).is(Blocks.TUFF_BRICKS),
+                    "A walkable passage connects the aqueduct and the crypt");
+        }
+        helper.succeed();
+    }
+
     @GameTest public void censusPopulationAndNeedsSurviveSerialization(GameTestHelper helper) {
         var level=helper.getLevel();var previous=level.removeAttached(NapoliCivicLife.CENSUS);
         var previousLife=level.removeAttached(CitySimulation.LIFE);
@@ -47,13 +92,13 @@ public final class CityLifeGameTest {
         helper.succeed();
     }
     @GameTest public void infantSchoolNightShiftAndNeedsChooseDifferentRoutines(GameTestHelper helper) {
-        var level=helper.getLevel();long day=NapoliBroadcast.day(level);var id=UUID.randomUUID();
+        var level=helper.getLevel();long day=NapoliBroadcast.day(level);var id=new UUID(0, 1);
         var child=new NapoliCivicLife.Citizen(id,"Bambina",true,day-8L*CityLifeConfig.settings.daysPerYear,0,-1,"","public_0","",false);
-        // Use a weekday-independent assertion for bedtime, and a fixed current weekday for lessons.
+        // Fixed personalities keep match celebrations out of the routine assertions.
         helper.assertTrue(CitySimulation.activity(level,child,CitySimulation.fresh(id),17000)==NapoliHouseholds.Activity.SLEEP,"Children sleep at night");
-        var baby=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Neonato",false,day,0,-1,"","public_0","",false);
+        var baby=new NapoliCivicLife.Citizen(new UUID(0, 2),"Neonato",false,day,0,-1,"","public_0","",false);
         helper.assertTrue(CitySimulation.activity(level,baby,CitySimulation.fresh(baby.id()),6000)==NapoliHouseholds.Activity.REST,"Infants do not attend school");
-        var doctor=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Medico di guardia",false,day-30L*CityLifeConfig.settings.daysPerYear,100,NapoliCivicLife.Job.NIGHT_DOCTOR.ordinal(),"","public_1","",false);
+        var doctor=new NapoliCivicLife.Citizen(new UUID(0, 3),"Medico di guardia",false,day-30L*CityLifeConfig.settings.daysPerYear,100,NapoliCivicLife.Job.NIGHT_DOCTOR.ordinal(),"","public_1","",false);
         helper.assertTrue(CitySimulation.activity(level,doctor,CitySimulation.fresh(doctor.id()),17000)==NapoliHouseholds.Activity.WORK,"Night workers stay on duty");
         var needs=new CitySimulation.Needs(5,80,80,80,80,80);
         var l=CitySimulation.fresh(id).withNeeds(needs,4,0,0,0);
@@ -125,8 +170,8 @@ public final class CityLifeGameTest {
     }
     @GameTest public void reportedNpcIsArrestedAndSentenceSerializes(GameTestHelper helper){
         var city=helper.getLevel();var previous=city.removeAttached(CityPublicOrder.INCIDENTS);var lives=city.removeAttached(CitySimulation.LIFE);
-        var suspect=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,helper.absolutePos(new net.minecraft.core.BlockPos(2,2,2)),0);
-        var officer=NapoliResident.spawn(city,NapoliResident.Role.CARABINIERE,helper.absolutePos(new net.minecraft.core.BlockPos(3,2,2)),0);
+        var suspect=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,helper.absolutePos(new BlockPos(2,2,2)),0);
+        var officer=NapoliResident.spawn(city,NapoliResident.Role.CARABINIERE,helper.absolutePos(new BlockPos(3,2,2)),0);
         try{
             CityPublicOrder.report(city,suspect.getUUID(),CityPublicOrder.Offence.THEFT);
             for(int tick=0;tick<20;tick++){officer.tickCount++;CityPublicOrder.tickEntity(officer,city);}

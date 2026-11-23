@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import dev.napuli.Hud;
+import dev.napuli.NapoliEmployment;
 import dev.napuli.Napuli;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -68,12 +69,13 @@ final class HudClient {
 		drawKitchen(g, mc.font, s);
 		if (!s.inCity()) return;
 		Font f = mc.font;
-		int w = 156, x = g.guiWidth() - w - 4, y = 54;   // under the status effect icons
+		int w = Math.clamp(g.guiWidth() / 3, 116, 146), x = g.guiWidth() - w - 4, y = 54;   // under the status effect icons
 		int lh = 11;
 
 		// ---------------- the panel
 		int accent = 0xff58c4ed;
-		int lines = 6 + (s.stars() > 0 ? 1 : 0) + (s.ally() >= 0 ? 2 : 1);
+		boolean reputation = s.lanterns() != 0 || s.tides() != 0 || s.ally() >= 0;
+		int lines = 1 + (reputation ? 7 + (s.ally() >= 0 ? 1 : 0) : 2) + (s.stars() > 0 ? 1 : 0);
 		card(g, x - 5, y - 5, x + w, y + lines * lh + 2, accent);
 		g.text(f, mc.player.getName().getString(), x, y, 0xFFFFFFFF, true);
 		y += lh + 2;
@@ -83,6 +85,8 @@ final class HudClient {
 			g.text(f, d, x + f.width("€ " + s.cash()) + 6, y, (cashDelta > 0 ? 0x66BB6A : 0xEF5350) | (Math.min(255, cashFlash * 8) << 24), true);
 		}
 		y += lh;
+		g.text(f, Component.translatable("napuli.hud.clock", Hud.clock(s.cityTime())), x, y, 0xffb5dfed, false);
+		y += lh;
 		if (s.stars() > 0) {
 			StringBuilder st = new StringBuilder();
 			for (int i = 0; i < 3; i++) st.append(i < s.stars() ? '★' : '☆');
@@ -90,6 +94,7 @@ final class HudClient {
 			g.text(f, st + " " + s.wantedLeft() + "s", x, y, blink ? 0xFFFF5252 : 0xFF448AFF, true);
 			y += lh;
 		}
+		if (reputation) {
 		y += 3;
 		g.text(f, "Reputazione", x, y, 0xFFBDBDBD, false);
 		y += lh;
@@ -108,7 +113,10 @@ final class HudClient {
 		} else {
 			g.text(f, "Senza clan", x, y, 0xFF9E9E9E, true);
 		}
-		y += lh + 8;
+		y += lh;
+		}
+		y += 8;
+		if (s.jail() <= 0 && s.tx() == Hud.NO_TARGET && s.objective().equals("none")) return;
 
 		// ---------------- the mission tracker
 		String title, line;
@@ -124,7 +132,8 @@ final class HudClient {
 			line = Component.translatable(key, s.cooldown()).getString();
 		}
 		var wrapped = f.split(Component.literal(line), w - 6);
-		int th = 14 + wrapped.size() * 10 + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
+		boolean shift = employment && !jailed;
+		int th = 14 + wrapped.size() * 10 + (shift ? 11 : 0) + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
 				if (employment && !jailed) {
 			g.fill(x - 3, y - 3, x + w + 2, y + th + 2, 0x6605070c);
 			g.fill(x - 5, y - 5, x + w, y + th, 0xee122927);
@@ -136,6 +145,12 @@ final class HudClient {
 		g.text(f, title, x, y, jailed ? 0xFFEF5350 : employment ? 0xffffe1a9 : 0xFFFFD54F, true);
 		y += 12;
 		for (var l : wrapped) { g.text(f, l, x, y, 0xFFFFFFFF, true); y += 10; }
+        if (shift) {
+            boolean open = s.cityTime() >= NapoliEmployment.OPEN && s.cityTime() < NapoliEmployment.CLOSE;
+            g.text(f, Component.translatable("napuli.hud.shift", Hud.clock(NapoliEmployment.OPEN),
+                    Hud.clock(NapoliEmployment.CLOSE)), x, y, open ? 0xff8add91 : 0xffffad81, false);
+            y += 11;
+        }
 		if (s.tx() != Hud.NO_TARGET && !jailed) {
 			double dx = s.tx() + 0.5 - mc.player.getX(), dz = s.tz() + 0.5 - mc.player.getZ();
 			int dist = (int) Math.round(Math.hypot(dx, dz));
@@ -148,21 +163,30 @@ final class HudClient {
 	}
 
 	private static void drawKitchen(GuiGraphicsExtractor g, Font font, Hud.State state) {
-		int x = 6, y = 8, width = 110;
-		card(g, x - 4, y - 4, x + width + 5, y + (state.inCity() ? 55 : 39), 0xffe6b65c);
+		int x = 6, y = 8, width = Math.clamp(g.guiWidth() / 4, 85, 108);
+		boolean pizzas = state.pizzas() > 0, hot = state.heat() > 0;
+		int bottom = y + 20 + (pizzas ? 11 : 0) + (hot ? 13 : 0) + (state.inCity() ? 13 : 0);
+		card(g, x - 4, y - 4, x + width + 5, bottom, 0xffe6b65c);
 		g.text(font, Component.translatable("napuli.kitchen.hunger"), x, y, 0xFFFFD180, true);
 		g.fill(x, y + 10, x + width, y + 14, 0xFF383838);
 		g.fill(x, y + 10, x + Math.clamp(state.fullness(), 0, 60) * width / 60, y + 14,
 				state.fullness() >= 50 ? 0xFFEF5350 : 0xFFFFB74D);
-		g.text(font, Component.translatable("napuli.kitchen.pizzas", state.pizzas()), x, y + 17, 0xFFFFFFFF, false);
-		g.text(font, Component.translatable("napuli.kitchen.heat"), x, y + 28, 0xFFBDBDBD, false);
-		g.fill(x + 40, y + 30, x + width, y + 34, 0xFF383838);
-		g.fill(x + 40, y + 30, x + 40 + Math.clamp(state.heat(), 0, 100) * (width - 40) / 100, y + 34, 0xFFFF7043);
+		y += 17;
+		if (pizzas) {
+			g.text(font, Component.translatable("napuli.kitchen.pizzas", state.pizzas()), x, y, 0xFFFFFFFF, false);
+			y += 11;
+		}
+		if (hot) {
+			g.text(font, Component.translatable("napuli.kitchen.heat"), x, y, 0xFFBDBDBD, false);
+			g.fill(x + 40, y + 2, x + width, y + 6, 0xFF383838);
+			g.fill(x + 40, y + 2, x + 40 + Math.clamp(state.heat(), 0, 100) * (width - 40) / 100, y + 6, 0xFFFF7043);
+			y += 13;
+		}
 		if (state.inCity()) {
-			g.text(font, Component.translatable("napuli.hygiene.label"), x, y + 42, 0xffb5dfed, false);
+			g.text(font, Component.translatable("napuli.hygiene.label"), x, y, 0xffb5dfed, false);
 			int hygiene = Math.clamp(state.hygiene(), 0, 100);
-			g.fill(x + 40, y + 44, x + width, y + 48, 0xff354b58);
-			g.fill(x + 40, y + 44, x + 40 + (width - 40) * hygiene / 100, y + 48,
+			g.fill(x + 40, y + 2, x + width, y + 6, 0xff354b58);
+			g.fill(x + 40, y + 2, x + 40 + (width - 40) * hygiene / 100, y + 6,
 					hygiene <= 25 ? 0xffec7857 : 0xff59c7da);
 		}
 	}

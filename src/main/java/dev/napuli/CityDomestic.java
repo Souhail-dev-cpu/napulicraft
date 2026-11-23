@@ -104,6 +104,7 @@ final class CityDomestic {
         npc.swingForAttack(InteractionHand.MAIN_HAND);
         if(d.stage()==0){if(d.progress()==0)unpack(city,c,point.block());barrel(city,point.block(),true);}
         if(d.progress()==0){
+            if(d.stage()==3)DomesticMeals.setTable(city,point.block(),true);
             SoundEvent sound=switch(d.stage()){case 0->SoundEvents.BARREL_OPEN;case 1,3->SoundEvents.ITEM_FRAME_ADD_ITEM;case 2->SoundEvents.FURNACE_FIRE_CRACKLE;case 4->SoundEvents.GENERIC_EAT.value();default->SoundEvents.BUCKET_EMPTY;};
             city.playSound(null,point.block(),sound,SoundSource.NEUTRAL,.35f,1);
         }
@@ -118,6 +119,7 @@ final class CityDomestic {
             city.sendParticles(ParticleTypes.HAPPY_VILLAGER,npc.getX(),npc.getY()+1,npc.getZ(),3,.2,.2,.2,0);
         }
         if(d.stage()==5){
+            DomesticMeals.setTable(city,point(h,3).block(),false);
             var l=CitySimulation.life(city,c.id());CitySimulation.put(city,c.id(),l.withNeeds(l.needs().change(0,0,4,0,0,0),l.food(),l.last(),l.water()+1,l.energy()+1));
             put(city,c.id(),new Dinner(h.id(),-1,0,now));npc.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
         }else put(city,c.id(),new Dinner(h.id(),d.stage()+1,0,d.served()));

@@ -14,9 +14,15 @@ final class CityCalendar {
         if(census!=null&&previous!=current){
             long day=NapoliBroadcast.day(city);var people=new ArrayList<NapoliCivicLife.Citizen>();
             for(var c:census.people()){
-                long elapsed=Math.max(0,day-c.birth());long years=elapsed/Math.max(1,previous),remainder=elapsed%Math.max(1,previous);
-                long birth=day-years*current-remainder*current/Math.max(1,previous);
-                people.add(new NapoliCivicLife.Citizen(c.id(),c.name(),c.woman(),birth,c.balance(),c.job(),c.partner(),c.property(),c.parents(),c.spawned()));
+                long elapsed=Math.max(0,day-c.birth());
+                long youth=c.childhoodDays()>0?(long)c.childhoodDays()*NapoliCivicLife.ADULT_AGE:0;
+                // A child's own growth rate is fixed at birth; only the adult years use the global rate.
+                long birth=c.birth();
+                if(elapsed>=youth){
+                    long adult=elapsed-youth,years=adult/Math.max(1,previous),remainder=adult%Math.max(1,previous);
+                    birth=day-youth-years*current-remainder*current/Math.max(1,previous);
+                }
+                people.add(new NapoliCivicLife.Citizen(c.id(),c.name(),c.woman(),birth,c.balance(),c.job(),c.partner(),c.property(),c.parents(),c.spawned(),c.childhoodDays()));
             }city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),List.copyOf(people)));
         }city.setAttached(RATIO,current);
     }

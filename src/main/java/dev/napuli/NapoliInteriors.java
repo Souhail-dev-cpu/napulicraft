@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  * the Carabinieri caserma with two cells, and the new girls. Runs once per world, also on cities built before.
  */
 final class NapoliInteriors {
-	static final int VERSION_NOW = 21;
+	static final int VERSION_NOW = 28;
 	private static final AttachmentType<Integer> VERSION = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT).buildAndRegister(Napuli.id("napoli_version"));
 	static final BlockPos PIZZERIA = new BlockPos(-64, 64, -20);
@@ -41,6 +41,10 @@ final class NapoliInteriors {
 	private final RandomSource random;
 
 	private NapoliInteriors(ServerLevel world) { this.world = world; this.random = world.getRandom(); }
+
+	static boolean upgradedWorkplaces(ServerLevel world) {
+		return world.getAttachedOrElse(VERSION, 1) >= 23;
+	}
 
 	static void upgrade(ServerLevel world) {
 		int v = world.getAttachedOrElse(VERSION, 1);
@@ -73,9 +77,19 @@ final class NapoliInteriors {
 			NapoliCityScale.build(world);
 			NapoliShower.upgrade(world);
 		}
-		if(v<19) { CityLivingHomes.build(world); CityProfessions.build(world); NapoliCivicLife.populate(world); }
+		if (v < 19) {
+			CityLivingHomes.build(world);
+			CityProfessions.build(world);
+			NapoliCivicLife.populate(world);
+		}
 		if (v < 20) NapoliPublicBuildings.upgrade(world);
-		if(v<21){CityArrivals.fixtures(world);CityAtmosphere.fixtures(world);}
+		if (v < 23) NapoliEmployment.buildWorkplaces(world);
+		if (v < 24) NapoliMap.relocateCrypt(world);
+		if (v < 25) FootballGround.build(world);
+		if (v < 26) FootballFacilities.build(world);
+		if (v < 27) CityHeists.build(world);
+		// Both branches used version 21. Apply these additive fixtures on either upgrade path.
+		if(v<28){CityArrivals.fixtures(world);CityAtmosphere.fixtures(world);}
 		world.setAttached(VERSION, VERSION_NOW);
 	}
 

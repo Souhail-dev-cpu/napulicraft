@@ -46,10 +46,11 @@ final class NapoliPeople {
 			}
 			case PIZZAIOLO, PRESEPAIO -> {
 				boolean pizza = npc.role() == NapoliResident.Role.PIZZAIOLO;
-				int price = pizza ? PIZZA_PRICE : CORNO_PRICE;
+				int price = NeighbourMemory.price(p, npc, pizza ? PIZZA_PRICE : CORNO_PRICE);
 				if (p.isShiftKeyDown()) {                       // sneak + click = buy
 					if (NapoliStreet.cash(p) < price) { say(p, npc, "napuli.people.broke"); return; }
 					NapoliStreet.credit(p, -price);
+					NeighbourMemory.remember(p, npc, 2);
 					give(p, new ItemStack(pizza ? Napuli.PIZZA : Napuli.CORNICELLO));
 					say(p, npc, "napuli.people." + id + ".sold");
 					return;
@@ -66,7 +67,8 @@ final class NapoliPeople {
 			case TIFOSO -> p.level().playSound(null, npc.blockPosition(), SoundEvents.NOTE_BLOCK_TRUMPET.value(), SoundSource.NEUTRAL, 1f, 1.2f);
 			default -> {}
 		}
-		say(p, npc, "napuli.people." + id + "." + line);
+		if (NeighbourMemory.trust(p, npc) != 0) NeighbourMemory.greet(p, npc);
+		else say(p, npc, "napuli.people." + id + "." + line);
 	}
 
 	private static void give(ServerPlayer p, ItemStack stack) {

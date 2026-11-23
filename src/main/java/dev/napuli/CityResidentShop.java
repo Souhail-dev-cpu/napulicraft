@@ -49,7 +49,7 @@ final class CityResidentShop {
     static boolean merchant(NapoliCivicLife.Citizen c) { return c.profession()==NapoliCivicLife.Job.AIR_SELLER||c.profession()==NapoliCivicLife.Job.INFLUENCER; }
     static void offer(ServerPlayer p,NapoliCivicLife.Citizen c) {
         if(!merchant(c))return;
-        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CitySocial.price(p.level(),c.id(),p.getUUID(),CityEvents.price(p.level(),water?12:4));
+        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=shopPrice(p,c.id(),water?12:4);
         var title=Component.literal(water?"Acqua da bagno personale · influencer adulta":"Ampolle d'aria di Napoli");
         var action=new ActionButton(new CommonButtonData(Component.literal("Compra · "+cost+" €"),250),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/bottega "+c.id()))));
@@ -61,18 +61,25 @@ final class CityResidentShop {
         var c=NapoliCivicLife.profile(p.level(),id);var entity=p.level().getEntity(id);
         if(c==null||!merchant(c)||entity==null||entity.distanceToSqr(p)>36||c.age(NapoliBroadcast.day(p.level()))<18)return 0;
         if(!CityProfessions.open(c.profession(),NapoliBroadcast.time(p.level()),NapoliBroadcast.day(p.level()))) {
-            p.sendSystemMessage(Component.literal("La bottega è chiusa: ripassa durante il turno."));return 0;
+            NapoliNotice.show(p, Component.literal("La bottega è chiusa: ripassa durante il turno."));return 0;
         }
         if(CitySocial.bond(p.level(),id,p.getUUID()).trust()<15)return 0;
-        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),water?12:4));
+        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=shopPrice(p,id,water?12:4);
         if(NapoliStreet.cash(p)<cost)return 0;
         var stack=new ItemStack(water?WATER:AIR);if(!p.getInventory().add(stack))return 0;
         NapoliStreet.credit(p,-cost);
         CitySocial.purchased(p.level(),id,p.getUUID());
+        if(entity instanceof NapoliResident npc)NeighbourMemory.remember(p,npc,2);
         var census=NapoliCivicLife.census(p.level());
         p.level().setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()
                 .map(person->person.id().equals(id)?person.withMoney(Math.min(99999,person.balance()+cost),person.job()):person).toList()));return 1;
     }
+    private static int shopPrice(ServerPlayer p, UUID seller, int base) {
+        int local = CityEvents.price(p.level(), base);
+        int remembered=p.level().getEntity(seller) instanceof NapoliResident npc?NeighbourMemory.price(p,npc,local):local;
+        return CitySocial.price(p.level(),seller,p.getUUID(),remembered);
+    }
+
     static void register() {
         CommandRegistrationCallback.EVENT.register((d,a,e)->d.register(Commands.literal("bottega").then(Commands.argument("venditore",StringArgumentType.word())
                 .executes(c->{try{return buy(c.getSource().getPlayerOrException(),UUID.fromString(StringArgumentType.getString(c,"venditore")));}catch(IllegalArgumentException invalid){return 0;}}))));

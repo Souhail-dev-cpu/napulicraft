@@ -48,6 +48,12 @@ public final class NapoliScenes {
             if (!player.isAlive() || player.isSpectator()) continue;
             NapoliStreet.tick(level, player, now);
             BlockPos pos = player.blockPosition();
+            if (NapoliMap.inClosedCrypt(level, pos)) {
+                BlockPos entry = NapoliLocalMap.TUNNEL_START;
+                player.teleportTo(level, entry.getX() + 0.5, entry.getY(), entry.getZ() + 0.5,
+                        java.util.Set.of(), player.getYRot(), player.getXRot(), true);
+                continue;
+            }
             Visits visits = player.getAttachedOrCreate(VISITS, Visits::new);
             if (now >= NEXT_MOTORINO.getOrDefault(level, 0L) && pos.getY() >= NapoliMap.STREET
                     && Math.abs(pos.getX()) < 17 && pos.getZ() >= -51 && pos.getZ() < 39) {
@@ -179,7 +185,7 @@ public final class NapoliScenes {
             default -> throw new IllegalArgumentException(role.toString());
         }
         if (charm && role != NapoliResident.Role.MBRIANA)
-            player.sendSystemMessage(Component.translatable("napuli.folklore.charm"));
+            NapoliNotice.show(player, Component.translatable("napuli.folklore.charm"));
     }
 
     static void answerSpirit(ServerPlayer player, NapoliResident spirit) {
@@ -209,7 +215,7 @@ public final class NapoliScenes {
         level.sendParticles(ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(),
                 24, 0.32, 0.5, 0.32, 0.03);
         level.playSound(null, spirit.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 0.8f, 1.1f);
-        player.sendSystemMessage(Component.translatable("napuli.horror.answer_" + spirit.role().id()));
+        NapoliNotice.show(player, Component.translatable("napuli.horror.answer_" + spirit.role().id()));
         spirit.discard();
     }
 

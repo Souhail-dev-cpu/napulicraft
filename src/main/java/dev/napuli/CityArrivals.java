@@ -61,7 +61,7 @@ final class CityArrivals {
         }
         p.sendOverlayMessage(Component.literal(answered?"Il campanello ha avvisato chi abita qui.":"Nessuna risposta. Puoi ripassare più tardi."));return 1;
     }
-    static String keyHome(ItemStack stack){var data=stack.get(DataComponents.CUSTOM_DATA);return stack.is(Items.TRIPWIRE_HOOK)&&data!=null?data.copyTag().getStringOr("napuli_home",""):"";}
+    static String keyHome(ItemStack stack){var data=stack.get(DataComponents.CUSTOM_DATA);if(!stack.is(Items.TRIPWIRE_HOOK)||data==null)return "";var tag=data.copyTag();return tag.getStringOr("napuli_home",tag.getStringOr("napuli_house",""));}
     static int key(ServerPlayer p,String id){
         var h=house(id);if(h==null||p.level().dimension()!=NapoliMap.LEVEL||!p.isAlive()||p.isSpectator()||!NapoliProperties.hasAccess(p,h))return 0;
         for(int i=0;i<p.getInventory().getContainerSize();i++)if(keyHome(p.getInventory().getItem(i)).equals(id))return 0;

@@ -53,7 +53,7 @@ final class MunacielloFriendship {
         chest.setChanged();
         monk.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         var pos = chest.getBlockPos();
-        player.sendSystemMessage(Component.translatable("napuli.munaciello.hidden", pos.getX(), pos.getY(), pos.getZ()));
+        NapoliNotice.show(player, Component.translatable("napuli.munaciello.hidden", pos.getX(), pos.getY(), pos.getZ()));
         return true;
     }
 }

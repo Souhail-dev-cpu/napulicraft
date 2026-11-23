@@ -35,7 +35,10 @@ public class NapuliClient implements ClientModInitializer {
 		EntityRendererRegistry.register(Napuli.RESIDENT, ResidentRenderer::new);
 		RadioClient.register();
 		HudClient.register();
+		NapoliNoticeToast.register();
 		FootballScreen.register();
+		FootballMenuScreen.register();
+		FootballControlsClient.register();
 		EmploymentScreen.register();
 		TelevisionScreen.register();
 		dev.napuli.LivingCityTest.register();
@@ -107,7 +110,14 @@ public class NapuliClient implements ClientModInitializer {
 			return TEXTURES.computeIfAbsent(name, n -> Napuli.id("textures/entity/" + n + ".png"));
 		}
 
-		@Override public Identifier getTextureLocation(NapoliResidentModel.State state) { return texture(state.role, state.variant); }
+		@Override public Identifier getTextureLocation(NapoliResidentModel.State state) {
+			if (state.alternateCivic && state.variant != 10) {
+				String prefix = state.role == dev.napuli.NapoliResident.Role.CIVIC_WOMAN ? "civic_woman_alt_" : "civic_man_alt_";
+				String name = prefix + Math.floorMod(state.variant, 10);
+				return TEXTURES.computeIfAbsent(name, n -> Napuli.id("textures/entity/" + n + ".png"));
+			}
+			return texture(state.role, state.variant);
+		}
 		@Override public NapoliResidentModel.State createRenderState() { return new NapoliResidentModel.State(); }
 		@Override
 		protected void scale(NapoliResidentModel.State s, PoseStack pose) {
@@ -124,6 +134,7 @@ public class NapuliClient implements ClientModInitializer {
 			super.extractRenderState(npc, state, partialTick);
 			state.role = npc.role();
 			state.variant = npc.variant();
+			state.alternateCivic = (state.role == dev.napuli.NapoliResident.Role.CIVIC_WOMAN || state.role == dev.napuli.NapoliResident.Role.CIVIC_MAN) && (npc.getUUID().hashCode() & 1) == 0;
 			state.activity = npc.activity();
 			if (npc.getVehicle() instanceof Motorino bike) {
 				state.bodyRot = bike.getYRot(partialTick);

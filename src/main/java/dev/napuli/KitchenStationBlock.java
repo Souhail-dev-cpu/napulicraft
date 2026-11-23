@@ -197,5 +197,5 @@ public final class KitchenStationBlock extends net.minecraft.world.level.block.B
         return addition.isEmpty();
     }
 
-    private static void say(ServerPlayer player, String key, Object... args) { player.sendSystemMessage(Component.translatable("napuli.kitchen." + key, args)); }
+    private static void say(ServerPlayer player, String key, Object... args) { NapoliNotice.show(player, Component.translatable("napuli.kitchen." + key, args)); }
 }

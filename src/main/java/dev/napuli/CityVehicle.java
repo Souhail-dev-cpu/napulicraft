@@ -35,7 +35,7 @@ public final class CityVehicle extends PathfinderMob {
         var target=route().get(Math.floorMod(waypoint,route().size()));
         var difference=target.subtract(position()).multiply(1,0,1);
         if(difference.length()<.35){waypoint++;stop=kind()==0?5:80;setDeltaMovement(Vec3.ZERO);return;}
-        var motion=difference.normalize().scale(kind()==0?.14:.11);
+        var motion=difference.normalize().scale((kind()==0?.14:.11)*(city.isRaining()?.8:1));
         var ahead=getBoundingBox().move(motion.scale(14)).inflate(.1,0,.1);
         if(!city.hasChunkAt(BlockPos.containing(position().add(motion.scale(20))))||!city.getEntities(this,ahead,e->!e.isPassengerOfSameVehicle(this)&&e.isAlive()&&(e instanceof Player||e instanceof CityVehicle||e instanceof NapoliResident)).isEmpty()){
             setDeltaMovement(Vec3.ZERO);return;
@@ -47,7 +47,7 @@ public final class CityVehicle extends PathfinderMob {
     @Override protected InteractionResult mobInteract(Player p,InteractionHand hand){
         if(hand!=InteractionHand.MAIN_HAND||p.isShiftKeyDown())return InteractionResult.PASS;
         if(!level().isClientSide()&&canAddPassenger(p)&&p.startRiding(this)){
-            stop=60;if(p instanceof net.minecraft.server.level.ServerPlayer sp)sp.sendSystemMessage(Component.literal("Trasporto urbano automatico. Shift per scendere."));
+            stop=60;if(p instanceof net.minecraft.server.level.ServerPlayer sp)NapoliNotice.show(sp, Component.literal("Trasporto urbano automatico. Shift per scendere."));
         }
         return InteractionResult.SUCCESS;
     }

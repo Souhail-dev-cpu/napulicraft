@@ -48,7 +48,7 @@ final class EmploymentScreen extends Screen {
                     boolean current = board.current().equals(offer.id());
                     g.fill(x, y, x + getWidth(), y + getHeight(), isHoveredOrFocused() ? 0xffffdfac : 0xffeadcc4);
                     if (current) g.fill(x, y, x + 3, y + getHeight(), 0xff2d8265);
-                    String pay = "€ " + offer.wage();
+                    String pay = "€ " + offer.wage() + "/h";
                     int payWidth = font.width(pay);
                     g.text(font, pay, x + getWidth() - payWidth - 5, y + 2, 0xff25664e, false);
                     var job = Component.translatable(offer.name()).getString();

@@ -159,7 +159,7 @@ public class Motorino extends Mob {
 			this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 1f, 1.6f);
 			if (this.getPassengers().size() == 3)
 				for (Entity e : this.getPassengers())
-					if (e instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("napuli.motorino.tre"));
+					if (e instanceof ServerPlayer sp) NapoliNotice.show(sp, Component.translatable("napuli.motorino.tre"));
 		}
 		return InteractionResult.SUCCESS;
 	}

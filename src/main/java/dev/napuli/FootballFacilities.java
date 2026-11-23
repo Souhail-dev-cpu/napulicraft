@@ -49,8 +49,8 @@ final class FootballFacilities {
         for (int z = 19; z <= 35; z++) {
             fill(city, 353, 63, z, 355, 63, z, z == 19 || z == 35 ? Blocks.CALCITE : block("red_terracotta"));
         }
-        staff(city, CLERK, RECEPTION_TAG, NapoliResident.Role.EMPLOYMENT_CLERK, "napuli.football.clerk");
-        staff(city, COACH, TRAINER_TAG, NapoliResident.Role.SHIFT_LEAD, "napuli.football.trainer");
+        staff(city, CLERK, RECEPTION_TAG, NapoliResident.Role.FOOTBALL_CLERK, "napuli.football.clerk");
+        staff(city, COACH, TRAINER_TAG, NapoliResident.Role.FOOTBALL_COACH, "napuli.football.trainer");
     }
 
     private static void pavilion(ServerLevel city, int x1, int z1, int x2, int z2, int roof,
@@ -70,6 +70,11 @@ final class FootballFacilities {
         fill(city, x1 + 1, roof + 1, z1 + 1, x2 - 1, roof + 1, z2 - 1, Blocks.POLISHED_DEEPSLATE);
         for (int z = z1 + 2; z < z2; z += 4)
             fill(city, x1 + 2, roof - 1, z, x2 - 2, roof - 1, z, Blocks.SEA_LANTERN);
+    }
+
+    static void updateStaffAppearance(NapoliResident npc) {
+        if (npc.entityTags().contains(RECEPTION_TAG)) npc.setEmploymentAppearance(NapoliResident.Role.FOOTBALL_CLERK, 0);
+        else if (npc.entityTags().contains(TRAINER_TAG)) npc.setEmploymentAppearance(NapoliResident.Role.FOOTBALL_COACH, 0);
     }
 
     private static void staff(ServerLevel city, BlockPos post, String tag, NapoliResident.Role role, String name) {

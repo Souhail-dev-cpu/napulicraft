@@ -73,7 +73,7 @@ public class Napuli implements ModInitializer {
 	}
 
 	// ------------------------------------------------------------ items
-	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, CASCO, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MUNACIELLO_EGG, GIGANTE_EGG, NAPULETANO_EGG;
+	public static Item CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, MOTORINO_ITEM, KNUCKLES, KNIFE, PISTOL, BATON, BOMBA_CARTA, CASCO, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MUNACIELLO_EGG, GIGANTE_EGG, NAPULETANO_EGG;
 
 	private static Item item(String name, Function<Item.Properties, Item> factory, Item.Properties props) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id(name));
@@ -118,6 +118,7 @@ public class Napuli implements ModInitializer {
 		MOTORINO_ITEM = item("motorino", MotorinoItem::new, new Item.Properties().stacksTo(1));
 		KNUCKLES = melee("tirapugni", 3, 2.5);
 		KNIFE = melee("coltello", 4, 2.1);
+		BOMBA_CARTA = item("bomba_carta", BombaCartaItem::new, new Item.Properties().stacksTo(8));
 		BATON = melee("manganello", 5, 1.5);
 		PISTOL = item("pistola", PistolaItem::new, new Item.Properties().durability(24));
 		// 'O casco: the scooter helmet. Without it, the carabinieri stop you (and the boys on the scooter too)
@@ -139,7 +140,7 @@ public class Napuli implements ModInitializer {
 				.title(net.minecraft.network.chat.Component.translatable("itemGroup.napuli.napulicraft"))
 				.icon(() -> new net.minecraft.world.item.ItemStack(CORNICELLO))
 				.displayItems((params, out) -> {
-					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
+					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL, BOMBA_CARTA,
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
 					NapoliKitchen.ITEMS.values().forEach(out::accept);
 					out.accept(CityResidentShop.AIR);out.accept(CityResidentShop.WATER);
@@ -160,6 +161,7 @@ public class Napuli implements ModInitializer {
 		HouseGuests.register();
 		NapoliBroadcast.register();
 		FootballPractice.register();
+		CityHeists.register();
 		NapoliCivicLife.register();
 		CitySimulation.register();
 		NapoliEmployment.register();

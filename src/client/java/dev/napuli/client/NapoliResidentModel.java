@@ -146,8 +146,8 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case MUSICISTA -> Set.of("side_part", "mandolin");
 			case GUARDIANO_PRESEPE -> Set.of("coppola", "scarf");
 			case EMPLOYMENT_CLERK -> Set.of("bun");
-			case SHIFT_LEAD -> Set.of("cap");
-			case SHIFT_WORKER -> Set.of("side_part");
+			case SHIFT_LEAD, FOOTBALL_COACH -> Set.of("cap");
+			case SHIFT_WORKER, FOOTBALL_CLERK -> Set.of("side_part");
 			case PASSERBY -> switch (variant) {
 				case 0 -> Set.of("coppola");                    // 'o nonno
 				case 1 -> Set.of("bun", "skirt", "earrings");    // 'a signora

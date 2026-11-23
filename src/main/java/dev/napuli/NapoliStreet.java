@@ -46,7 +46,7 @@ public final class NapoliStreet {
     private record Spot(NapoliResident.Role role, BlockPos pos, float yaw) {}
     private record Session(NapoliResident npc, String token, long expires, List<Action> allowed) {}
     private record Offer(ItemStack stack, int cost) {}
-    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE, HELMET, SCOOTER, MINE_JOB, SURVEY_JOB }
+    private enum Action { PIZZA, BREAD, COFFEE, SWORD, COAT, CHARM, DELIVERY, TURN_IN, LEFT, MIDDLE, RIGHT, HELP_SUPPLY, HELP_CLASH, CONTACT, REPORT, ABANDON, LEVY, CACHE, COLLECT, TAKE_LEDGER, KNUCKLES, KNIFE, PISTOL, BATON, SOCKS, CHEESE, HELMET, SCOOTER, MINE_JOB, SURVEY_JOB, BOMBA_CARTA }
 
     private static final List<Spot> SPOTS = List.of(
         new Spot(NapoliResident.Role.PEPPE_FETISH, PeppeFetish.STALL, 0),
@@ -275,7 +275,7 @@ public final class NapoliStreet {
                     ? List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY, Action.COLLECT)
                     : List.of(Action.PIZZA, Action.BREAD, Action.COFFEE, Action.DELIVERY);
             case MOTOR_DEALER -> List.of(Action.HELMET, Action.SCOOTER);
-            case ARMORER -> List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON);
+            case ARMORER -> List.of(Action.KNUCKLES, Action.KNIFE, Action.PISTOL, Action.BATON, Action.BOMBA_CARTA);
             case TAILOR -> {
                 var gear = new java.util.ArrayList<>(List.of(Action.COAT, Action.CHARM));
                 if (NapoliFactions.onErrand(player, true)) gear.add(Action.TAKE_LEDGER);
@@ -341,6 +341,7 @@ public final class NapoliStreet {
             case BREAD -> new Offer(new ItemStack(Items.BREAD, 2), 3);
             case COFFEE -> new Offer(new ItemStack(Napuli.CAFE), 3);
             case SWORD -> new Offer(new ItemStack(Items.IRON_SWORD), 14);
+            case BOMBA_CARTA -> new Offer(new ItemStack(Napuli.BOMBA_CARTA), 9);
             case KNUCKLES -> new Offer(new ItemStack(Napuli.KNUCKLES), 11);
             case KNIFE -> new Offer(new ItemStack(Napuli.KNIFE), 15);
             case PISTOL -> new Offer(new ItemStack(Napuli.PISTOL), 24);

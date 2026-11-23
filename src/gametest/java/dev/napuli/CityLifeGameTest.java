@@ -10,6 +10,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffects;
 
 public final class CityLifeGameTest {
+    @GameTest public void footballLineupFillsBothTeamsAndReusesVacancies(GameTestHelper helper) {
+        var occupied = new HashSet<Integer>();
+        for (int i = 0; i < 5; i++) {
+            int seat = FootballLineup.available(4, 0, occupied::contains);
+            helper.assertTrue(seat >= 0 && seat < 5 && occupied.add(seat), "Each Napoli player gets a unique seat");
+        }
+        helper.assertTrue(FootballLineup.available(4, 0, occupied::contains) == -1, "A full side rejects another player");
+        for (int i = 0; i < 5; i++) {
+            int seat = FootballLineup.available(4, -1, occupied::contains);
+            helper.assertTrue(seat >= 5 && occupied.add(seat), "Auto join fills the visiting side");
+        }
+        helper.assertTrue(FootballLineup.available(4, -1, occupied::contains) == -1, "Ten human seats are the limit");
+        occupied.remove(7);
+        helper.assertTrue(FootballLineup.available(1, 5, occupied::contains) == 7, "A departing player frees only their seat");
+        helper.succeed();
+    }
+
 
     @GameTest public void cryptMigrationClosesTheOldStairsAndOpensTheAqueductPassage(GameTestHelper helper) {
         var world = helper.getLevel();
@@ -74,13 +91,13 @@ public final class CityLifeGameTest {
         helper.succeed();
     }
     @GameTest public void infantSchoolNightShiftAndNeedsChooseDifferentRoutines(GameTestHelper helper) {
-        var level=helper.getLevel();long day=NapoliBroadcast.day(level);var id=UUID.randomUUID();
+        var level=helper.getLevel();long day=NapoliBroadcast.day(level);var id=new UUID(0, 1);
         var child=new NapoliCivicLife.Citizen(id,"Bambina",true,day-8L*CityLifeConfig.settings.daysPerYear,0,-1,"","public_0","",false);
-        // Use a weekday-independent assertion for bedtime, and a fixed current weekday for lessons.
+        // Fixed personalities keep match celebrations out of the routine assertions.
         helper.assertTrue(CitySimulation.activity(level,child,CitySimulation.fresh(id),17000)==NapoliHouseholds.Activity.SLEEP,"Children sleep at night");
-        var baby=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Neonato",false,day,0,-1,"","public_0","",false);
+        var baby=new NapoliCivicLife.Citizen(new UUID(0, 2),"Neonato",false,day,0,-1,"","public_0","",false);
         helper.assertTrue(CitySimulation.activity(level,baby,CitySimulation.fresh(baby.id()),6000)==NapoliHouseholds.Activity.REST,"Infants do not attend school");
-        var doctor=new NapoliCivicLife.Citizen(UUID.randomUUID(),"Medico di guardia",false,day-30L*CityLifeConfig.settings.daysPerYear,100,NapoliCivicLife.Job.NIGHT_DOCTOR.ordinal(),"","public_1","",false);
+        var doctor=new NapoliCivicLife.Citizen(new UUID(0, 3),"Medico di guardia",false,day-30L*CityLifeConfig.settings.daysPerYear,100,NapoliCivicLife.Job.NIGHT_DOCTOR.ordinal(),"","public_1","",false);
         helper.assertTrue(CitySimulation.activity(level,doctor,CitySimulation.fresh(doctor.id()),17000)==NapoliHouseholds.Activity.WORK,"Night workers stay on duty");
         var needs=new CitySimulation.Needs(5,80,80,80,80,80);
         var l=CitySimulation.fresh(id).withNeeds(needs,4,0,0,0);

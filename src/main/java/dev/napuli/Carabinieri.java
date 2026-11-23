@@ -39,7 +39,7 @@ public final class Carabinieri {
 	private Carabinieri() {}
 
 	public enum Crime {
-		THEFT(1, 28), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32);
+		THEFT(1, 28), ROBBERY(3, 52), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32);
 		final int gravity, witnessRange;
 		Crime(int gravity, int witnessRange) { this.gravity = gravity; this.witnessRange = witnessRange; }
 		String id() { return name().toLowerCase(); }

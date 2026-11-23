@@ -27,15 +27,21 @@ final class FootballMenuScreen extends Screen {
 
     @Override protected void init() {
         panelWidth = Math.min(width - 16, 354);
-        panelHeight = menu.canReturn() ? 161 : 131;
+        panelHeight = menu.canReturn() ? 188 : 158;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
         int cell = (panelWidth - 28) / 2;
-        option("watch_option", "guarda", left + 10, top + 62, cell);
-        option("play_option", "gioca", left + 18 + cell, top + 62, cell);
+        int entryCell = (panelWidth - 28) / 3;
+        option("watch_option", "guarda", left + 10, top + 62, entryCell);
+        option("play_option", "gioca napoli", left + 14 + entryCell, top + 62, entryCell);
+        option("away_option", "gioca ospiti", left + 18 + 2 * entryCell, top + 62, entryCell);
         option("training_option", "palestra", left + 10, top + 91, cell);
         option("profile_option", "", left + 18 + cell, top + 91, cell);
-        if (menu.canReturn()) option("return_option", "torna", left + 10, top + 120, panelWidth - 20);
+        int roleCell = (panelWidth - 28) / 3;
+        option("role.attack", "ruolo attaccante", left + 10, top + 120, roleCell);
+        option("role.midfield", "ruolo centrocampista", left + 14 + roleCell, top + 120, roleCell);
+        option("role.defense", "ruolo difensore", left + 18 + 2 * roleCell, top + 120, roleCell);
+        if (menu.canReturn()) option("return_option", "torna", left + 10, top + 149, panelWidth - 20);
     }
 
     private void option(String key, String command, int x, int y, int width) {

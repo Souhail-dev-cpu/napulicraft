@@ -12,8 +12,7 @@ GTA-style radio, and the soundtrack **you** choose.*
 ## Neapolitan kitchen
 
 Craft the requested Neapolitan dishes, renewable ingredients, regenerating fry bag and four portable kitchen
-stations. Use a crafting table for preparations, a vanilla furnace for cooking, or a kitchen station's recipe and
-confirmation menus. The additions include timed food effects, team healing, a Sartu puzzle, pizza-making reputation,
+stations. Use the pizza and coffee counters like crafting tables, and the wood oven and frying counter like furnaces. The additions include timed food effects, team healing, a Sartu puzzle, pizza-making reputation,
 NPC quest helpers, the Neapolitan fullness/heat HUD and a sweet-tamed Munaciello who hides items in your last opened
 chest and leaves redeemable coins.
 

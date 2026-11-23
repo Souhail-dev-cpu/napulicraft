@@ -43,7 +43,7 @@ ingredients = [
 # baked, sweet, fried, serving container, rarity, illustrated silhouette.
 foods = [
     ('fritto_misto','Fritto misto','Mixed fritters',5,.35,1.0,'NONE',['potato','napuli:farina','napuli:olio'],'FRY',True,False,True,None,False,'bag'),
-    ('pizza_portafoglio','Pizza a Portafoglio','Folded street pizza',7,.65,.6,'NONE',['napuli:impasto','napuli:pomodoro','napuli:mozzarella'],'OVEN',True,False,False,None,False,'fold'),
+    ('pizza_portafoglio','Pizza a Portafoglio','Folded street pizza',7,.65,.6,'NONE',['napuli:impasto','napuli:pomodoro','napuli:mozzarella','paper'],'OVEN',True,False,False,None,False,'fold'),
     ('sfogliatella_riccia','Sfogliatella Riccia','Riccia sfogliatella',5,.5,1.2,'RANDOM_LUCK',['napuli:farina','napuli:ricotta','sugar'],'OVEN',True,True,False,None,False,'shell'),
     ('sfogliatella_frolla','Sfogliatella Frolla','Rare frolla sfogliatella',6,.7,1.2,'RARE_LUCK',['napuli:impasto','napuli:ricotta','honey_bottle','gold_nugget'],'OVEN',True,True,False,None,True,'bun'),
     ('baba_rum','Babà al Rum','Rum baba',5,.5,1.2,'BABA',['napuli:impasto','napuli:rum','sugar'],'OVEN',True,True,False,None,False,'baba'),
@@ -76,7 +76,7 @@ def recipe(recipe_id, output, count, inputs, station='TABLE', fuel=False, smelt=
     recipes.append(dict(id=recipe_id, output=output, count=count, ingredients=inputs, station=station, fuel=fuel))
     result = dict(id=output, count=count)
     if smelt:
-        value = dict(type='minecraft:smelting', category='food', ingredient=inputs[0], result=result, experience=.2, cookingtime=200)
+        value = dict(type='napuli:oil_frying' if station == 'FRY' else 'napuli:wood_baking', category='food', ingredient=inputs[0], result=result, experience=.2, cookingtime=200)
     else:
         value = dict(type='minecraft:crafting_shapeless', category='misc', ingredients=inputs, result=result)
     write(DATA / 'recipe' / (recipe_id + '.json'), value)
@@ -209,10 +209,11 @@ for lang in ('it_it','nap_it','en_us'):
     write(path,translations)
 (ROOT/'tools/kitchen-art.tsv').write_text('\n'.join(art)+'\n',encoding='utf-8',newline='\n')
 
-lines=['# Ricette della cucina napoletana','', 'Tutte disponibili senza quest. `+` indica ingredienti nella crafting table; le preparazioni crude vanno in fornace (10 secondi).', '', '| Risultato | Ingredienti | Postazione alternativa |','| --- | --- | --- |']
+lines=['# Ricette della cucina napoletana','', 'Tutte disponibili senza quest. `+` indica ingredienti nella crafting table; le preparazioni crude vanno nel forno a legna o nella friggitoria (10 secondi).', '', '| Risultato | Ingredienti | Postazione alternativa |','| --- | --- | --- |']
 for r in recipes:
     names = [x.removeprefix('minecraft:').removeprefix('napuli:').replace('_',' ') for x in r['ingredients']]
-    lines.append('| '+r['output'].removeprefix('napuli:').replace('_',' ')+f" ×{r['count']} | "+' + '.join(names)+(' + carbone/carbonella (solo postazione)' if r['fuel'] else '')+' | '+r['station']+' |')
+    station = 'TABLE' if r['id'] == 'olio' else r['station']
+    lines.append('| '+r['output'].removeprefix('napuli:').replace('_',' ')+f" ×{r['count']} | "+' + '.join(names)+((' + tronchi' if station == 'OVEN' else ' + olio') if r['fuel'] else '')+' | '+station+' |')
 path=ROOT/'docs/CUCINA_RICETTE.md'
 path.parent.mkdir(exist_ok=True)
 path.write_text('\n'.join(lines)+'\n',encoding='utf-8',newline='\n')

@@ -30,6 +30,57 @@ import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 public final class KitchenGameTest {
     private static int sequence;
 
+    @GameTest public void civicLifePaysOnceAndCreatesGrowingFamilies(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var initialCensus = level.removeAttached(NapoliCivicLife.CENSUS);
+        var initialOwners = level.removeAttached(NapoliProperties.OWNERS);
+        try {
+            verifyCivicLife(helper, level);
+        } finally {
+            if (initialCensus == null) level.removeAttached(NapoliCivicLife.CENSUS);
+            else level.setAttached(NapoliCivicLife.CENSUS, initialCensus);
+            if (initialOwners == null) level.removeAttached(NapoliProperties.OWNERS);
+            else level.setAttached(NapoliProperties.OWNERS, initialOwners);
+        }
+    }
+
+    private static void verifyCivicLife(GameTestHelper helper, net.minecraft.server.level.ServerLevel level) {
+        NapoliCivicLife.seed(level);
+        long start = NapoliCivicLife.census(level).day();
+        var offered = NapoliMergellina.PROPERTIES.getFirst();
+        UUID previousOwner = UUID.randomUUID();
+        helper.assertTrue(NapoliProperties.claimForResident(level, offered, previousOwner), "Reserve an already sold house");
+        NapoliCivicLife.advance(level, start + 1);
+        var first = NapoliCivicLife.census(level);
+        helper.assertTrue(first.people().getFirst().balance() == 17, "Baker receives daily wages, net of household expenses");
+        helper.assertTrue(!first.people().getFirst().partner().isEmpty(), "Adults form a couple");
+        NapoliCivicLife.advance(level, start + 1);
+        helper.assertTrue(NapoliCivicLife.census(level).equals(first), "A repeated day cannot pay twice");
+        NapoliCivicLife.advance(level, start + 10);
+        var settled = NapoliCivicLife.census(level);
+        var child = settled.people().stream().filter(c -> !c.parents().isEmpty()).findFirst().orElseThrow();
+        helper.assertTrue(child.age(settled.day()) < NapoliCivicLife.ADULT_AGE && child.profession() == null, "A child is born after purchase and has no job");
+        var house = NapoliMergellina.PROPERTIES.stream().filter(h -> h.id().equals(child.property())).findFirst().orElseThrow();
+        helper.assertTrue(NapoliProperties.owner(level, house).toString().equals(child.parents()), "The child lives in the house bought by the parent");
+        helper.assertTrue(NapoliProperties.owner(level, offered).equals(previousOwner), "NPCs cannot buy a previously owned house");
+        var encoded = NapoliCivicLife.Census.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, settled).getOrThrow();
+        helper.assertTrue(NapoliCivicLife.Census.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, encoded).getOrThrow().equals(settled),
+                "Census preserves family, home and money across serialization");
+        NapoliCivicLife.advance(level, child.birth() + NapoliCivicLife.ADULT_AGE + 1);
+        var grown = NapoliCivicLife.profile(level, child.id());
+        helper.assertTrue(grown.profession() != null && grown.balance() > 0, "The same child grows up and earns a wage");
+        helper.succeed();
+    }
+
+    @GameTest public void footballCalendarOnlySchedulesWeeklyFixtures(GameTestHelper helper) {
+        var opening = NapoliBroadcast.match(0);
+        helper.assertTrue(opening != null && opening.win(), "Opening fixture can trigger celebration");
+        helper.assertTrue(NapoliBroadcast.match(1) == null && NapoliBroadcast.match(6) == null, "No match on intervening days");
+        helper.assertTrue(NapoliBroadcast.match(7).equals(NapoliBroadcast.match(7)), "A result is stable after reload");
+        helper.assertTrue(NapoliBroadcast.match(21) != null && !NapoliBroadcast.match(21).win(), "A loss does not trigger celebration");
+        helper.succeed();
+    }
+
     @GameTest public void allRecipesMatchAndAreObtainable(GameTestHelper helper) {
         var manager = helper.getLevel().getServer().getRecipeManager();
         var reachable = new java.util.HashSet<net.minecraft.world.item.Item>();
@@ -38,7 +89,7 @@ public final class KitchenGameTest {
             var holder = manager.byKey(ResourceKey.create(Registries.RECIPE, Napuli.id(recipe.id()))).orElseThrow();
             if (recipe.fuel()) {
                 var input = new SingleRecipeInput(new ItemStack(recipe.ingredients().getFirst()));
-                var smelting = manager.getRecipeFor(RecipeType.SMELTING, input, helper.getLevel()).orElseThrow();
+                var smelting = manager.getRecipeFor(NapoliKitchen.cookingType(recipe.station()), input, helper.getLevel()).orElseThrow();
                 helper.assertTrue(smelting.value().assemble(input).is(recipe.output()), "Furnace output " + recipe.id());
             } else {
                 List<ItemStack> slots = new ArrayList<>();
@@ -59,11 +110,17 @@ public final class KitchenGameTest {
     }
 
     @GameTest(maxTicks = 260) public void actualFurnaceCooksPizzaAndFritters(GameTestHelper helper) {
-        helper.setBlock(1, 1, 1, Blocks.FURNACE); helper.setBlock(2, 1, 1, Blocks.FURNACE);
-        var pizza = (FurnaceBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(1, 1, 1)));
-        var fritters = (FurnaceBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(2, 1, 1)));
-        pizza.setItem(0, new ItemStack(NapoliKitchen.item("pizza_cruda"))); pizza.setItem(1, new ItemStack(Items.COAL));
-        fritters.setItem(0, new ItemStack(NapoliKitchen.item("chiacchiere_crudo"))); fritters.setItem(1, new ItemStack(Items.COAL));
+        helper.setBlock(1, 1, 1, NapoliKitchen.BLOCKS.get("forno_legna_portatile"));
+        helper.setBlock(2, 1, 1, NapoliKitchen.BLOCKS.get("banca_frittura"));
+        var pizza = (KitchenOvenEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(1, 1, 1)));
+        var fritters = (KitchenOvenEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(2, 1, 1)));
+        pizza.setItem(0, new ItemStack(NapoliKitchen.item("pizza_cruda"))); pizza.setItem(1, new ItemStack(Items.OAK_LOG));
+        fritters.setItem(0, new ItemStack(NapoliKitchen.item("chiacchiere_crudo"))); fritters.setItem(1, new ItemStack(NapoliKitchen.item("olio")));
+        helper.assertTrue(!pizza.canPlaceItem(1, new ItemStack(Items.COAL)), "Wood oven rejects coal");
+        helper.assertTrue(!fritters.canPlaceItem(1, new ItemStack(Items.OAK_LOG)), "Fryer rejects logs");
+        helper.assertTrue(helper.getLevel().getServer().getRecipeManager().getRecipeFor(RecipeType.SMELTING,
+                new SingleRecipeInput(new ItemStack(NapoliKitchen.item("pizza_cruda"))), helper.getLevel()).isEmpty(),
+                "Vanilla furnace cannot bake pizza");
         helper.runAtTickTime(230, () -> {
             helper.assertTrue(pizza.getItem(2).is(Napuli.PIZZA) && pizza.getItem(0).isEmpty(), "Pizza cooked in real furnace");
             helper.assertTrue(fritters.getItem(2).is(NapoliKitchen.item("chiacchiere")) && fritters.getItem(0).isEmpty(), "Fried food cooked in real furnace");
@@ -77,7 +134,8 @@ public final class KitchenGameTest {
             for (var recipe : NapoliKitchen.RECIPES) {
                 player.getInventory().clearContent();
                 for (var ingredient : recipe.ingredients()) player.getInventory().add(new ItemStack(ingredient));
-                if (recipe.fuel()) player.getInventory().add(new ItemStack(Items.OAK_LOG));
+                if (recipe.fuel()) player.getInventory().add(new ItemStack(recipe.station() == NapoliKitchen.Kind.OVEN
+                        ? Items.OAK_LOG : NapoliKitchen.item("olio")));
                 helper.assertTrue(KitchenStationBlock.prepare(player, recipe), "Station recipe " + recipe.id());
                 helper.assertTrue(player.getInventory().countItem(recipe.output()) == recipe.count(), "Exact output " + recipe.id());
                 int buckets = (int) recipe.ingredients().stream().filter(i -> i == Items.WATER_BUCKET || i == Items.MILK_BUCKET).count();
@@ -89,7 +147,7 @@ public final class KitchenGameTest {
             helper.assertTrue(!KitchenStationBlock.prepare(player, recipe), "Missing fuel rejected");
             helper.assertTrue(player.getInventory().getItem(0).getCount() == 2, "Missing fuel consumes nothing");
             for (int i = 1; i < 36; i++) player.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
-            player.getInventory().setItem(1, new ItemStack(Items.CHARCOAL, 2));
+            player.getInventory().setItem(1, new ItemStack(Items.OAK_LOG, 2));
             helper.assertTrue(!KitchenStationBlock.prepare(player, recipe), "Full inventory rejected");
             helper.assertTrue(player.getInventory().getItem(0).getCount() == 2 && player.getInventory().getItem(1).getCount() == 2, "Full inventory consumes nothing");
         }); helper.succeed();

@@ -24,7 +24,7 @@ final class PistolaItem extends Item {
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (level.dimension() != NapoliMap.LEVEL) return InteractionResult.PASS;
         var stack = player.getItemInHand(hand);
-        if (player.getCooldowns().isOnCooldown(stack)) return InteractionResult.PASS;
+        if (player.getCooldowns().isOnCooldown(stack)) return InteractionResult.FAIL;
         if (level instanceof ServerLevel world && player instanceof ServerPlayer shooter) {
             Vec3 start = shooter.getEyePosition();
             Vec3 aim = start.add(shooter.getLookAngle().scale(14));
@@ -34,11 +34,19 @@ final class PistolaItem extends Item {
                     entity -> entity instanceof LivingEntity && entity.isPickable(), start.distanceToSqr(end));
             if (hit != null && (hit.getEntity() instanceof Monster
                     || hit.getEntity() instanceof NapoliResident npc && npc.role().fighter())) {
-                hit.getEntity().hurtServer(world, world.damageSources().playerAttack(shooter), 6f);
+                if (hit.getEntity().hurtServer(world, world.damageSources().playerAttack(shooter), 6f)) {
+                    world.sendParticles(ParticleTypes.CRIT, hit.getLocation().x, hit.getLocation().y,
+                            hit.getLocation().z, 8, 0.15, 0.15, 0.15, 0.05);
+                }
             }
             world.playSound(null, shooter.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 0.6f, 1.6f);
             Vec3 tip = start.add(shooter.getLookAngle().scale(0.7));
-            world.sendParticles(ParticleTypes.POOF, tip.x, tip.y, tip.z, 4, 0.08, 0.08, 0.08, 0.02);
+            world.sendParticles(ParticleTypes.FLAME, tip.x, tip.y, tip.z, 1, 0, 0, 0, 0);
+            Vec3 impact = hit == null ? end : hit.getLocation();
+            for (int i = 1; i <= 5; i++) {
+                Vec3 dust = tip.lerp(impact, i / 6.0);
+                world.sendParticles(ParticleTypes.SMOKE, dust.x, dust.y, dust.z, 1, 0, 0, 0, 0);
+            }
             Carabinieri.crime(shooter, Carabinieri.Crime.SHOOTING);
             shooter.getCooldowns().addCooldown(stack, 24);
             stack.hurtAndBreak(1, shooter, hand);

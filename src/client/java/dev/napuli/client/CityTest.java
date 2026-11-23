@@ -32,6 +32,7 @@ final class CityTest {
     private static int waitingTicks;
     private static double initialZ;
     private static int localCash;
+    private static NapoliResident resident;
 
     static void register() {
         if (Boolean.getBoolean("napuli.citytest")) ClientTickEvents.END_CLIENT_TICK.register(CityTest::tick);
@@ -63,6 +64,18 @@ final class CityTest {
             return;
         }
         ++tick;
+        if (Boolean.getBoolean("napuli.civictest") && tick > 60) {
+            civicLife(mc, tick);
+            return;
+        }
+        if (Boolean.getBoolean("napuli.familiestest") && tick > 60) {
+            families(mc, tick);
+            return;
+        }
+        if (Boolean.getBoolean("napuli.housingtest") && tick > 60) {
+            housing(mc, tick);
+            return;
+        }
         if (Boolean.getBoolean("napuli.localjobstest") && tick > 60) {
             localJobs(mc, tick);
             return;
@@ -301,6 +314,162 @@ final class CityTest {
     private static boolean hasGhost(ServerPlayer p, NapoliResident.Role role) {
         return p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(20)).stream()
                 .anyMatch(npc -> npc.role() == role);
+    }
+
+    private static NapoliResident citizenChild;
+    private static void civicLife(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> {
+                view(p, -151.5, 64, 43.5, 180, 0);
+                AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set noon", "time add 192000");
+            });
+            case 130 -> server(mc, p -> {
+                var people = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(60));
+                citizenChild = people.stream().filter(npc -> (npc.role() == NapoliResident.Role.CIVIC_MAN
+                        || npc.role() == NapoliResident.Role.CIVIC_WOMAN)
+                        && npc.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.SCALE) < .9)
+                        .findFirst().orElse(null);
+                assertTrue(citizenChild != null, "children appear near the purchased family homes");
+                AutoTest.run(p.level().getServer(), "time set midnight");
+            });
+            case 200 -> server(mc, p -> {
+                if (citizenChild != null) {
+                    view(p, citizenChild.getX(), citizenChild.getY() + 1, citizenChild.getZ() + 4, 180, 12);
+                    assertTrue(citizenChild.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.SCALE) < 1,
+                            "child has a smaller model");
+                }
+            });
+            case 220 -> AutoTest.shot(mc, "mergellina-cittadini");
+            case 223 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time add 480000"));
+            case 303 -> server(mc, p -> {
+                assertTrue(citizenChild != null && citizenChild.getAttributeValue(
+                        net.minecraft.world.entity.ai.attributes.Attributes.SCALE) == 1, "same resident becomes adult");
+                AutoTest.run(p.level().getServer(), "time set noon");
+            });
+            case 370 -> server(mc, p -> {
+                assertTrue(citizenChild != null && !citizenChild.getMainHandItem().isEmpty(), "adult child joins a daytime shift");
+                if (citizenChild != null) view(p, citizenChild.getX(), 64, citizenChild.getZ() + 4, 180, 0);
+            });
+            case 392 -> AutoTest.shot(mc, "mergellina-lavoro");
+            case 409 -> { Napuli.LOGGER.info("[CIVICTEST] completed, failed={}", failed); mc.stop(); }
+            default -> {}
+        }
+    }
+
+    private static void families(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> {
+                view(p, -168.5, 64, 21.5, 180, 0);
+                AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set 8000");
+            });
+            case 110 -> server(mc, p -> {
+                assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER, dev.napuli.NapoliHouseholds.Activity.COOK), "mother cooks");
+                assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER, dev.napuli.NapoliHouseholds.Activity.MATCH), "father watches Napoli");
+                assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_CHILD, dev.napuli.NapoliHouseholds.Activity.PLAY)
+                        && familyActivity(p, NapoliResident.Role.FAMILY_CHILD_TWO, dev.napuli.NapoliHouseholds.Activity.PLAY), "children play");
+            });
+            case 120 -> {
+                if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+                AutoTest.shot(mc, "famiglia-mergellina-pomeriggio");
+            }
+            case 124 -> clickFamilyTv(mc);
+            case 128 -> server(mc, p -> {
+                assertTrue(p.level().getBlockState(new net.minecraft.core.BlockPos(-171, 65, 20))
+                        .is(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("black_concrete"))), "TV switches off");
+                assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER, dev.napuli.NapoliHouseholds.Activity.REST),
+                        "father stops watching when the TV is off");
+            });
+            case 130 -> clickFamilyTv(mc);
+            case 138 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 1150"));
+            case 172 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER,
+                    dev.napuli.NapoliHouseholds.Activity.WASH), "mother visits the washbasin in the morning"));
+            case 180 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 10800"));
+            case 220 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
+                    dev.napuli.NapoliHouseholds.Activity.EAT), "family changes activity for dinner"));
+            case 224 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 14000"));
+            case 228 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
+                    dev.napuli.NapoliHouseholds.Activity.MATCH), "father watches the scheduled evening fixture"));
+            case 232 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 15000"));
+            case 255 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set midnight"));
+            case 315 -> server(mc, p -> {
+                var relatives = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(12));
+                assertTrue(relatives.stream().filter(npc -> npc.role() == NapoliResident.Role.FAMILY_MOTHER
+                        || npc.role() == NapoliResident.Role.FAMILY_FATHER).filter(NapoliResident::isSleeping).count() == 2,
+                        "parents sleep in the upstairs beds");
+                AutoTest.run(p.level().getServer(), "time set noon");
+                view(p, 4.5, 65, 26.5, 90, -6);
+            });
+            case 355 -> AutoTest.shot(mc, "plebiscito-colonnato");
+            case 375 -> { Napuli.LOGGER.info("[FAMILYTEST] completed, failed={}", failed); mc.stop(); }
+            default -> {}
+        }
+    }
+
+    private static void clickFamilyTv(Minecraft mc) {
+        var pos = new net.minecraft.core.BlockPos(-171, 65, 20);
+        mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new net.minecraft.world.phys.BlockHitResult(
+                net.minecraft.world.phys.Vec3.atCenterOf(pos), net.minecraft.core.Direction.EAST, pos, false));
+    }
+
+    private static boolean familyActivity(ServerPlayer player, NapoliResident.Role role, dev.napuli.NapoliHouseholds.Activity activity) {
+        return player.level().getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(12)).stream()
+                .anyMatch(npc -> npc.role() == role && npc.activity() == activity);
+    }
+
+    private static void housing(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> view(p, -151.5, 64, 37.5, 0, 0));
+            case 84 -> server(mc, p -> assertTrue(p.getZ() >= 40, "unowned property expels visitors"));
+            case 87 -> server(mc, p -> view(p, -149.5, 64, 41.5, 180, 0));
+            case 98 -> mc.player.connection.sendCommand("casa compra leone");
+            case 116 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 8, "cannot purchase without funds");
+                dev.napuli.NapoliStreet.credit(p, 60);
+            });
+            case 125 -> {
+                var pos = new net.minecraft.core.BlockPos(-150, 64, 40);
+                mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                                net.minecraft.core.Direction.SOUTH, pos, false));
+            }
+            case 145 -> {
+                var screen = mc.gui.screen();
+                String label = Component.translatable("napuli.property.buy").getString();
+                var button = screen == null ? java.util.Optional.<AbstractButton>empty()
+                        : descendants(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
+                            .filter(b -> b.getMessage().getString().equals(label)).findFirst();
+                assertTrue(button.isPresent(), "property sign displays purchase confirmation");
+                button.ifPresent(b -> b.onPress(new KeyEvent(257, 0, 0)));
+            }
+            case 162 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 13, "home purchase debits exactly 55 euros");
+                view(p, -151.5, 64, 37.5, 180, 0);
+            });
+            case 183 -> {
+                AutoTest.shot(mc, "mergellina-home");
+                server(mc, p -> {
+                    assertTrue(p.getZ() < 39, "owner stays inside the house");
+                    view(p, -168, 74, 47, 90, 15);
+                });
+            }
+            case 200 -> AutoTest.shot(mc, "mergellina-lungomare");
+            case 203 -> server(mc, p -> {
+                resident = p.level().getEntitiesOfClass(NapoliResident.class,
+                        new net.minecraft.world.phys.AABB(-179, 62, 40, -161, 68, 55)).stream()
+                        .filter(npc -> npc.role() == NapoliResident.Role.PASSERBY)
+                        .findFirst().orElse(null);
+                assertTrue(resident != null, "Mergellina has street residents");
+                AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set midnight");
+            });
+            case 438 -> server(mc, p -> {
+                assertTrue(resident != null && resident.getZ() < 24, "resident returns indoors at night");
+                AutoTest.run(p.level().getServer(), "time set noon");
+            });
+            case 659 -> server(mc, p -> assertTrue(resident != null && resident.getZ() > 41,
+                    "resident returns to their usual daytime post"));
+            case 675 -> { Napuli.LOGGER.info("[HOUSINGTEST] completed, failed={}", failed); mc.stop(); }
+            default -> {}
+        }
     }
 
     private static void localJobs(Minecraft mc, int step) {

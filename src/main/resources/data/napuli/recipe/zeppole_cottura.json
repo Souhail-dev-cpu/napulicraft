@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:smelting",
+  "type": "napuli:oil_frying",
   "category": "food",
   "ingredient": "napuli:zeppole_crudo",
   "result": {

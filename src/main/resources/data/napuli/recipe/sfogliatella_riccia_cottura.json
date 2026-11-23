@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:smelting",
+  "type": "napuli:wood_baking",
   "category": "food",
   "ingredient": "napuli:sfogliatella_riccia_crudo",
   "result": {

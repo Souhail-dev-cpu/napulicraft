@@ -43,6 +43,27 @@ loom {
 			vmArg "-Dnapuli.localjobstest=true"
 			runDir "run-autotest"
 		}
+		housingTest {
+			client()
+			name "Napoli housing and schedules play-test"
+			vmArg "-Dnapuli.citytest=true"
+			vmArg "-Dnapuli.housingtest=true"
+			runDir "run-autotest"
+		}
+		familiesTest {
+			client()
+			name "Napoli families play-test"
+			vmArg "-Dnapuli.citytest=true"
+			vmArg "-Dnapuli.familiestest=true"
+			runDir "run-autotest"
+		}
+		civicTest {
+			client()
+			name "Napoli households and jobs play-test"
+			vmArg "-Dnapuli.citytest=true"
+			vmArg "-Dnapuli.civictest=true"
+			runDir "run-autotest"
+		}
 		cityTest {
 			client()
 			name "Napoli city play-test"

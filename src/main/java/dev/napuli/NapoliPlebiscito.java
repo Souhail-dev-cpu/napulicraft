@@ -50,6 +50,38 @@ final class NapoliPlebiscito {
 		p.connect();
 	}
 
+	static void refine(ServerLevel world) {
+		var piazza = new NapoliPlebiscito(world);
+		for (int side : new int[] {-1, 1}) {
+			for (int deg = 71; deg <= 79; deg++) {
+				double angle = Math.toRadians(deg) * side;
+				for (int radius = R_IN - 1; radius <= R_OUT + 1; radius++) {
+					int x = (int) Math.round(CX - radius * Math.cos(angle));
+					int z = (int) Math.round(CZ + radius * Math.sin(angle));
+					if (z < 7 || z > 44) continue;
+					piazza.put(x, 73, z, Blocks.SMOOTH_QUARTZ);
+					piazza.put(x, 74, z, Blocks.QUARTZ_SLAB);
+				}
+			}
+			for (int radius : new int[] {R_IN, R_OUT}) {
+				double angle = Math.toRadians(77) * side;
+				int x = (int) Math.round(CX - radius * Math.cos(angle));
+				int z = (int) Math.round(CZ + radius * Math.sin(angle));
+				piazza.fill(x, 64, z, x, 71, z, Blocks.QUARTZ_PILLAR);
+				piazza.put(x, 72, z, Blocks.CHISELED_QUARTZ_BLOCK);
+			}
+		}
+		for (int z : new int[] {18, 34}) {
+			for (int x = -21; x <= -15; x++) for (int zz = z - 3; zz <= z + 3; zz++) {
+				if (x == -21 || x == -15 || zz == z - 3 || zz == z + 3)
+					piazza.put(x, 63, zz, Blocks.POLISHED_BLACKSTONE);
+			}
+		}
+		for (int x = -37; x <= 9; x++)
+			if (world.getBlockState(new BlockPos(x, 64, CZ)).isAir())
+				piazza.put(x, 63, CZ, Blocks.POLISHED_ANDESITE);
+	}
+
 	/** v5: the old gallery had its west arch one block outside the area demolished in v3: it was left floating */
 	static void cleanup(ServerLevel world) {
 		NapoliPlebiscito p = new NapoliPlebiscito(world);

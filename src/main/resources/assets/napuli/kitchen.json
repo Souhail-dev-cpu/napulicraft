@@ -789,7 +789,8 @@
       "ingredients": [
         "napuli:impasto",
         "napuli:pomodoro",
-        "napuli:mozzarella"
+        "napuli:mozzarella",
+        "minecraft:paper"
       ],
       "station": "TABLE",
       "fuel": false

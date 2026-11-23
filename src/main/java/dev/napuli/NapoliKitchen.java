@@ -37,11 +37,34 @@ public final class NapoliKitchen {
     public record Recipe(String id, Item output, int count, List<Item> ingredients, Kind station, boolean fuel) {}
     public static final Map<String, Item> ITEMS = new LinkedHashMap<>();
     public static final Map<String, KitchenStationBlock> BLOCKS = new LinkedHashMap<>();
+    static net.minecraft.world.level.block.entity.BlockEntityType<KitchenOvenEntity> OVEN_ENTITY;
     public static final List<Recipe> RECIPES = new ArrayList<>();
     private static final Map<Item, Food> FOODS = new LinkedHashMap<>();
     private NapoliKitchen() {}
 
+    private static final Map<Kind, net.minecraft.world.item.crafting.RecipeType<KitchenCookingRecipe>> COOKING_TYPES = new java.util.EnumMap<>(Kind.class);
+    private static final Map<Kind, net.minecraft.world.item.crafting.RecipeSerializer<KitchenCookingRecipe>> COOKING_SERIALIZERS = new java.util.EnumMap<>(Kind.class);
+
+    static net.minecraft.world.item.crafting.RecipeType<KitchenCookingRecipe> cookingType(Kind kind) { return COOKING_TYPES.get(kind); }
+    static net.minecraft.world.item.crafting.RecipeSerializer<KitchenCookingRecipe> cookingSerializer(Kind kind) { return COOKING_SERIALIZERS.get(kind); }
+
+    private static void registerCooking(Kind kind, String id) {
+        var type = Registry.register(BuiltInRegistries.RECIPE_TYPE, Napuli.id(id),
+                new net.minecraft.world.item.crafting.RecipeType<KitchenCookingRecipe>() {});
+        COOKING_TYPES.put(kind, type);
+        net.minecraft.world.item.crafting.AbstractCookingRecipe.Factory<KitchenCookingRecipe> factory =
+                (info, book, ingredient, output, experience, time) ->
+                    new KitchenCookingRecipe(kind, info, book, ingredient, output, experience, time);
+        COOKING_SERIALIZERS.put(kind, Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Napuli.id(id),
+                new net.minecraft.world.item.crafting.RecipeSerializer<>(
+                        net.minecraft.world.item.crafting.AbstractCookingRecipe.cookingMapCodec(factory),
+                        net.minecraft.world.item.crafting.AbstractCookingRecipe.cookingStreamCodec(factory))));
+    }
+
     static void register() {
+        registerCooking(Kind.OVEN, "wood_baking");
+        registerCooking(Kind.FRY, "oil_frying");
+        KitchenMenus.register();
         try (var source = new InputStreamReader(NapoliKitchen.class.getResourceAsStream("/assets/napuli/kitchen.json"), StandardCharsets.UTF_8)) {
             JsonObject catalogue = JsonParser.parseReader(source).getAsJsonObject();
             for (var value : catalogue.getAsJsonArray("ingredients")) {
@@ -101,6 +124,10 @@ public final class NapoliKitchen {
                         List.copyOf(ingredients), Kind.valueOf(spec.get("station").getAsString()), spec.get("fuel").getAsBoolean()));
             }
         } catch (Exception failure) { throw new IllegalStateException("Invalid Napulicraft kitchen catalogue", failure); }
+        var hotBlocks = BLOCKS.values().stream().filter(KitchenStationBlock::heated).toArray(Block[]::new);
+        OVEN_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Napuli.id("kitchen_oven"),
+                net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder
+                        .create(KitchenOvenEntity::new, hotBlocks).build());
         KitchenProgress.register();
         MunacielloFriendship.register();
         ServerTickEvents.END_SERVER_TICK.register(KitchenEffects::tick);

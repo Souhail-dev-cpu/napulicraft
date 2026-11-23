@@ -38,7 +38,8 @@ public final class KitchenTest {
     private static int titleTicks, elapsed, phaseTicks, captureTicks, feedTicks;
     private static Vec3 start;
     private static Munaciello monk;
-    private static final BlockPos OVEN = new BlockPos(0, 129, 0), PUZZLE = new BlockPos(2, 129, 0);
+    private static final BlockPos OVEN = new BlockPos(0, 129, 0), PUZZLE = new BlockPos(2, 129, 0), TABLE = new BlockPos(-2, 129, 0);
+    private static final BlockPos FRYER = new BlockPos(4, 129, 0), COFFEE = new BlockPos(6, 129, 0);
     public static void register() {
         if (!Boolean.getBoolean("napuli.kitchentest")) return;
         ClientTickEvents.END_CLIENT_TICK.register(KitchenTest::clientTick);
@@ -64,16 +65,55 @@ public final class KitchenTest {
         mc.options.keyUp.setDown(phase == 3);
         mc.options.keySprint.setDown(phase == 3);
         if ((phase == 1 || phase == 7) && clientStep != phase && mc.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
-            BlockPos pos = phase == 1 ? OVEN : PUZZLE;
+            BlockPos pos = switch (phase) { case 1 -> OVEN; case 7 -> PUZZLE; case 16 -> FRYER; case 18 -> COFFEE; default -> TABLE; };
             if (!(mc.level.getBlockState(pos).getBlock() instanceof KitchenStationBlock)) return;
             mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND,
                     new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false));
             clientStep = phase;
         }
-        if (phase == 2 && mc.gui.screen() != null && ++captureTicks >= 30 && clientStep != 2) {
-            if (captureTicks == 30) Screenshot.grab(mc.gameDirectory, "kitchen-station.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
-            if (press(mc, "Prepara")) clientStep = 2;
-            else press(mc, "Portafoglio");
+        if (phase == 2 && mc.player.containerMenu instanceof net.minecraft.world.inventory.FurnaceMenu furnace) {
+            if (clientStep != 2) {
+                click(mc, 3, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                click(mc, 4, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                clientStep = 2;
+            } else if (furnace.getSlot(2).hasItem()) {
+                Screenshot.grab(mc.gameDirectory, "kitchen-station.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+                click(mc, 2, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                click(mc, 1, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                mc.player.closeContainer();
+            }
+        }
+        if (phase == 17 && mc.player.containerMenu instanceof KitchenMenus.Heat fryer && !fryer.woodOven()) {
+            if (clientStep != 17) {
+                click(mc, 3, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                click(mc, 4, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                clientStep = 17;
+            } else if (fryer.getSlot(2).hasItem()) {
+                Screenshot.grab(mc.gameDirectory, "kitchen-fryer.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+                click(mc, 2, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                mc.player.closeContainer();
+            }
+        }
+        if (phase == 19 && mc.player.containerMenu instanceof KitchenMenus.Grid coffee && coffee.coffee() && clientStep != 19) {
+            Screenshot.grab(mc.gameDirectory, "kitchen-coffee.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+            clientStep = 19;
+        }
+        if (phase == 14 && mc.player.containerMenu instanceof net.minecraft.world.inventory.CraftingMenu grid) {
+            if (clientStep != 14) {
+                for (int i = 0; i < 4; i++) {
+                    click(mc, 10 + i, net.minecraft.world.inventory.ContainerInput.PICKUP);
+                    click(mc, 1 + i, net.minecraft.world.inventory.ContainerInput.PICKUP);
+                }
+                clientStep = 14;
+            } else if (grid.getSlot(0).hasItem()) {
+                Screenshot.grab(mc.gameDirectory, "kitchen-grid.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+                click(mc, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE);
+                mc.player.closeContainer();
+            }
+        }
+        if (phase == 15 && mc.level.dimension() == NapoliMap.LEVEL && ++captureTicks > 35 && clientStep != 15) {
+            Screenshot.grab(mc.gameDirectory, "fishing-harbour.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+            clientStep = 15;
         }
         if ((phase == 3 || phase == 4 || phase == 6) && clientStep != phase) {
             String id = phase == 3 ? "pizza_portafoglio" : phase == 4 ? "baba_rum" : "sartu_riso";
@@ -94,6 +134,10 @@ public final class KitchenTest {
             clientStep = 12;
         }
     }
+    private static void click(Minecraft mc, int slot, net.minecraft.world.inventory.ContainerInput action) {
+        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, 0, action, mc.player);
+    }
+
     private static boolean press(Minecraft mc, String text) {
         if (mc.gui.screen() == null) return false;
         var button = descendants(mc.gui.screen()).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
@@ -120,20 +164,27 @@ public final class KitchenTest {
                         for (int y = 129; y < 135; y++) level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
                     }
                     player.teleportTo(level, -.5, 129, -1.5, Set.of(), 0, 0, true);
+                    level.setBlock(TABLE, NapoliKitchen.BLOCKS.get("tavolo_pizzaiolo").defaultBlockState(), 3);
                     level.setBlock(OVEN, NapoliKitchen.BLOCKS.get("forno_legna_portatile").defaultBlockState(), 3);
                     level.setBlock(PUZZLE, NapoliKitchen.BLOCKS.get("enigma_sartu").defaultBlockState(), 3);
                     level.setBlock(new BlockPos(4, 129, 0), NapoliKitchen.BLOCKS.get("banca_frittura").defaultBlockState(), 3);
                     level.setBlock(new BlockPos(6, 129, 0), NapoliKitchen.BLOCKS.get("banca_caffe").defaultBlockState(), 3);
                     player.getInventory().clearContent();
                     player.getInventory().setItem(9, new ItemStack(NapoliKitchen.item("pizza_portafoglio_crudo")));
-                    player.getInventory().setItem(10, new ItemStack(Items.CHARCOAL, 2));
+                    player.getInventory().setItem(10, new ItemStack(Items.OAK_LOG, 2));
                     player.getFoodData().setFoodLevel(10);
                     next(1);
                 }
                 case 1 -> { if (clientStep == 1 && phaseTicks > 10) next(2); }
                 case 2 -> {
                     if (player.getInventory().countItem(NapoliKitchen.item("pizza_portafoglio")) != 1) return;
-                    check(player.getInventory().countItem(Items.CHARCOAL) == 1, "Native station consumes one fuel");
+                    check(player.getInventory().countItem(Items.OAK_LOG) == 1, "Native station consumes one fuel");
+                    for (int i = 0; i < 36; i++) {
+                        if (!player.getInventory().getItem(i).is(NapoliKitchen.item("pizza_portafoglio"))) continue;
+                        var pizza = player.getInventory().removeItem(i, 1);
+                        player.setItemInHand(InteractionHand.MAIN_HAND, pizza);
+                        break;
+                    }
                     start = player.position(); next(3);
                 }
                 case 3 -> {
@@ -176,12 +227,63 @@ public final class KitchenTest {
                 case 12 -> {
                     if (phaseTicks < 30 || clientStep != 12) return;
                     check(FryBagItem.data(player.getInventory().getItem(7)).getLong("last_tick").isPresent(), "Carried bag regenerates in an unselected inventory slot");
-                    Napuli.LOGGER.info("[KITCHENTEST] ALL PASSED: native station checkout, sprint eating, delayed baba effects, sartu puzzle and taming");
+                    player.teleportTo(server.overworld(), -1.5, 129, -1.5, Set.of(), 0, 0, true);
+                    player.getInventory().setItem(9, new ItemStack(NapoliKitchen.item("impasto")));
+                    player.getInventory().setItem(10, new ItemStack(NapoliKitchen.item("pomodoro")));
+                    player.getInventory().setItem(11, new ItemStack(NapoliKitchen.item("mozzarella")));
+                    player.getInventory().setItem(12, new ItemStack(Items.PAPER));
+                    next(13);
+                }
+                case 13 -> { if (phaseTicks > 15) { openStation(player, TABLE); next(14); } }
+                case 14 -> {
+                    if (player.getInventory().countItem(NapoliKitchen.item("pizza_portafoglio_crudo")) != 1) return;
+                    var city = server.getLevel(NapoliMap.LEVEL);
+                    player.teleportTo(city, -23.7, 64, 66, Set.of(), 8, 13, true);
+                    next(15);
+                }
+                case 15 -> {
+                    if (clientStep != 15) return;
+                    var city = player.level();
+                    var boats = city.getEntitiesOfClass(net.minecraft.world.entity.vehicle.boat.AbstractBoat.class,
+                            new net.minecraft.world.phys.AABB(-34, 59, 62, -14, 68, 84));
+                    check(boats.size() >= 2, "Fishing harbour contains usable boats");
+                    check(player.startRiding(boats.getFirst(), true, true), "Player boards a fishing boat");
+                    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FISHING_ROD));
+                    Items.FISHING_ROD.use(city, player, InteractionHand.MAIN_HAND);
+                    check(player.fishing != null, "Player casts from the boat");
+                    player.stopRiding();
+                    ItemStack pistol = new ItemStack(Napuli.PISTOL);
+                    player.setItemInHand(InteractionHand.MAIN_HAND, pistol);
+                    Napuli.PISTOL.use(city, player, InteractionHand.MAIN_HAND);
+                    Napuli.PISTOL.use(city, player, InteractionHand.MAIN_HAND);
+                    check(pistol.getDamageValue() == 1, "Arcade weapon fires once during its cooldown");
+                    player.teleportTo(server.overworld(), 4.5, 129, -1.5, Set.of(), 0, 0, true);
+                    player.getInventory().setItem(9, new ItemStack(NapoliKitchen.item("chiacchiere_crudo")));
+                    player.getInventory().setItem(10, new ItemStack(NapoliKitchen.item("olio")));
+                    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                    next(16);
+                }
+                case 16 -> { if (phaseTicks > 15) { openStation(player, FRYER); next(17); } }
+                case 17 -> {
+                    if (player.getInventory().countItem(NapoliKitchen.item("chiacchiere")) != 1) return;
+                    player.teleportTo(server.overworld(), 6.5, 129, -1.5, Set.of(), 0, 0, true);
+                    next(18);
+                }
+                case 18 -> { if (phaseTicks > 15) { openStation(player, COFFEE); next(19); } }
+                case 19 -> {
+                    if (clientStep != 19 || phaseTicks < 10) return;
+                    Napuli.LOGGER.info("[KITCHENTEST] ALL PASSED: furnace slots, crafting grid, fishing boats, arcade effects and kitchen progression");
                     finished = true;
                 }
             }
         } catch (Throwable failure) { Napuli.LOGGER.error("[KITCHENTEST] FAILED in phase " + phase, failure); finished = true; }
     }
-    private static void next(int value) { phaseTicks = 0; if (value == 12) captureTicks = 0; phase = value; Napuli.LOGGER.info("[KITCHENTEST] phase {}", value); }
+    private static void openStation(net.minecraft.server.level.ServerPlayer player, BlockPos pos) {
+        var state = player.level().getBlockState(pos);
+        ((KitchenStationBlock) state.getBlock()).useWithoutItem(state, player.level(), pos, player,
+                new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false));
+    }
+
+    private static void next(int value) { phaseTicks = 0; if (value == 12 || value == 15) captureTicks = 0; phase = value; Napuli.LOGGER.info("[KITCHENTEST] phase {}", value); }
     private static void check(boolean condition, String message) { if (!condition) throw new IllegalStateException(message); }
 }

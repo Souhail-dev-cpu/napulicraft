@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:smelting",
+  "type": "napuli:wood_baking",
   "category": "food",
   "ingredient": "napuli:spaghetti_vongole_crudo",
   "result": {

@@ -151,7 +151,7 @@ final class NapoliLocalJobs {
                 if (has(player, ACCEPTED, job) && !has(player, COMPLETED, job))
                     options.addAll(List.of("gallery", "vesuvius", "crypt"));
             }
-            case MARKET -> options.addAll(List.of("bread", "beetroot", "milk", "candle", "fish"));
+            case MARKET -> options.addAll(List.of("bread", "beetroot", "milk", "candle", "fish", "firewood"));
             case MUSIC -> {
                 options.add("listen");
                 if (!has(player, COMPLETED, job) && has(player, ACCEPTED, job)) options.addAll(NOTES);
@@ -295,6 +295,7 @@ final class NapoliLocalJobs {
         return switch (action) {
             case "pizza" -> new Offer(Napuli.PIZZA, 1, 5);
             case "bread" -> new Offer(Items.BREAD, 2, 3);
+            case "firewood" -> new Offer(Items.OAK_LOG, 4, 3);
             case "beetroot" -> new Offer(Items.BEETROOT, 4, 4);
             case "milk" -> new Offer(Items.MILK_BUCKET, 1, 5);
             case "candle" -> new Offer(Items.CANDLE, 3, 5);

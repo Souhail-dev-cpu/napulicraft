@@ -6,23 +6,18 @@ La [lista completa delle 71 ricette](CUCINA_RICETTE.md) indica quantità, ingred
 
 ## Preparazione
 
-La crafting table prepara ingredienti, impasti e pietanze crude. La fornace cuoce una preparazione cruda in
-10 secondi usando il normale combustibile vanilla. Restano disponibili anche le ricette originali di pizza e caffè.
+La griglia prepara ingredienti, impasti e pietanze crude. Cuoci le pizze nel Forno a Legna Portatile con tronchi. Puoi raccoglierli dagli alberi o comprare quattro tronchi per 3 € dal Mercatante di Porta Nolana.
 
-Le quattro postazioni si possono costruire, piazzare, raccogliere e trasportare. Con il tasto destro si apre
-un ricettario a pagine: scegli una pietanza, controlla gli ingredienti e premi **Prepara**.
+Le quattro postazioni si possono costruire, piazzare, raccogliere e trasportare. Con il tasto destro si aprono gli slot di lavoro e il ricettario.
 
 | Postazione | Utilizzo | Ricetta della postazione |
 | --- | --- | --- |
 | Forno a Legna Portatile | Cuoce pizze, dolci e piatti pronti da cuocere | Fornace + 2 mattoni + lingotto di ferro |
 | Tavolo da Pizzaiolo | Ingredienti, impasti, preparazioni crude e insalate | Crafting table + pietra liscia + ciotola |
-| Banca della Frittura | Produce olio e cuoce le preparazioni fritte | Calderone + fornace + lingotto di ferro |
+| Banca della Frittura | Cuoce le preparazioni crude con uno slot per il combustibile | Calderone + fornace + lingotto di ferro |
 | Banca del Caffè | Prepara chicchi, rum da cucina, caffè, limoncello e acqua di cocomero | Crafting table + lingotto di rame + bottiglia + cacao |
 
-Le cotture nelle postazioni consumano **una unità di carbone, carbonella, tronco o assi** per porzione.
-La produzione di ingredienti e bevande non richiede combustibile. Le postazioni usano i primi 36 slot dello zaino;
-secchi e bottiglie degli ingredienti vengono restituiti. Se mancano ingredienti, combustibile o spazio per risultato
-e contenitori, non viene consumato nulla. Anche altri giocatori possono usare la stessa postazione.
+Il forno cuoce con tronchi e la friggitoria usa olio. Le preparazioni usano la griglia 3×3. La Banca del Caffè accetta le sue ricette di caffè, chicchi, rum, limoncello e acqua di cocomero.
 
 ## Alimenti ed effetti
 
@@ -109,7 +104,7 @@ gli curano la salute. Proprietario, fiducia e bottino vengono salvati.
 ## Verifica e risorse
 
 `./gradlew build` esegue i test server di ricette, cottura effettiva, inventari atomici, effetti, squadre, progressione,
-borsa e Munaciello. `./gradlew runKitchentest` usa un client reale per menu e conferme, consumo in corsa,
+borsa e Munaciello. `./gradlew runKitchentest` usa un client reale per gli slot di cucina, consumo in corsa,
 effetti ritardati, enigma e addomesticamento; salva immagini in `run-autotest/screenshots`.
 
 `python tools/generate_kitchen.py` rigenera catalogo, ricette, ricettario, modelli e traduzioni.

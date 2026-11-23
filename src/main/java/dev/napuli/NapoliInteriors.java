@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  * the Carabinieri caserma with two cells, and the new girls. Runs once per world, also on cities built before.
  */
 final class NapoliInteriors {
-	static final int VERSION_NOW = 11;
+	static final int VERSION_NOW = 15;
 	private static final AttachmentType<Integer> VERSION = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT).buildAndRegister(Napuli.id("napoli_version"));
 	static final BlockPos PIZZERIA = new BlockPos(-64, 64, -20);
@@ -58,7 +58,31 @@ final class NapoliInteriors {
 		if (v < 9) NapoliMunicipio.build(world);
 		if (v < 10) NapoliVedute.build(world);
 		if (v < 11) NapoliLocalMap.build(world);
+		if (v < 12) NapoliFishingHarbour.build(world);
+		if (v < 13) NapoliMergellina.build(world);
+		if (v < 14) {
+			NapoliMergellina.completeUpperFloors(world);
+			NapoliHouseholds.build(world);
+			new NapoliInteriors(world).completeEmptyHomes();
+			NapoliPlebiscito.refine(world);
+		}
+		if (v < 15) NapoliCivicLife.seed(world);
 		world.setAttached(VERSION, VERSION_NOW);
+	}
+
+	private void completeEmptyHomes() {
+		for (int[] home : homes()) {
+			int x = home[0], z = home[1], index = home[2];
+			int height = 12 + Math.floorMod(index, 4) * 3;
+			if (!world.getBlockState(new BlockPos(x, 64 + height, z)).is(Blocks.BRICKS)) continue;
+			boolean empty = true;
+			for (BlockPos pos : BlockPos.betweenClosed(x + 1, 64, z + 1, x + 9, 63 + height, z + 10)) {
+				if (world.getBlockState(pos).isAir() || world.getBlockState(pos).is(Blocks.LANTERN)) continue;
+				empty = false;
+				break;
+			}
+			if (empty) furnish(x, z, index, height, x == -70 && z == -26);
+		}
 	}
 
 	/** furnish one of the new homes of the east district */

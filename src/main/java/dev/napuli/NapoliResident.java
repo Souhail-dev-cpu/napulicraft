@@ -29,7 +29,10 @@ public final class NapoliResident extends PathfinderMob {
         // the people of the centro storico (v8)
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
         GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER,
-        BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE;
+        BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE,
+        FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN;
+
+        boolean civic() { return this == CIVIC_WOMAN || this == CIVIC_MAN; }
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
@@ -41,7 +44,7 @@ public final class NapoliResident extends PathfinderMob {
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
@@ -51,7 +54,20 @@ public final class NapoliResident extends PathfinderMob {
             SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> VARIANT =
             SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> ACTIVITY = SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
     private int spiritLife = 160;
+
+    void setCivicAge(int age) {
+        var scale = getAttribute(Attributes.SCALE);
+        if (scale != null) scale.setBaseValue(0.55 + 0.45 * Math.clamp(age, 0, NapoliCivicLife.ADULT_AGE) / NapoliCivicLife.ADULT_AGE);
+    }
+
+    public NapoliHouseholds.Activity activity() { return NapoliHouseholds.Activity.values()[entityData.get(ACTIVITY)]; }
+    void setActivity(NapoliHouseholds.Activity activity) { entityData.set(ACTIVITY, activity.ordinal()); }
+    private BlockPos dayPost;
+    private BlockPos nightPost;
+    private boolean returningHome;
+    private int commuteTicks;
 
     public int variant() { return entityData.get(VARIANT); }
 
@@ -83,6 +99,7 @@ public final class NapoliResident extends PathfinderMob {
         super.defineSynchedData(builder);
         builder.define(ROLE, Role.GENNARO.ordinal());
         builder.define(VARIANT, 0);
+        builder.define(ACTIVITY, 0);
     }
 
     public Role role() { return Role.values()[entityData.get(ROLE)]; }
@@ -93,6 +110,8 @@ public final class NapoliResident extends PathfinderMob {
         out.putInt("napuli_role", role().ordinal());
         out.putInt("napuli_spirit_life", spiritLife);
         out.putInt("napuli_variant", variant());
+        if (dayPost != null) out.store("napuli_day_post", BlockPos.CODEC, dayPost);
+        out.putBoolean("napuli_return_home", returningHome);
     }
 
     @Override
@@ -100,6 +119,8 @@ public final class NapoliResident extends PathfinderMob {
         super.readAdditionalSaveData(in);
         entityData.set(ROLE, Math.clamp(in.getIntOr("napuli_role", 0), 0, Role.values().length - 1));
         spiritLife = in.getIntOr("napuli_spirit_life", 160);
+        dayPost = in.read("napuli_day_post", BlockPos.CODEC).orElse(null);
+        returningHome = in.getBooleanOr("napuli_return_home", false);
         // old saves had no variant: give passers-by a random look instead of all the same one
         int v = in.getIntOr("napuli_variant", -1);
         entityData.set(VARIANT, v >= 0 ? v % role().variants() : random.nextInt(role().variants()));
@@ -113,6 +134,7 @@ public final class NapoliResident extends PathfinderMob {
         npc.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
         npc.setCustomName(role.displayName());
         npc.setHomeTo(pos, npc.wanderRadius());
+        npc.dayPost = pos.immutable();
         if (role == Role.CARABINIERE) {
             npc.setHomeTo(pos, 10);
             npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(Napuli.BATON));
@@ -145,6 +167,11 @@ public final class NapoliResident extends PathfinderMob {
         if (role().spirit() && --spiritLife <= 0) discard();
         if (isNoAi() || isPassenger() || role().spirit() || role().fighter()) return;
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
+        if (level() instanceof ServerLevel city) {
+            if (role().civic()) { NapoliCivicLife.commute(this, city); return; }
+            if (NapoliHouseholds.family(role())) { NapoliHouseholds.tick(this, city); return; }
+            if (runResidentialSchedule(city)) return;
+        }
         // everybody strolls around their own place (shop, bar, street corner) instead of standing like a statue
         int radius = wanderRadius();
         if (radius == 0) return;
@@ -154,6 +181,53 @@ public final class NapoliResident extends PathfinderMob {
             var next = net.minecraft.world.entity.ai.util.DefaultRandomPos.getPos(this, Math.max(2, radius), 1);
             if (next != null && next.y >= 63 && isWithinHome(next)) getNavigation().moveTo(next.x, next.y, next.z, role() == Role.CARABINIERE ? 0.7 : 0.6);
         }
+    }
+
+    private boolean runResidentialSchedule(ServerLevel city) {
+        if (city.dimension() != NapoliMap.LEVEL || !hasResidentialSchedule()) return false;
+        if (dayPost == null) dayPost = (hasHome() ? getHomePosition() : blockPosition()).immutable();
+        int offset = Math.floorMod(getUUID().hashCode(), 400);
+        long time = Math.floorMod(city.getOverworldClockTime(), 24000);
+        boolean night = time >= 12600 + offset || time < 400 + offset;
+        if (night != returningHome) {
+            returningHome = night;
+            nightPost = null;
+            commuteTicks = 160;
+            getNavigation().stop();
+        }
+        if (!night && commuteTicks == 0) return false;
+        if ((tickCount + getId()) % 20 == 0) {
+            if (night && nightPost == null) nightPost = NapoliResidentHomes.destination(city, dayPost, offset);
+            BlockPos destination = night ? nightPost : dayPost;
+            if (destination != null && destination.distToCenterSqr(position()) > 1.6) {
+                if (commuteTicks > 0) {
+                    getNavigation().moveTo(destination.getX() + .5, destination.getY(), destination.getZ() + .5, 0.85);
+                    commuteTicks = Math.max(0, commuteTicks - 20);
+                } else {
+                    getNavigation().stop();
+                    if (NapoliResidentHomes.walkable(city, destination))
+                        snapTo(destination.getX() + .5, destination.getY(), destination.getZ() + .5, getYRot(), 0);
+                }
+            } else {
+                getNavigation().stop();
+                commuteTicks = 0;
+            }
+        }
+        // On the tick after the final path attempt, finish the dawn journey if needed.
+        if (!night && commuteTicks == 0 && dayPost.distToCenterSqr(position()) > 1.6
+                && NapoliResidentHomes.walkable(city, dayPost)) {
+            getNavigation().stop();
+            snapTo(dayPost.getX() + .5, dayPost.getY(), dayPost.getZ() + .5, getYRot(), 0);
+        }
+        return true;
+    }
+
+    private boolean hasResidentialSchedule() {
+        return switch (role()) {
+            case PASSERBY, NONNA, TIFOSO, SCUGNIZZO, PARCHEGGIATORE, VENDOR, TAILOR, BUSKER,
+                 PIZZAIOLO, PRESEPAIO, PESCATORE, MERCATANTE, MUSICISTA, CARTOMANTE, GUARDIANO_PRESEPE -> true;
+            default -> false;
+        };
     }
 
     /** how far from their spot each one walks: shopkeepers stay in the shop, people in the street go further */
@@ -191,6 +265,10 @@ public final class NapoliResident extends PathfinderMob {
 
     /** move an existing person to a new place (used when the map changes) */
     public void relocate(BlockPos pos, float yaw) {
+        dayPost = pos.immutable();
+        nightPost = null;
+        returningHome = false;
+        commuteTicks = 0;
         snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
         getNavigation().stop();
         setHomeTo(pos, wanderRadius());
@@ -216,6 +294,15 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && role().civic()) {
+            if (player instanceof ServerPlayer sp) NapoliCivicLife.describe(sp, this);
+            return InteractionResult.SUCCESS;
+        }
+        if (hand == InteractionHand.MAIN_HAND && NapoliHouseholds.family(role())) {
+            if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
+                    "napuli.family." + activity().name().toLowerCase(Locale.ROOT)));
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && role().spirit()) {
             if (isAlive() && player instanceof ServerPlayer sp) NapoliScenes.answerSpirit(sp, this);
             return InteractionResult.SUCCESS;

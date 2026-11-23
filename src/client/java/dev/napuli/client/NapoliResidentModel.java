@@ -111,7 +111,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case ANIMA -> Set.of("hood");
 			case VENDOR -> Set.of("toque");
 			case TAILOR, ARMORER -> Set.of("coppola");
-			case MOTOR_DEALER -> Set.of();
+			case MOTOR_DEALER -> Set.of("hood");
 			case BUSKER -> Set.of("curls", "mandolin");
 			case PORTER -> Set.of("headscarf", "earrings", "skirt");
 			case ADA -> Set.of("long_hair", "hairband", "earrings");
@@ -125,7 +125,12 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case GIUSY -> Set.of("waves", "long_hair", "earrings", "skirt");
 			case SOFIA -> Set.of("side_part", "long_hair", "bag");
 			case GIORGIA_MELONI -> Set.of("side_part", "bob", "long_hair");
-			case PEPPE_FETISH -> Set.of("hood");
+			case PEPPE_FETISH -> Set.of();
+			case FAMILY_MOTHER, CIVIC_WOMAN -> Set.of("bun", "earrings");
+			case CIVIC_MAN -> Set.of("coppola");
+			case FAMILY_FATHER -> Set.of("scarf");
+			case FAMILY_CHILD -> Set.of("cap");
+			case FAMILY_CHILD_TWO -> Set.of("ponytail");
 			case NONNA -> Set.of("headscarf", "skirt", "bag");
 			case PARCHEGGIATORE -> Set.of("cap");
 			case TIFOSO -> Set.of("curls", "scarf");
@@ -158,7 +163,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	@Override
 	public void setupAnim(State state) {
 		super.setupAnim(state);
-		boolean peppe = state.role == Role.MOTOR_DEALER;
+		boolean peppe = state.role == Role.PEPPE_FETISH;
 		head.skipDraw = peppe;
 		hat.visible = !peppe;
 		peppePortrait.visible = peppe;
@@ -174,7 +179,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 		// girls: slimmer arms (scaled around the shoulder, they stay attached to the body)
 		float arm = female(state.role, state.variant) ? 0.75f : 1f;
 		rightArm.xScale = arm; leftArm.xScale = arm; rightArm.zScale = arm == 1f ? 1f : 0.9f; leftArm.zScale = rightArm.zScale;
-		if (state.isPassenger) {
+		if (state.activity == dev.napuli.NapoliHouseholds.Activity.MATCH || state.isPassenger) {
 			rightLeg.xRot = -0.99f; leftLeg.xRot = -0.99f;
 			rightLeg.yRot = 0.23f; leftLeg.yRot = -0.23f;
 			rightLeg.zRot = 0.18f; leftLeg.zRot = -0.18f;
@@ -191,6 +196,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	static final class State extends HumanoidRenderState {
 		Role role = Role.GENNARO;
 		int variant;
+		dev.napuli.NapoliHouseholds.Activity activity = dev.napuli.NapoliHouseholds.Activity.REST;
 	}
 
 	@SuppressWarnings("unused") private static NapoliResident unused;

@@ -17,6 +17,7 @@ public final class GenKitchenTextures {
         Files.createDirectories(output.resolve("block")); Files.createDirectories(output.resolve("item"));
         for(String row:rows){
             var p=row.split("\t");String id=p[0],shape=p[1];
+            if (args.length > 0 && !java.util.Arrays.asList(args).contains(id)) continue;
             if(shape.equals("block")){
                 for(String side:new String[]{"top","side"}){
                     img=new BufferedImage(16,16,BufferedImage.TYPE_INT_ARGB);station(id,side.equals("top"));
@@ -38,6 +39,93 @@ public final class GenKitchenTextures {
         System.out.println("Generated "+rows.size()+" kitchen pixel-art assets.");
     }
     static void food(String id,String shape,int seed){
+        switch (id.replace("_crudo", "")) {
+            case "sartu_riso" -> {
+                oval(2, 10, 12, 4, 0x533b4d);
+                poly(new int[]{3, 5, 11, 13}, new int[]{11, 5, 5, 11}, 0x754426);
+                oval(4, 3, 8, 5, 0xefac4b);
+                for (int x = 4; x <= 11; x += 2) px(x, 8 + x % 3, 0xffdf89);
+                px(6, 5, 0xb54832); px(9, 5, 0x688440); return;
+            }
+            case "capitone", "capitone_fritto" -> {
+                boolean fried = id.startsWith("capitone_fritto");
+                oval(2, 3, 12, 10, 0x433832);
+                oval(3, 4, 10, 8, fried ? 0xc4853c : 0x516d72);
+                oval(5, 6, 5, 4, 0);
+                rect(9, 8, 11, 10, 0);
+                line(9, 9, 13, 11, fried ? 0xdb9b45 : 0x53666b);
+                px(5, 4, WHITE); px(11, 6, fried ? LIGHT : 0x98b2aa); return;
+            }
+            case "baccala_napoletana" -> {
+                oval(1, 6, 14, 8, 0x653b31);
+                oval(2, 6, 12, 6, 0xb34c38);
+                poly(new int[]{4, 10, 12, 8, 3}, new int[]{5, 4, 7, 10, 8}, WHITE);
+                line(4, 7, 10, 6, 0xbda778);
+                px(3, 9, 0x536237); px(11, 9, 0x536237); return;
+            }
+            case "casatiello" -> {
+                oval(1, 5, 14, 10, INK); oval(2, 5, 12, 9, BROWN);
+                oval(3, 5, 10, 6, GOLD); oval(6, 7, 4, 3, INK);
+                oval(3, 6, 3, 4, WHITE); oval(10, 6, 3, 4, WHITE);
+                px(4, 7, 0xf4bb56); px(11, 7, 0xf4bb56); return;
+            }
+            case "zeppole" -> {
+                oval(2, 5, 12, 9, INK); oval(3, 5, 10, 8, GOLD);
+                oval(5, 4, 6, 6, WHITE); oval(7, 3, 3, 3, 0xad343d);
+                line(4, 10, 10, 10, LIGHT); return;
+            }
+            case "lasagne_carnevale" -> {
+                poly(new int[]{2, 10, 14, 6}, new int[]{6, 3, 7, 11}, 0xd78544);
+                poly(new int[]{2, 6, 14, 14, 6, 2}, new int[]{6, 9, 6, 11, 14, 10}, INK);
+                line(3, 8, 6, 10, WHITE); line(6, 10, 13, 7, WHITE);
+                line(3, 10, 6, 12, GOLD); line(6, 12, 13, 9, 0xb94a39); return;
+            }
+            case "gatto_patate" -> {
+                poly(new int[]{3, 8, 13, 13, 5, 3}, new int[]{5, 3, 6, 11, 14, 10}, INK);
+                poly(new int[]{4, 8, 12, 5}, new int[]{5, 4, 6, 9}, GOLD);
+                poly(new int[]{5, 12, 12, 5}, new int[]{9, 7, 10, 13}, WHITE);
+                px(7, 10, 0xd98971); px(10, 9, 0xd98971); return;
+            }
+            case "pizza_cruda" -> {
+                oval(1, 4, 14, 10, INK); oval(2, 4, 12, 9, LIGHT);
+                oval(3, 5, 10, 7, 0xcd6656);
+                oval(4, 6, 3, 2, WHITE); oval(8, 8, 3, 2, WHITE); px(8, 6, 0x687e55); return;
+            }
+            case "insalata_rinforzo" -> {
+                oval(1, 8, 14, 7, 0x42586a); oval(2, 6, 12, 7, 0xa0bdc3);
+                oval(3, 5, 10, 6, 0x66824f);
+                for (int x : new int[]{4, 7, 10}) oval(x, 5 + x % 2, 3, 3, WHITE);
+                px(6, 9, 0xb6443d); px(9, 7, 0xb6443d); return;
+            }
+            case "olio", "rum" -> {
+                boolean oil = id.equals("olio");
+                rect(6, 2, 9, 6, INK); rect(7, 1, 8, 3, 0x9b734c);
+                rect(oil ? 5 : 4, 5, oil ? 10 : 11, 14, INK);
+                rect(oil ? 6 : 5, 6, oil ? 9 : 10, 13, oil ? 0x949641 : 0x8d4c39);
+                rect(6, 8, 9, 11, oil ? 0xd6d69a : 0xd5a178); return;
+            }
+            case "borsa_fritto" -> {
+                poly(new int[]{3, 13, 11, 5}, new int[]{4, 4, 14, 14}, INK);
+                poly(new int[]{4, 12, 10, 6}, new int[]{5, 5, 13, 13}, 0xccaa76);
+                line(5, 7, 11, 7, 0xf3daa3); line(7, 9, 10, 9, 0xa15941); return;
+            }
+            case "pasta" -> {
+                for (int x = 3; x < 12; x += 3) {
+                    line(x, 4, x + 2, 12, INK); line(x + 1, 4, x + 3, 11, GOLD);
+                }
+                return;
+            }
+            case "riso" -> {
+                oval(2, 7, 12, 7, 0x705245);
+                for (int x = 4; x < 12; x += 2) {
+                    line(x, 6 + x % 3, x + 1, 7 + x % 3, WHITE);
+                    line(x, 10, x + 1, 11, 0xffdf9c);
+                }
+                return;
+            }
+            default -> {}
+        }
+
         int accent=id.contains("friarielli")||id.contains("rinforzo")?0x5e9a42:id.contains("mustaccioli")?0x61372d:0xb74730;
         switch(shape){
             case "bag" -> {rect(3,5,13,14,INK);rect(4,6,12,13,0xbd8750);rect(5,7,11,12,0xd8b578);for(int x:new int[]{4,7,10}){rect(x,2,x+2,8,INK);rect(x,3,x+1,8,LIGHT);}rect(5,11,11,12,0xb35b31);}
@@ -75,6 +163,16 @@ public final class GenKitchenTextures {
         int base=id.contains("forno")?0xa75d46:id.contains("frittura")?0x8a939b:id.contains("enigma")?0x73808b:0x845a3b;
         rect(0,0,16,16,base);
         for(int y=1;y<16;y+=4)line(0,y,15,y,0x564b41);
+        if(top && id.contains("forno")) {
+            rect(1,1,15,15,0x9a4e3d);
+            for (int y=2;y<16;y+=4) { line(0,y,15,y,0x653b35); for (int x=2+y%3;x<15;x+=5) line(x,y,x,y+3,0x653b35); }
+            rect(9,3,14,8,0x65332e); rect(10,4,13,7,0x392b2b); return;
+        }
+        if(top && id.contains("pizzaiolo")) {
+            rect(1,1,15,15,0xece1ce); line(1,13,14,13,0xc5aeaa); line(3,3,13,5,0xd4c8bb);
+            oval(3,6,7,6,0xc2a97c); oval(4,6,6,5,0xe9cc9e);
+            line(6,4,12,10,0x694b38); line(7,4,13,10,0xb58259); px(11,3,WHITE); return;
+        }
         if(top){rect(1,1,15,15,id.contains("pizzaiolo")?0xeadbc4:base);if(id.contains("frittura")){rect(3,3,13,13,INK);rect(4,4,12,12,0xc3a34b);for(int x:new int[]{5,8,10})px(x,7,LIGHT);}else if(id.contains("caffe")){oval(4,3,8,9,INK);oval(5,3,6,7,0xb6b2a1);oval(6,4,4,4,0x574032);}else if(id.contains("enigma")){line(3,3,12,3,LIGHT);line(12,3,12,7,LIGHT);line(8,7,12,7,LIGHT);line(8,7,8,10,LIGHT);px(8,13,LIGHT);}else{oval(3,3,10,10,INK);oval(4,4,8,8,GOLD);px(6,6,0xb74730);px(9,8,WHITE);}}else{rect(1,2,15,5,0xc2a37a);rect(3,7,13,14,INK);if(id.contains("forno")||id.contains("frittura")){rect(4,11,12,13,0xd76d2e);px(6,10,GOLD);px(9,9,LIGHT);}else{line(3,7,12,7,WHITE);px(11,10,GOLD);}}
     }
     static void px(int x,int y,int c){if(x>=0&&x<16&&y>=0&&y<16)img.setRGB(x,y,c==0?0:0xff000000|c);}

@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:smelting",
+  "type": "napuli:wood_baking",
   "category": "food",
   "ingredient": "napuli:casatiello_crudo",
   "result": {

@@ -43,6 +43,7 @@ public class NapuliClient implements ClientModInitializer {
 		dev.napuli.TaxVisitTest.register();
 		dev.napuli.PeppeTest.register();
 		dev.napuli.MotorinoTest.register();
+		KitchenScreens.register();
 		dev.napuli.KitchenTest.register();
 		dev.napuli.PoliceAITest.register();
 	}
@@ -80,6 +81,7 @@ public class NapuliClient implements ClientModInitializer {
 		private static final java.util.Map<String, Identifier> TEXTURES = new java.util.HashMap<>();
 		ResidentRenderer(EntityRendererProvider.Context ctx) {
 			super(ctx, new NapoliResidentModel(ctx.bakeLayer(NapoliResidentModel.LAYER)), 0.45f);
+			this.addLayer(new net.minecraft.client.renderer.entity.layers.ItemInHandLayer<>(this));
 			// so the casco (and any helmet) shows on the boys of the scooter
 			this.addLayer(new net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer<>(this, net.minecraft.client.renderer.entity.ArmorModelSet.bake(ModelLayers.ZOMBIE_ARMOR, ctx.getModelSet(),
 					(net.minecraft.client.model.geom.ModelPart p) -> new HumanoidModel<NapoliResidentModel.State>(p)), ctx.getEquipmentRenderer()));
@@ -87,7 +89,15 @@ public class NapuliClient implements ClientModInitializer {
 
 		/** passers-by and carabinieri have several looks: texture "passerby_3", "carabiniere_1"... */
 		static Identifier texture(dev.napuli.NapoliResident.Role role, int variant) {
-			String name = role.variants() > 1 ? role.id() + "_" + Math.floorMod(variant, role.variants()) : role.id();
+			String name = switch (role) {
+				case FAMILY_MOTHER -> "carmela";
+				case CIVIC_WOMAN -> "bucato";
+				case CIVIC_MAN -> "pescatore";
+				case FAMILY_FATHER -> "tifoso";
+				case FAMILY_CHILD -> "scugnizzo";
+				case FAMILY_CHILD_TWO -> "passerby_3";
+				default -> role.variants() > 1 ? role.id() + "_" + Math.floorMod(variant, role.variants()) : role.id();
+			};
 			return TEXTURES.computeIfAbsent(name, n -> Napuli.id("textures/entity/" + n + ".png"));
 		}
 
@@ -95,7 +105,8 @@ public class NapuliClient implements ClientModInitializer {
 		@Override public NapoliResidentModel.State createRenderState() { return new NapoliResidentModel.State(); }
 		@Override
 		protected void scale(NapoliResidentModel.State s, PoseStack pose) {
-			if (s.role == dev.napuli.NapoliResident.Role.SCUGNIZZO) pose.scale(0.74f, 0.74f, 0.74f); // 'o scugnizzo is a kid
+			if (s.role == dev.napuli.NapoliResident.Role.SCUGNIZZO || s.role == dev.napuli.NapoliResident.Role.FAMILY_CHILD
+					|| s.role == dev.napuli.NapoliResident.Role.FAMILY_CHILD_TWO) pose.scale(0.74f, 0.74f, 0.74f); // 'o scugnizzo is a kid
 		}
 		@Override
 		protected int getBlockLightLevel(dev.napuli.NapoliResident npc, net.minecraft.core.BlockPos pos) {
@@ -107,6 +118,7 @@ public class NapuliClient implements ClientModInitializer {
 			super.extractRenderState(npc, state, partialTick);
 			state.role = npc.role();
 			state.variant = npc.variant();
+			state.activity = npc.activity();
 			if (npc.getVehicle() instanceof Motorino bike) {
 				state.bodyRot = bike.getYRot(partialTick);
 				state.yRot = 0;

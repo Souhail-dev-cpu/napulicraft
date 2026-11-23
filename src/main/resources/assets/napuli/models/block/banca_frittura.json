@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "minecraft:block/iron_block",
+    "top": "napuli:block/banca_frittura_top",
+    "side": "napuli:block/banca_frittura_side"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:cocoa_beans"
+  ],
+  "result": {
+    "id": "napuli:chicchi_caffe",
+    "count": 2
+  }
+}

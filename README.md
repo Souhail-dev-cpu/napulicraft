@@ -9,6 +9,18 @@ GTA-style radio, and the soundtrack **you** choose.*
 
 > Fabric · Minecraft 26.3 · Java 25 · requires [Fabric API](https://modrinth.com/mod/fabric-api) on client and server.
 
+## Neapolitan kitchen
+
+Craft the requested Neapolitan dishes, renewable ingredients, regenerating fry bag and four portable kitchen
+stations. Use a crafting table for preparations, a vanilla furnace for cooking, or a kitchen station's recipe and
+confirmation menus. The additions include timed food effects, team healing, a Sartu puzzle, pizza-making reputation,
+NPC quest helpers, the Neapolitan fullness/heat HUD and a sweet-tamed Munaciello who hides items in your last opened
+chest and leaves redeemable coins.
+
+See the [Italian gameplay guide](docs/CUCINA.md) and [all 71 recipes](docs/CUCINA_RICETTE.md).
+Install the same updated JAR on the server and every client; the new items and HUD are synchronized by the server.
+Server kitchen tests run with `./gradlew build`; `./gradlew runKitchentest` also checks the real client interactions.
+
 ## No songs included — bring your own
 
 The mod ships **without any music**. Every player picks their own:

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:potato",
+    "minecraft:potato",
+    "napuli:mozzarella",
+    "minecraft:egg"
+  ],
+  "result": {
+    "id": "napuli:gatto_patate_crudo",
+    "count": 1
+  }
+}

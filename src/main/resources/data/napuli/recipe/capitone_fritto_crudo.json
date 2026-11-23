@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:capitone",
+    "napuli:farina",
+    "napuli:olio",
+    "minecraft:gold_nugget"
+  ],
+  "result": {
+    "id": "napuli:capitone_fritto_crudo",
+    "count": 1
+  }
+}

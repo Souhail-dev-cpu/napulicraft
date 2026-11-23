@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "minecraft:block/dark_oak_planks",
+    "top": "napuli:block/banca_caffe_top",
+    "side": "napuli:block/banca_caffe_side"
+  }
+}

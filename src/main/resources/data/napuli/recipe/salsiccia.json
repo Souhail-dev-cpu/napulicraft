@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:porkchop",
+    "minecraft:sweet_berries"
+  ],
+  "result": {
+    "id": "napuli:salsiccia",
+    "count": 2
+  }
+}

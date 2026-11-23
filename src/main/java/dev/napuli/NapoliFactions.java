@@ -157,6 +157,7 @@ public final class NapoliFactions {
         if (p.stage() != 0) { say(player, "busy"); return 0; }
         if (now < p.nextMission()) { say(player, "cooldown"); return 0; }
         player.setAttached(DATA, new Progress(p.lanterns(), p.tides(), side.ordinal(), stage, 0));
+        KitchenProgress.questStarted(player);
         return 1;
     }
 

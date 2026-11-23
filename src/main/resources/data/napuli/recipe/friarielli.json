@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:kelp",
+    "minecraft:green_dye"
+  ],
+  "result": {
+    "id": "napuli:friarielli",
+    "count": 2
+  }
+}

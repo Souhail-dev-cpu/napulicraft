@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:pasta",
+    "napuli:vongole",
+    "napuli:olio",
+    "minecraft:bowl"
+  ],
+  "result": {
+    "id": "napuli:spaghetti_vongole_crudo",
+    "count": 1
+  }
+}

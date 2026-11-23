@@ -64,7 +64,9 @@ final class HudClient {
 	private static void draw(GuiGraphicsExtractor g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		Hud.State s = state;
-		if (hidden || s == null || mc.player == null || !s.inCity()) return;
+		if (hidden || s == null || mc.player == null) return;
+		drawKitchen(g, mc.font, s);
+		if (!s.inCity()) return;
 		Font f = mc.font;
 		int w = 156, x = g.guiWidth() - w - 4, y = 54;   // under the status effect icons
 		int lh = 11;
@@ -134,6 +136,19 @@ final class HudClient {
 			String arrow = dist < 4 ? "●" : ARROWS[(int) Math.floorMod(Math.round(rel / 45.0), 8)];
 			g.text(f, arrow + " " + (dist < 4 ? "Sì arrivato" : dist + " m"), x, y + 1, dist < 4 ? 0xFF66BB6A : 0xFFFFD54F, true);
 		}
+	}
+
+	private static void drawKitchen(GuiGraphicsExtractor g, Font font, Hud.State state) {
+		int x = 6, y = 8, width = 110;
+		g.fill(x - 3, y - 3, x + width + 3, y + 39, 0x90000000);
+		g.text(font, Component.translatable("napuli.kitchen.hunger"), x, y, 0xFFFFD180, true);
+		g.fill(x, y + 10, x + width, y + 14, 0xFF383838);
+		g.fill(x, y + 10, x + Math.clamp(state.fullness(), 0, 60) * width / 60, y + 14,
+				state.fullness() >= 50 ? 0xFFEF5350 : 0xFFFFB74D);
+		g.text(font, Component.translatable("napuli.kitchen.pizzas", state.pizzas()), x, y + 17, 0xFFFFFFFF, false);
+		g.text(font, Component.translatable("napuli.kitchen.heat"), x, y + 28, 0xFFBDBDBD, false);
+		g.fill(x + 40, y + 30, x + width, y + 34, 0xFF383838);
+		g.fill(x + 40, y + 30, x + 40 + Math.clamp(state.heat(), 0, 100) * (width - 40) / 100, y + 34, 0xFFFF7043);
 	}
 
 	// straight ahead, ahead-right, right, behind-right, behind, behind-left, left, ahead-left

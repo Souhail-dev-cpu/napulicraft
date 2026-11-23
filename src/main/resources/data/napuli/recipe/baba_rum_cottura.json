@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:baba_rum_crudo",
+  "result": {
+    "id": "napuli:baba_rum",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

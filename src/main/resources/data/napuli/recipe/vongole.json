@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:cod",
+    "minecraft:flint"
+  ],
+  "result": {
+    "id": "napuli:vongole",
+    "count": 3
+  }
+}

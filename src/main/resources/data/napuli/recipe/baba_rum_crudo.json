@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "napuli:rum",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "napuli:baba_rum_crudo",
+    "count": 1
+  }
+}

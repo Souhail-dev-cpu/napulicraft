@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:smooth_stone",
+    "minecraft:bowl"
+  ],
+  "result": {
+    "id": "napuli:tavolo_pizzaiolo",
+    "count": 1
+  }
+}

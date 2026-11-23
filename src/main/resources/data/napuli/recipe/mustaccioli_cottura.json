@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:mustaccioli_crudo",
+  "result": {
+    "id": "napuli:mustaccioli",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

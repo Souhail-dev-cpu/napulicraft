@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:potato",
+    "napuli:farina",
+    "napuli:olio"
+  ],
+  "result": {
+    "id": "napuli:fritto_misto_crudo",
+    "count": 1
+  }
+}

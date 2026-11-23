@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:wheat_seeds",
+    "minecraft:sugar_cane"
+  ],
+  "result": {
+    "id": "napuli:riso",
+    "count": 3
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:sfogliatella_frolla_crudo",
+  "result": {
+    "id": "napuli:sfogliatella_frolla",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

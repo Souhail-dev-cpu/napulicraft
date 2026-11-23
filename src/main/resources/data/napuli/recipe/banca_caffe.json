@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:copper_ingot",
+    "minecraft:glass_bottle",
+    "minecraft:cocoa_beans"
+  ],
+  "result": {
+    "id": "napuli:banca_caffe",
+    "count": 1
+  }
+}

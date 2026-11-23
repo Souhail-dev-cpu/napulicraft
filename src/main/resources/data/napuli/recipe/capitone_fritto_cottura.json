@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:capitone_fritto_crudo",
+  "result": {
+    "id": "napuli:capitone_fritto",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

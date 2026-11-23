@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:farina",
+    "minecraft:egg"
+  ],
+  "result": {
+    "id": "napuli:pasta",
+    "count": 3
+  }
+}

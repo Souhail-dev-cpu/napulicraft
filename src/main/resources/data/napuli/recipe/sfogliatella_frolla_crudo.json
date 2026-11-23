@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "napuli:ricotta",
+    "minecraft:honey_bottle",
+    "minecraft:gold_nugget"
+  ],
+  "result": {
+    "id": "napuli:sfogliatella_frolla_crudo",
+    "count": 1
+  }
+}

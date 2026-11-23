@@ -124,6 +124,7 @@ public class Napuli implements ModInitializer {
 						new AttributeModifier(id("casco_armor"), 2, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD).build())
 				.component(net.minecraft.core.component.DataComponents.EQUIPPABLE, net.minecraft.world.item.equipment.Equippable.builder(net.minecraft.world.entity.EquipmentSlot.HEAD)
 						.setEquipSound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_TURTLE).setAsset(net.minecraft.resources.ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, id("casco"))).build()));
+		NapoliKitchen.register();
 		Radio.register();
 		Hud.register();
 		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
@@ -136,6 +137,7 @@ public class Napuli implements ModInitializer {
 				.displayItems((params, out) -> {
 					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
+					NapoliKitchen.ITEMS.values().forEach(out::accept);
 				}).build());
 
 		FabricDefaultAttributeRegistry.register(MUNACIELLO, Munaciello.attributes());

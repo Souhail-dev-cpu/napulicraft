@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:salsiccia",
+    "napuli:friarielli",
+    "napuli:olio"
+  ],
+  "result": {
+    "id": "napuli:salsiccia_friarielli_crudo",
+    "count": 1
+  }
+}

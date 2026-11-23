@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:pasta",
+    "napuli:pomodoro",
+    "napuli:ricotta",
+    "napuli:salsiccia"
+  ],
+  "result": {
+    "id": "napuli:lasagne_carnevale_crudo",
+    "count": 1
+  }
+}

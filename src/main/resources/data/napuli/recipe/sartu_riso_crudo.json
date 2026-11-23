@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:riso",
+    "napuli:pomodoro",
+    "napuli:mozzarella",
+    "minecraft:egg"
+  ],
+  "result": {
+    "id": "napuli:sartu_riso_crudo",
+    "count": 1
+  }
+}

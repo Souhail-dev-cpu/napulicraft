@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:wheat",
+    "napuli:ricotta",
+    "minecraft:egg",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "napuli:pastiera_crudo",
+    "count": 1
+  }
+}

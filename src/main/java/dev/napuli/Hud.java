@@ -19,15 +19,17 @@ public final class Hud {
 	public static final int NO_TARGET = Integer.MIN_VALUE;
 
 	public record State(boolean inCity, int cash, int lanterns, int tides, int ally, String objective, int tx, int tz,
-			int stars, int wantedLeft, int jail, int cooldown) implements CustomPacketPayload {
+			int stars, int wantedLeft, int jail, int cooldown, int pizzas, int fullness, int heat) implements CustomPacketPayload {
 		public static final Type<State> TYPE = new Type<>(Napuli.id("hud"));
 		public static final StreamCodec<FriendlyByteBuf, State> CODEC = StreamCodec.of((buf, s) -> {
 			buf.writeBoolean(s.inCity);
 			buf.writeVarInt(s.cash); buf.writeVarInt(s.lanterns); buf.writeVarInt(s.tides); buf.writeVarInt(s.ally);
 			buf.writeUtf(s.objective); buf.writeInt(s.tx); buf.writeInt(s.tz);
 			buf.writeVarInt(s.stars); buf.writeVarInt(s.wantedLeft); buf.writeVarInt(s.jail); buf.writeVarInt(s.cooldown);
+			buf.writeVarInt(s.pizzas); buf.writeVarInt(s.fullness); buf.writeVarInt(s.heat);
 		}, buf -> new State(buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
-				buf.readUtf(), buf.readInt(), buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
+				buf.readUtf(), buf.readInt(), buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+				buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
 		@Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 	}
 
@@ -46,7 +48,8 @@ public final class Hud {
 					NapoliFactions.reputation(p, NapoliFactions.Side.LANTERNE), NapoliFactions.reputation(p, NapoliFactions.Side.MAREE),
 					ally == null ? -1 : ally.ordinal(), obj.key(),
 					obj.target() == null ? NO_TARGET : obj.target().getX(), obj.target() == null ? NO_TARGET : obj.target().getZ(),
-					Carabinieri.wantedStars(p), Carabinieri.wantedSecondsLeft(p), Carabinieri.jailSecondsLeft(p), NapoliFactions.cooldownSeconds(p)));
+					Carabinieri.wantedStars(p), Carabinieri.wantedSecondsLeft(p), Carabinieri.jailSecondsLeft(p), NapoliFactions.cooldownSeconds(p),
+					KitchenProgress.pizzas(p), NapoliStreet.fullness(p), KitchenEffects.heat(p)));
 		}
 	}
 }

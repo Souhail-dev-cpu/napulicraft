@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:friarielli",
+    "napuli:salsiccia",
+    "minecraft:carrot",
+    "minecraft:bowl"
+  ],
+  "result": {
+    "id": "napuli:minestra_maritata_crudo",
+    "count": 1
+  }
+}

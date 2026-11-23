@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:furnace",
+    "minecraft:brick",
+    "minecraft:brick",
+    "minecraft:iron_ingot"
+  ],
+  "result": {
+    "id": "napuli:forno_legna_portatile",
+    "count": 1
+  }
+}

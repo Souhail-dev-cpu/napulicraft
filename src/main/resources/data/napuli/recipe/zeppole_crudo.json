@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "napuli:ricotta",
+    "minecraft:sweet_berries",
+    "napuli:olio"
+  ],
+  "result": {
+    "id": "napuli:zeppole_crudo",
+    "count": 1
+  }
+}

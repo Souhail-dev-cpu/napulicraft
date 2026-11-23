@@ -1,0 +1,1412 @@
+{
+  "ingredients": [
+    {
+      "id": "farina",
+      "it": "Farina",
+      "en": "Flour",
+      "container": null
+    },
+    {
+      "id": "lievito",
+      "it": "Lievito",
+      "en": "Yeast",
+      "container": null
+    },
+    {
+      "id": "sale",
+      "it": "Sale",
+      "en": "Salt",
+      "container": null
+    },
+    {
+      "id": "impasto",
+      "it": "Impasto",
+      "en": "Dough",
+      "container": null
+    },
+    {
+      "id": "pomodoro",
+      "it": "Pomodoro",
+      "en": "Tomato",
+      "container": null
+    },
+    {
+      "id": "mozzarella",
+      "it": "Mozzarella",
+      "en": "Mozzarella",
+      "container": null
+    },
+    {
+      "id": "ricotta",
+      "it": "Ricotta",
+      "en": "Ricotta",
+      "container": null
+    },
+    {
+      "id": "olio",
+      "it": "Olio",
+      "en": "Cooking oil",
+      "container": "glass_bottle"
+    },
+    {
+      "id": "riso",
+      "it": "Riso",
+      "en": "Rice",
+      "container": null
+    },
+    {
+      "id": "pasta",
+      "it": "Pasta fresca",
+      "en": "Fresh pasta",
+      "container": null
+    },
+    {
+      "id": "friarielli",
+      "it": "Friarielli",
+      "en": "Broccoli rabe",
+      "container": null
+    },
+    {
+      "id": "salsiccia",
+      "it": "Salsiccia",
+      "en": "Sausage",
+      "container": null
+    },
+    {
+      "id": "vongole",
+      "it": "Vongole",
+      "en": "Clams",
+      "container": null
+    },
+    {
+      "id": "baccala",
+      "it": "Baccalà sotto sale",
+      "en": "Salt cod",
+      "container": null
+    },
+    {
+      "id": "capitone",
+      "it": "Capitone",
+      "en": "Eel",
+      "container": null
+    },
+    {
+      "id": "limone",
+      "it": "Limone",
+      "en": "Lemon",
+      "container": null
+    },
+    {
+      "id": "rum",
+      "it": "Rum da cucina",
+      "en": "Cooking rum",
+      "container": "glass_bottle"
+    },
+    {
+      "id": "chicchi_caffe",
+      "it": "Chicchi di caffè",
+      "en": "Coffee beans",
+      "container": null
+    },
+    {
+      "id": "fritto_misto_crudo",
+      "it": "Fritto misto · da cuocere",
+      "en": "Mixed fritters · uncooked",
+      "container": null
+    },
+    {
+      "id": "pizza_portafoglio_crudo",
+      "it": "Pizza a Portafoglio · da cuocere",
+      "en": "Folded street pizza · uncooked",
+      "container": null
+    },
+    {
+      "id": "sfogliatella_riccia_crudo",
+      "it": "Sfogliatella Riccia · da cuocere",
+      "en": "Riccia sfogliatella · uncooked",
+      "container": null
+    },
+    {
+      "id": "sfogliatella_frolla_crudo",
+      "it": "Sfogliatella Frolla · da cuocere",
+      "en": "Rare frolla sfogliatella · uncooked",
+      "container": null
+    },
+    {
+      "id": "baba_rum_crudo",
+      "it": "Babà al Rum · da cuocere",
+      "en": "Rum baba · uncooked",
+      "container": null
+    },
+    {
+      "id": "pastiera_crudo",
+      "it": "Pastiera Napoletana · da cuocere",
+      "en": "Neapolitan pastiera · uncooked",
+      "container": null
+    },
+    {
+      "id": "zeppole_crudo",
+      "it": "Zeppole di San Giuseppe · da cuocere",
+      "en": "Saint Joseph fritters · uncooked",
+      "container": null
+    },
+    {
+      "id": "struffoli_crudo",
+      "it": "Struffoli · da cuocere",
+      "en": "Sharing struffoli · uncooked",
+      "container": null
+    },
+    {
+      "id": "roccoco_crudo",
+      "it": "Roccocò · da cuocere",
+      "en": "Travel roccoco · uncooked",
+      "container": null
+    },
+    {
+      "id": "mustaccioli_crudo",
+      "it": "Mustaccioli · da cuocere",
+      "en": "Dungeon mustaccioli · uncooked",
+      "container": null
+    },
+    {
+      "id": "casatiello_crudo",
+      "it": "Casatiello · da cuocere",
+      "en": "Casatiello · uncooked",
+      "container": null
+    },
+    {
+      "id": "lasagne_carnevale_crudo",
+      "it": "Lasagne di Carnevale · da cuocere",
+      "en": "Carnival lasagne · uncooked",
+      "container": null
+    },
+    {
+      "id": "chiacchiere_crudo",
+      "it": "Chiacchiere · da cuocere",
+      "en": "Quick carnival ribbons · uncooked",
+      "container": null
+    },
+    {
+      "id": "spaghetti_vongole_crudo",
+      "it": "Spaghetti alle Vongole · da cuocere",
+      "en": "Clam spaghetti · uncooked",
+      "container": null
+    },
+    {
+      "id": "baccala_napoletana_crudo",
+      "it": "Baccalà alla Napoletana · da cuocere",
+      "en": "Neapolitan salt cod · uncooked",
+      "container": null
+    },
+    {
+      "id": "capitone_fritto_crudo",
+      "it": "Capitone Fritto · da cuocere",
+      "en": "Rare fried eel · uncooked",
+      "container": null
+    },
+    {
+      "id": "minestra_maritata_crudo",
+      "it": "Minestra Maritata · da cuocere",
+      "en": "Slow-healing wedding soup · uncooked",
+      "container": null
+    },
+    {
+      "id": "salsiccia_friarielli_crudo",
+      "it": "Salsiccia e Friarielli · da cuocere",
+      "en": "Sausage and broccoli rabe · uncooked",
+      "container": null
+    },
+    {
+      "id": "gatto_patate_crudo",
+      "it": "Gattò di Patate · da cuocere",
+      "en": "Potato gateau · uncooked",
+      "container": null
+    },
+    {
+      "id": "sartu_riso_crudo",
+      "it": "Sartù di Riso · da cuocere",
+      "en": "Puzzle rice sartu · uncooked",
+      "container": null
+    },
+    {
+      "id": "pizza_cruda",
+      "it": "Pizza cruda",
+      "en": "Uncooked pizza",
+      "container": null
+    }
+  ],
+  "foods": [
+    {
+      "id": "fritto_misto",
+      "it": "Fritto misto",
+      "en": "Mixed fritters",
+      "nutrition": 5,
+      "saturation": 0.35,
+      "seconds": 1.0,
+      "effect": "NONE",
+      "sweet": false,
+      "fried": true,
+      "container": null,
+      "rare": false,
+      "shape": "bag"
+    },
+    {
+      "id": "pizza_portafoglio",
+      "it": "Pizza a Portafoglio",
+      "en": "Folded street pizza",
+      "nutrition": 7,
+      "saturation": 0.65,
+      "seconds": 0.6,
+      "effect": "NONE",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "fold"
+    },
+    {
+      "id": "sfogliatella_riccia",
+      "it": "Sfogliatella Riccia",
+      "en": "Riccia sfogliatella",
+      "nutrition": 5,
+      "saturation": 0.5,
+      "seconds": 1.2,
+      "effect": "RANDOM_LUCK",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "shell"
+    },
+    {
+      "id": "sfogliatella_frolla",
+      "it": "Sfogliatella Frolla",
+      "en": "Rare frolla sfogliatella",
+      "nutrition": 6,
+      "saturation": 0.7,
+      "seconds": 1.2,
+      "effect": "RARE_LUCK",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": true,
+      "shape": "bun"
+    },
+    {
+      "id": "baba_rum",
+      "it": "Babà al Rum",
+      "en": "Rum baba",
+      "nutrition": 5,
+      "saturation": 0.5,
+      "seconds": 1.2,
+      "effect": "BABA",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "baba"
+    },
+    {
+      "id": "pastiera",
+      "it": "Pastiera Napoletana",
+      "en": "Neapolitan pastiera",
+      "nutrition": 9,
+      "saturation": 0.8,
+      "seconds": 1.6,
+      "effect": "PASTIERA",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "pie"
+    },
+    {
+      "id": "zeppole",
+      "it": "Zeppole di San Giuseppe",
+      "en": "Saint Joseph fritters",
+      "nutrition": 5,
+      "saturation": 0.5,
+      "seconds": 1.0,
+      "effect": "LUCK",
+      "sweet": true,
+      "fried": true,
+      "container": null,
+      "rare": false,
+      "shape": "ring"
+    },
+    {
+      "id": "struffoli",
+      "it": "Struffoli",
+      "en": "Sharing struffoli",
+      "nutrition": 6,
+      "saturation": 0.55,
+      "seconds": 1.2,
+      "effect": "TEAM_HEAL",
+      "sweet": true,
+      "fried": true,
+      "container": null,
+      "rare": false,
+      "shape": "balls"
+    },
+    {
+      "id": "roccoco",
+      "it": "Roccocò",
+      "en": "Travel roccoco",
+      "nutrition": 5,
+      "saturation": 0.8,
+      "seconds": 1.2,
+      "effect": "RESISTANCE",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "ring"
+    },
+    {
+      "id": "mustaccioli",
+      "it": "Mustaccioli",
+      "en": "Dungeon mustaccioli",
+      "nutrition": 6,
+      "saturation": 0.6,
+      "seconds": 1.2,
+      "effect": "DUNGEON",
+      "sweet": true,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "diamond"
+    },
+    {
+      "id": "casatiello",
+      "it": "Casatiello",
+      "en": "Casatiello",
+      "nutrition": 10,
+      "saturation": 0.9,
+      "seconds": 1.6,
+      "effect": "STRENGTH",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "ring"
+    },
+    {
+      "id": "lasagne_carnevale",
+      "it": "Lasagne di Carnevale",
+      "en": "Carnival lasagne",
+      "nutrition": 14,
+      "saturation": 1.0,
+      "seconds": 2.0,
+      "effect": "HEAVY",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "tray"
+    },
+    {
+      "id": "chiacchiere",
+      "it": "Chiacchiere",
+      "en": "Quick carnival ribbons",
+      "nutrition": 3,
+      "saturation": 0.3,
+      "seconds": 0.4,
+      "effect": "AGILITY",
+      "sweet": true,
+      "fried": true,
+      "container": null,
+      "rare": false,
+      "shape": "ribbons"
+    },
+    {
+      "id": "spaghetti_vongole",
+      "it": "Spaghetti alle Vongole",
+      "en": "Clam spaghetti",
+      "nutrition": 8,
+      "saturation": 0.65,
+      "seconds": 1.6,
+      "effect": "SEA",
+      "sweet": false,
+      "fried": false,
+      "container": "bowl",
+      "rare": false,
+      "shape": "bowl"
+    },
+    {
+      "id": "baccala_napoletana",
+      "it": "Baccalà alla Napoletana",
+      "en": "Neapolitan salt cod",
+      "nutrition": 10,
+      "saturation": 0.8,
+      "seconds": 1.6,
+      "effect": "CLEANSE",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "fish"
+    },
+    {
+      "id": "capitone_fritto",
+      "it": "Capitone Fritto",
+      "en": "Rare fried eel",
+      "nutrition": 14,
+      "saturation": 1.0,
+      "seconds": 1.6,
+      "effect": "EXTREME",
+      "sweet": false,
+      "fried": true,
+      "container": null,
+      "rare": true,
+      "shape": "fish"
+    },
+    {
+      "id": "minestra_maritata",
+      "it": "Minestra Maritata",
+      "en": "Slow-healing wedding soup",
+      "nutrition": 7,
+      "saturation": 0.7,
+      "seconds": 1.6,
+      "effect": "SOUP",
+      "sweet": false,
+      "fried": false,
+      "container": "bowl",
+      "rare": false,
+      "shape": "bowl"
+    },
+    {
+      "id": "insalata_rinforzo",
+      "it": "Insalata di Rinforzo",
+      "en": "Celebration reinforcement salad",
+      "nutrition": 6,
+      "saturation": 0.6,
+      "seconds": 1.2,
+      "effect": "RESISTANCE",
+      "sweet": false,
+      "fried": false,
+      "container": "bowl",
+      "rare": false,
+      "shape": "bowl"
+    },
+    {
+      "id": "salsiccia_friarielli",
+      "it": "Salsiccia e Friarielli",
+      "en": "Sausage and broccoli rabe",
+      "nutrition": 10,
+      "saturation": 0.85,
+      "seconds": 1.6,
+      "effect": "STRENGTH",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "plate"
+    },
+    {
+      "id": "gatto_patate",
+      "it": "Gattò di Patate",
+      "en": "Potato gateau",
+      "nutrition": 11,
+      "saturation": 1.0,
+      "seconds": 1.6,
+      "effect": "GATTO",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "tray"
+    },
+    {
+      "id": "sartu_riso",
+      "it": "Sartù di Riso",
+      "en": "Puzzle rice sartu",
+      "nutrition": 9,
+      "saturation": 0.8,
+      "seconds": 1.6,
+      "effect": "PUZZLE",
+      "sweet": false,
+      "fried": false,
+      "container": null,
+      "rare": false,
+      "shape": "baba"
+    },
+    {
+      "id": "limoncello",
+      "it": "Limoncello",
+      "en": "Limoncello",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "LIMONCELLO",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "bottle"
+    },
+    {
+      "id": "acqua_cocomero",
+      "it": "Acqua di Cocomero",
+      "en": "Cooling watermelon water",
+      "nutrition": 3,
+      "saturation": 0.25,
+      "seconds": 0.6,
+      "effect": "COOLING",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "bottle"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "farina",
+      "output": "napuli:farina",
+      "count": 2,
+      "ingredients": [
+        "minecraft:wheat"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "lievito",
+      "output": "napuli:lievito",
+      "count": 2,
+      "ingredients": [
+        "minecraft:brown_mushroom",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "sale",
+      "output": "napuli:sale",
+      "count": 3,
+      "ingredients": [
+        "minecraft:kelp"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "impasto",
+      "output": "napuli:impasto",
+      "count": 2,
+      "ingredients": [
+        "napuli:farina",
+        "napuli:lievito",
+        "minecraft:water_bucket"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "pomodoro",
+      "output": "napuli:pomodoro",
+      "count": 3,
+      "ingredients": [
+        "minecraft:beetroot",
+        "minecraft:sweet_berries"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "mozzarella",
+      "output": "napuli:mozzarella",
+      "count": 3,
+      "ingredients": [
+        "minecraft:milk_bucket",
+        "napuli:sale"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "ricotta",
+      "output": "napuli:ricotta",
+      "count": 3,
+      "ingredients": [
+        "minecraft:milk_bucket",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "olio",
+      "output": "napuli:olio",
+      "count": 1,
+      "ingredients": [
+        "minecraft:wheat_seeds",
+        "minecraft:wheat_seeds",
+        "minecraft:wheat_seeds",
+        "minecraft:glass_bottle"
+      ],
+      "station": "FRY",
+      "fuel": false
+    },
+    {
+      "id": "riso",
+      "output": "napuli:riso",
+      "count": 3,
+      "ingredients": [
+        "minecraft:wheat_seeds",
+        "minecraft:sugar_cane"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "pasta",
+      "output": "napuli:pasta",
+      "count": 3,
+      "ingredients": [
+        "napuli:farina",
+        "minecraft:egg"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "friarielli",
+      "output": "napuli:friarielli",
+      "count": 2,
+      "ingredients": [
+        "minecraft:kelp",
+        "minecraft:green_dye"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "salsiccia",
+      "output": "napuli:salsiccia",
+      "count": 2,
+      "ingredients": [
+        "minecraft:porkchop",
+        "minecraft:sweet_berries"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "vongole",
+      "output": "napuli:vongole",
+      "count": 3,
+      "ingredients": [
+        "minecraft:cod",
+        "minecraft:flint"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "baccala",
+      "output": "napuli:baccala",
+      "count": 2,
+      "ingredients": [
+        "minecraft:cod",
+        "napuli:sale"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "capitone",
+      "output": "napuli:capitone",
+      "count": 1,
+      "ingredients": [
+        "minecraft:salmon",
+        "minecraft:kelp"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "limone",
+      "output": "napuli:limone",
+      "count": 2,
+      "ingredients": [
+        "minecraft:sugar_cane",
+        "minecraft:yellow_dye"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "rum",
+      "output": "napuli:rum",
+      "count": 1,
+      "ingredients": [
+        "minecraft:sugar",
+        "minecraft:red_mushroom",
+        "minecraft:water_bucket",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "chicchi_caffe",
+      "output": "napuli:chicchi_caffe",
+      "count": 2,
+      "ingredients": [
+        "minecraft:cocoa_beans"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "fritto_misto_crudo",
+      "output": "napuli:fritto_misto_crudo",
+      "count": 1,
+      "ingredients": [
+        "minecraft:potato",
+        "napuli:farina",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "fritto_misto_cottura",
+      "output": "napuli:fritto_misto",
+      "count": 1,
+      "ingredients": [
+        "napuli:fritto_misto_crudo"
+      ],
+      "station": "FRY",
+      "fuel": true
+    },
+    {
+      "id": "pizza_portafoglio_crudo",
+      "output": "napuli:pizza_portafoglio_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:pomodoro",
+        "napuli:mozzarella"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "pizza_portafoglio_cottura",
+      "output": "napuli:pizza_portafoglio",
+      "count": 1,
+      "ingredients": [
+        "napuli:pizza_portafoglio_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "sfogliatella_riccia_crudo",
+      "output": "napuli:sfogliatella_riccia_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:farina",
+        "napuli:ricotta",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "sfogliatella_riccia_cottura",
+      "output": "napuli:sfogliatella_riccia",
+      "count": 1,
+      "ingredients": [
+        "napuli:sfogliatella_riccia_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "sfogliatella_frolla_crudo",
+      "output": "napuli:sfogliatella_frolla_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:ricotta",
+        "minecraft:honey_bottle",
+        "minecraft:gold_nugget"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "sfogliatella_frolla_cottura",
+      "output": "napuli:sfogliatella_frolla",
+      "count": 1,
+      "ingredients": [
+        "napuli:sfogliatella_frolla_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "baba_rum_crudo",
+      "output": "napuli:baba_rum_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:rum",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "baba_rum_cottura",
+      "output": "napuli:baba_rum",
+      "count": 1,
+      "ingredients": [
+        "napuli:baba_rum_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "pastiera_crudo",
+      "output": "napuli:pastiera_crudo",
+      "count": 1,
+      "ingredients": [
+        "minecraft:wheat",
+        "napuli:ricotta",
+        "minecraft:egg",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "pastiera_cottura",
+      "output": "napuli:pastiera",
+      "count": 1,
+      "ingredients": [
+        "napuli:pastiera_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "zeppole_crudo",
+      "output": "napuli:zeppole_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:ricotta",
+        "minecraft:sweet_berries",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "zeppole_cottura",
+      "output": "napuli:zeppole",
+      "count": 1,
+      "ingredients": [
+        "napuli:zeppole_crudo"
+      ],
+      "station": "FRY",
+      "fuel": true
+    },
+    {
+      "id": "struffoli_crudo",
+      "output": "napuli:struffoli_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "minecraft:honey_bottle",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "struffoli_cottura",
+      "output": "napuli:struffoli",
+      "count": 1,
+      "ingredients": [
+        "napuli:struffoli_crudo"
+      ],
+      "station": "FRY",
+      "fuel": true
+    },
+    {
+      "id": "roccoco_crudo",
+      "output": "napuli:roccoco_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:farina",
+        "minecraft:cocoa_beans",
+        "minecraft:sugar"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "roccoco_cottura",
+      "output": "napuli:roccoco",
+      "count": 1,
+      "ingredients": [
+        "napuli:roccoco_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "mustaccioli_crudo",
+      "output": "napuli:mustaccioli_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:farina",
+        "minecraft:cocoa_beans",
+        "minecraft:honey_bottle"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "mustaccioli_cottura",
+      "output": "napuli:mustaccioli",
+      "count": 1,
+      "ingredients": [
+        "napuli:mustaccioli_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "casatiello_crudo",
+      "output": "napuli:casatiello_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:salsiccia",
+        "minecraft:egg",
+        "napuli:mozzarella"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "casatiello_cottura",
+      "output": "napuli:casatiello",
+      "count": 1,
+      "ingredients": [
+        "napuli:casatiello_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "lasagne_carnevale_crudo",
+      "output": "napuli:lasagne_carnevale_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:pasta",
+        "napuli:pomodoro",
+        "napuli:ricotta",
+        "napuli:salsiccia"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "lasagne_carnevale_cottura",
+      "output": "napuli:lasagne_carnevale",
+      "count": 1,
+      "ingredients": [
+        "napuli:lasagne_carnevale_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "chiacchiere_crudo",
+      "output": "napuli:chiacchiere_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:farina",
+        "minecraft:sugar",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "chiacchiere_cottura",
+      "output": "napuli:chiacchiere",
+      "count": 1,
+      "ingredients": [
+        "napuli:chiacchiere_crudo"
+      ],
+      "station": "FRY",
+      "fuel": true
+    },
+    {
+      "id": "spaghetti_vongole_crudo",
+      "output": "napuli:spaghetti_vongole_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:pasta",
+        "napuli:vongole",
+        "napuli:olio",
+        "minecraft:bowl"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "spaghetti_vongole_cottura",
+      "output": "napuli:spaghetti_vongole",
+      "count": 1,
+      "ingredients": [
+        "napuli:spaghetti_vongole_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "baccala_napoletana_crudo",
+      "output": "napuli:baccala_napoletana_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:baccala",
+        "napuli:pomodoro",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "baccala_napoletana_cottura",
+      "output": "napuli:baccala_napoletana",
+      "count": 1,
+      "ingredients": [
+        "napuli:baccala_napoletana_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "capitone_fritto_crudo",
+      "output": "napuli:capitone_fritto_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:capitone",
+        "napuli:farina",
+        "napuli:olio",
+        "minecraft:gold_nugget"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "capitone_fritto_cottura",
+      "output": "napuli:capitone_fritto",
+      "count": 1,
+      "ingredients": [
+        "napuli:capitone_fritto_crudo"
+      ],
+      "station": "FRY",
+      "fuel": true
+    },
+    {
+      "id": "minestra_maritata_crudo",
+      "output": "napuli:minestra_maritata_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:friarielli",
+        "napuli:salsiccia",
+        "minecraft:carrot",
+        "minecraft:bowl"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "minestra_maritata_cottura",
+      "output": "napuli:minestra_maritata",
+      "count": 1,
+      "ingredients": [
+        "napuli:minestra_maritata_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "insalata_rinforzo",
+      "output": "napuli:insalata_rinforzo",
+      "count": 1,
+      "ingredients": [
+        "minecraft:carrot",
+        "minecraft:beetroot",
+        "napuli:friarielli",
+        "napuli:olio",
+        "minecraft:bowl"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "salsiccia_friarielli_crudo",
+      "output": "napuli:salsiccia_friarielli_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:salsiccia",
+        "napuli:friarielli",
+        "napuli:olio"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "salsiccia_friarielli_cottura",
+      "output": "napuli:salsiccia_friarielli",
+      "count": 1,
+      "ingredients": [
+        "napuli:salsiccia_friarielli_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "gatto_patate_crudo",
+      "output": "napuli:gatto_patate_crudo",
+      "count": 1,
+      "ingredients": [
+        "minecraft:potato",
+        "minecraft:potato",
+        "napuli:mozzarella",
+        "minecraft:egg"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "gatto_patate_cottura",
+      "output": "napuli:gatto_patate",
+      "count": 1,
+      "ingredients": [
+        "napuli:gatto_patate_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "sartu_riso_crudo",
+      "output": "napuli:sartu_riso_crudo",
+      "count": 1,
+      "ingredients": [
+        "napuli:riso",
+        "napuli:pomodoro",
+        "napuli:mozzarella",
+        "minecraft:egg"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "sartu_riso_cottura",
+      "output": "napuli:sartu_riso",
+      "count": 1,
+      "ingredients": [
+        "napuli:sartu_riso_crudo"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "limoncello",
+      "output": "napuli:limoncello",
+      "count": 1,
+      "ingredients": [
+        "napuli:limone",
+        "napuli:rum",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "acqua_cocomero",
+      "output": "napuli:acqua_cocomero",
+      "count": 1,
+      "ingredients": [
+        "minecraft:melon_slice",
+        "minecraft:melon_slice",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "pizza_cruda",
+      "output": "napuli:pizza_cruda",
+      "count": 1,
+      "ingredients": [
+        "napuli:impasto",
+        "napuli:pomodoro",
+        "napuli:mozzarella"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "pizza_cottura",
+      "output": "napuli:pizza",
+      "count": 1,
+      "ingredients": [
+        "napuli:pizza_cruda"
+      ],
+      "station": "OVEN",
+      "fuel": true
+    },
+    {
+      "id": "caffe_banca",
+      "output": "napuli:cafe",
+      "count": 1,
+      "ingredients": [
+        "napuli:chicchi_caffe",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "borsa_fritto",
+      "output": "napuli:borsa_fritto",
+      "count": 1,
+      "ingredients": [
+        "minecraft:leather",
+        "minecraft:paper",
+        "minecraft:string",
+        "napuli:fritto_misto"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "formaggio_piede_cucina",
+      "output": "napuli:formaggio_piede",
+      "count": 1,
+      "ingredients": [
+        "napuli:mozzarella",
+        "minecraft:brown_mushroom",
+        "napuli:sale"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "forno_legna_portatile",
+      "output": "napuli:forno_legna_portatile",
+      "count": 1,
+      "ingredients": [
+        "minecraft:furnace",
+        "minecraft:brick",
+        "minecraft:brick",
+        "minecraft:iron_ingot"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "tavolo_pizzaiolo",
+      "output": "napuli:tavolo_pizzaiolo",
+      "count": 1,
+      "ingredients": [
+        "minecraft:crafting_table",
+        "minecraft:smooth_stone",
+        "minecraft:bowl"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "banca_frittura",
+      "output": "napuli:banca_frittura",
+      "count": 1,
+      "ingredients": [
+        "minecraft:cauldron",
+        "minecraft:furnace",
+        "minecraft:iron_ingot"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "banca_caffe",
+      "output": "napuli:banca_caffe",
+      "count": 1,
+      "ingredients": [
+        "minecraft:crafting_table",
+        "minecraft:copper_ingot",
+        "minecraft:glass_bottle",
+        "minecraft:cocoa_beans"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    },
+    {
+      "id": "enigma_sartu",
+      "output": "napuli:enigma_sartu",
+      "count": 1,
+      "ingredients": [
+        "minecraft:stone_bricks",
+        "minecraft:redstone",
+        "minecraft:book"
+      ],
+      "station": "TABLE",
+      "fuel": false
+    }
+  ],
+  "blocks": [
+    {
+      "id": "forno_legna_portatile",
+      "kind": "OVEN",
+      "it": "Forno a Legna Portatile",
+      "en": "Portable Wood Oven",
+      "texture": "bricks"
+    },
+    {
+      "id": "tavolo_pizzaiolo",
+      "kind": "TABLE",
+      "it": "Tavolo da Pizzaiolo",
+      "en": "Pizza Maker Table",
+      "texture": "oak_planks"
+    },
+    {
+      "id": "banca_frittura",
+      "kind": "FRY",
+      "it": "Banca della Frittura",
+      "en": "Frying Counter",
+      "texture": "iron_block"
+    },
+    {
+      "id": "banca_caffe",
+      "kind": "COFFEE",
+      "it": "Banca del Caffè",
+      "en": "Coffee Counter",
+      "texture": "dark_oak_planks"
+    },
+    {
+      "id": "enigma_sartu",
+      "kind": "PUZZLE",
+      "it": "Tavoletta dell'Enigma",
+      "en": "Sartu Puzzle Tablet",
+      "texture": "chiseled_stone_bricks"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "napuli:pomodoro",
+    "napuli:mozzarella"
+  ],
+  "result": {
+    "id": "napuli:pizza_portafoglio_crudo",
+    "count": 1
+  }
+}

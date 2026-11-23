@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:salsiccia_friarielli_crudo",
+  "result": {
+    "id": "napuli:salsiccia_friarielli",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

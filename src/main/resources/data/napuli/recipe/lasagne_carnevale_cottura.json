@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "napuli:lasagne_carnevale_crudo",
+  "result": {
+    "id": "napuli:lasagne_carnevale",
+    "count": 1
+  },
+  "experience": 0.2,
+  "cookingtime": 200
+}

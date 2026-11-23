@@ -6,6 +6,12 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+		kitchentest {
+			client()
+			name "Napuli kitchen integration test"
+			vmArg "-Dnapuli.kitchentest=true"
+			runDir "run-autotest"
+		}
 		motorinotest {
 			client()
 			name "Napuli multiplayer scooter test"
@@ -131,6 +137,13 @@ tasks.named('runPeppetest') {
 }
 
 def motorinoTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runKitchentest') {
+	doLast {
+		if (!motorinoTestLog.asFile.exists() || !motorinoTestLog.asFile.text.contains('[KITCHENTEST] ALL PASSED')) {
+			throw new GradleException('Kitchen integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
 tasks.named('runMotorinotest') {
 	doLast {
 		def log = motorinoTestLog.asFile

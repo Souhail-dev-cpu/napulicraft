@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "minecraft:honey_bottle",
+    "napuli:olio"
+  ],
+  "result": {
+    "id": "napuli:struffoli_crudo",
+    "count": 1
+  }
+}

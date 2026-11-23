@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:farina",
+    "minecraft:cocoa_beans",
+    "minecraft:honey_bottle"
+  ],
+  "result": {
+    "id": "napuli:mustaccioli_crudo",
+    "count": 1
+  }
+}

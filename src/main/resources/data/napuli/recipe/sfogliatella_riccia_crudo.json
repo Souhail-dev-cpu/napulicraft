@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:farina",
+    "napuli:ricotta",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "napuli:sfogliatella_riccia_crudo",
+    "count": 1
+  }
+}

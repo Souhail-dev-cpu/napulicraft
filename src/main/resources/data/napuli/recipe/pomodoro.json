@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:beetroot",
+    "minecraft:sweet_berries"
+  ],
+  "result": {
+    "id": "napuli:pomodoro",
+    "count": 3
+  }
+}

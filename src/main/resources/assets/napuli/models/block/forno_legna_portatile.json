@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "minecraft:block/bricks",
+    "top": "napuli:block/forno_legna_portatile_top",
+    "side": "napuli:block/forno_legna_portatile_side"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:cod",
+    "napuli:sale"
+  ],
+  "result": {
+    "id": "napuli:baccala",
+    "count": 2
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:impasto",
+    "napuli:salsiccia",
+    "minecraft:egg",
+    "napuli:mozzarella"
+  ],
+  "result": {
+    "id": "napuli:casatiello_crudo",
+    "count": 1
+  }
+}

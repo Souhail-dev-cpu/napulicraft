@@ -139,9 +139,6 @@ public final class NapoliStreet {
     }
 
     static void tick(ServerLevel level, ServerPlayer player, long now) {
-        int stored = player.getAttachedOrElse(FULLNESS, 0);
-        if (stored > 0 && level.getServer().getTickCount() % (20 * 60) == 0) player.setAttached(FULLNESS, stored - 1);
-        applyWeight(player);
         NapoliFactions.recognize(player);
         NapoliFactions.explore(player);
         for (var ally : level.getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(35),
@@ -214,19 +211,31 @@ public final class NapoliStreet {
     }
 
     public static void ate(ServerPlayer player, ItemStack food) {
+        KitchenEffects.beforeEating(player, food);
         var nutrition = food.get(DataComponents.FOOD);
-        if (nutrition == null || nutrition.nutrition() == 0 || player.level().dimension() != NapoliMap.LEVEL || player.isCreative()) return;
+        if (nutrition == null || nutrition.nutrition() == 0 || player.isCreative()) return;
         int before = player.getAttachedOrElse(FULLNESS, 0);
-        int amount = player.getFoodData().getFoodLevel() >= 16 ? nutrition.nutrition() : 0;
+        int amount = Math.max(2, nutrition.nutrition() / 2) + KitchenEffects.friedBonus(player, food);
         if (amount == 0) return;
         int after = Math.min(60, before + amount);
         player.setAttached(FULLNESS, after);
         applyWeight(player);
         if (before < 16 && after >= 16) message(player, "full");
+        if (before < 50 && after >= 50) {
+            KitchenEffects.effect(player, net.minecraft.world.effect.MobEffects.SLOWNESS, 10, 1);
+            player.sendSystemMessage(Component.translatable("napuli.kitchen.extreme"));
+        }
+    }
+
+    public static int fullness(ServerPlayer player) { return player.getAttachedOrElse(FULLNESS, 0); }
+    static void addFullness(ServerPlayer player, int amount) { player.setAttached(FULLNESS, Math.clamp(fullness(player) + amount, 0, 60)); applyWeight(player); }
+    static void digest(ServerPlayer player) {
+        if (player.level().getServer().getTickCount() % 200 == 0 && fullness(player) > 0) addFullness(player, -1);
+        applyWeight(player);
     }
 
     private static void applyWeight(ServerPlayer player) {
-        int load = player.level().dimension() == NapoliMap.LEVEL ? player.getAttachedOrElse(FULLNESS, 0) : 0;
+        int load = player.isCreative() || player.isSpectator() ? 0 : fullness(player);
         double excess = Math.max(0, load - 15) / 45.0;
         modifier(player.getAttribute(Attributes.SCALE), SIZE, excess * 0.16);
         modifier(player.getAttribute(Attributes.MOVEMENT_SPEED), SPEED, -excess * 0.18);

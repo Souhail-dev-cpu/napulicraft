@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:baccala",
+    "napuli:pomodoro",
+    "napuli:olio"
+  ],
+  "result": {
+    "id": "napuli:baccala_napoletana_crudo",
+    "count": 1
+  }
+}

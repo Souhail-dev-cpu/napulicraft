@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:mozzarella",
+    "minecraft:brown_mushroom",
+    "napuli:sale"
+  ],
+  "result": {
+    "id": "napuli:formaggio_piede",
+    "count": 1
+  }
+}

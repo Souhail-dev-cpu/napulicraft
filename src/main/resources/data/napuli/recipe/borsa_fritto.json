@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:leather",
+    "minecraft:paper",
+    "minecraft:string",
+    "napuli:fritto_misto"
+  ],
+  "result": {
+    "id": "napuli:borsa_fritto",
+    "count": 1
+  }
+}

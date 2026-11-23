@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:sugar",
+    "minecraft:red_mushroom",
+    "minecraft:water_bucket",
+    "minecraft:glass_bottle"
+  ],
+  "result": {
+    "id": "napuli:rum",
+    "count": 1
+  }
+}

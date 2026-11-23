@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:farina",
+    "napuli:lievito",
+    "minecraft:water_bucket"
+  ],
+  "result": {
+    "id": "napuli:impasto",
+    "count": 2
+  }
+}

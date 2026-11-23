@@ -5,7 +5,7 @@
   "name": "Napulicraft server tests",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["dev.napuli.MotorinoGameTest"]
+    "fabric-gametest": ["dev.napuli.MotorinoGameTest", "dev.napuli.KitchenGameTest"]
   },
   "depends": { "napuli": "*" }
 }

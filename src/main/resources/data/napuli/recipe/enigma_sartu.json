@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:stone_bricks",
+    "minecraft:redstone",
+    "minecraft:book"
+  ],
+  "result": {
+    "id": "napuli:enigma_sartu",
+    "count": 1
+  }
+}

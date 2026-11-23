@@ -52,10 +52,18 @@ public class GenResidentTextures {
 			look("pizzaiolo", false, 0xc79a78, 0x2a211c, 0x3a2a20, WHITE, 0xc0392b, 0x2b2b30, 0x1e1e1e, WHITE, i -> { neckerchief(i, 0xc0392b); apron(i, 0xfafafa, 24); flour(i); mustache(i, 0x2a211c); }),
 			look("giorgia_meloni", true, 0xe0b496, 0xb28a50, 0x587a91, 0x202127, WHITE, 0x24252b, 0x121318, 0xb28a50, GenResidentTextures::meloni),
 			look("peppe_fetish", false, 0xb07c55, 0xb45e2a, 0x4d5340, 0x69717a, 0x4b7ca9, 0x324f74, 0xe6e6de, 0x69717a, GenResidentTextures::peppe),
+			look("bucato", true, 0xb98868, 0x6d4936, 0x566142, 0x578f89, WHITE, 0x3e5a70, 0x4c3c35, 0xc4dfdb, i -> apron(i, 0xf0e4ce, 24)),
+			look("turista", false, 0xd6a786, 0x6a4430, 0x496b79, 0xdeb251, 0xffe8ad, 0x476774, 0xdeceab, 0x26788d, i -> hStripes(i, 0xf4d182)),
+			look("pescatore", false, 0x9c7055, 0x50463c, 0x536353, 0x143b56, 0xf0c35b, 0x384c59, 0x272b30, 0xe3a93c, i -> { hStripes(i, 0x285e70); beard(i, 0x50463c); }),
+			look("custode_tunnel", false, 0xbe947b, 0x424344, 0x647570, 0x4b5148, 0xb8b37c, 0x373e39, 0x383038, 0x7a7655, i -> { sash(i, 0xc2a363); beard(i, 0x424344); }),
+			look("cartomante", true, 0xc9906f, 0x342739, 0x643e66, 0x58265e, GOLD, 0x352440, 0x292235, 0xba955b, i -> sash(i, 0xa35782)),
+			look("mercatante", false, 0xb57953, 0x302620, 0x363c29, 0xa04436, 0xf5d8ac, 0x545746, 0x332d2d, 0x7c5233, i -> { apron(i, 0xe4bda2, 24); mustache(i, 0x302620); }),
+			look("musicista", false, 0xc19b80, 0x30252a, 0x4b5f72, 0x252c4b, WHITE, 0x26253c, 0x1e1b29, 0xb04358, i -> neckerchief(i, 0xb04358)),
+			look("guardiano_presepe", false, 0xd4a582, 0x999087, 0x515c40, 0x385749, 0xb24737, 0x504542, 0x392e30, 0x693a39, i -> { glasses(i); mustache(i, 0x999087); apron(i, 0xac8161, 23); }),
 			look("motor_dealer", false, 0xdfb49e, 0x302925, 0x503328, 0x343c3c, WHITE, 0x373a39, 0x292827, 0x343c3c, GenResidentTextures::motorDealer)
 		};
 		for (Look l : looks) {
-			if (args.length > 0 && !l.name.equals(args[0])) continue;
+			if (args.length > 0 && !java.util.Arrays.asList(args).contains(l.name)) continue;
 			BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
 			base(img, l);
 			l.extra().accept(img);

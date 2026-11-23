@@ -219,6 +219,38 @@ public final class KitchenGameTest {
         }); helper.succeed();
     }
 
+    @GameTest public void stolenItemOwnerStaysSeparateFromPetOwner(GameTestHelper helper) {
+        withPlayers(helper, 2, players -> {
+            var victim = players.getFirst(); var bystander = players.get(1);
+            var saved = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
+            var original = new Munaciello(Napuli.MUNACIELLO, helper.getLevel());
+            original.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND));
+            original.save(saved);
+            var legacy = saved.buildResult();
+            legacy.remove("napuli_flee"); legacy.putInt("napuli_flee_ticks", 12);
+            legacy.put("napuli_loot_owner", net.minecraft.core.UUIDUtil.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, victim.getUUID()).getOrThrow());
+            var monk = new Munaciello(Napuli.MUNACIELLO, helper.getLevel());
+            monk.load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), legacy));
+            helper.assertTrue(monk.hasLoot() && !monk.isTamed() && monk.owner() == null, "Legacy theft saves never become tamed pets");
+            bystander.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Napuli.CORNICELLO));
+            monk.mobInteract(bystander, InteractionHand.MAIN_HAND);
+            helper.assertTrue(!monk.isRemoved() && monk.getMainHandItem().is(Items.DIAMOND), "Bystanders cannot claim another player's stolen item");
+            victim.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Napuli.CORNICELLO));
+            monk.mobInteract(victim, InteractionHand.MAIN_HAND);
+            helper.assertTrue(monk.isRemoved() && victim.getInventory().countItem(Items.DIAMOND) == 1,
+                    "Cornicello returns the item to its original owner");
+
+            var bribed = new Munaciello(Napuli.MUNACIELLO, helper.getLevel());
+            bribed.load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), legacy));
+            bystander.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.COOKIE, 3));
+            for (int i = 0; i < 3; i++) bribed.mobInteract(bystander, InteractionHand.MAIN_HAND);
+            helper.assertTrue(bribed.isTamed() && bystander.getUUID().equals(bribed.owner()), "Treats establish the pet owner independently");
+            helper.assertTrue(victim.getInventory().countItem(Items.DIAMOND) == 2 && bystander.getInventory().countItem(Items.DIAMOND) == 0,
+                    "Taming preserves the original theft victim's property");
+            helper.assertTrue(!bribed.hasLoot() && bribed.getMainHandItem().isEmpty(), "Returning stolen loot cannot leave duplicate loot on a pet");
+        }); helper.succeed();
+    }
+
     static void eat(ServerPlayer player, String id) { new ItemStack(NapoliKitchen.item(id)).finishUsingItem(player.level(), player); }
     private static void withPlayers(GameTestHelper helper, int count, java.util.function.Consumer<List<ServerPlayer>> body) {
         List<ServerPlayer> players = new ArrayList<>(); List<EmbeddedChannel> channels = new ArrayList<>();

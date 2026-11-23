@@ -28,7 +28,8 @@ public final class NapoliResident extends PathfinderMob {
         CARABINIERE, CARMELA, GIUSY, SOFIA,
         // the people of the centro storico (v8)
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
-        GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER;
+        GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER,
+        BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE;
 
         public String id() { return name().toLowerCase(Locale.ROOT); }
         /** the girls you can talk to and date */
@@ -40,7 +41,7 @@ public final class NapoliResident extends PathfinderMob {
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
@@ -140,6 +141,7 @@ public final class NapoliResident extends PathfinderMob {
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
         // everybody strolls around their own place (shop, bar, street corner) instead of standing like a statue
         int radius = wanderRadius();
+        if (radius == 0) return;
         if (!hasHome()) setHomeTo(blockPosition(), radius); // older saves had no home: their current spot becomes it
         int every = role() == Role.PASSERBY || role() == Role.CARABINIERE ? 60 : 110;
         if ((tickCount + getId()) % every == 0 && getNavigation().isDone() && random.nextFloat() < 0.8f) {
@@ -155,6 +157,8 @@ public final class NapoliResident extends PathfinderMob {
             case CARABINIERE -> 12;
             case VENDOR, TAILOR, PORTER, PRESEPAIO, PIZZAIOLO, PEPPE_FETISH -> 3;
             case NONNA -> 2;
+            case BUCATO, CUSTODE_TUNNEL, MUSICISTA -> 0;
+            case TURISTA, PESCATORE, CARTOMANTE, MERCATANTE, GUARDIANO_PRESEPE -> 2;
             case PARCHEGGIATORE -> 5;
             case TIFOSO, SCUGNIZZO -> 10;
             case BUSKER -> 4;
@@ -206,6 +210,10 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && role().spirit()) {
+            if (isAlive() && player instanceof ServerPlayer sp) NapoliScenes.answerSpirit(sp, this);
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && role() == Role.GIORGIA_MELONI) {
             if (player instanceof ServerPlayer sp) GiorgiaMeloni.open(sp, this);
             return InteractionResult.SUCCESS;
@@ -213,6 +221,11 @@ public final class NapoliResident extends PathfinderMob {
         if (hand == InteractionHand.MAIN_HAND && role() == Role.CARABINIERE) {
             if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
                     Carabinieri.isWanted(sp) ? "napuli.cc.talk.wanted" : "napuli.cc.talk." + random.nextInt(4)));
+            return InteractionResult.SUCCESS;
+        }
+        NapoliLocalJobs.Job job = NapoliLocalJobs.job(role());
+        if (hand == InteractionHand.MAIN_HAND && job != null && !(role() == Role.PIZZAIOLO && player.isShiftKeyDown())) {
+            if (player instanceof ServerPlayer sp) NapoliLocalJobs.open(sp, this, job);
             return InteractionResult.SUCCESS;
         }
         if (hand == InteractionHand.MAIN_HAND && role().people()) {

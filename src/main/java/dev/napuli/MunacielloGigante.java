@@ -20,14 +20,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 'O Munaciello Gigante: the horror one. Stands far away and stares (like the Man From The Fog).
- * The moment you look at him: the scream plays LOUD, darkness falls and he runs at you.
- * Gone at sunrise. Drops the Cornicello.
+ * 'O Munaciello Gigante watches until held in the player's gaze, then winds up and gives chase.
+ * Breaking sight or reaching sustained block light ends the chase. Gone at sunrise.
  */
 public class MunacielloGigante extends Monster {
 	private Player prey;
 	private boolean chasing;
-	private int stareTicks;
+	private int idleTicks;
+	private int gazeTicks;
+	private int windup;
+	private int chaseTicks;
+	private int hiddenTicks;
+	private int brightTicks;
 
 	public MunacielloGigante(EntityType<? extends MunacielloGigante> type, Level level) {
 		super(type, level);
@@ -52,6 +56,22 @@ public class MunacielloGigante extends Monster {
 		this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, true));
 	}
 
+	@Override
+	protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
+		super.addAdditionalSaveData(out);
+		out.putBoolean("napuli_chase", chasing);
+		out.putInt("napuli_chase_ticks", chaseTicks);
+		out.putInt("napuli_windup", windup);
+	}
+
+	@Override
+	protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
+		super.readAdditionalSaveData(in);
+		chasing = in.getBooleanOr("napuli_chase", false);
+		chaseTicks = in.getIntOr("napuli_chase_ticks", 0);
+		windup = in.getIntOr("napuli_windup", 0);
+	}
+
 	public void setPrey(Player p) { this.prey = p; }
 	public boolean isChasing() { return chasing; }
 
@@ -59,24 +79,44 @@ public class MunacielloGigante extends Monster {
 	public void aiStep() {
 		super.aiStep();
 		if (!(this.level() instanceof ServerLevel level)) return;
-		if (prey == null || !prey.isAlive() || prey.isSpectator()) {
+		if (prey == null || !prey.isAlive() || prey.isSpectator() || prey.level() != level) {
 			prey = level.getNearestPlayer(this, 128);
-			if (prey == null) return;
+			if (prey == null) { if (tickCount > 300) leave(level); return; }
 		}
 		// sunrise: he's gone
 		if (level.isBrightOutside() && this.tickCount > 200) { leave(level); return; }
 
 		if (!chasing) {
-			this.getNavigation().stop();
-			this.getLookControl().setLookAt(prey, 30f, 30f);
-			stareTicks++;
-			if (isLookedAtBy(prey) || stareTicks > 20 * 45 || this.distanceToSqr(prey) < 14 * 14) startChase(level);
+			getNavigation().stop();
+			getLookControl().setLookAt(prey, 30f, 30f);
+			if (windup > 0) {
+				if (--windup == 0) startChase(level);
+				return;
+			}
+			idleTicks++;
+			gazeTicks = isLookedAtBy(prey) ? gazeTicks + 1 : 0;
+			if (gazeTicks >= 12 || idleTicks > 20 * 40 || distanceToSqr(prey) < 9 * 9) {
+				windup = 18;
+				prey.sendOverlayMessage(Component.translatable("napuli.horror.giant_windup"));
+				level.playSound(null, blockPosition(), net.minecraft.sounds.SoundEvents.WARDEN_HEARTBEAT, SoundSource.HOSTILE, 2.0f, 0.9f);
+				level.sendParticles(ParticleTypes.LARGE_SMOKE, getX(), getY() + 3, getZ(), 30, 0.6, 1.8, 0.6, 0.02);
+			}
 			return;
 		}
-		this.setTarget(prey);
-		if (this.distanceToSqr(prey) < 40 * 40)
-			prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60, 0, false, false));
-		if (this.distanceToSqr(prey) > 110 * 110) leave(level);
+		chaseTicks++;
+		setTarget(prey);
+		boolean visible = hasLineOfSight(prey);
+		hiddenTicks = visible ? 0 : hiddenTicks + 1;
+		boolean lit = level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, prey.blockPosition()) >= 12;
+		brightTicks = lit ? brightTicks + 1 : 0;
+		if (visible && !lit && chaseTicks % 55 == 0 && distanceToSqr(prey) < 28 * 28)
+			prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 34, 0, false, false));
+		if (chaseTicks % 13 == 0)
+			level.sendParticles(ParticleTypes.ASH, getX(), getY() + 0.3, getZ(), 4, 0.65, 0.2, 0.65, 0.01);
+		if (chaseTicks >= 20 * 32 || hiddenTicks >= 100 || brightTicks >= 60 || distanceToSqr(prey) > 110 * 110) {
+			prey.sendOverlayMessage(Component.translatable("napuli.horror.giant_lost"));
+			leave(level);
+		}
 	}
 
 	/** Same test the Enderman uses: the player's view points right at him, and nothing is in the way. */
@@ -89,11 +129,10 @@ public class MunacielloGigante extends Monster {
 
 	private void startChase(ServerLevel level) {
 		chasing = true;
-		// several copies at once: Minecraft caps a single sound's loudness, stacking makes the scream really LOUD
-		for (int i = 0; i < 3; i++)
-			Songs.urlo(level, prey.position());
+		Songs.urlo(level, prey.position());
 		prey.sendSystemMessage(Component.translatable("napuli.gigante.chase"));
-		prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 100, 0, false, false));
+		if (level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, prey.blockPosition()) < 12)
+			prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 45, 0, false, false));
 	}
 
 	private void leave(ServerLevel level) {

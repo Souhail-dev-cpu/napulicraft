@@ -172,7 +172,7 @@ public final class UserMusic {
 	private static final Map<String, Track> TOKENS = new ConcurrentHashMap<>();
 	private static final AtomicInteger NEXT = new AtomicInteger();
 	private record Track(File file, double start, double max) {}
-	private static final List<FileSound> SCENE = new ArrayList<>();
+	private static SoundInstance scene;
 
 	/** called by the sound library mixin: the file behind "napuli_user:sounds/tN.ogg" */
 	public static net.minecraft.client.sounds.AudioStream open(Identifier location) throws IOException {
@@ -254,47 +254,43 @@ public final class UserMusic {
 		return s.file().equals(c.file()) || c.file().isEmpty() ? c.start() : defaultStart(situation);
 	}
 
-	private static Song lastUrlo;
-	private static long lastUrloAt;
-
 	public static void playSituation(String situation, int seconds) {
 		boolean urlo = situation.equals("urlo");
-		Song s;
-		if (urlo) {
-			// the scream arrives 3 times at once (stacked = LOUD): same clip for all three
-			long now = System.currentTimeMillis();
-			if (lastUrlo != null && now - lastUrloAt < 1500) s = lastUrlo;
-			else {
-				// no clip picked for the scream: the start of the song picked for the fights
-				s = choice("urlo").file().isEmpty() ? songFor("lite") : songFor("urlo");
-				lastUrlo = s;
-				lastUrloAt = now;
-			}
-		} else s = songFor(situation);
-		if (s == null) return;
-		if (!urlo) stopScene();
-		FileSound snd = new FileSound(s, startFor(situation, s), seconds, null, urlo ? 1.0f : 0.9f);
-		SCENE.add(snd);
-		Minecraft.getInstance().getSoundManager().play(snd);
+		Song s = songFor(urlo && choice("urlo").file().isEmpty() ? "lite" : situation);
+		if (s != null) {
+			startScene(new FileSound(s, startFor(situation, s), seconds, null, urlo ? 1.0f : 0.9f));
+		} else if (urlo) {
+			startScene(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.WARDEN_ROAR, 0.85f));
+		}
 	}
 
 	public static String sceneDebug() {
-		StringBuilder sb = new StringBuilder();
-		for (FileSound s : SCENE) sb.append('[').append(s.song.title()).append(" active ").append(Minecraft.getInstance().getSoundManager().isActive(s)).append("] ");
-		return sb.length() == 0 ? "no scene song" : sb.toString();
+		return scene instanceof FileSound s ? "[" + s.song.title() + " active " + scenePlaying() + "]" : "no scene song";
 	}
 
 	public static void stopScene() {
-		for (FileSound s : SCENE) { s.halt(); Minecraft.getInstance().getSoundManager().stop(s); }
-		SCENE.clear();
+		if (scene == null) return;
+		if (scene instanceof FileSound file) file.halt();
+		Minecraft.getInstance().getSoundManager().stop(scene);
+		scene = null;
+	}
+
+	public static boolean scenePlaying() {
+		return scene != null && (!(scene instanceof FileSound file) || !file.isStopped())
+				&& Minecraft.getInstance().getSoundManager().isActive(scene);
+	}
+
+	private static void startScene(SoundInstance next) {
+		stopScene();
+		dev.napuli.client.RadioClient.suspendForScene();
+		scene = next;
+		Minecraft.getInstance().getSoundManager().play(scene);
 	}
 
 	/** preview in the songs screen */
 	public static FileSound preview(Song s, int start) {
-		stopScene();
 		FileSound snd = new FileSound(s, start, 12, null, 1.0f);
-		SCENE.add(snd);
-		Minecraft.getInstance().getSoundManager().play(snd);
+		startScene(snd);
 		return snd;
 	}
 

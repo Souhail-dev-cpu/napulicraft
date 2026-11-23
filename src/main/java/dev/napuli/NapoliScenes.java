@@ -28,6 +28,7 @@ public final class NapoliScenes {
 
     private static final class Visits {
         long crypt;
+        long cryptWarning;
         long galleria;
         long water;
         long cafe;
@@ -52,9 +53,21 @@ public final class NapoliScenes {
                     && Math.abs(pos.getX()) < 17 && pos.getZ() >= -51 && pos.getZ() < 39) {
                 motorino(player);
             }
-            if (now >= visits.crypt && pos.getY() < 63 && pos.distSqr(NapoliMap.CRYPT) < 100) {
-                visits.crypt = now + 20 * 55;
-                folklore(player, NapoliResident.Role.ANIMA);
+            boolean inCrypt = pos.getY() < 63 && pos.distSqr(NapoliMap.CRYPT) < 100;
+            if (!inCrypt) visits.cryptWarning = 0;
+            else if (now >= visits.crypt) {
+                if (visits.cryptWarning == 0) {
+                    visits.cryptWarning = now + 20;
+                    player.sendOverlayMessage(Component.translatable("napuli.horror.crypt_warning"));
+                    var point = NapoliMap.CRYPT;
+                    level.playSound(null, point, SoundEvents.AMETHYST_CLUSTER_HIT, SoundSource.AMBIENT, 0.65f, 0.6f);
+                    level.sendParticles(ParticleTypes.SOUL, point.getX() + 0.5, point.getY() + 0.4, point.getZ() + 0.5,
+                            12, 0.2, 0.2, 0.2, 0.025);
+                } else if (now >= visits.cryptWarning) {
+                    visits.cryptWarning = 0;
+                    visits.crypt = now + 20 * 55;
+                    folklore(player, NapoliResident.Role.ANIMA);
+                }
             }
             if (now >= visits.water && pos.distSqr(NapoliMap.WATERFRONT) < 150 && !level.isBrightOutside()) {
                 visits.water = now + 20 * 90;
@@ -167,6 +180,37 @@ public final class NapoliScenes {
         }
         if (charm && role != NapoliResident.Role.MBRIANA)
             player.sendSystemMessage(Component.translatable("napuli.folklore.charm"));
+    }
+
+    static void answerSpirit(ServerPlayer player, NapoliResident spirit) {
+        var level = player.level();
+        switch (spirit.role()) {
+            case ANIMA -> {
+                var hand = player.getMainHandItem().is(net.minecraft.world.item.Items.CANDLE)
+                        ? player.getMainHandItem() : player.getOffhandItem();
+                if (!hand.is(net.minecraft.world.item.Items.CANDLE)) {
+                    player.sendOverlayMessage(Component.translatable("napuli.horror.anima_offer"));
+                    return;
+                }
+                if (!player.isCreative()) hand.shrink(1);
+                player.removeEffect(MobEffects.SLOWNESS);
+                player.removeEffect(MobEffects.DARKNESS);
+            }
+            case PARTENOPE -> {
+                player.removeEffect(MobEffects.SLOWNESS);
+                player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 20 * 25, 0));
+            }
+            case MBRIANA -> {
+                player.removeEffect(MobEffects.DARKNESS);
+                player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 30, 0));
+            }
+            default -> { return; }
+        }
+        level.sendParticles(ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(),
+                24, 0.32, 0.5, 0.32, 0.03);
+        level.playSound(null, spirit.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 0.8f, 1.1f);
+        player.sendSystemMessage(Component.translatable("napuli.horror.answer_" + spirit.role().id()));
+        spirit.discard();
     }
 
     static void removeRiders(Motorino bike) {

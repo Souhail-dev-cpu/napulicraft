@@ -98,7 +98,7 @@ Il Munaciello prende **un singolo oggetto** e prova a nasconderlo nell'ultima ch
 se è caricata e si trova entro 64 blocchi. Deposita anche 1–3 **Monete del Munaciello**: tasto destro su una moneta
 per aggiungere 1 € al tuo portafoglio. Ricevi le coordinate della chest in chat.
 
-Se non trova una chest adatta o è piena, entro 40 secondi restituisce l'oggetto al proprietario; se è offline lo
+Se non trova una chest adatta o è piena, entro 28 secondi restituisce l'oggetto al proprietario; se è offline lo
 lascia a terra. Anche un cambio a difficoltà Pacifica restituisce prima il bottino.
 
 Tienigli in mano un dolce e dagli **tre porzioni con il tasto destro**: si fermerà per riceverle e diventerà tuo amico.

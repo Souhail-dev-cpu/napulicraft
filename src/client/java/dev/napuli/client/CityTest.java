@@ -31,6 +31,7 @@ final class CityTest {
     private static volatile boolean failed;
     private static int waitingTicks;
     private static double initialZ;
+    private static int localCash;
 
     static void register() {
         if (Boolean.getBoolean("napuli.citytest")) ClientTickEvents.END_CLIENT_TICK.register(CityTest::tick);
@@ -61,7 +62,12 @@ final class CityTest {
             }
             return;
         }
-        switch (++tick) {
+        ++tick;
+        if (Boolean.getBoolean("napuli.localjobstest") && tick > 60) {
+            localJobs(mc, tick);
+            return;
+        }
+        switch (tick) {
             case 25 -> {
                 mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
                 mc.options.showSubtitles().set(true);
@@ -143,23 +149,44 @@ final class CityTest {
                 press(mc, "space");
                 server(mc, player -> view(player, -52.5, 58, -27, 180, 0));
             }
-            case 280 -> server(mc, player -> {
+            case 294 -> server(mc, player -> {
                 assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS), "crypt triggers darkness");
                 assertTrue(hasGhost(player, NapoliResident.Role.ANIMA), "wandering soul spawned");
             });
-            case 290 -> AutoTest.shot(mc, "napoli_v2_06_anema_pezzentella");
+            case 297 -> AutoTest.shot(mc, "napoli_v2_06_anema_pezzentella");
+            case 298 -> server(mc, player -> {
+                var ghost = player.level().getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(20))
+                        .stream().filter(npc -> npc.role() == NapoliResident.Role.ANIMA).findFirst();
+                ghost.ifPresent(npc -> {
+                    var previous = player.getMainHandItem();
+                    player.setItemInHand(InteractionHand.MAIN_HAND,
+                            new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE));
+                    npc.interact(player, InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO);
+                    assertTrue(npc.isRemoved() && !player.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS),
+                            "candle at the crypt puts the soul to rest");
+                    player.setItemInHand(InteractionHand.MAIN_HAND, previous);
+                });
+            });
             case 300 -> {
                 mc.player.connection.sendCommand("time set midnight");
                 server(mc, player -> view(player, 2.5, 64, 53, 0, 0));
             }
             case 327 -> server(mc, player -> assertTrue(hasGhost(player, NapoliResident.Role.PARTENOPE), "Partenope spawned"));
             case 330 -> AutoTest.shot(mc, "napoli_v2_07_partenope");
-            case 336 -> server(mc, player -> view(player, 33.5, 64, -8, -90, 0));
+            case 331 -> server(mc, player -> {
+                interactWithGhost(player, NapoliResident.Role.PARTENOPE);
+                assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING), "Partenope grants water breathing");
+            });
+            case 336 -> server(mc, player -> view(player, 116.5, 64, -43.5, -90, 0));
             case 365 -> server(mc, player -> {
                 assertTrue(hasGhost(player, NapoliResident.Role.MBRIANA), "Bella 'Mbriana spawned");
                 assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.REGENERATION), "guardian heals");
             });
             case 370 -> AutoTest.shot(mc, "napoli_v2_08_mbriana");
+            case 371 -> server(mc, player -> {
+                interactWithGhost(player, NapoliResident.Role.MBRIANA);
+                assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.NIGHT_VISION), "Bella 'Mbriana grants night vision");
+            });
             case 372 -> {
                 mc.player.connection.sendCommand("time set noon");
                 server(mc, player -> view(player, 36.5, 64, -6.5, 108, 9));
@@ -274,6 +301,122 @@ final class CityTest {
     private static boolean hasGhost(ServerPlayer p, NapoliResident.Role role) {
         return p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(20)).stream()
                 .anyMatch(npc -> npc.role() == role);
+    }
+
+    private static void localJobs(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> view(p, -18.5, 64, -122.5, 180, 0));
+            case 80 -> server(mc, p -> talk(p, NapoliResident.Role.CUSTODE_TUNNEL));
+            case 90 -> localButton(mc, "accept");
+            case 103 -> server(mc, p -> talk(p, NapoliResident.Role.CUSTODE_TUNNEL));
+            case 115 -> localButton(mc, "access");
+            case 128 -> server(mc, p -> assertTrue(p.getBlockY() == 42, "keeper opens the underground"));
+            case 132 -> AutoTest.shot(mc, "local_01_tunnel");
+            case 135 -> server(mc, p -> view(p, -0.5, 42, -108.5, 180, 0));
+            case 150 -> AutoTest.shot(mc, "local_02_cistern");
+            case 155 -> server(mc, p -> view(p, -18.5, 42, -124.5, 180, 0));
+            case 167 -> server(mc, p -> talk(p, NapoliResident.Role.CUSTODE_TUNNEL));
+            case 180 -> localButton(mc, "report");
+            case 194 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 20, "cistern mission pays twelve euros");
+                talk(p, NapoliResident.Role.CUSTODE_TUNNEL);
+            });
+            case 207 -> localButton(mc, "access");
+            case 222 -> server(mc, p -> {
+                assertTrue(p.getBlockY() == 64, "keeper returns player to street");
+                view(p, -33.5, 64, -121.5, 180, 0);
+            });
+            case 235 -> server(mc, p -> talk(p, NapoliResident.Role.BUCATO));
+            case 245 -> localButton(mc, "accept");
+            case 257 -> server(mc, p -> talk(p, NapoliResident.Role.BUCATO));
+            case 267 -> localButton(mc, "access");
+            case 285 -> server(mc, p -> assertTrue(p.getBlockY() == 90, "laundry lady opens the rooftop"));
+            case 290 -> AutoTest.shot(mc, "local_03_rooftop");
+            case 295 -> server(mc, p -> view(p, -25.5, 90, -119.5, 90, 0));
+            case 309 -> server(mc, p -> view(p, -33.5, 90, -119.5, 90, 0));
+            case 321 -> server(mc, p -> talk(p, NapoliResident.Role.BUCATO));
+            case 333 -> localButton(mc, "report");
+            case 345 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 29, "rooftop mission pays nine euros");
+                localCash = dev.napuli.NapoliStreet.cash(p);
+                view(p, 123.5, 64, -7.5, 180, 0);
+            });
+            case 360 -> server(mc, p -> talk(p, NapoliResident.Role.MUSICISTA));
+            case 371 -> localButton(mc, "accept");
+            case 383 -> server(mc, p -> talk(p, NapoliResident.Role.MUSICISTA));
+            case 395 -> localButton(mc, "low");
+            case 407 -> localButton(mc, "high");
+            case 419 -> localButton(mc, "middle");
+            case 431 -> localButton(mc, "low");
+            case 448 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == localCash + 9, "four correct notes pay nine euros");
+                localCash = dev.napuli.NapoliStreet.cash(p);
+                view(p, 72.5, 64, -122.5, 180, 0);
+            });
+            case 465 -> AutoTest.shot(mc, "local_04_market");
+            case 470 -> server(mc, p -> talk(p, NapoliResident.Role.MERCATANTE));
+            case 485 -> {
+                var screen = mc.gui.screen();
+                var button = screen == null ? java.util.Optional.<AbstractButton>empty()
+                        : descendants(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
+                            .filter(b -> b.getMessage().getString().equals(Component.translatable("napuli.local.offer", 2,
+                                    net.minecraft.world.item.Items.BREAD.getDefaultInstance().getHoverName(), 3).getString())).findFirst();
+                assertTrue(button.isPresent(), "market bread offer displayed");
+                button.ifPresent(b -> b.onPress(new KeyEvent(257, 0, 0)));
+            }
+            case 505 -> server(mc, p -> assertTrue(dev.napuli.NapoliStreet.cash(p) == localCash - 3
+                    && p.getInventory().contains(net.minecraft.world.item.Items.BREAD.getDefaultInstance()), "market trades bread for three euros"));
+            case 520 -> server(mc, p -> view(p, -11.5, 64, -128.5, 180, 0));
+            case 535 -> server(mc, p -> talk(p, NapoliResident.Role.PIZZAIOLO));
+            case 548 -> localButton(mc, "learn");
+            case 560 -> server(mc, p -> {
+                localCash = dev.napuli.NapoliStreet.cash(p);
+                view(p, 118.5, 64, -21.5, 0, 0);
+            });
+            case 575 -> server(mc, p -> talk(p, NapoliResident.Role.TURISTA));
+            case 587 -> localButton(mc, "accept");
+            case 599 -> server(mc, p -> talk(p, NapoliResident.Role.TURISTA));
+            case 610 -> localButton(mc, "gallery");
+            case 625 -> server(mc, p -> {
+                var souvenir = net.minecraft.world.item.Items.COMPASS.getDefaultInstance();
+                souvenir.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.translatable("napuli.local.souvenir"));
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == localCash + 5
+                        && p.getInventory().contains(souvenir), "tourist gives a souvenir");
+                view(p, 9.5, 64, 50.5, 0, 0);
+            });
+            case 638 -> server(mc, p -> talk(p, NapoliResident.Role.PESCATORE));
+            case 650 -> localButton(mc, "accept");
+            case 665 -> server(mc, p -> {
+                assertTrue(p.getInventory().contains(net.minecraft.world.item.Items.FISHING_ROD.getDefaultInstance()), "fisherman lends a rod");
+                view(p, -36.5, 64, -122.5, 180, 0);
+            });
+            case 680 -> server(mc, p -> talk(p, NapoliResident.Role.CARTOMANTE));
+            case 692 -> localButton(mc, "learn");
+            case 705 -> server(mc, p -> view(p, 30.5, 64, -139.5, 180, 0));
+            case 720 -> server(mc, p -> talk(p, NapoliResident.Role.GUARDIANO_PRESEPE));
+            case 732 -> localButton(mc, "accept");
+            case 745 -> {
+                Napuli.LOGGER.info("[CITYTEST] local jobs completed, failed={}", failed);
+                mc.stop();
+            }
+            default -> {}
+        }
+    }
+
+    private static void localButton(Minecraft mc, String action) {
+        String label = Component.translatable("napuli.local.button." + action).getString();
+        var screen = mc.gui.screen();
+        var button = screen == null ? java.util.Optional.<AbstractButton>empty()
+                : descendants(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
+                    .filter(b -> b.getMessage().getString().equals(label)).findFirst();
+        assertTrue(button.isPresent(), "local jobs button " + action);
+        button.ifPresent(b -> b.onPress(new KeyEvent(257, 0, 0)));
+    }
+
+    private static void interactWithGhost(ServerPlayer player, NapoliResident.Role role) {
+        player.level().getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(20)).stream()
+                .filter(npc -> npc.role() == role).findFirst()
+                .ifPresent(npc -> npc.interact(player, InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO));
     }
 
     private static void talk(ServerPlayer p, NapoliResident.Role role) {

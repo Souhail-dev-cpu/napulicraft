@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 'O Munaciello: the little monk spirit of Naples' alleys. Sneaks up, steals one item and runs away laughing.
- * Catch him and he drops it back with some gold. Leave him and after 40 s he vanishes with your item.
+ * Follow his trail to your chest, use a Cornicello to bargain, or recover the item when he vanishes.
  * Kill too many and his big brother comes for you.
  */
 public class Munaciello extends Monster {
@@ -33,8 +33,11 @@ public class Munaciello extends Monster {
 	private Player target;
 	private int fleeTicks = -1; // >=0 once he stole something
 	private int life;
+	// A pet's owner and the victim whose item it carries must remain separate identities.
 	private java.util.UUID owner, feeder, lootOwner;
 	private int treats;
+	private int stalk;
+	private static final int FLEE_LIMIT = 20 * 28;
 
 	public Munaciello(EntityType<? extends Munaciello> type, Level level) {
 		super(type, level);
@@ -75,12 +78,27 @@ public class Munaciello extends Monster {
 		feeder = input.read("napuli_feeder", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
 		lootOwner = input.read("napuli_loot_owner", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
 		treats = Math.clamp(input.getIntOr("napuli_treats", 0), 0, 3);
-		fleeTicks = input.getIntOr("napuli_flee", getMainHandItem().isEmpty() ? -1 : 0);
+		fleeTicks = input.getIntOr("napuli_flee", input.getIntOr("napuli_flee_ticks", getMainHandItem().isEmpty() ? -1 : 0));
 		entityData.set(TAMED, owner != null);
 		if (owner != null) setPersistenceRequired();
 	}
 
 	@Override protected net.minecraft.world.InteractionResult mobInteract(Player player, InteractionHand hand) {
+		if (!isTamed() && hasLoot() && protectedByCharm(player) && (lootOwner == null || lootOwner.equals(player.getUUID()))) {
+			if (level() instanceof ServerLevel level) {
+				ItemStack recovered = getMainHandItem();
+				Component recoveredName = recovered.getHoverName();
+				setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+				player.addItem(recovered);
+				if (!recovered.isEmpty()) {
+					var fallen = spawnAtLocation(level, recovered);
+					if (fallen != null) fallen.setGlowingTag(true);
+				}
+				player.sendSystemMessage(Component.translatable("napuli.horror.bargain", recoveredName));
+				vanish(level, false);
+			}
+			return net.minecraft.world.InteractionResult.SUCCESS;
+		}
 		ItemStack sweet = player.getItemInHand(hand);
 		if (!NapoliKitchen.sweet(sweet) || owner != null && !owner.equals(player.getUUID())) return net.minecraft.world.InteractionResult.PASS;
 		if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
@@ -100,6 +118,10 @@ public class Munaciello extends Monster {
 		return net.minecraft.world.InteractionResult.SUCCESS;
 	}
 
+	private static boolean protectedByCharm(Player player) {
+		return player.getMainHandItem().is(Napuli.CORNICELLO) || player.getOffhandItem().is(Napuli.CORNICELLO);
+	}
+
 	@Override
 	public void aiStep() {
 		super.aiStep();
@@ -113,34 +135,44 @@ public class Munaciello extends Monster {
 		if (fleeTicks >= 0) {
 			fleeTicks++;
 			var original = lootOwner == null ? null : level.getServer().getPlayerList().getPlayer(lootOwner);
+			if ((target == null || !target.isAlive() || target.level() != level) && original != null && original.level() == level) target = original;
+			if (fleeTicks % 7 == 0)
+				level.sendParticles(ParticleTypes.SOUL, getX(), getY() + 0.2, getZ(), 2, 0.13, 0.16, 0.13, 0.015);
 			var chest = original == null ? null : MunacielloFriendship.chest(this, original);
 			if (chest != null) {
 				var pos = chest.getBlockPos();
 				if (pos.distToCenterSqr(position()) < 9 && MunacielloFriendship.hide(this, original)) { vanish(level, false); return; }
 				if (tickCount % 20 == 0) getNavigation().moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.15);
 			}
-			if (chest == null && this.getNavigation().isDone() && target != null) {
+			if (chest == null && this.getNavigation().isDone() && target != null && target.level() == level) {
 				Vec3 away = DefaultRandomPos.getPosAway(this, 20, 7, target.position());
 				if (away != null) this.getNavigation().moveTo(away.x, away.y, away.z, 1.15);
 			}
-			if (fleeTicks > 800) vanish(level, true);
+			if (fleeTicks >= FLEE_LIMIT) vanish(level, true);
 			return;
 		}
-		if (target == null || !target.isAlive() || target.isSpectator() || target.distanceToSqr(this) > 48 * 48) {
+		if (target == null || !target.isAlive() || target.isSpectator() || target.level() != level || target.distanceToSqr(this) > 48 * 48) {
 			target = level.getNearestPlayer(this, 40);
+			stalk = 0;
 			if (target == null && life > 1200) { vanish(level, false); return; }
 		}
 		if (target == null) return;
 		if (NapoliKitchen.sweet(target.getMainHandItem()) || NapoliKitchen.sweet(target.getOffhandItem())) {
-			getNavigation().stop(); getLookControl().setLookAt(target, 30, 30); return;
+			getNavigation().stop(); getLookControl().setLookAt(target, 30, 30); stalk = 0; return;
 		}
-		if (target.getOffhandItem().is(Napuli.CORNICELLO) || target.getMainHandItem().is(Napuli.CORNICELLO)) {
-			// the cornicello protects you: he keeps his distance and just stares
-			if (this.distanceToSqr(target) < 36) this.getNavigation().stop();
+		if (protectedByCharm(target)) {
+			getNavigation().stop();
+			stalk = 0;
 			return;
 		}
-		if (this.tickCount % 10 == 0) this.getNavigation().moveTo(target, 1.0);
-		if (this.distanceToSqr(target) < 4.0) steal(level, target);
+		if (distanceToSqr(target) < 12 * 12 && stalk == 0) {
+			target.sendOverlayMessage(Component.translatable("napuli.horror.stalk"));
+			level.playSound(null, blockPosition(), net.minecraft.sounds.SoundEvents.SOUL_ESCAPE.value(), SoundSource.HOSTILE, 0.6f, 0.8f);
+		}
+		if (distanceToSqr(target) < 12 * 12) stalk++;
+		else stalk = 0;
+		if (tickCount % 10 == 0) getNavigation().moveTo(target, stalk < 24 ? 0.82 : 1.0);
+		if (stalk >= 24 && distanceToSqr(target) < 4 && hasLineOfSight(target)) steal(level, target);
 	}
 
 	private void steal(ServerLevel level, Player p) {
@@ -149,6 +181,7 @@ public class Munaciello extends Monster {
 		if (slots.isEmpty()) return;
 		int slot = slots.get(this.random.nextInt(slots.size()));
 		ItemStack stolen = p.getInventory().removeItem(slot, 1);
+		if (stolen.isEmpty()) return;
 		lootOwner = p.getUUID();
 		this.setItemInHand(InteractionHand.MAIN_HAND, stolen);
 		this.fleeTicks = 0;
@@ -174,7 +207,10 @@ public class Munaciello extends Monster {
 		if (original != null) {
 			NapoliKitchen.give(original, loot);
 			original.sendSystemMessage(Component.translatable("napuli.munaciello.returned"));
-		} else spawnAtLocation(level, loot);
+		} else {
+			var fallen = spawnAtLocation(level, loot);
+			if (fallen != null) fallen.setGlowingTag(true);
+		}
 		setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 	}
 

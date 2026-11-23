@@ -103,7 +103,7 @@ final class CitySimulation {
                     (!c.property().isEmpty()&&c.property().equals(other.property())||c.job()>=0&&c.job()==other.job())) {
                 int previous=relationships.getOrDefault(other.id().toString(),50);
                 boolean conflict=l.needs().mood()<25&&Math.floorMod(day+c.id().hashCode(),4)==0;
-                relationships.put(other.id().toString(),clamp(previous+(conflict?-5:2)));
+                relationships.put(other.id().toString(),clamp(previous+(conflict?-3:1)));
             }
             states.put(c.id().toString(),new Life(l.needs(),l.health(),l.reputation(),l.experience(),l.rank(),l.absences(),l.food(),l.last(),l.personality(),Map.copyOf(relationships),l.memories(),l.water(),l.energy(),l.lastBirth()));
         }
@@ -195,16 +195,23 @@ final class CitySimulation {
         if(distance>=128*128) {
             var census=NapoliCivicLife.census(city);
             city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()
-                    .map(p->p.id().equals(c.id())?new NapoliCivicLife.Citizen(p.id(),p.name(),p.woman(),p.birth(),p.balance(),p.job(),p.partner(),p.property(),p.parents(),false):p).toList()));
+                    .map(p->p.id().equals(c.id())?new NapoliCivicLife.Citizen(p.id(),p.name(),p.woman(),p.birth(),p.balance(),p.job(),p.partner(),p.property(),p.parents(),false,p.childhoodDays()):p).toList()));
             npc.discard();return;
         }
         if(distance>=80*80) {npc.getNavigation().stop();return;}
         var house=CityLivingHomes.find(c.property());
         var visit = visitingHouse(city,c);
         if(visit!=null) {house=visit;action=NapoliBroadcast.time(city)<11600?NapoliHouseholds.Activity.EAT:NapoliHouseholds.Activity.MATCH;npc.setActivity(action);}
+        if (visit == null && house != null && c.woman() && age >= NapoliCivicLife.ADULT_AGE
+                && (action == NapoliHouseholds.Activity.COOK || action == NapoliHouseholds.Activity.EAT
+                    || action == NapoliHouseholds.Activity.SOCIAL || action == NapoliHouseholds.Activity.REST
+                    || action == NapoliHouseholds.Activity.SHOP)
+                && DomesticMeals.act(city, npc, house, l.food())) return;
         BlockPos home=NapoliCivicLife.home(c);
         BlockPos target=home;
-        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=c.profession().site;
+        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)
+            target=NeighbourCommute.target(city,npc,home,c.profession().site);
+        else if (npc.getVehicle() instanceof CityVehicle) npc.stopRiding();
         else if(action==NapoliHouseholds.Activity.CARE)target=CityProfessions.Category.HEALTH.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.SCHOOL)target=CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.SHOP)target=CityProfessions.Category.TRADE.site().offset(8,0,7);
@@ -231,7 +238,7 @@ final class CitySimulation {
         if(!city.hasChunkAt(target))return;
         if(target.distToCenterSqr(npc.position())>2&&!npc.isSleeping()) {
             var path=npc.getNavigation().createPath(target,0);
-            if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,.85);
+            if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,city.isRaining()?.72:.85);
             else npc.getNavigation().stop(); // Never teleport a visible inhabitant through a wall.
         } else if(action==NapoliHouseholds.Activity.COOK||action==NapoliHouseholds.Activity.WASH)npc.swingForAttack(InteractionHand.MAIN_HAND);
         var tool=action==NapoliHouseholds.Activity.WORK&&c.profession()!=null?c.profession().category.tool
@@ -239,6 +246,7 @@ final class CitySimulation {
         if(npc.getMainHandItem().getItem()!=tool)npc.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(tool));
     }
     static void describe(ServerPlayer p,NapoliCivicLife.Citizen c) {
+        if (p.level().getEntity(c.id()) instanceof NapoliResident npc) NeighbourMemory.greet(p, npc);
         var l=life(p.level(),c.id());var n=l.needs();
         p.sendSystemMessage(Component.literal("Fame "+n.hunger()+" · Riposo "+n.sleep()+" · Igiene "+n.hygiene()+" · Divertimento "+n.fun()+" · Socialità "+n.social()+" · Umore "+n.mood()+" · Salute "+l.health()));
         p.sendSystemMessage(Component.literal("Personalità: "+l.personality()+" · Reputazione: "+l.reputation()+" · Scorte: "+l.food()+" pasti"));

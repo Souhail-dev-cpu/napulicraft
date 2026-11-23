@@ -337,11 +337,13 @@ final class CityTest {
 
 
     private static net.minecraft.world.phys.Vec3 firstRunner;
+    private static net.minecraft.core.BlockPos footballEntry;
 
     private static void football(Minecraft mc, int step) {
         switch (step) {
             case 65 -> server(mc, p -> {
                 var commands = p.level().getServer().getCommands();
+                footballEntry = p.blockPosition();
                 commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio gioca");
                 assertTrue(p.blockPosition().getX() > 365 && p.blockPosition().getZ() == 23, "player enters the pitch");
                 var field = p.getBoundingBox().inflate(52);
@@ -400,7 +402,24 @@ final class CityTest {
                         "football profile appears as a screen notification");
                 AutoTest.shot(mc, "fuorigrotta-avviso-schermo");
             }
-            case 320 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
+            case 320 -> mc.player.connection.sendCommand("calcio torna");
+            case 345 -> server(mc, p -> {
+                assertTrue(p.blockPosition().equals(footballEntry), "football return reaches the original city location");
+                view(p, 365.5, 64, 4.5, 180, 0);
+            });
+            case 362 -> {
+                mc.gui.toastManager().clear();
+                employmentClick(mc, 365, 64, 3);
+            }
+            case 380 -> {
+                var screen = mc.gui.screen();
+                var watch = Component.translatable("napuli.football.watch_option").getString();
+                assertTrue(screen instanceof FootballMenuScreen && descendants(screen).filter(AbstractButton.class::isInstance)
+                        .map(AbstractButton.class::cast).anyMatch(button -> button.getMessage().getString().equals(watch)),
+                        "clicking the Fuorigrotta sign opens the football menu");
+                AutoTest.shot(mc, "fuorigrotta-menu");
+            }
+            case 390 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
     }
@@ -408,12 +427,17 @@ final class CityTest {
     private static void employment(Minecraft mc, int step) {
         switch (step) {
             case 65 -> server(mc, p -> {
-                view(p, -117.5, 64, 36.5, 180, 0);
+                view(p, -118.5, 64, 35.5, 180, 0);
                 AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set noon");
             });
-            case 95 -> assertTrue(HudClient.state() != null && HudClient.state().tx() == -119
+            case 83 -> mc.player.connection.sendCommand("lavoro segui");
+            case 95 -> assertTrue(HudClient.state() != null && HudClient.state().tx() == -118
                     && HudClient.state().objective().equals("napuli.work.visit"), "HUD points newcomers to the employment office");
-            case 100 -> employmentClick(mc, -119, 65, 33);
+            case 100 -> {
+                assertTrue(!(mc.player.level().getBlockEntity(new net.minecraft.core.BlockPos(-119,65,33))
+                        instanceof net.minecraft.world.level.block.entity.SignBlockEntity), "office has no interaction sign");
+                clickStaff(mc, NapoliResident.Role.EMPLOYMENT_CLERK);
+            }
             case 119 -> {
                 String job = Component.translatable("napuli.work.offer", Component.translatable("napuli.civic.job.cleaner"), 9).getString();
                 var screen = mc.gui.screen();
@@ -424,48 +448,47 @@ final class CityTest {
                 AutoTest.shot(mc, "centro-impiego-offerte");
                 button.ifPresent(b -> b.onPress(new KeyEvent(257, 0, 0)));
             }
-            case 139 -> server(mc, p -> view(p, -165.5, 64, 51.5, 0, 0));
-            case 166 -> employmentClick(mc, -166, 64, 53);
-            case 187 -> server(mc, p -> {
+            case 133 -> server(mc, p -> view(p, -165.5, 64, 48.5, 0, 0));
+            case 150 -> server(mc, CityTest::viewCleaner);
+            case 163 -> {
+                clickStaff(mc, NapoliResident.Role.SHIFT_LEAD);
+                AutoTest.shot(mc, "mergellina-capoturno");
+            }
+            case 173 -> server(mc, p -> {
                 assertTrue(dev.napuli.NapoliStreet.cash(p) == 8, "clocking in does not grant payment");
-                view(p, -171.5, 64, 51.5, 0, 0);
+                var brush = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BRUSH);
+                assertTrue(p.getInventory().contains(brush), "supervisor hands the player a brush");
+                p.setItemInHand(InteractionHand.MAIN_HAND, brush);
+                view(p, -171.5, 64, 53.5, 0, 42);
             });
-            case 211 -> employmentClick(mc, -172, 64, 53);
-            case 231 -> server(mc, p -> view(p, -165.5, 64, 51.5, 0, 0));
-            case 250 -> employmentClick(mc, -166, 64, 53);
-            case 272 -> server(mc, p -> assertTrue(dev.napuli.NapoliStreet.cash(p) == 17, "completed shift pays nine euros"));
-            case 280 -> employmentClick(mc, -166, 64, 53);
-            case 300 -> server(mc, p -> {
+            case 185, 194, 203 -> employmentClick(mc, -172, 63, 53);
+            case 212, 221, 230 -> employmentClick(mc, -170, 63, 53);
+            case 239, 248, 257 -> employmentClick(mc, -172, 63, 55);
+            case 266, 275, 284 -> employmentClick(mc, -170, 63, 55);
+            case 295 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 8, "no payment before one working hour");
+                AutoTest.run(p.level().getServer(), "tick sprint 1050");
+            });
+            case 360 -> server(mc, CityTest::viewCleaner);
+            case 375 -> clickStaff(mc, NapoliResident.Role.SHIFT_LEAD);
+            case 395 -> server(mc, p -> assertTrue(dev.napuli.NapoliStreet.cash(p) == 17, "one working hour pays nine euros"));
+            case 402 -> clickStaff(mc, NapoliResident.Role.SHIFT_LEAD);
+            case 415 -> server(mc, p -> {
                 assertTrue(dev.napuli.NapoliStreet.cash(p) == 17, "cannot collect twice on the same day");
                 var civic = new net.minecraft.core.BlockPos(-154, 65, 40);
                 assertTrue(p.level().getBlockEntity(civic) instanceof net.minecraft.world.level.block.entity.SignBlockEntity,
                         "Mergellina house has a numbered plaque");
                 view(p, -151.5, 64, 44.5, 180, -5);
             });
-            case 325 -> AutoTest.shot(mc, "mergellina-civico");
-            case 330 -> server(mc, p -> view(p, -107.5, 65, 52.5, -90, 11));
-            case 365 -> AutoTest.shot(mc, "mergellina-raccordo");
-            case 385 -> server(mc, p -> {
-                dev.napuli.NapoliStreet.credit(p, 55);
-                view(p, -149.5, 64, 41.5, 180, 0);
-            });
-            case 404 -> mc.player.connection.sendCommand("casa compra leone");
-            case 423 -> server(mc, p -> view(p, -151.5, 64, 36.5, -90, 0));
-            case 455 -> {
-                assertTrue(HudClient.state() != null && HudClient.state().hygiene() < 100,
-                        "hygiene decreases with time");
-                employmentClick(mc, -149, 65, 37);
-            }
-            case 483 -> assertTrue(HudClient.state() != null && HudClient.state().hygiene() == 100,
-                    "owner's shower restores hygiene fully");
-            case 485 -> server(mc, p -> view(p, -152.0, 64, 37.5, -90, 9));
-            case 492 -> AutoTest.shot(mc, "mergellina-doccia");
-            case 500 -> server(mc, p -> view(p, -273, 65, 47, 90, 5));
-            case 532 -> AutoTest.shot(mc, "mergellina-approdo");
-            case 540 -> server(mc, p -> assertTrue(p.level().getEntitiesOfClass(NapoliResident.class,
+            case 445 -> AutoTest.shot(mc, "mergellina-civico");
+            case 450 -> server(mc, p -> view(p, -107.5, 65, 52.5, -90, 11));
+            case 485 -> AutoTest.shot(mc, "mergellina-raccordo");
+            case 620 -> server(mc, p -> view(p, -273, 65, 47, 90, 5));
+            case 652 -> AutoTest.shot(mc, "mergellina-approdo");
+            case 660 -> server(mc, p -> assertTrue(p.level().getEntitiesOfClass(NapoliResident.class,
                     p.getBoundingBox().inflate(55)).stream().anyMatch(npc -> npc.getName().getString().equals("Lucia De Luca")),
                     "new workers appear in the western quarter"));
-            case 555 -> server(mc, p -> {
+            case 675 -> server(mc, p -> {
                 expectBlock(p, 0, 63, -249, Blocks.POLISHED_DEEPSLATE);
                 expectBlock(p, -108, 63, -46, Blocks.POLISHED_DEEPSLATE);
                 expectBlock(p, -29, 63, 10, Blocks.POLISHED_DIORITE);
@@ -473,12 +496,34 @@ final class CityTest {
                 expectBlock(p, 340, 63, 0, Blocks.POLISHED_DEEPSLATE);
                 view(p, 307.5, 64, 31.5, -80, -16);
             });
-            case 590 -> AutoTest.shot(mc, "napoli-municipio-isolati");
-            case 600 -> server(mc, p -> view(p, 6.5, 64, -219, -155, -12));
-            case 635 -> AutoTest.shot(mc, "napoli-centro-isolati");
-            case 645 -> { Napuli.LOGGER.info("[EMPLOYMENTTEST] completed, failed={}", failed); mc.stop(); }
+            case 710 -> AutoTest.shot(mc, "napoli-municipio-isolati");
+            case 720 -> server(mc, p -> view(p, 6.5, 64, -219, -155, -12));
+            case 755 -> AutoTest.shot(mc, "napoli-centro-isolati");
+            case 765 -> { Napuli.LOGGER.info("[EMPLOYMENTTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
+    }
+
+    private static void viewCleaner(ServerPlayer p) {
+        var area = new net.minecraft.world.phys.AABB(-173,63,46,-159,67,60);
+        var staff = p.level().getEntitiesOfClass(NapoliResident.class, area,
+                npc -> npc.entityTags().contains("napuli_supervisor_cleaner"));
+        assertTrue(staff.size() == 1, "cleaning shift has exactly one supervisor");
+        if (staff.isEmpty()) return;
+        var lead = staff.getFirst();
+        assertTrue(lead.blockPosition().distSqr(new net.minecraft.core.BlockPos(-166,64,53)) >= 9,
+                "cleaning supervisor uses a separate location from the civic cleaner");
+        assertTrue(p.level().getEntitiesOfClass(NapoliResident.class, lead.getBoundingBox().inflate(.2),
+                npc -> npc != lead).isEmpty(), "supervisor does not overlap another resident");
+        view(p, lead.getX(), 64, lead.getZ() + 2, 180, 0);
+    }
+
+    private static void clickStaff(Minecraft mc, NapoliResident.Role role) {
+        var staff = mc.player.level().getEntitiesOfClass(NapoliResident.class, mc.player.getBoundingBox().inflate(5),
+                npc -> npc.role() == role).stream().min(java.util.Comparator.comparingDouble(npc -> npc.distanceToSqr(mc.player)));
+        assertTrue(staff.isPresent(), "workplace NPC is available to talk to: " + role);
+        staff.ifPresent(npc -> mc.gameMode.interact(mc.player, npc,
+                new net.minecraft.world.phys.EntityHitResult(npc), InteractionHand.MAIN_HAND));
     }
 
     private static void expectBlock(net.minecraft.server.level.ServerPlayer p, int x, int y, int z,
@@ -572,27 +617,36 @@ final class CityTest {
                 } else assertTrue(false, "broadcast remains open");
                 mc.options.keyShift.setDown(true);
             }
-            case 156, 161, 166 -> clickFamilyTv(mc);
-            case 171 -> mc.options.keyShift.setDown(false);
-            case 177 -> server(mc, p -> {
+            case 156 -> clickFamilyTv(mc);
+            case 158 -> mc.options.keyShift.setDown(false);
+            case 164 -> clickFamilyTv(mc);
+            case 173 -> {
+                assertTrue(mc.gui.screen() instanceof TelevisionScreen, "click opens the selected news channel");
+                AutoTest.shot(mc, "telenapoli-notizie");
+                if (mc.gui.screen() instanceof TelevisionScreen screen) screen.onClose();
+                mc.options.keyShift.setDown(true);
+            }
+            case 181, 186 -> clickFamilyTv(mc);
+            case 189 -> mc.options.keyShift.setDown(false);
+            case 194 -> server(mc, p -> {
                 assertTrue(p.level().getBlockState(new net.minecraft.core.BlockPos(-171, 65, 20))
                         .is(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("black_concrete"))), "TV switches off");
                 assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER, dev.napuli.NapoliHouseholds.Activity.REST),
                         "father stops watching when the TV is off");
             });
-            case 180 -> clickFamilyTv(mc);
-            case 188 -> {
+            case 197 -> clickFamilyTv(mc);
+            case 205 -> {
                 if (mc.gui.screen() instanceof FootballScreen screen) screen.onClose();
                 server(mc, p -> AutoTest.run(p.level().getServer(), "time set 1150"));
             }
-            case 217 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER,
+            case 234 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER,
                     dev.napuli.NapoliHouseholds.Activity.WASH), "mother visits the washbasin in the morning"));
-            case 222 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 10800"));
-            case 250 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
+            case 239 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 10800"));
+            case 267 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
                     dev.napuli.NapoliHouseholds.Activity.EAT), "family changes activity for dinner"));
-            case 254 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 13823"));
-            case 261 -> clickFamilyTv(mc);
-            case 273 -> {
+            case 271 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 13823"));
+            case 278 -> clickFamilyTv(mc);
+            case 290 -> {
                 assertTrue(mc.gui.screen() instanceof FootballScreen screen
                         && screen.broadcast().mode() == dev.napuli.FootballBroadcast.Frame.LIVE
                         && screen.broadcast().minute() == 37, "evening TV shows the live minute");
@@ -603,7 +657,7 @@ final class CityTest {
                     AutoTest.run(p.level().getServer(), "time set 15000");
                 });
             }
-            case 300 -> {
+            case 317 -> {
                 assertTrue(mc.gui.screen() instanceof FootballScreen screen
                         && screen.broadcast().mode() == dev.napuli.FootballBroadcast.Frame.FINAL
                         && screen.broadcast().minute() == 90 && screen.broadcast().napoli() == 1
@@ -611,7 +665,7 @@ final class CityTest {
                 if (mc.gui.screen() instanceof FootballScreen screen) screen.onClose();
                 server(mc, p -> AutoTest.run(p.level().getServer(), "time set midnight"));
             }
-            case 350 -> server(mc, p -> {
+            case 367 -> server(mc, p -> {
                 var relatives = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(12));
                 assertTrue(relatives.stream().filter(npc -> npc.role() == NapoliResident.Role.FAMILY_MOTHER
                         || npc.role() == NapoliResident.Role.FAMILY_FATHER).filter(NapoliResident::isSleeping).count() == 2,
@@ -619,8 +673,8 @@ final class CityTest {
                 AutoTest.run(p.level().getServer(), "time set noon");
                 view(p, 4.5, 65, 26.5, 90, -6);
             });
-            case 390 -> AutoTest.shot(mc, "plebiscito-colonnato");
-            case 410 -> { Napuli.LOGGER.info("[FAMILYTEST] completed, failed={}", failed); mc.stop(); }
+            case 407 -> AutoTest.shot(mc, "plebiscito-colonnato");
+            case 427 -> { Napuli.LOGGER.info("[FAMILYTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
     }

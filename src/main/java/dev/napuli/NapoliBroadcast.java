@@ -88,14 +88,16 @@ final class NapoliBroadcast {
                 var city = viewer.level();
                 Channel current = channel(city, television);
                 Channel chosen = player.isShiftKeyDown() ? current.next()
-                        : current == Channel.SPORT || current == Channel.OFF ? Channel.SPORT : Channel.OFF;
+                        : current == Channel.OFF ? Channel.SPORT : current;
                 var channels = new HashMap<>(city.getAttachedOrElse(CHANNELS, Map.of()));
                 channels.put(television.asLong(), chosen.ordinal());
                 city.setAttached(CHANNELS, Map.copyOf(channels));
                 NapoliHouseholds.paintTelevision(city, television);
-                if (!player.isShiftKeyDown() && chosen == Channel.SPORT && openFootball(viewer, television))
-                    return InteractionResult.SUCCESS;
-                showProgram(viewer, chosen);
+                if (player.isShiftKeyDown()) {
+                    NapoliNotice.show(viewer, Component.translatable("napuli.tv.selected." + chosen.name().toLowerCase(java.util.Locale.ROOT)));
+                } else if (chosen != Channel.SPORT || !openFootball(viewer, television)) {
+                    showProgram(viewer, chosen);
+                }
             }
             return InteractionResult.SUCCESS;
         });

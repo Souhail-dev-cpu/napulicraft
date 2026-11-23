@@ -81,11 +81,9 @@ final class HousingCapacity {
         var homes = homes(city);
         var home = at(homes, destination);
         if (home == null) return true;
-        if (HouseGuests.capacityExempt(city, home.property(), entrant)) return true;
         int count = 0;
         for (var entity : city.getAllEntities()) {
             if (occupant(entity) && !entity.getUUID().equals(entrant)
-                    && !HouseGuests.capacityExempt(city, home.property(), entity.getUUID())
                     && home.equals(at(homes, entity.blockPosition())) && ++count >= MAX_OCCUPANTS) return false;
         }
         return true;
@@ -116,8 +114,6 @@ final class HousingCapacity {
         for (var entry : groups.entrySet()) {
             var home = entry.getKey();
             var inside = entry.getValue();
-            // Invited visitors have additional places and never displace the normal occupants.
-            inside.removeIf(e -> HouseGuests.capacityExempt(city, home.property(), e.getUUID()));
             if (inside.isEmpty()) continue;
             var previous = state.admitted.getOrDefault(home, List.of());
             // Existing occupants keep their places; simultaneous arrivals use a stable order.

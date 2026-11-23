@@ -14,6 +14,17 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.server.dialog.ActionButton;
+import net.minecraft.server.dialog.CommonButtonData;
+import net.minecraft.server.dialog.CommonDialogData;
+import net.minecraft.server.dialog.DialogAction;
+import net.minecraft.server.dialog.MultiActionDialog;
+import net.minecraft.server.dialog.action.StaticAction;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -62,13 +73,17 @@ public final class FootballPractice {
                 Codec.LONG.fieldOf("training_day").forGetter(Career::trainingDay)).apply(i, Career::new));
     }
 
+    private static final AttachmentType<GlobalPos> RETURN_POINT =
+            AttachmentRegistry.create(Napuli.id("football_return_point"));
+
     static void register() {
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballMenu.TYPE, FootballMenu.CODEC);
         CommandRegistrationCallback.EVENT.register((dispatcher, context, kind) -> dispatcher.register(
                 Commands.literal("calcio").executes(c -> profile(c.getSource().getPlayerOrException()))
                         .then(Commands.literal("guarda").executes(c -> enter(c.getSource().getPlayerOrException(), false)))
                         .then(Commands.literal("gioca").executes(c -> enter(c.getSource().getPlayerOrException(), true)))
                         .then(Commands.literal("esci").executes(c -> exit(c.getSource().getPlayerOrException())))
-                        .then(kickCommand("passa", false)).then(kickCommand("tira", true))
+                        .then(Commands.literal("torna").executes(c -> returnToEntry(c.getSource().getPlayerOrException()))).then(kickCommand("passa", false)).then(kickCommand("tira", true))
                         .then(Commands.literal("palestra").executes(c -> gym(c.getSource().getPlayerOrException())))));
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> GAMES.entrySet().removeIf(entry -> {
             if (entry.getKey().getServer() != server) return false;
@@ -82,26 +97,94 @@ public final class FootballPractice {
             if (city != null) for (ServerPlayer player : city.players()) training(player, city);
         });
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
-            if (!(player instanceof ServerPlayer server) || level.dimension() != NapoliMap.LEVEL
-                    || hand != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty()) return InteractionResult.PASS;
+            if (level.dimension() != NapoliMap.LEVEL || hand != InteractionHand.MAIN_HAND || player.isSpectator())
+                return InteractionResult.PASS;
+            BlockPos pos = hit.getBlockPos();
+            if (pos.equals(FootballGround.RECEPTION) || pos.equals(FootballGround.GYM)) {
+                if (player instanceof ServerPlayer server && !Carabinieri.isJailed(server)) menu(server);
+                return InteractionResult.SUCCESS;
+            }
+            if (!(player instanceof ServerPlayer server) || !player.getMainHandItem().isEmpty()
+                    || pos.getY() != 63 || !inside(Vec3.atCenterOf(pos))) return InteractionResult.PASS;
             Game game = GAMES.get(server.level());
-            if (game == null || !game.controls(server)) return InteractionResult.PASS;
-            game.playerKick(server, player.isShiftKeyDown());
-            return InteractionResult.SUCCESS;
+            return game != null && game.playerKick(server, player.isShiftKeyDown())
+                    ? InteractionResult.SUCCESS : InteractionResult.PASS;
         });
+    }
+
+    private static void menu(ServerPlayer player) {
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, FootballMenu.TYPE)) {
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+                    new FootballMenu(player.getAttached(RETURN_POINT) != null));
+            return;
+        }
+        var actions = new java.util.ArrayList<>(List.of(
+                option("watch_option", "guarda"), option("play_option", "gioca"),
+                option("training_option", "palestra"), option("profile_option", "")));
+        if (player.getAttached(RETURN_POINT) != null) actions.add(option("return_option", "torna"));
+        player.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(
+                Component.translatable("napuli.football.menu"), Optional.empty(), true, false, DialogAction.CLOSE,
+                List.of(), List.of()), actions, Optional.empty(), 2)));
+    }
+
+    private static ActionButton option(String label, String command) {
+        return new ActionButton(new CommonButtonData(Component.translatable("napuli.football." + label), 132),
+                Optional.of(new StaticAction(new ClickEvent.RunCommand(command.isEmpty() ? "/calcio" : "/calcio " + command))));
+    }
+
+    private static boolean arrive(ServerPlayer player) {
+        if (player.isSpectator() || Carabinieri.isJailed(player) || Carabinieri.isWanted(player)) return false;
+        GlobalPos origin = GlobalPos.of(player.level().dimension(), player.blockPosition());
+        if (player.level().dimension() != NapoliMap.LEVEL && NapoliMap.visit(player) == 0) return false;
+        if (origin.dimension() != NapoliMap.LEVEL || !atGround(Vec3.atCenterOf(origin.pos())))
+            player.setAttached(RETURN_POINT, origin);
+        return true;
+    }
+
+    private static boolean atGround(Vec3 pos) {
+        return pos.x >= 348 && pos.x <= 412 && pos.z >= -4 && pos.z <= 42;
+    }
+
+    private static int returnToEntry(ServerPlayer p) {
+        if (p.level().dimension() != NapoliMap.LEVEL || !atGround(p.position())
+                || Carabinieri.isJailed(p) || Carabinieri.isWanted(p)) return 0;
+        GlobalPos origin = p.getAttached(RETURN_POINT);
+        if (origin == null) {
+            say(p, "no_return");
+            return 0;
+        }
+        ServerLevel destination = p.level().getServer().getLevel(origin.dimension());
+        BlockPos pos = origin.pos();
+        if (destination == null || !destination.getBlockState(pos).isAir()
+                || !destination.getBlockState(pos.above()).isAir() || !destination.getBlockState(pos.below()).isSolidRender()) {
+            say(p, "no_return");
+            return 0;
+        }
+        ServerLevel city = p.level();
+        if (!p.teleportTo(destination, pos.getX() + .5, pos.getY(), pos.getZ() + .5, Set.of(), p.getYRot(), p.getXRot(), true))
+            return 0;
+        Game game = GAMES.get(city);
+        if (game != null && game.controls(p)) game.restoreNpc(city);
+        p.removeAttached(RETURN_POINT);
+        return 1;
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> kickCommand(String name, boolean shoot) {
         return Commands.literal(name).executes(c -> {
             ServerPlayer player = c.getSource().getPlayerOrException();
             Game game = GAMES.get(player.level());
-            return game != null && game.playerKick(player, shoot) ? 1 : 0;
+            if (game == null || !game.controls(player)) {
+                say(player, "not_playing");
+                return 0;
+            }
+            if (game.playerKick(player, shoot)) return 1;
+            say(player, "no_ball");
+            return 0;
         });
     }
 
     private static int enter(ServerPlayer player, boolean play) {
-        if (Carabinieri.isJailed(player) || player.isSpectator()) return 0;
-        if (player.level().dimension() != NapoliMap.LEVEL && NapoliMap.visit(player) == 0) return 0;
+        if (!arrive(player)) return 0;
         ServerLevel city = player.level();
         Game game = GAMES.computeIfAbsent(city, Game::new);
         if (play && game.player != null && !game.controls(player)) {
@@ -128,8 +211,7 @@ public final class FootballPractice {
     }
 
     private static int gym(ServerPlayer player) {
-        if (Carabinieri.isJailed(player) || player.isSpectator()) return 0;
-        if (player.level().dimension() != NapoliMap.LEVEL && NapoliMap.visit(player) == 0) return 0;
+        if (!arrive(player)) return 0;
         Game game = GAMES.get(player.level());
         if (game != null && game.controls(player)) game.restoreNpc(player.level());
         teleport(player, FootballGround.START_RUN, 0);

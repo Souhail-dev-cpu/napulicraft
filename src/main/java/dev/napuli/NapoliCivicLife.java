@@ -119,7 +119,11 @@ final class NapoliCivicLife {
     }
 
     record Citizen(UUID id, String name, boolean woman, long birth, int balance, int job,
-                   String partner, String property, String parents, boolean spawned) {
+                   String partner, String property, String parents, boolean spawned, int childhoodDays) {
+        Citizen(UUID id, String name, boolean woman, long birth, int balance, int job,
+                String partner, String property, String parents, boolean spawned) {
+            this(id, name, woman, birth, balance, job, partner, property, parents, spawned, 0);
+        }
         private static final Codec<Citizen> CODEC = RecordCodecBuilder.create(i -> i.group(
                 UUIDUtil.CODEC.fieldOf("id").forGetter(Citizen::id),
                 Codec.STRING.fieldOf("name").forGetter(Citizen::name),
@@ -130,19 +134,27 @@ final class NapoliCivicLife {
                 Codec.STRING.optionalFieldOf("partner", "").forGetter(Citizen::partner),
                 Codec.STRING.optionalFieldOf("property", "").forGetter(Citizen::property),
                 Codec.STRING.optionalFieldOf("parents", "").forGetter(Citizen::parents),
-                Codec.BOOL.optionalFieldOf("spawned", false).forGetter(Citizen::spawned)
+                Codec.BOOL.optionalFieldOf("spawned", false).forGetter(Citizen::spawned),
+            Codec.INT.optionalFieldOf("childhood_days", 0).forGetter(Citizen::childhoodDays)
         ).apply(i, Citizen::new));
 
-        int age(long day) { return (int) Math.clamp((day - birth) / CityLifeConfig.settings.daysPerYear, 0, 999); }
+        int age(long day) {
+            int adultRate = CityLifeConfig.settings.daysPerYear;
+            long lived = Math.max(0, day - birth);
+            if (childhoodDays <= 0) return (int) Math.min(999, lived / adultRate);
+            long youth = (long) childhoodDays * ADULT_AGE;
+            return lived < youth ? (int) (lived / childhoodDays)
+                    : (int) Math.min(999, ADULT_AGE + (lived - youth) / adultRate);
+        }
         Job profession() { return job < 0 || job >= Job.values().length ? null : Job.values()[job]; }
         Citizen withMoney(int money, int newJob) {
-            return new Citizen(id, name, woman, birth, money, newJob, partner, property, parents, spawned);
+            return new Citizen(id, name, woman, birth, money, newJob, partner, property, parents, spawned, childhoodDays);
         }
         Citizen withHousehold(String companion, String home, int money) {
-            return new Citizen(id, name, woman, birth, money, job, companion, home, parents, spawned);
+            return new Citizen(id, name, woman, birth, money, job, companion, home, parents, spawned, childhoodDays);
         }
         Citizen materialized() {
-            return new Citizen(id, name, woman, birth, balance, job, partner, property, parents, true);
+            return new Citizen(id, name, woman, birth, balance, job, partner, property, parents, true, childhoodDays);
         }
     }
 
@@ -322,7 +334,7 @@ final class NapoliCivicLife {
             CitySimulation.birth(city,a.id(),day);
             CitySimulation.parentage(city,childId,a.id(),b.id());
             people.put(childId, new Citizen(childId, (daughter ? "Lucia " : "Antonio ") + surname, daughter,
-                    day, 0, -1, "", a.property(), family, false));
+                    day, 0, -1, "", a.property(), family, false, 2 * CityLifeConfig.settings.daysPerYear));
         }
     }
 

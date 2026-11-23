@@ -145,19 +145,30 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case MERCATANTE -> Set.of("coppola");
 			case MUSICISTA -> Set.of("side_part", "mandolin");
 			case GUARDIANO_PRESEPE -> Set.of("coppola", "scarf");
+			case EMPLOYMENT_CLERK -> Set.of("bun");
+			case SHIFT_LEAD -> Set.of("cap");
+			case SHIFT_WORKER -> Set.of("side_part");
 			case PASSERBY -> switch (variant) {
 				case 0 -> Set.of("coppola");                    // 'o nonno
 				case 1 -> Set.of("bun", "skirt", "earrings");    // 'a signora
 				case 2 -> Set.of("cap");                         // 'o guaglione
 				case 3 -> Set.of("long_hair", "hairband", "skirt"); // 'a guagliona
 				case 4 -> Set.of("curls");                       // 'o tifoso
-				default -> Set.of("headscarf", "skirt");         // 'a nonna
+				case 5, 11 -> Set.of("headscarf", "skirt");
+				case 6, 14 -> Set.of("coppola");
+				case 7, 17 -> Set.of("bun", "earrings");
+				case 8, 12 -> Set.of("side_part");
+				case 9 -> Set.of("bun");
+				case 10 -> Set.of("fringe");
+				case 13, 15 -> Set.of("long_hair");
+				case 16 -> Set.of("cap");
+				default -> Set.of();
 			};
 		};
 	}
 
 	static boolean female(Role role, int variant) {
-		return role.female() || (role == Role.PASSERBY && (variant == 1 || variant == 3 || variant == 5));
+		return role.female() || (role == Role.PASSERBY && (variant & 1) == 1);
 	}
 
 	@Override
@@ -196,6 +207,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	static final class State extends HumanoidRenderState {
 		Role role = Role.GENNARO;
 		int variant;
+		boolean alternateCivic;
 		dev.napuli.NapoliHouseholds.Activity activity = dev.napuli.NapoliHouseholds.Activity.REST;
 	}
 

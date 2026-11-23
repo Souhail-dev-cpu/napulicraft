@@ -72,7 +72,7 @@ public final class KitchenGameTest {
         var encoded = NapoliCivicLife.Census.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, settled).getOrThrow();
         helper.assertTrue(NapoliCivicLife.Census.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, encoded).getOrThrow().equals(settled),
                 "Census preserves family, home and money across serialization");
-        NapoliCivicLife.advance(level, child.birth() + NapoliCivicLife.ADULT_AGE + 1);
+        NapoliCivicLife.advance(level, child.birth() + (long) NapoliCivicLife.ADULT_AGE * Math.max(1, child.childhoodDays()) + 1);
         var grown = NapoliCivicLife.profile(level, child.id());
         helper.assertTrue(grown.profession() != null && grown.balance() > 0, "The same child grows up and earns a wage");
         helper.succeed();

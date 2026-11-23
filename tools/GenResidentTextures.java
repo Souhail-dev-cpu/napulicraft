@@ -32,6 +32,25 @@ public class GenResidentTextures {
 			look("passerby_3", true, 0xe0b090, 0xc9a24a, 0x3d6b8a, WHITE, 0xe86a9a, 0x3d5f8f, 0xf2f2f2, 0xe86a9a, i -> {}),
 			look("passerby_4", false, 0xa8704f, 0x161210, 0x2e2018, NAPOLI, WHITE, WHITE, 0x1f1f1f, 0x161210, i -> { number10(i, WHITE); stubble(i, 0x161210); }),
 			look("passerby_5", true, 0xc9a084, 0x1c1c1c, 0x3a3a3a, 0x1f1f22, 0x2e2e33, 0x1f1f22, 0x111111, 0x1c1c1c, i -> {}),
+			look("passerby_6", false, 0x754633, 0x283022, 0x302724, 0x89643d, 0xd4b277, 0x313e47, 0x262325, 0xa37544, i -> { beard(i, 0x283022); cardigan(i); }),
+			look("passerby_7", true, 0x9b604a, 0x32212e, 0x482636, 0x669a82, 0xecc973, 0x3f6158, 0x624d32, 0x377160, i -> neckerchief(i, 0xecc973)),
+			look("passerby_8", false, 0xe2b995, 0xb95c32, 0x527977, 0x824d65, 0xcaa7bf, 0x474754, 0x39262e, 0x84412e, i -> { stubble(i, 0x8d411e); hStripes(i, 0xa06c85); }),
+			look("passerby_9", true, 0xf0c2a6, 0xa39d91, 0x577b7d, 0x304b70, 0xd8ddbb, 0x3e4967, 0x233653, 0x576c83, i -> glasses(i)),
+			look("passerby_10", false, 0xb17a60, 0x302529, 0x393231, 0x774e31, 0xf3d68b, 0x4e614f, 0x303838, 0xa0784c, i -> { waistcoat(i, 0x9c6a39, 0xf3d68b); glasses(i); }),
+			look("passerby_11", true, 0x88553f, 0x281719, 0x4d2a27, 0xc68136, 0x743822, 0x4f3339, 0x432629, 0xa74935, i -> { dots(i, 20, 20, 28, 32, 0xf9d97e); }),
+			look("passerby_12", false, 0xe5b89c, 0x6c4830, 0x4d6275, 0x2f6573, 0x91bdb7, 0x49515f, 0x292d3a, 0x315c57, i -> { stripesArm(i, 0x91bdb7); mustache(i, 0x6c4830); }),
+			look("passerby_13", true, 0xcd8d6c, 0x502325, 0x69312a, 0x9c4049, 0xe3bc95, 0x5f455d, 0x44293a, 0x714b69, i -> sash(i, 0xe3bc95)),
+			look("passerby_14", false, 0x98664a, 0xa6a495, 0x3e593c, 0x50704d, 0xafa570, 0x4c4337, 0x29283a, 0x717e56, i -> { mustache(i, 0xa6a495); buttons(i, 0xdba75a); }),
+			look("passerby_15", true, 0xeab486, 0x925536, 0x526143, 0x59416f, 0xd6b5c9, 0x594d75, 0x372837, 0x7b526d, i -> hStripes(i, 0xa37ea7)),
+			look("passerby_16", false, 0x6e4133, 0x232229, 0x302820, 0xb7332d, 0xf0ce9d, 0x333b53, 0x222934, 0xa93c33, i -> { stripesArm(i, 0xf0ce9d); stubble(i, 0x232229); }),
+			look("passerby_17", true, 0xb18063, 0x342e22, 0x54694f, 0x40658e, 0xc9d6ce, 0x857159, 0x3d362e, 0x446471, i -> { glasses(i); cardigan(i); }),
+			look("employment_clerk", true, 0xc48f75, 0x6c3c34, 0x57757a, 0x496064, 0xf0f1dd, 0x314856, 0x303642, 0x7b442e, i -> { waistcoat(i, 0x496064, 0xf0f1dd); glasses(i); }),
+			look("shift_lead_0", false, 0xaa7253, 0x333039, 0x41554f, 0x294e61, 0xf0bf4d, 0x304254, 0x282e30, 0x294e61, i -> { stripesArm(i, 0xf0bf4d); beard(i, 0x333039); }),
+			look("shift_lead_1", false, 0xdeac87, 0x7b4430, 0x53593b, 0x3d5f45, 0xd4cb78, 0x463d3c, 0x362b24, 0x3d5f45, i -> { stripesArm(i, 0xd4cb78); mustache(i, 0x7b4430); }),
+			look("shift_lead_2", false, 0x774b3b, 0x1e2022, 0x3e3341, 0x67493f, 0xf0bf4d, 0x323f4e, 0x22242e, 0x67493f, i -> sash(i, 0xf0bf4d)),
+			look("shift_worker_0", false, 0xc79a71, 0x38261e, 0x485746, 0x627c69, 0xb6d2b9, 0x3f4d55, 0x322c23, 0x4c654d, i -> apron(i, 0x8aab91, 23)),
+			look("shift_worker_1", false, 0x9b6859, 0x8b8c8a, 0x50443a, 0x54728d, 0xdbddd0, 0x514938, 0x312f31, 0x365a82, i -> { apron(i, 0x9aafb1, 23); mustache(i, 0x8b8c8a); }),
+			look("shift_worker_2", false, 0xe4b69a, 0x533229, 0x6a6951, 0x895a49, 0xdcd1b8, 0x49415c, 0x2c263a, 0x895a49, i -> apron(i, 0xc4a686, 23)),
 			look("ada", true, 0xc58d6c, 0x4e3224, 0x4a3829, 0x263f77, 0xf0c478, 0x2e303a, 0x292828, 0xf0c478, i -> goldTrim(i)),
 			look("michele", false, 0xdbad88, 0x43302a, 0x424934, 0x1f3550, 0xedcb8b, 0x444a51, 0x222835, 0x4b4f55, i -> { buttons(i, GOLD); mustache(i, 0x43302a); }),
 			look("nico", false, 0xa9755c, 0x2e231e, 0x3e3226, 0x274d89, 0xf0c478, 0x344e66, 0x252628, 0x274d89, i -> { chain(i); stubble(i, 0x2e231e); }),
@@ -71,6 +90,7 @@ public class GenResidentTextures {
 			ImageIO.write(img, "PNG", Path.of("src/main/resources/assets/napuli/textures/entity/" + l.name + ".png").toFile());
 		}
 		System.out.println("residents painted: " + looks.length);
+		if (args.length == 0 || java.util.Arrays.asList(args).contains("civic_alt")) alternateCivics();
 		if(args.length==0 || java.util.Arrays.asList(args).contains("civic")) {
 			int[] uniforms={0xf0eee6,0x759b59,0x528ea3,0x335488,0xe5b642,0x784cb3,0xd17b31,0x404b64,0xc4e4e0,0x20283a};
 			for(int category=0;category<uniforms.length;category++) for(boolean female:new boolean[]{false,true}) {
@@ -83,6 +103,21 @@ public class GenResidentTextures {
 		}
 	}
 
+	static void alternateCivics() throws Exception {
+		int[] tops = {0x9e654e, 0x537a77, 0x7e565e, 0x566c98, 0xb5a363, 0x485f4d, 0xa05e43, 0x7f6c9c, 0x47767f, 0x72654d};
+		int[] skin = {0x8b5845, 0xe1b590, 0xab735b, 0xd49b77, 0x754738};
+		int[] hair = {0x272226, 0x744935, 0xaaa297, 0x9d5433, 0x382326};
+		for (int i = 0; i < tops.length; i++) for (boolean female : new boolean[]{false, true}) {
+			int face = Math.floorMod(i + (female ? 2 : 0), skin.length);
+			var style = look("civic_" + (female ? "woman" : "man") + "_alt_" + i, female,
+					skin[face], hair[face], 0x546051, tops[i], 0xe6dac1, 0x46576a, 0x343038, tops[(i + 1) % tops.length],
+					female ? image -> neckerchief(image, 0xe6dac1) : image -> buttons(image, 0xddd2bb));
+			var image = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+			base(image, style);
+			style.extra().accept(image);
+			ImageIO.write(image, "PNG", Path.of("src/main/resources/assets/napuli/textures/entity/" + style.name() + ".png").toFile());
+		}
+	}
 	static Look look(String n, boolean f, int skin, int hair, int eye, int top, int trim, int legs, int shoes, int accent, Consumer<BufferedImage> extra) {
 		return new Look(n, f, skin, hair, eye, top, trim, legs, shoes, accent, extra);
 	}

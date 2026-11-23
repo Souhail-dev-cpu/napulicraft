@@ -33,13 +33,13 @@ final class CityEvents {
                 city.setAttached(ANNOUNCED,day);
                 int rep=city.getAttachedOrElse(REPUTATION,50);
                 city.setAttached(REPUTATION,Math.clamp(rep+(danger(city)?-2:1),0,100));
-                for(var p:city.players())p.sendSystemMessage(Component.literal("Notizie di Napoli: "+label(event(day))+". Le routine e i prezzi si adeguano all'evento."));
+                for(var p:city.players())NapoliNotice.show(p, Component.literal("Notizie di Napoli: "+label(event(day))+". Le routine e i prezzi si adeguano all'evento."));
             }
         });
         CommandRegistrationCallback.EVENT.register((d,a,e)->d.register(Commands.literal("citta")
                 .executes(c->{var p=c.getSource().getPlayerOrException();var data=NapoliCivicLife.census(p.level());
-                    p.sendSystemMessage(Component.literal("Abitanti censiti: "+(data==null?0:data.people().size())+" · Professioni: "+NapoliCivicLife.Job.values().length+" · Case: "+NapoliMergellina.PROPERTIES.size()));
-                    p.sendSystemMessage(Component.literal("Giorno "+NapoliBroadcast.day(p.level())+" · "+label(event(NapoliBroadcast.day(p.level())))+" · Reputazione città: "+p.level().getAttachedOrElse(REPUTATION,50)));return 1;})));
+                    NapoliNotice.show(p, Component.literal("Abitanti censiti: "+(data==null?0:data.people().size())+" · Professioni: "+NapoliCivicLife.Job.values().length+" · Case: "+NapoliMergellina.PROPERTIES.size()));
+                    NapoliNotice.show(p, Component.literal("Giorno "+NapoliBroadcast.day(p.level())+" · "+label(event(NapoliBroadcast.day(p.level())))+" · Reputazione città: "+p.level().getAttachedOrElse(REPUTATION,50)));return 1;})));
     }
     private CityEvents() {}
 }

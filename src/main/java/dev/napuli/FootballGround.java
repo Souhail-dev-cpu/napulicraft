@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.Blocks;
 final class FootballGround {
     static final int MID_X = 384, MID_Z = 23, MIN_X = 363, MAX_X = 405, MIN_Z = 10, MAX_Z = 36;
     static final BlockPos STAND = new BlockPos(384, 67, 7), GYM = new BlockPos(358, 64, 15);
+    static final BlockPos RECEPTION = new BlockPos(365, 64, 3);
     static final BlockPos START_RUN = new BlockPos(354, 64, 19), FINISH_RUN = new BlockPos(354, 64, 35);
 
     private FootballGround() {}
@@ -51,7 +52,7 @@ final class FootballGround {
         for (int z = 19; z <= 35; z++) {
             set(level, new BlockPos(354, 63, z), z == 19 || z == 35 ? Blocks.CALCITE : colour("red_terracotta"));
         }
-        NapoliEmploymentMap.sign(level, new BlockPos(365, 64, 3), "FUORIGROTTA", "Campo allenamento", "/calcio guarda");
+        NapoliEmploymentMap.sign(level, RECEPTION, "FUORIGROTTA", "Campo allenamento", "/calcio guarda");
         NapoliEmploymentMap.sign(level, new BlockPos(355, 64, 19), "PREPARAZIONE", "/calcio palestra", "Corri fino in fondo");
         buildGym(level);
         NapoliEmploymentMap.sign(level, GYM, "PALESTRA", "/calcio palestra", "Corsia esterna");

@@ -294,12 +294,13 @@ public final class NapoliStreet {
             default -> List.of();
         };
         if (options.isEmpty()) { message(player, levelGreeting(player)); return; }
+        NeighbourMemory.greet(player, npc);
         String token = UUID.randomUUID().toString();
         player.setAttached(DIALOG, new Session(npc, token, player.level().getGameTime() + 1200, options));
         var actions = options.stream().map(action -> {
             Offer offer = offer(action);
             Component label = offer == null ? Component.translatable(key(action))
-                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), offer.cost());
+                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), NeighbourMemory.price(player, npc, offer.cost()));
             return new ActionButton(new CommonButtonData(label, 220),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/napulistrada " + token + " " + action.name()))));
         }).toList();
@@ -361,8 +362,14 @@ public final class NapoliStreet {
                 || player.distanceToSqr(session.npc()) > 36 || now > session.expires()) return 0;
         Offer offer = offer(action);
         if (offer != null) {
-            if (cash(player) < offer.cost()) { message(player, "poor"); return 0; }
-            credit(player, -offer.cost());
+            int price = NeighbourMemory.price(player, session.npc(), offer.cost());
+            if (cash(player) < price) { message(player, "poor"); return 0; }
+            if (action == Action.BREAD && !BakeryStock.reserveBread(player.level(), offer.stack().getCount())) {
+                message(player, BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");
+                return 0;
+            }
+            credit(player, -price);
+            NeighbourMemory.remember(player, session.npc(), 2);
             player.addItem(offer.stack());
             if (!offer.stack().isEmpty()) player.spawnAtLocation(player.level(), offer.stack());
             message(player, "cash", cash(player));
@@ -385,7 +392,11 @@ public final class NapoliStreet {
                 if (done == 1) Carabinieri.crime(player, Carabinieri.Crime.PIZZO);
                 return done;
             }
-            case TAKE_LEDGER -> { return NapoliFactions.errand(player, true); }
+            case TAKE_LEDGER -> {
+                int result = NapoliFactions.errand(player, true);
+                if (result == 1) NeighbourMemory.remember(player, session.npc(), -5);
+                return result;
+            }
             case DELIVERY -> {
                 if (player.getAttachedOrElse(DELIVERY, 0L) > now) { message(player, "route"); return 0; }
                 player.setAttached(DELIVERY, now + 20 * 240);
@@ -399,6 +410,7 @@ public final class NapoliStreet {
                 }
                 player.removeAttached(DELIVERY);
                 credit(player, 12);
+                NeighbourMemory.remember(player, session.npc(), 4);
                 message(player, "reward", 12);
                 scheduleThief(player, now);
             }

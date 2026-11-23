@@ -40,8 +40,7 @@ final class NapoliEmploymentMap {
             for (int z = 40; z <= 49; z++) put(level, new BlockPos(x, 63, z), Blocks.POLISHED_ANDESITE);
         }
         for (int x = -120; x <= -116; x++) put(level, new BlockPos(x, 64, 33), Blocks.SPRUCE_PLANKS);
-        put(level, NapoliEmployment.DESK.below(), Blocks.LECTERN);
-        sign(level, NapoliEmployment.DESK, "SPORTELLO", "Offerte di lavoro", "Tasto destro");
+
         wallSign(level, new BlockPos(-121, 66, 40), "CENTRO PER", "L'IMPIEGO", "Mergellina 2");
         put(level, new BlockPos(-120, 67, 35), Blocks.LANTERN);
         put(level, new BlockPos(-115, 67, 35), Blocks.LANTERN);
@@ -49,11 +48,6 @@ final class NapoliEmploymentMap {
     }
 
     static void markAddressesAndJobs(ServerLevel level) {
-        for (NapoliEmployment.Contract contract : NapoliEmployment.Contract.values()) {
-            sign(level, contract.clock, "TIMBRATURA", label(contract), "Inizio / paga");
-            sign(level, contract.task, "MANSIONE", label(contract), "Tasto destro");
-        }
-
         for (NapoliMergellina.House h : NapoliMergellina.allHouses()) {
             BlockPos facade = new BlockPos(h.x() + 3, 65, h.z() + 12);
             if (level.getBlockState(facade).isAir()) wallSign(level, facade, "MERGELLINA", "CIVICO " + h.civic());
@@ -66,19 +60,6 @@ final class NapoliEmploymentMap {
                 wallSign(level, face, "CIVICO", Integer.toString(number));
             number++;
         }
-    }
-
-    private static String label(NapoliEmployment.Contract job) {
-        return switch (job) {
-            case BAKER -> "Forno";
-            case PORTER -> "Porticciolo";
-            case MERCHANT -> "Mercato";
-            case CLEANER -> "Lungomare";
-            case GARDENER -> "Giardini";
-            case FISHER -> "Approdo";
-            case COURIER -> "Consegne";
-            case CARPENTER -> "Cantiere";
-        };
     }
 
     static void sign(ServerLevel level, BlockPos pos, String... lines) {

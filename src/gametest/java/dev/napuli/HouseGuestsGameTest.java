@@ -10,7 +10,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 
 public final class HouseGuestsGameTest {
-    @GameTest(maxTicks = 200) public void invitedFriendsAndNpcCanDineWithFiveResidents(GameTestHelper helper) {
+    @GameTest(maxTicks = 200) public void invitedFriendsWaitWhenFiveResidentsAreInside(GameTestHelper helper) {
         loadedHouse(helper, house -> HousingCapacityGameTest.withPlayers(helper, 3, players -> state(helper, () -> {
             var city = helper.getLevel(); var owner = players.get(0); var friend = players.get(1); var stranger = players.get(2);
             city.setAttached(NapoliProperties.OWNERS, Map.of(house.id(), owner.getUUID()));
@@ -26,18 +26,18 @@ public final class HouseGuestsGameTest {
                 helper.assertTrue(!HousingCapacity.canEnter(city,house.inside(),friend.getUUID()),"A full house initially rejects an uninvited friend");
                 helper.assertTrue(!HouseGuests.grant(city,house.id(),stranger.getUUID(),friend),"A stranger cannot authorize an invitation");
                 helper.assertTrue(HouseGuests.grant(city,house.id(),owner.getUUID(),friend),"The owner can invite a friend into a full house");
-                helper.assertTrue(HousingCapacity.canEnter(city,house.inside(),friend.getUUID()),"An invited friend may exceed the normal capacity");
+                helper.assertTrue(!HousingCapacity.canEnter(city,house.inside(),friend.getUUID()),"An invited friend must also wait for room");
                 helper.assertTrue(NapoliProperties.hasAccess(friend,house)&&!NapoliProperties.owns(friend,house),"An invitation grants access without ownership");
                 helper.assertTrue(!HouseGuests.grant(city,house.id(),friend.getUUID(),stranger),"Guests cannot invite other people");
                 friend.snapTo(house.inside().getX()+.5,64,house.inside().getZ()+.5,0,0);
                 stranger.snapTo(house.inside().getX()+.5,64,house.inside().getZ()+.5,0,0);
                 HousingCapacity.enforce(city);
-                helper.assertTrue(house.contains(friend.blockPosition())&&house.contains(owner.blockPosition())&&npcs.stream().allMatch(n->house.contains(n.blockPosition())),"Five ordinary occupants and an invited friend all remain inside");
+                helper.assertTrue(!house.contains(friend.blockPosition())&&house.contains(owner.blockPosition())&&npcs.stream().allMatch(n->house.contains(n.blockPosition())),"The five existing occupants keep their places");
                 helper.assertTrue(!house.contains(stranger.blockPosition()),"The exception does not admit uninvited strangers");
                 var visitor=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_WOMAN,house.inside(),0);visitor.setNoAi(true);npcs.add(visitor);
                 helper.assertTrue(HouseGuests.grant(city,house.id(),owner.getUUID(),visitor),"NPCs can also be invited as guests");
                 HousingCapacity.enforce(city);
-                helper.assertTrue(house.contains(visitor.blockPosition())&&house.contains(friend.blockPosition()),"Two invited guests may join the five ordinary occupants");
+                helper.assertTrue(!house.contains(visitor.blockPosition())&&!house.contains(friend.blockPosition()),"Invited NPCs and friends wait when there are five occupants");
                 var family=new ArrayList<NapoliCivicLife.Citizen>();
                 for(int i=0;i<4;i++) family.add(new NapoliCivicLife.Citizen(npcs.get(i).getUUID(),"Resident "+i,false,0,0,-1,"",house.id(),"",true));
                 helper.assertTrue(HousingCapacity.reservedOccupants(city,house,family)==5,"Authorized visits do not consume family capacity or duplicate residents");
@@ -60,7 +60,7 @@ public final class HouseGuestsGameTest {
             var encoded=HouseGuests.Invitation.CODEC.encodeStart(JsonOps.INSTANCE,invitation).getOrThrow();
             var decoded=HouseGuests.Invitation.CODEC.parse(JsonOps.INSTANCE,encoded).getOrThrow();
             city.setAttached(HouseGuests.INVITATIONS,Map.of(house.id(),List.of(decoded)));
-            helper.assertTrue(HouseGuests.capacityExempt(city,house.id(),guest.getUUID()),"A reloaded invitation retains permission to exceed five occupants");
+            helper.assertTrue(HouseGuests.invited(city,house.id(),guest.getUUID()),"A reloaded invitation retains access permission");
             helper.assertTrue(!HouseGuests.revoke(city,house.id(),stranger.getUUID(),guest.getUUID()),"A non-host cannot revoke someone else's invitation");
             CityHousingFinance.inherit(city,tenant.getUUID(),null);
             helper.assertTrue(!HouseGuests.invited(city,house.id(),guest.getUUID()),"Ending the tenancy also ends its guest permissions");

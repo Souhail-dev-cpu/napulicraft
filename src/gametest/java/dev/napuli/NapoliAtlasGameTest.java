@@ -9,6 +9,42 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 
 public final class NapoliAtlasGameTest {
+    @GameTest public void atlasHomesHaveFinishedUpperRoomsWithAStairLanding(GameTestHelper h) {
+        var fixture = new HashMap<BlockPos, net.minecraft.world.level.block.state.BlockState>();
+        var floor = new NapoliInteriorLayout((x, y, z, state) -> fixture.put(new BlockPos(x, y, z), state));
+        floor.apartmentBlock(0, 64, 0, 3);
+        for (int step = 0; step < 5; step++) {
+            h.assertTrue(fixture.get(new BlockPos(16, 64 + step, 16 + step)).is(Blocks.STONE_BRICK_STAIRS),
+                    "Continuous steps join the ground and first floor");
+            h.assertTrue(fixture.get(new BlockPos(16, 65 + step, 16 + step)).isAir(), "Stair headroom stays clear");
+            h.assertTrue(fixture.get(new BlockPos(19, 69 + step, 20 - step)).is(Blocks.STONE_BRICK_STAIRS),
+                    "The next flight links to the top floor");
+        }
+        for (int y : new int[]{69, 74}) {
+            h.assertTrue(fixture.get(new BlockPos(13, y, 5)).getBlock() instanceof net.minecraft.world.level.block.BedBlock,
+                    "The upper rooms have complete beds");
+            h.assertTrue(fixture.get(new BlockPos(18, y, 2)).is(Blocks.BOOKSHELF), "The upper-floor study is furnished");
+        }
+        h.succeed();
+    }
+
+    @GameTest public void anExploredMonumentGetsFacadeDepthWithoutReplacingTheApproach(GameTestHelper h) {
+        var level = city(h);
+        var museum = NapoliAtlas.find("mann");
+        int y = NapoliExpansion.height(museum.x(), museum.z()) + 1;
+        var pediment = new BlockPos(museum.x(), y + 27, museum.z() + 20);
+        var chunk = level.getChunkAt(pediment);
+        chunk.removeAttached(NapoliExpansion.ARCHITECTURE);
+        ((AttachmentTarget) chunk).setAttached(NapoliExpansion.GENERATED, NapoliExpansion.REVISION);
+        h.assertTrue(NapoliExpansion.upgradeArchitecture(level, chunk), "An established atlas chunk receives the architectural pass");
+        h.assertTrue(level.getBlockState(pediment).is(Blocks.SMOOTH_QUARTZ_SLAB), "The MANN facade has a larger central pediment");
+        h.assertTrue(!NapoliExpansion.upgradeArchitecture(level, chunk), "The architectural pass runs once");
+        var entry = museum.arrival();
+        NapoliExpansion.generate(level, level.getChunkAt(entry));
+        h.assertTrue(level.isEmptyBlock(entry) && !level.isEmptyBlock(entry.below()), "The atlas arrival is still walkable");
+        h.succeed();
+    }
+
     @GameTest public void cityAreaIsExactlyTenTimesThePreviousEnvelope(GameTestHelper h){
         h.assertTrue(NapoliAtlas.EXPANDED.area()==NapoliAtlas.ORIGINAL.area()*10,"The explorable city envelope expands from 557,056 to 5,570,560 square blocks");
         h.assertTrue(NapoliAtlas.EXPANDED.contains(NapoliAtlas.ORIGINAL.minX(),NapoliAtlas.ORIGINAL.minZ())&&NapoliAtlas.EXPANDED.contains(NapoliAtlas.ORIGINAL.maxX()-1,NapoliAtlas.ORIGINAL.maxZ()-1),"The entire previous city remains inside the expanded map");h.succeed();

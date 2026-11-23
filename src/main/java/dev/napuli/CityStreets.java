@@ -95,7 +95,10 @@ final class CityStreets {
         for(var move:props)if(replaceable(chunk.getBlockState(move.position()))&&!CityProperty.playerPlaced(city,move.position()))put(city,chunk,move.position(),move.state());
         for(var move:signs){put(city,chunk,move.position(),move.state());if(chunk.getBlockEntity(move.position()) instanceof SignBlockEntity sign){sign.setText(move.front(),SignTextSlot.FRONT);sign.setText(move.back(),SignTextSlot.BACK);sign.setChanged();}}
         ((AttachmentTarget)chunk).setAttached(GRADED,REVISION);
-        for(var entity:city.getEntitiesOfClass(Entity.class,new AABB(cp.getMinBlockX(),60,cp.getMinBlockZ(),cp.getMaxBlockX()+1,130,cp.getMaxBlockZ()+1),CityStreets::traveler))settle(city,chunk,entity);
+        // Connected players can arrive before a remote chunk's entity sections become visible.
+        // Use the level's player list so terrain repairs also protect them during that transition.
+        for(var player:city.players())settle(city,chunk,player);
+        for(var entity:city.getEntitiesOfClass(Entity.class,new AABB(cp.getMinBlockX(),60,cp.getMinBlockZ(),cp.getMaxBlockX()+1,130,cp.getMaxBlockZ()+1),e->traveler(e)&&!(e instanceof ServerPlayer)))settle(city,chunk,entity);
         return changed;
     }
     private static void settle(ServerLevel city,LevelChunk chunk,Entity entity){

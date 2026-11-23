@@ -56,8 +56,9 @@ public final class StreetGameTest {
     @GameTest public void standingPlayersAreMovedOntoTheRepairedRoad(GameTestHelper h){
         var city=h.getLevel();var cliff=cliff();var chunks=legacy(city,cliff);var at=NapoliExpansion.height(cliff.getX(),cliff.getZ())==NapoliExpansion.legacyHeight(cliff.getX(),cliff.getZ())?cliff.south():cliff;
         HousingCapacityGameTest.withPlayers(h,1,players->{var player=players.getFirst();player.setPos(at.getX()+.5,NapoliExpansion.legacyHeight(at.getX(),at.getZ())+1,at.getZ()+.5);float health=player.getHealth();
+            h.assertTrue(city.players().contains(player),"The connected player is registered even before remote entity sections become active");
             for(var chunk:chunks)CityStreets.fit(city,chunk);
-            h.assertTrue(Math.abs(player.getY()-NapoliExpansion.height(at.getX(),at.getZ())-1)<.05&&player.getHealth()==health,"A standing player is neither buried by fill nor dropped from the old terrace during the upgrade");
+            h.assertTrue(Math.abs(player.getY()-NapoliExpansion.height(at.getX(),at.getZ())-1)<.05&&player.getHealth()==health,"A standing player is neither buried by fill nor dropped from the old terrace during the upgrade: actual="+player.getY()+", expected="+(NapoliExpansion.height(at.getX(),at.getZ())+1)+", health="+player.getHealth());
         });h.succeed();
     }
     static BlockPos cliff(){

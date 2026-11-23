@@ -163,6 +163,7 @@ final class NapoliCivicLife {
             if (server.getTickCount() % 20 != 0) return;
             var city = server.getLevel(NapoliMap.LEVEL);
             if (city == null || city.getAttached(CENSUS) == null) return;
+            CityCalendar.sync(city);
             advance(city, NapoliBroadcast.day(city));
             CitySimulation.update(city);
             if (!city.players().isEmpty()) materializeNearby(city);
@@ -200,11 +201,12 @@ final class NapoliCivicLife {
         for(int n=0;people.size()<CityLifeConfig.settings.population;n++) {
             UUID id=identity("population:"+n);if(people.stream().anyMatch(c->c.id().equals(id)))continue;
             int member=n%4,group=n/4; boolean woman=member==0||member==3;
-            int age=member<2?26+group%20:member==2?6:12;
+            boolean generations=group%7==2;
+            int age=generations?(member<2?70+member*3:35+(member-2)*5):member<2?26+group%20:member==2?6:12;
             String name=(woman?women:men)[(group+member)%8]+" "+surnames[group%surnames.length];
             String partner=member<2?identity("population:"+(member==0?n+1:n-1)).toString():"";
             String parents=member>=2?identity("population:"+(n-member)).toString():"";
-            int job=member<2?Math.floorMod(group*3+member+8,Job.values().length):-1;
+            int job=age>=ADULT_AGE&&age<CityLifeConfig.settings.retirementAge?Math.floorMod(group*3+member+8,Job.values().length):-1;
             if(group==0&&member==0)job=Job.INFLUENCER.ordinal();
             if(group==0&&member==1)job=Job.AIR_SELLER.ordinal();
             people.add(new Citizen(id,name,woman,day-(long)age*CityLifeConfig.settings.daysPerYear,member<2?8:0,job,partner,"public_"+group%28,parents,false));
@@ -275,6 +277,8 @@ final class NapoliCivicLife {
                 Citizen second = people.get(other.id());
                 if (second.woman() || !second.partner().isEmpty() || second.age(day) < ADULT_AGE || Math.abs(second.age(day)-first.age(day))>20
                         || related(city,first, second, people)) continue;
+                if(CitySimulation.life(city,first.id()).relations().getOrDefault(second.id().toString(),0)<60
+                        ||CitySimulation.life(city,second.id()).relations().getOrDefault(first.id().toString(),0)<60)continue;
                 String address=!first.property().isEmpty()&&!first.property().startsWith("public_")?first.property():second.property();
                 people.put(first.id(), first.withHousehold(second.id().toString(), address, first.balance()));
                 people.put(second.id(), second.withHousehold(first.id().toString(), address, second.balance()));
@@ -362,7 +366,9 @@ final class NapoliCivicLife {
         for (int i = 0; i < updated.size(); i++) {
             Citizen c = updated.get(i);
             if (c.spawned()) continue;
-            BlockPos spawn = CitySimulation.location(city,c);
+            BlockPos desired = CitySimulation.location(city,c);
+            var targetHome=CityLivingHomes.all().stream().filter(h->h.contains(desired)).findFirst().orElse(null);
+            BlockPos spawn = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.entrance().south():desired;
             if (!NapoliResidentHomes.walkable(city, spawn)
                     || !HousingCapacity.canEnter(city,spawn,c.id())
                     || city.players().stream().noneMatch(p -> spawn.distToCenterSqr(p.position()) < 64 * 64)) continue;

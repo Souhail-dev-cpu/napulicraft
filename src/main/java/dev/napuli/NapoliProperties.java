@@ -104,11 +104,11 @@ final class NapoliProperties {
         if (player.isSpectator()) return;
         if (!owns(player, house) && HouseGuests.invited(player.level(), house.id(), player.getUUID())) {
             show(player, Component.literal(house.address()), Component.translatable("napuli.guest.welcome"),
-                    List.of(button(Component.translatable("napuli.property.go"), "/casa vai " + house.id())));
+                    List.of(button(Component.translatable("napuli.property.go"), "/casa vai " + house.id()),CitySocial.button("Ritira la chiave","/casa chiave "+house.id())));
             return;
         }
         UUID owner = owner(player.level(), house);
-        if (owner != null && !owns(player,house)) { say(player, "sold"); return; }
+        if (owner != null && !owns(player,house)) { CityArrivals.visitorMenu(player,house);return; }
         boolean owned = owns(player,house);
         var body = owned ? Component.translatable("napuli.property.mine")
                 : Component.translatable("napuli.property.price", house.price(), NapoliStreet.cash(player));
@@ -121,6 +121,7 @@ final class NapoliProperties {
         } else {
             actions.add(button(Component.literal("Paga rate e bollette"),"/casa paga "+house.id()));
             actions.add(button(Component.translatable("napuli.guest.title"), "/casa ospiti " + house.id()));
+            actions.add(CitySocial.button("Ritira la chiave","/casa chiave "+house.id()));
         }
         show(player, Component.literal(house.address()), body, actions);
     }

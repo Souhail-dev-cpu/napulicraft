@@ -20,7 +20,7 @@ final class CityLivingHomes {
             .mapToObj(i->new NapoliMergellina.House("public_"+i,"Corte dei residenti "+(i+1),-534+i%7*27,70+i/7*35,0,Blocks.SMOOTH_SANDSTONE,17,18,2,100+i)).toList();
     static List<NapoliMergellina.House> all() { return java.util.stream.Stream.concat(NapoliMergellina.PROPERTIES.stream(),PUBLIC_HOMES.stream()).toList(); }
     enum Room { KITCHEN, BATHROOM, LIVING, DOUBLE_BEDROOM, CHILD_BEDROOM, STUDY, LAUNDRY, BALCONY }
-    enum Furniture { STOVE, FRIDGE, SINK, SHOWER, TOILET, SOFA, TV, BED, WARDROBE, DESK, WASHER }
+    enum Furniture { STOVE, FRIDGE, SINK, SHOWER, TOILET, SOFA, TV, BED, WARDROBE, DESK, WASHER, TABLE }
     record UsePoint(Room room, Furniture furniture, BlockPos block, BlockPos stand) {}
     static List<UsePoint> points(NapoliMergellina.House h) {
         int x = h.x(), z = h.z(), upstairs = h.style() >= 0 ? 69 : 68;
@@ -120,6 +120,7 @@ final class CityLivingHomes {
                 case SOFA -> Blocks.SPRUCE_STAIRS;
                 case TV -> block("black_concrete");
                 case DESK -> Blocks.CRAFTING_TABLE;
+                case TABLE -> Blocks.OAK_FENCE;
                 case WASHER -> Blocks.DISPENSER;
                 case SHOWER,BED -> Blocks.AIR;
             };

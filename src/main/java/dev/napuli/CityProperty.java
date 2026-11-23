@@ -47,6 +47,9 @@ public final class CityProperty {
         if (level.dimension() != NapoliMap.LEVEL) return true;
         return NapoliMergellina.PROPERTIES.stream().noneMatch(h -> h.contains(pos) && !NapoliProperties.owns(player, h));
     }
+    static boolean storageAllowed(ServerPlayer player,BlockPos pos){
+        return NapoliMergellina.PROPERTIES.stream().anyMatch(h->h.contains(pos)&&NapoliProperties.hasAccess(player,h));
+    }
     static void forget(ServerLevel level, BlockPos pos) {
         var positions = level.getAttachedOrElse(PLACED, Set.of());
         if (!positions.contains(pos.asLong())) return;

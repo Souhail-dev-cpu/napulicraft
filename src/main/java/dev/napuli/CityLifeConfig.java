@@ -17,7 +17,7 @@ final class CityLifeConfig {
         int population = 120;
         int maximumPopulation = 160;
         int needsIntervalTicks = 600;
-        int daysPerYear = 1;
+        int daysPerYear = 7;
         int retirementAge = 70;
         int maximumAge = 95;
         List<Fixture> fixtures = List.of(new Fixture());

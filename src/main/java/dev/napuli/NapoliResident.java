@@ -291,8 +291,10 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     public boolean hurtServer(ServerLevel level, net.minecraft.world.damagesource.DamageSource source, float amount) {
-        return (role().fighter() || role().civic() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
+        boolean hurt=(role().fighter() || role().civic() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
                 && super.hurtServer(level, source, amount);
+        if(hurt&&source.getEntity() instanceof ServerPlayer p&&NapoliCivicLife.profile(level,getUUID())!=null)CitySocial.harm(level,getUUID(),p.getUUID());
+        return hurt;
     }
 
     @Override

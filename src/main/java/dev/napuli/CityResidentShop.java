@@ -49,7 +49,7 @@ final class CityResidentShop {
     static boolean merchant(NapoliCivicLife.Citizen c) { return c.profession()==NapoliCivicLife.Job.AIR_SELLER||c.profession()==NapoliCivicLife.Job.INFLUENCER; }
     static void offer(ServerPlayer p,NapoliCivicLife.Citizen c) {
         if(!merchant(c))return;
-        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CityEvents.price(p.level(),water?12:4);
+        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CitySocial.price(p.level(),c.id(),p.getUUID(),CityEvents.price(p.level(),water?12:4));
         var title=Component.literal(water?"Acqua da bagno personale · influencer adulta":"Ampolle d'aria di Napoli");
         var action=new ActionButton(new CommonButtonData(Component.literal("Compra · "+cost+" €"),250),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/bottega "+c.id()))));
@@ -63,10 +63,12 @@ final class CityResidentShop {
         if(!CityProfessions.open(c.profession(),NapoliBroadcast.time(p.level()),NapoliBroadcast.day(p.level()))) {
             p.sendSystemMessage(Component.literal("La bottega è chiusa: ripassa durante il turno."));return 0;
         }
-        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CityEvents.price(p.level(),water?12:4);
+        if(CitySocial.bond(p.level(),id,p.getUUID()).trust()<15)return 0;
+        boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),water?12:4));
         if(NapoliStreet.cash(p)<cost)return 0;
         var stack=new ItemStack(water?WATER:AIR);if(!p.getInventory().add(stack))return 0;
         NapoliStreet.credit(p,-cost);
+        CitySocial.purchased(p.level(),id,p.getUUID());
         var census=NapoliCivicLife.census(p.level());
         p.level().setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()
                 .map(person->person.id().equals(id)?person.withMoney(Math.min(99999,person.balance()+cost),person.job()):person).toList()));return 1;

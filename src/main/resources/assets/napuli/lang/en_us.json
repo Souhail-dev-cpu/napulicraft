@@ -713,5 +713,11 @@
 	"napuli.guest.add": "Invite %s",
 	"napuli.guest.remove": "Revoke invitation for %s",
 	"napuli.guest.end": "End all hospitality",
-	"napuli.guest.welcome": "You are a guest of this home. You can enter and use its furniture even when its five regular places are occupied."
+	"napuli.guest.welcome": "You are a guest of this home. You can enter and use its furniture even when its five regular places are occupied.",
+	"napuli.family.fetch": "Taking ingredients from the fridge",
+	"napuli.family.prepare": "Preparing a meal",
+	"napuli.family.set_table": "Setting the table",
+	"napuli.family.clean": "Washing the dishes",
+	"napuli.family.wait": "Waiting for a place",
+	"napuli.family.commute": "On the way"
 }

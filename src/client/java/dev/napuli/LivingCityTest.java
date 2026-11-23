@@ -17,9 +17,15 @@ public final class LivingCityTest {
     private static volatile boolean ready,failed;
     private static int originalCash;
     private static java.util.UUID guest;
+    private static java.util.UUID diner;
+    private static volatile int dinnerStage=-2;
+    private static int photographed=-2;
+    private static long dinnerStarted;
+    private static volatile boolean mealFinished,testsDone;
     public static void register(){
         if(!Boolean.getBoolean("napuli.livingcitytest"))return;
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
+            if(testsDone){mc.stop();return;}
             if(failed){mc.stop();return;}
             if(mc.player==null){
                 if(mc.gui.screen() instanceof TitleScreen&&++titles==80){
@@ -66,9 +72,18 @@ public final class LivingCityTest {
                     var bottle=new net.minecraft.world.item.ItemStack(CityResidentShop.WATER,2);bottle.finishUsingItem(p.level(),p);
                     check(p.hasEffect(net.minecraft.world.effect.MobEffects.SPEED)&&p.getEffect(net.minecraft.world.effect.MobEffects.SPEED).getDuration()==600,"Influencer bottle grants exactly 30 seconds of speed");
                     check(p.hasEffect(net.minecraft.world.effect.MobEffects.HUNGER)&&bottle.getCount()==1,"The bottle is consumed and causes hunger");
-                    Napuli.LOGGER.info("[LIVINGCITYTEST] ALL PASSED");
                 });
-                if(step==550){shot(mc,"living-city-traffic");mc.stop();}
+                if(step==550)shot(mc,"living-city-traffic");
+                if(step==570)server(mc,LivingCityTest::startDomesticScene);
+                if(step>570&&step%40==0)server(mc,p->{
+                    var d=CityDomestic.dinner(p.level(),diner);dinnerStage=d.stage();
+                    var npc=p.level().getEntity(diner);
+                    Napuli.LOGGER.info("[LIVINGCITYTEST] dinner stage={} progress={} position={}",d.stage(),d.progress(),npc==null?"missing":npc.blockPosition());
+                    if(d.stage()==-1&&d.served()>=dinnerStarted){check(CitySimulation.life(p.level(),diner).needs().hunger()>10,"The observed meal restores hunger");mealFinished=true;}
+                });
+                if(step>610&&dinnerStage!=photographed&&dinnerStage>=0){photographed=dinnerStage;shot(mc,"living-city-meal-"+dinnerStage);}
+                if(step>1400&&mealFinished)server(mc,p->{var npc=p.level().getEntity(diner);if(npc!=null)npc.discard();Napuli.LOGGER.info("[LIVINGCITYTEST] ALL PASSED");testsDone=true;});
+                if(step==2100)throw new IllegalStateException("The resident did not complete a natural meal: stage="+dinnerStage);
             }catch(Throwable error){Napuli.LOGGER.error("[LIVINGCITYTEST] FAILED",error);failed=true;}
         });
     }
@@ -77,7 +92,7 @@ public final class LivingCityTest {
     }
     private static void guestPermissions(ServerPlayer player){
         var city=player.level();var house=NapoliMergellina.PROPERTIES.get(7);
-        var npc=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,player.blockPosition().east(2),0);npc.setNoAi(true);guest=npc.getUUID();
+        var npc=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,player.blockPosition().east(2),0);npc.setNoAi(true);npc.setCustomName(net.minecraft.network.chat.Component.literal("Marco Esposito"));guest=npc.getUUID();
         city.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack(),"casa invita "+house.id()+" "+guest);
         check(HouseGuests.invited(city,house.id(),guest),"The registered invitation command authorizes a nearby NPC");
         var owners=city.getAttachedOrElse(NapoliProperties.OWNERS,java.util.Map.of());
@@ -91,6 +106,7 @@ public final class LivingCityTest {
             var changedAccounts=new java.util.HashMap<>(accounts);changedAccounts.remove(house.id());city.setAttached(CityHousingFinance.ACCOUNTS,java.util.Map.copyOf(changedAccounts));
             HouseGuests.clear(city,house.id());check(HouseGuests.grant(city,house.id(),guest,player),"The temporary host can invite the player");
             check(NapoliProperties.hasAccess(player,house)&&!CityProperty.mayBuild(city,player,target),"A guest has access without construction rights");
+            check(CityProperty.storageAllowed(player,CityLivingHomes.use(house,CityLivingHomes.Furniture.FRIDGE).block()),"Invited guests can use the fridge without a theft accusation");
             city.setBlock(target,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2);
             city.setBlock(target.below(),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),2);
             var item=(net.minecraft.world.item.BlockItem)stack.getItem();
@@ -104,6 +120,42 @@ public final class LivingCityTest {
             city.setBlock(target,oldTarget,2);city.setBlock(target.below(),oldSupport,2);
         }
         check(HouseGuests.menu(player,house.id())==1,"The mortgage owner can manage invitations");
+    }
+    private static void startDomesticScene(ServerPlayer p){
+        var city=p.level();var h=NapoliMergellina.PROPERTIES.get(7);
+        // Delivery settlement uses real inventory and cannot be replayed for a second payment.
+        var stocks=city.getAttachedOrElse(CityEconomy.STOCKS,java.util.Map.of());
+        try{
+            CityEconomy.put(city,"forno",new CityEconomy.Stock(0,0,0,0,0));
+            p.teleportTo(city,CityEconomy.DEPOT.getX()+.5,64,CityEconomy.DEPOT.getZ()+.5,Set.of(),0,0,true);
+            check(CityEconomy.delivery(p,"forno",false)==1,"A player can accept a supply job at the depot");
+            p.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WHEAT,8));
+            var destination=CityEconomy.site("forno");p.teleportTo(city,destination.getX()+.5,64,destination.getZ()+.5,Set.of(),0,0,true);
+            int cash=NapoliStreet.cash(p);check(CityEconomy.delivery(p,"forno",true)==1&&NapoliStreet.cash(p)==cash+12,"A completed delivery pays once and supplies the shop");
+            check(CityEconomy.stock(city,"forno").grain()==8&&CityEconomy.delivery(p,"forno",true)==0&&NapoliStreet.cash(p)==cash+12,"Replaying delivery completion cannot create money or duplicate supplies");
+        }finally{city.setAttached(CityEconomy.STOCKS,stocks);}
+        p.teleportTo(city,h.entrance().getX()+.5,64,h.entrance().getZ()+1.5,Set.of(),180,0,true);
+        check(CityArrivals.key(p,h.id())==1,"An owner can collect a physical house key");
+        net.minecraft.world.item.ItemStack key=net.minecraft.world.item.ItemStack.EMPTY;
+        for(int i=0;i<p.getInventory().getContainerSize();i++)if(CityArrivals.keyHome(p.getInventory().getItem(i)).equals(h.id()))key=p.getInventory().getItem(i).copy();
+        check(!key.isEmpty(),"The key identifies the home");
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,key);
+        var door=h.entrance().north();boolean wasOpen=city.getBlockState(door).getValue(net.minecraft.world.level.block.DoorBlock.OPEN);
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.invoker().interact(p,city,net.minecraft.world.InteractionHand.MAIN_HAND);
+        check(city.getBlockState(door).getValue(net.minecraft.world.level.block.DoorBlock.OPEN)!=wasOpen,"An authorized key opens the actual door");
+        var owners=city.getAttachedOrElse(NapoliProperties.OWNERS,java.util.Map.of());var accounts=city.getAttachedOrElse(CityHousingFinance.ACCOUNTS,java.util.Map.of());
+        try{
+            city.setAttached(NapoliProperties.OWNERS,java.util.Map.of(h.id(),java.util.UUID.randomUUID()));city.setAttached(CityHousingFinance.ACCOUNTS,java.util.Map.of());
+            boolean open=city.getBlockState(door).getValue(net.minecraft.world.level.block.DoorBlock.OPEN);
+            check(net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.invoker().interact(p,city,net.minecraft.world.InteractionHand.MAIN_HAND)==net.minecraft.world.InteractionResult.FAIL&&city.getBlockState(door).getValue(net.minecraft.world.level.block.DoorBlock.OPEN)==open,"Keeping or copying a key does not preserve revoked permission");
+            check(CityArrivals.ring(p,h.id())==1,"An unauthorized visitor can ring from the doorstep");
+        }finally{city.setAttached(NapoliProperties.OWNERS,owners);city.setAttached(CityHousingFinance.ACCOUNTS,accounts);}
+        city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(),"time set 10550");
+        var npc=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,h.inside(),0);diner=npc.getUUID();npc.setCustomName(net.minecraft.network.chat.Component.literal("Ciro Esposito"));
+        long day=NapoliBroadcast.day(city);var c=new NapoliCivicLife.Citizen(diner,"Ciro Esposito",false,day-30L*CityLifeConfig.settings.daysPerYear,100,-1,"",h.id(),"",true);
+        var census=NapoliCivicLife.census(city);var people=new java.util.ArrayList<>(census.people());people.add(c);city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),java.util.List.copyOf(people)));
+        var l=CitySimulation.fresh(diner);CitySimulation.put(city,diner,l.withNeeds(new CitySimulation.Needs(10,80,80,80,80,80),3,city.getGameTime(),0,0));
+        dinnerStarted=city.getGameTime();p.setGameMode(GameType.SPECTATOR);p.teleportTo(city,h.x()+5.5,64,h.z()+10.5,Set.of(),180,8,true);
     }
     private static void shot(Minecraft mc,String name){Screenshot.grab(mc.gameDirectory,name+".png",mc.gameRenderer.mainRenderTarget(),1,m->Napuli.LOGGER.info("[LIVINGCITYTEST] screenshot {}",name));}
     private static void check(boolean value,String message){if(!value)throw new IllegalStateException(message);}

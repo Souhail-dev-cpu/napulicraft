@@ -36,6 +36,7 @@ public final class KitchenGameTest {
         var initialOwners = level.removeAttached(NapoliProperties.OWNERS);
         var initialLife = level.removeAttached(CitySimulation.LIFE);
         var initialAccounts = level.removeAttached(CityHousingFinance.ACCOUNTS);
+        var initialStocks = level.removeAttached(CityEconomy.STOCKS);
         try {
             verifyCivicLife(helper, level);
         } finally {
@@ -47,11 +48,14 @@ public final class KitchenGameTest {
             else level.setAttached(CitySimulation.LIFE, initialLife);
             if (initialAccounts == null) level.removeAttached(CityHousingFinance.ACCOUNTS);
             else level.setAttached(CityHousingFinance.ACCOUNTS, initialAccounts);
+            if(initialStocks==null)level.removeAttached(CityEconomy.STOCKS);else level.setAttached(CityEconomy.STOCKS,initialStocks);
         }
     }
 
     private static void verifyCivicLife(GameTestHelper helper, net.minecraft.server.level.ServerLevel level) {
         NapoliCivicLife.seed(level);
+        var seeded=NapoliCivicLife.census(level);
+        level.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(seeded.day(),seeded.people().stream().map(p->p.withHousehold("","public_27",p.balance())).toList()));
         long start = NapoliCivicLife.census(level).day();
         var offered = NapoliMergellina.PROPERTIES.getFirst();
         UUID previousOwner = UUID.randomUUID();
@@ -59,10 +63,10 @@ public final class KitchenGameTest {
         NapoliCivicLife.advance(level, start + 1);
         var first = NapoliCivicLife.census(level);
         helper.assertTrue(first.people().getFirst().balance() == 17, "Baker receives daily wages, net of household expenses");
-        helper.assertTrue(!first.people().getFirst().partner().isEmpty(), "Adults form a couple");
+        helper.assertTrue(first.people().getFirst().partner().isEmpty(), "Strangers do not form a couple on their first day");
         NapoliCivicLife.advance(level, start + 1);
         helper.assertTrue(NapoliCivicLife.census(level).equals(first), "A repeated day cannot pay twice");
-        NapoliCivicLife.advance(level, start + 10);
+        NapoliCivicLife.advance(level, start + 24);
         var settled = NapoliCivicLife.census(level);
         var child = settled.people().stream().filter(c -> !c.parents().isEmpty()).findFirst().orElseThrow();
         helper.assertTrue(child.age(settled.day()) < NapoliCivicLife.ADULT_AGE && child.profession() == null, "A child is born after purchase and has no job");
@@ -72,7 +76,8 @@ public final class KitchenGameTest {
         var encoded = NapoliCivicLife.Census.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, settled).getOrThrow();
         helper.assertTrue(NapoliCivicLife.Census.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, encoded).getOrThrow().equals(settled),
                 "Census preserves family, home and money across serialization");
-        NapoliCivicLife.advance(level, child.birth() + NapoliCivicLife.ADULT_AGE + 1);
+        long grownDay=child.birth()+(long)NapoliCivicLife.ADULT_AGE*CityLifeConfig.settings.daysPerYear+1;
+        while(NapoliCivicLife.census(level).day()<grownDay)NapoliCivicLife.advance(level,grownDay);
         var grown = NapoliCivicLife.profile(level, child.id());
         helper.assertTrue(grown.profession() != null && grown.balance() > 0, "The same child grows up and earns a wage");
         helper.succeed();

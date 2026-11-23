@@ -58,16 +58,22 @@ public final class CityVehicle extends PathfinderMob {
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(server->{
             if(server.getTickCount()%200!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null||city.players().isEmpty())return;
-            for(int kind=0;kind<3;kind++){
-                var id=java.util.UUID.nameUUIDFromBytes(("napuli:city_vehicle:"+kind).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                var start=new BlockPos(kind==2?-345:kind==1?-337:-341,64,kind==0?-170:kind==1?-50:130);
+            for(int slot=0;slot<5;slot++){
+                int kind=slot<3?slot:0;
+                var id=java.util.UUID.nameUUIDFromBytes(("napuli:city_vehicle:"+slot).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                if(slot>=3&&!CityAtmosphere.rush(NapoliBroadcast.time(city))){
+                    var parked=city.getEntity(id);if(parked!=null&&parked.getPassengers().isEmpty()){
+                        parked.discard();var updated=new java.util.HashSet<>(city.getAttachedOrElse(SPAWNED,java.util.Set.of()));updated.remove(slot);city.setAttached(SPAWNED,java.util.Set.copyOf(updated));
+                    }continue;
+                }
+                var start=new BlockPos(kind==2?-345:kind==1?-337:-341,64,slot>=3?slot==3?-80:40:kind==0?-170:kind==1?-50:130);
                 if(!city.hasChunkAt(start)||city.players().stream().noneMatch(p->start.distToCenterSqr(p.position())<96*96)||city.getEntity(id)!=null)continue;
                 // Chunk ownership prevents respawning an already persisted but unloaded route vehicle.
-                var marker=city.getAttachedOrElse(SPAWNED,java.util.Set.of());if(marker.contains(kind))continue;
+                var marker=city.getAttachedOrElse(SPAWNED,java.util.Set.of());if(marker.contains(slot))continue;
                 var v=Napuli.CITY_VEHICLE.create(city,EntitySpawnReason.EVENT);if(v==null)continue;
                 v.setUUID(id);v.entityData.set(KIND,kind);v.waypoint=kind==1?3:1;v.snapTo(start.getX(),64,start.getZ(),0,0);
                 v.setCustomName(Component.literal(kind==0?"Auto di quartiere":kind==1?"Bus · Linea Partenope":"Tram · Rione Partenope"));city.addFreshEntity(v);
-                var updated=new java.util.HashSet<>(marker);updated.add(kind);city.setAttached(SPAWNED,java.util.Set.copyOf(updated));
+                var updated=new java.util.HashSet<>(marker);updated.add(slot);city.setAttached(SPAWNED,java.util.Set.copyOf(updated));
             }
         });
     }

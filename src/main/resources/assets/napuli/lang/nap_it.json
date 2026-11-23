@@ -927,5 +927,11 @@
 	"napuli.guest.add": "Invita %s",
 	"napuli.guest.remove": "Revoca invito di %s",
 	"napuli.guest.end": "Concludi tutte le ospitalità",
-	"napuli.guest.welcome": "Sei ospite di questa casa. Puoi entrare e usare gli arredi anche quando i cinque posti ordinari sono occupati."
+	"napuli.guest.welcome": "Sei ospite di questa casa. Puoi entrare e usare gli arredi anche quando i cinque posti ordinari sono occupati.",
+	"napuli.family.fetch": "Prende gli ingredienti dal frigo",
+	"napuli.family.prepare": "Prepara il pasto",
+	"napuli.family.set_table": "Apparecchia la tavola",
+	"napuli.family.clean": "Lava i piatti",
+	"napuli.family.wait": "Aspetta che si liberi un posto",
+	"napuli.family.commute": "È in tragitto"
 }

@@ -191,6 +191,13 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 				leftArm.xRot = -0.50f; rightArm.xRot = -0.50f;
 			}
 		}
+		if(state.activity==dev.napuli.NapoliHouseholds.Activity.PREPARE||state.activity==dev.napuli.NapoliHouseholds.Activity.COOK||state.activity==dev.napuli.NapoliHouseholds.Activity.CLEAN){
+			float wave=(float)Math.sin(state.ageInTicks*.4f)*.2f;rightArm.xRot=-1.0f+wave;leftArm.xRot=-1.0f-wave;
+		}else if(state.activity==dev.napuli.NapoliHouseholds.Activity.EAT){
+			rightArm.xRot=-1.6f+(float)Math.sin(state.ageInTicks*.3f)*.15f;
+		}else if(state.activity==dev.napuli.NapoliHouseholds.Activity.FETCH||state.activity==dev.napuli.NapoliHouseholds.Activity.SET_TABLE){
+			rightArm.xRot=-1.1f;leftArm.xRot=-.7f;
+		}
 	}
 
 	static final class State extends HumanoidRenderState {

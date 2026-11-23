@@ -20,6 +20,7 @@ public final class CityLifeGameTest {
             helper.assertTrue(NapoliCivicLife.census(level).equals(census),"Reapplying migration cannot duplicate residents");
             helper.assertTrue(census.people().stream().anyMatch(p->p.profession()==NapoliCivicLife.Job.INFLUENCER&&p.woman()&&p.age(census.day())>=18),"Adult female influencer exists");
             helper.assertTrue(census.people().stream().anyMatch(p->p.profession()==NapoliCivicLife.Job.AIR_SELLER),"Souvenir merchant exists");
+            helper.assertTrue(census.people().stream().anyMatch(p->p.age(census.day())>=70)&&census.people().stream().anyMatch(p->p.age(census.day())<18),"The initial neighborhood includes elders as well as children");
             var state=CitySimulation.fresh(UUID.randomUUID());
             var encoded=CitySimulation.Life.CODEC.encodeStart(JsonOps.INSTANCE,state).getOrThrow();
             helper.assertTrue(CitySimulation.Life.CODEC.parse(JsonOps.INSTANCE,encoded).getOrThrow().equals(state),"Needs, inventory, reputation and memories round-trip");
@@ -104,9 +105,9 @@ public final class CityLifeGameTest {
         try{
             long day=NapoliBroadcast.day(city);UUID mother=UUID.randomUUID(),father=UUID.randomUUID(),child=UUID.randomUUID();var house=NapoliMergellina.PROPERTIES.getFirst();
             var people=new LinkedHashMap<UUID,NapoliCivicLife.Citizen>();
-            people.put(mother,new NapoliCivicLife.Citizen(mother,"Madre",true,day-30,10,-1,father.toString(),house.id(),"",false));
-            people.put(father,new NapoliCivicLife.Citizen(father,"Padre",false,day-30,20,-1,mother.toString(),house.id(),"",false));
-            people.put(child,new NapoliCivicLife.Citizen(child,"Figlio",false,day-5,5,-1,"",house.id(),mother.toString(),false));
+            people.put(mother,new NapoliCivicLife.Citizen(mother,"Madre",true,day-30L*CityLifeConfig.settings.daysPerYear,10,-1,father.toString(),house.id(),"",false));
+            people.put(father,new NapoliCivicLife.Citizen(father,"Padre",false,day-30L*CityLifeConfig.settings.daysPerYear,20,-1,mother.toString(),house.id(),"",false));
+            people.put(child,new NapoliCivicLife.Citizen(child,"Figlio",false,day-5L*CityLifeConfig.settings.daysPerYear,5,-1,"",house.id(),mother.toString(),false));
             CitySimulation.parentage(city,child,mother,father);NapoliProperties.claimForResident(city,house,mother);
             CityHousingFinance.mortgageForResident(city,house,mother,day,10);
             var life=CitySimulation.life(city,mother);CitySimulation.put(city,mother,life.career(0,50,0,0,0,List.of()));

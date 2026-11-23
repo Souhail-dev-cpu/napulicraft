@@ -85,7 +85,7 @@ public final class Carabinieri {
 		// opening the residents' chests and barrels = stealing
 		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
 			if (player instanceof ServerPlayer p && level.dimension() == NapoliMap.LEVEL && !p.isCreative()
-					&& level.getBlockEntity(hit.getBlockPos()) instanceof BaseContainerBlockEntity)
+					&& level.getBlockEntity(hit.getBlockPos()) instanceof BaseContainerBlockEntity&&!CityProperty.storageAllowed(p,hit.getBlockPos()))
 				crime(p, Crime.THEFT);
 			return InteractionResult.PASS;
 		});

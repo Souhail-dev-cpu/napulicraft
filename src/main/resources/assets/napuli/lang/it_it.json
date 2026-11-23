@@ -774,5 +774,18 @@
 	"napuli.guest.add": "Invita %s",
 	"napuli.guest.remove": "Revoca invito di %s",
 	"napuli.guest.end": "Concludi tutte le ospitalità",
-	"napuli.guest.welcome": "Sei ospite di questa casa. Puoi entrare e usare gli arredi anche quando i cinque posti ordinari sono occupati."
+	"napuli.guest.welcome": "Sei ospite di questa casa. Puoi entrare e usare gli arredi anche quando i cinque posti ordinari sono occupati.",
+  "key.category.napuli.football": "Calcio",
+  "napuli.football.hud.title": "Calcio",
+  "napuli.football.intercept_missed": "Avvicinati e guarda verso il pallone.",
+  "key.napuli.football.pass": "Passa",
+  "napuli.football.hud.pass": "%s · Passa",
+  "key.napuli.football.shoot": "Tira",
+  "napuli.football.hud.shoot": "%s · Tira",
+  "key.napuli.football.request": "Chiedi palla",
+  "napuli.football.hud.request": "%s · Chiedi palla",
+  "key.napuli.football.intercept": "Intercetta",
+  "napuli.football.hud.intercept": "%s · Intercetta",
+  "napuli.football.clerk": "Ciro · Addetto al campo",
+  "napuli.football.trainer": "Mimmo · Preparatore"
 }

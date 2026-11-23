@@ -33,6 +33,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -42,11 +44,11 @@ import net.minecraft.world.phys.Vec3;
 public final class FootballPractice {
     private static final int PLAYER_SLOT = 4, MATCH_TICKS = 20 * 150;
     private static final String ACTOR = "napuli_practice_actor", BALL = "napuli_practice_ball";
-    private static final AABB ARENA = new AABB(360, 62, 5, 412, 74, 42);
+    private static final AABB ARENA = new AABB(358, 62, 2, FootballGround.MAX_X + 6, 79, FootballGround.MAX_Z + 6);
     private static final String[] NAMES = {"Russo", "Greco", "Marino", "Esposito", "Vitale",
             "Riva", "Serra", "Costa", "Leone", "Barbieri"};
-    private static final double[] DEPTH = {2, 10, 16, 16, 19};
-    private static final int[] WIDTH = {0, 0, -7, 7, 0};
+    private static final double[] DEPTH = {2, 16, 24, 24, 33};
+    private static final int[] WIDTH = {0, 0, -13, 13, 0};
     private static final WeakHashMap<ServerLevel, Game> GAMES = new WeakHashMap<>();
     private static final AttachmentType<Career> CAREER = AttachmentRegistry.<Career>builder()
             .persistent(Career.CODEC).copyOnDeath().buildAndRegister(Napuli.id("football_career"));
@@ -78,12 +80,15 @@ public final class FootballPractice {
 
     static void register() {
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballMenu.TYPE, FootballMenu.CODEC);
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballControls.TYPE, FootballControls.CODEC);
         CommandRegistrationCallback.EVENT.register((dispatcher, context, kind) -> dispatcher.register(
                 Commands.literal("calcio").executes(c -> profile(c.getSource().getPlayerOrException()))
                         .then(Commands.literal("guarda").executes(c -> enter(c.getSource().getPlayerOrException(), false)))
                         .then(Commands.literal("gioca").executes(c -> enter(c.getSource().getPlayerOrException(), true)))
                         .then(Commands.literal("esci").executes(c -> exit(c.getSource().getPlayerOrException())))
                         .then(Commands.literal("torna").executes(c -> returnToEntry(c.getSource().getPlayerOrException()))).then(kickCommand("passa", false)).then(kickCommand("tira", true))
+                        .then(Commands.literal("chiedi").executes(c -> offBall(c.getSource().getPlayerOrException(), false)))
+                        .then(Commands.literal("intercetta").executes(c -> offBall(c.getSource().getPlayerOrException(), true)))
                         .then(Commands.literal("palestra").executes(c -> gym(c.getSource().getPlayerOrException())))));
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> GAMES.entrySet().removeIf(entry -> {
             if (entry.getKey().getServer() != server) return false;
@@ -100,16 +105,23 @@ public final class FootballPractice {
             if (level.dimension() != NapoliMap.LEVEL || hand != InteractionHand.MAIN_HAND || player.isSpectator())
                 return InteractionResult.PASS;
             BlockPos pos = hit.getBlockPos();
-            if (pos.equals(FootballGround.RECEPTION) || pos.equals(FootballGround.GYM)) {
-                if (player instanceof ServerPlayer server && !Carabinieri.isJailed(server)) menu(server);
-                return InteractionResult.SUCCESS;
-            }
             if (!(player instanceof ServerPlayer server) || !player.getMainHandItem().isEmpty()
                     || pos.getY() != 63 || !inside(Vec3.atCenterOf(pos))) return InteractionResult.PASS;
             Game game = GAMES.get(server.level());
             return game != null && game.playerKick(server, player.isShiftKeyDown())
                     ? InteractionResult.SUCCESS : InteractionResult.PASS;
         });
+    }
+
+    static boolean interact(NapoliResident npc, net.minecraft.world.entity.player.Player player) {
+        boolean trainer = npc.entityTags().contains(FootballFacilities.TRAINER_TAG);
+        if (!trainer && !npc.entityTags().contains(FootballFacilities.RECEPTION_TAG)) return false;
+        if (player instanceof ServerPlayer server && server.level().dimension() == NapoliMap.LEVEL
+                && !server.isSpectator() && server.distanceToSqr(npc) <= 36 && !Carabinieri.isJailed(server)) {
+            if (trainer) gym(server);
+            else menu(server);
+        }
+        return true;
     }
 
     private static void menu(ServerPlayer player) {
@@ -142,7 +154,7 @@ public final class FootballPractice {
     }
 
     private static boolean atGround(Vec3 pos) {
-        return pos.x >= 348 && pos.x <= 412 && pos.z >= -4 && pos.z <= 42;
+        return pos.x >= 348 && pos.x <= FootballGround.MAX_X + 6 && pos.z >= -4 && pos.z <= FootballGround.MAX_Z + 6;
     }
 
     private static int returnToEntry(ServerPlayer p) {
@@ -181,6 +193,15 @@ public final class FootballPractice {
             say(player, "no_ball");
             return 0;
         });
+    }
+
+    private static int offBall(ServerPlayer player, boolean intercept) {
+        Game game = GAMES.get(player.level());
+        if (game == null || !game.controls(player) || !inside(player.position()) || Carabinieri.isJailed(player)) {
+            say(player, "not_playing");
+            return 0;
+        }
+        return intercept ? game.tryInterception(player) : game.requestPass();
     }
 
     private static int enter(ServerPlayer player, boolean play) {
@@ -265,24 +286,35 @@ public final class FootballPractice {
 
     private static final class Game {
         final NapoliResident[] team = new NapoliResident[10];
-        final ItemEntity marker;
+        final Display.ItemDisplay marker;
+        final Vec3[] motion = new Vec3[team.length];
         java.util.UUID player;
         Vec3 ball = spot(PLAYER_SLOT).add(.55, 0, 0), velocity = Vec3.ZERO;
         int ticks, unattended, home, away, owner = -1, kicker = -1, pickupDelay, held, playerGoals;
-        int passes, shots, interceptions;
+        int passes, shots, interceptions, requestUntil, nextInterception;
         double playerKickDistance;
 
         Game(ServerLevel city) {
-            for (int x = 352; x <= 416; x += 16) for (int z = 0; z <= 48; z += 16)
+            for (int x = 352; x <= FootballGround.MAX_X + 6; x += 16)
+                for (int z = 0; z <= FootballGround.MAX_Z + 6; z += 16)
                 city.getChunkAt(new BlockPos(x, 64, z));
             for (var npc : city.getEntitiesOfClass(NapoliResident.class, ARENA, n -> n.entityTags().contains(ACTOR))) npc.discard();
             for (var item : city.getEntitiesOfClass(ItemEntity.class, ARENA, n -> n.entityTags().contains(BALL))) item.discard();
+            for (var display : city.getEntitiesOfClass(Display.ItemDisplay.class, ARENA, n -> n.entityTags().contains(BALL))) display.discard();
             for (int i = 0; i < team.length; i++) spawn(city, i);
-            marker = new ItemEntity(city, ball.x, 64.15, ball.z, new ItemStack(Items.SNOWBALL), 0, 0, 0);
+            marker = new Display.ItemDisplay(net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("item_display")), city);
+            ItemStack model = new ItemStack(Items.PAPER);
+            model.set(DataComponents.ITEM_MODEL, Napuli.id("pallone"));
+            marker.setItemStack(model);
+            marker.setItemTransform(ItemDisplayContext.FIXED);
+            marker.setPosRotInterpolationDuration(2);
+            marker.setWidth(1);
+            marker.setHeight(1);
+            marker.setShadowRadius(.32f);
+            marker.setPos(ball.x, 64.44, ball.z);
             marker.addTag(BALL);
             marker.setNoGravity(true);
             marker.setPermanentlyInvulnerable(true);
-            marker.setNeverPickUp();
             city.addFreshEntity(marker);
             setOwner(4);
         }
@@ -298,12 +330,15 @@ public final class FootballPractice {
             shirt.set(DataComponents.DYED_COLOR, new DyedItemColor(slot % 5 == 0 ? 0xe1a538 : slot < 5 ? 0x319bdb : 0xf4eeee));
             npc.setItemSlot(EquipmentSlot.CHEST, shirt);
             team[slot] = npc;
+            motion[slot] = Vec3.ZERO;
         }
 
         boolean controls(ServerPlayer viewer) { return viewer.getUUID().equals(player); }
 
         void substitute(ServerPlayer p) {
             player = p.getUUID();
+            requestUntil = 0;
+            nextInterception = ticks;
             Vec3 position = team[PLAYER_SLOT] == null ? spot(PLAYER_SLOT) : team[PLAYER_SLOT].position();
             if (team[PLAYER_SLOT] != null) team[PLAYER_SLOT].discard();
             team[PLAYER_SLOT] = null;
@@ -324,6 +359,26 @@ public final class FootballPractice {
         private Vec3 position(int index, ServerPlayer participant) {
             if (index == PLAYER_SLOT && participant != null) return participant.position();
             return team[index] == null ? spot(index) : team[index].position();
+        }
+
+        int requestPass() {
+            if (owner < 0 || owner >= PLAYER_SLOT || ticks < requestUntil) return 0;
+            requestUntil = ticks + 45;
+            return 1;
+        }
+
+        int tryInterception(ServerPlayer player) {
+            if (ticks < nextInterception || owner >= 0 && owner < 5 || kicker >= 0 && kicker < 5) return 0;
+            nextInterception = ticks + 16;
+            Vec3 toBall = flat(ball.subtract(player.position()));
+            if (toBall.lengthSqr() > 2.3 * 2.3 || Math.abs(player.getY() - ball.y) > 1.3
+                    || toBall.lengthSqr() > .16 && flat(player.getLookAngle()).normalize().dot(toBall.normalize()) < .35) {
+                say(player, "intercept_missed");
+                return 0;
+            }
+            interceptions++;
+            setOwner(PLAYER_SLOT);
+            return 1;
         }
 
         boolean playerKick(ServerPlayer p, boolean shoot) {
@@ -368,9 +423,15 @@ public final class FootballPractice {
             driveTeams(participant);
             playBall(participant);
             if (pickupDelay > 0) pickupDelay--;
-            marker.setPos(ball.x, 64.15, ball.z);
-            marker.setDeltaMovement(Vec3.ZERO);
+            marker.setPos(ball.x, 64.44, ball.z);
             if (ticks % 20 == 0) hud(city, participant);
+            if (participant != null && inside(participant.position()) && ticks % 5 == 0
+                    && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(participant, FootballControls.TYPE)) {
+                int situation = owner < 0 ? (kicker >= 0 && kicker < 5 ? FootballControls.TEAM_PASS : FootballControls.FREE)
+                        : owner == PLAYER_SLOT ? FootballControls.YOURS
+                        : owner < 5 ? FootballControls.TEAM : FootballControls.OPPONENT;
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(participant, new FootballControls(situation));
+            }
             return true;
         }
 
@@ -380,37 +441,62 @@ public final class FootballPractice {
         }
 
         private void driveTeams(ServerPlayer participant) {
-            int first = nearest(0, participant), second = nearest(5, participant);
+            Vec3 projected = ball.add(velocity.scale(7));
+            int homePress = nearest(0, projected, participant), awayPress = nearest(5, projected, participant);
             for (int slot = 0; slot < team.length; slot++) {
                 var npc = team[slot];
                 if (npc == null) continue;
+                int role = slot % 5, direction = slot < 5 ? 1 : -1;
+                boolean inPossession = owner >= 0 && (owner < 5) == (slot < 5);
                 Vec3 base = spot(slot), pos = npc.position(), target;
-                int sign = slot < 5 ? 1 : -1;
-                boolean goalkeeper = slot % 5 == 0;
-                if (slot == owner) target = new Vec3(pos.x + 5 * sign, 64, FootballGround.MID_Z + .5);
-                else if (goalkeeper) {
-                    double reach = (ball.x - base.x) * sign;
-                    target = reach >= 0 && reach < 5 && owner < 0 ? ball
-                            : new Vec3(base.x, 64, Math.clamp(ball.z, base.z - 2.4, base.z + 2.4));
-                } else if ((slot == first || slot == second) && (owner < 0 || (slot < 5) != (owner < 5))) target = ball;
-                else target = base.add((ball.x - FootballGround.MID_X) * .34, 0, (ball.z - FootballGround.MID_Z) * .30);
-                target = new Vec3(Math.clamp(target.x, FootballGround.MIN_X + 1, FootballGround.MAX_X),
-                        64, Math.clamp(target.z, FootballGround.MIN_Z + 1, FootballGround.MAX_Z));
-                Vec3 delta = target.subtract(pos);
-                double distance = delta.horizontalDistance();
-                if (distance > .08) {
-                    Vec3 move = flat(delta).scale(Math.min(slot == owner ? .16 : .23, distance) / distance);
-                    npc.snapTo(pos.x + move.x, 64, pos.z + move.z,
-                            (float) Math.toDegrees(Math.atan2(-move.x, move.z)), 0);
+                double speed = .17;
+                if (slot == owner) {
+                    // Carry into the available lane before looking to pass or shoot.
+                    int opponent = slot < 5 ? awayPress : homePress;
+                    Vec3 defender = position(opponent, participant);
+                    double lane = defender.distanceToSqr(pos) < 36 ? (pos.z < defender.z ? -4 : 4) : 0;
+                    target = pos.add(direction * 6, 0, lane);
+                    speed = .19;
+                } else if (role == 0) {
+                    double depth = (projected.x - base.x) * direction;
+                    target = owner < 0 && depth > -1 && depth < 7 && Math.abs(projected.z - base.z) < 6
+                            ? projected : base.add(direction * Math.clamp((ball.x - base.x) * direction * .07, 0, 4),
+                            0, Math.clamp((ball.z - base.z) * .23, -4, 4));
+                    speed = .21;
+                } else if (!inPossession && slot == (slot < 5 ? homePress : awayPress)) {
+                    target = projected;
+                    speed = .28;
+                } else {
+                    // Supporting players keep separate lanes on the ball; defenders slide across as a block.
+                    double advance = (ball.x - FootballGround.MID_X - .5) * (inPossession ? .42 : .31);
+                    double width = (base.z - FootballGround.MID_Z - .5) * (inPossession ? 1.15 : .70);
+                    double shift = (ball.z - FootballGround.MID_Z - .5) * (inPossession ? .17 : .40);
+                    target = new Vec3(base.x + advance + direction * (inPossession ? 5 : -4),
+                            64, FootballGround.MID_Z + .5 + width + shift);
+                }
+                target = new Vec3(Math.clamp(target.x, FootballGround.MIN_X + 1.5, FootballGround.MAX_X - .5),
+                        64, Math.clamp(target.z, FootballGround.MIN_Z + 1.5, FootballGround.MAX_Z - .5));
+                Vec3 delta = flat(target.subtract(pos));
+                Vec3 desired = delta.normalize().scale(Math.min(speed, delta.horizontalDistance() * .22));
+                Vec3 movement = motion[slot].lerp(desired, .24);
+                motion[slot] = movement;
+                npc.move(net.minecraft.world.entity.MoverType.SELF, movement);
+                Vec3 facing = movement.horizontalDistanceSqr() > .0025 ? movement : flat(ball.subtract(pos));
+                if (facing.lengthSqr() > .01) {
+                    float angle = (float) Math.toDegrees(Math.atan2(-facing.x, facing.z));
+                    float turn = Math.clamp(net.minecraft.util.Mth.wrapDegrees(angle - npc.getYRot()), -12f, 12f);
+                    npc.setYRot(npc.getYRot() + turn);
+                    npc.setYBodyRot(npc.getYRot());
+                    npc.setYHeadRot(npc.getYRot());
                 }
             }
         }
 
-        private int nearest(int first, ServerPlayer participant) {
+        private int nearest(int first, Vec3 target, ServerPlayer participant) {
             int closest = first + 1;
             for (int i = first + 2; i < first + 5; i++)
-                if (flat(position(i, participant).subtract(ball)).lengthSqr()
-                        < flat(position(closest, participant).subtract(ball)).lengthSqr()) closest = i;
+                if (flat(position(i, participant).subtract(target)).lengthSqr()
+                        < flat(position(closest, participant).subtract(target)).lengthSqr()) closest = i;
             return closest;
         }
 
@@ -418,7 +504,9 @@ public final class FootballPractice {
             if (owner >= 0) {
                 Vec3 pos = position(owner, participant);
                 int direction = owner < 5 ? 1 : -1;
-                ball = new Vec3(pos.x + direction * .55, 64, pos.z);
+                Vec3 travel = owner == PLAYER_SLOT && participant != null ? flat(participant.getLookAngle()) : motion[owner];
+                if (travel.lengthSqr() < .0025) travel = new Vec3(direction, 0, 0);
+                ball = new Vec3(pos.x, 64, pos.z).add(travel.normalize().scale(.62));
                 held++;
                 for (int i = owner < 5 ? 5 : 0; i < (owner < 5 ? 10 : 5); i++) {
                     if (held > 18 && ball.distanceToSqr(position(i, participant)) < .62) {
@@ -428,7 +516,7 @@ public final class FootballPractice {
                     }
                 }
                 if (owner != PLAYER_SLOT || participant == null) {
-                    if (held >= 8) npcKick(participant);
+                    if (held >= 14 && held % 4 == 2) npcKick(participant);
                 } else if (!inside(pos)) {
                     setOwner(-1);
                 }
@@ -437,7 +525,7 @@ public final class FootballPractice {
             Vec3 previous = ball;
             ball = ball.add(velocity);
             if (kicker == PLAYER_SLOT && participant != null) playerKickDistance += velocity.horizontalDistance();
-            velocity = velocity.scale(.963);
+            velocity = velocity.scale(.978);
             if (!inside(ball)) {
                 int edge = ball.x <= FootballGround.MIN_X + .5 ? FootballGround.MIN_X : FootballGround.MAX_X;
                 double line = edge + .5;
@@ -447,7 +535,7 @@ public final class FootballPractice {
                     if (edge == FootballGround.MAX_X) { home++; if (kicker == PLAYER_SLOT && player != null) playerGoals++; }
                     else away++;
                     ball = mid();
-                    setOwner(edge == FootballGround.MAX_X ? 9 : 4);
+                    setOwner(-1);
                 } else {
                     ball = new Vec3(Math.clamp(ball.x, FootballGround.MIN_X + 1, FootballGround.MAX_X),
                             64, Math.clamp(ball.z, FootballGround.MIN_Z + 1, FootballGround.MAX_Z));
@@ -473,32 +561,37 @@ public final class FootballPractice {
         private void npcKick(ServerPlayer participant) {
             int sign = owner < 5 ? 1 : -1, goal = owner < 5 ? FootballGround.MAX_X + 1 : FootballGround.MIN_X;
             double distance = (goal - ball.x) * sign;
-            if (distance < 10 && owner % 5 != 0) {
+            if (distance < 15 && Math.abs(ball.z - FootballGround.MID_Z) < 13 && owner % 5 != 0) {
                 Vec3 target = new Vec3(goal, 64, FootballGround.MID_Z + (ticks % 2 == 0 ? -1.6 : 2.4));
                 shots++;
                 kick(target.subtract(ball), .98);
                 return;
             }
             Vec3 target = null;
-            double best = -1;
+            double best = held < 30 && owner % 5 != 0 ? 2.0 : -4.0;
             for (int i = owner < 5 ? 0 : 5; i < (owner < 5 ? 5 : 10); i++) {
                 if (i == owner) continue;
-                Vec3 receiver = position(i, participant), delta = receiver.subtract(ball);
+                Vec3 receiver = position(i, participant).add(i == PLAYER_SLOT && participant != null ? Vec3.ZERO : motion[i].scale(7));
+                Vec3 delta = receiver.subtract(ball);
                 double length = delta.horizontalDistance();
-                if (length < 2 || length > 23) continue;
-                double score = delta.x * sign - length * .22;
+                if (length < 4 || length > 29) continue;
+                double score = delta.x * sign * .32 - length * .12 + Math.abs(delta.z) * .11;
                 for (int foe = owner < 5 ? 5 : 0; foe < (owner < 5 ? 10 : 5); foe++)
-                    if (segmentDistance(position(foe, participant), ball, receiver) < 2.25) score -= 4;
+                    if (segmentDistance(position(foe, participant), ball, receiver) < 3.25) score -= 6;
+                if (i == PLAYER_SLOT && participant != null && ticks < requestUntil && score > -4) score += 10;
                 if (score > best) { target = receiver; best = score; }
             }
-            if (target != null) pass(target);
+            if (target != null) {
+                pass(target);
+                requestUntil = 0;
+            }
             else if (held >= 45) kick(new Vec3(sign, 0, (FootballGround.MID_Z + .5 - ball.z) * .16), .65);
         }
 
         private void pass(Vec3 target) {
             passes++;
             Vec3 direction = target.subtract(ball);
-            kick(direction, Math.clamp(direction.horizontalDistance() * .045 + .28, .48, .87));
+            kick(direction, Math.clamp(direction.horizontalDistance() * .035 + .36, .52, 1.08));
         }
 
         private void kick(Vec3 direction, double speed) {

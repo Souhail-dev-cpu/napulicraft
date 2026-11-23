@@ -308,6 +308,7 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && FootballPractice.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && NapoliEmployment.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {
             if (player instanceof ServerPlayer sp) NapoliCivicLife.describe(sp, this);

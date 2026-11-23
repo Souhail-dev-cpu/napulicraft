@@ -774,5 +774,18 @@
 	"napuli.guest.add": "Invite %s",
 	"napuli.guest.remove": "Revoke invitation for %s",
 	"napuli.guest.end": "End all hospitality",
-	"napuli.guest.welcome": "You are a guest of this home. You can enter and use its furniture even when its five regular places are occupied."
+	"napuli.guest.welcome": "You are a guest of this home. You can enter and use its furniture even when its five regular places are occupied.",
+  "key.category.napuli.football": "Football",
+  "napuli.football.hud.title": "Football",
+  "napuli.football.intercept_missed": "Get closer and face the ball.",
+  "key.napuli.football.pass": "Pass",
+  "napuli.football.hud.pass": "%s · Pass",
+  "key.napuli.football.shoot": "Shoot",
+  "napuli.football.hud.shoot": "%s · Shoot",
+  "key.napuli.football.request": "Call for the ball",
+  "napuli.football.hud.request": "%s · Call for the ball",
+  "key.napuli.football.intercept": "Intercept",
+  "napuli.football.hud.intercept": "%s · Intercept",
+  "napuli.football.clerk": "Ciro · Match attendant",
+  "napuli.football.trainer": "Mimmo · Trainer"
 }

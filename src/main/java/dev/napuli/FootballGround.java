@@ -8,76 +8,77 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 final class FootballGround {
-    static final int MID_X = 384, MID_Z = 23, MIN_X = 363, MAX_X = 405, MIN_Z = 10, MAX_Z = 36;
-    static final BlockPos STAND = new BlockPos(384, 67, 7), GYM = new BlockPos(358, 64, 15);
-    static final BlockPos RECEPTION = new BlockPos(365, 64, 3);
+    static final int MID_X = 399, MID_Z = 33, MIN_X = 363, MAX_X = 435, MIN_Z = 10, MAX_Z = 56;
+    static final BlockPos STAND = new BlockPos(MID_X, 70, 3);
     static final BlockPos START_RUN = new BlockPos(354, 64, 19), FINISH_RUN = new BlockPos(354, 64, 35);
 
     private FootballGround() {}
 
     static void build(ServerLevel level) {
+        clearOldFixtures(level);
         Block green = colour("green_concrete"), light = colour("green_concrete_powder");
-        for (int x = 348; x <= 410; x++) for (int z = -4; z <= 41; z++) {
-            BlockPos floor = new BlockPos(x, 63, z);
-            if (!level.getBlockState(floor).is(Blocks.SAND)) continue;
-            boolean turf = x >= 359 && x <= 409 && z >= 9 && z <= 38;
-            boolean line = x >= MIN_X && x <= MAX_X && z >= MIN_Z && z <= MAX_Z
-                    && (x == MIN_X || x == MAX_X || z == MIN_Z || z == MAX_Z || x == MID_X
-                    || (Math.abs(z - MID_Z) <= 5 && (x == MIN_X + 4 || x == MAX_X - 4))
-                    || (Math.abs(z - MID_Z) == 5 && (x < MIN_X + 4 || x > MAX_X - 4))
-                    || Math.abs(Math.hypot(x - MID_X, z - MID_Z) - 4) < .5);
-            Block material = line ? Blocks.CALCITE : turf ? ((x / 4) % 2 == 0 ? green : light)
-                    : z <= 4 ? Blocks.POLISHED_DEEPSLATE : Blocks.POLISHED_ANDESITE;
-            set(level, floor, material);
+        for (int x = 358; x <= MAX_X + 5; x++) for (int z = 7; z <= MAX_Z + 5; z++) {
+            int goalDepth = Math.min(x - MIN_X, MAX_X - x);
+            int fromCenter = Math.abs(z - MID_Z);
+            boolean inside = goalDepth >= 0 && z >= MIN_Z && z <= MAX_Z;
+            boolean line = inside && (goalDepth == 0 || z == MIN_Z || z == MAX_Z || x == MID_X
+                    || boxLine(goalDepth, fromCenter, 11, 13) || boxLine(goalDepth, fromCenter, 4, 7)
+                    || fromCenter == 0 && goalDepth == 8
+                    || Math.abs(Math.hypot(x - MID_X, z - MID_Z) - 6) < .5);
+            boolean runoff = x >= MIN_X - 3 && x <= MAX_X + 3 && z >= MIN_Z - 2 && z <= MAX_Z + 2;
+            set(level, new BlockPos(x, 63, z), line ? Blocks.CALCITE
+                    : runoff ? ((x / 6) % 2 == 0 ? green : light) : Blocks.POLISHED_ANDESITE);
         }
         for (int x : new int[]{MIN_X, MAX_X}) {
-            int behind = x + (x == MIN_X ? -2 : 2);
-            for (int z : new int[]{MID_Z - 3, MID_Z + 3}) for (int y = 64; y <= 67; y++)
-                set(level, new BlockPos(x, y, z), Blocks.QUARTZ_PILLAR);
+            int back = x + (x == MIN_X ? -3 : 3);
+            for (int z : new int[]{MID_Z - 3, MID_Z + 3}) {
+                for (int y = 64; y <= 67; y++) set(level, new BlockPos(x, y, z), Blocks.QUARTZ_PILLAR);
+                for (int xx = Math.min(x, back); xx <= Math.max(x, back); xx++)
+                    if (xx != x) for (int y = 64; y <= 67; y++) set(level, new BlockPos(xx, y, z), colour("white_stained_glass"));
+            }
             for (int z = MID_Z - 3; z <= MID_Z + 3; z++) {
                 set(level, new BlockPos(x, 67, z), Blocks.SMOOTH_QUARTZ);
-                for (int y = 64; y <= 66; y++) set(level, new BlockPos(behind, y, z), Blocks.GLASS);
-                set(level, new BlockPos(behind, 67, z), Blocks.SMOOTH_QUARTZ);
+                for (int y = 64; y <= 67; y++) set(level, new BlockPos(back, y, z), colour("white_stained_glass"));
             }
         }
-        for (int x = 372; x <= 396; x++) for (int row = 0; row < 3; row++) {
-            for (int y = 64; y <= 64 + row; y++) {
-                set(level, new BlockPos(x, y, 9 - row), x % 2 == 0 ? Blocks.SMOOTH_STONE : Blocks.POLISHED_ANDESITE);
-            }
+        for (int x = 375; x <= 423; x++) for (int row = 0; row < 6; row++) {
+            for (int y = 64; y <= 64 + row; y++)
+                set(level, new BlockPos(x, y, 8 - row), Blocks.POLISHED_ANDESITE);
+            if ((x - 375) % 12 > 1)
+                set(level, new BlockPos(x, 64 + row, 8 - row), colour(row % 2 == 0 ? "light_blue_concrete" : "blue_concrete"));
         }
-        for (int x : new int[]{368, 400}) {
-            for (int y = 64; y <= 68; y++) set(level, new BlockPos(x, y, 8), Blocks.ANDESITE_WALL);
-            set(level, new BlockPos(x, 69, 8), Blocks.LANTERN);
+        for (int x : new int[]{369, 429}) for (int z : new int[]{7, 59}) {
+            for (int y = 64; y <= 75; y++) set(level, new BlockPos(x, y, z), Blocks.POLISHED_DEEPSLATE_WALL);
+            for (int dx = -1; dx <= 1; dx++) set(level, new BlockPos(x + dx, 76, z), Blocks.SEA_LANTERN);
         }
         for (int z = 19; z <= 35; z++) {
             set(level, new BlockPos(354, 63, z), z == 19 || z == 35 ? Blocks.CALCITE : colour("red_terracotta"));
         }
-        NapoliEmploymentMap.sign(level, RECEPTION, "FUORIGROTTA", "Campo allenamento", "/calcio guarda");
-        NapoliEmploymentMap.sign(level, new BlockPos(355, 64, 19), "PREPARAZIONE", "/calcio palestra", "Corri fino in fondo");
-        buildGym(level);
-        NapoliEmploymentMap.sign(level, GYM, "PALESTRA", "/calcio palestra", "Corsia esterna");
     }
 
-    private static void buildGym(ServerLevel level) {
-        for (int x = 349; x <= 357; x++) for (int z = 9; z <= 16; z++) {
-            set(level, new BlockPos(x, 63, z), Blocks.SPRUCE_PLANKS);
-            set(level, new BlockPos(x, 68, z), Blocks.DEEPSLATE_BRICKS);
-            boolean northWindow = z == 9 && x >= 351 && x <= 355;
-            boolean wall = x == 349 || x == 357 || z == 9 || z == 16;
-            if (!wall || (z == 16 && x >= 353 && x <= 355)) continue;
-            for (int y = 64; y <= 67; y++) set(level, new BlockPos(x, y, z),
-                    northWindow && (y == 65 || y == 66) ? Blocks.GLASS : Blocks.SMOOTH_SANDSTONE);
+    private static boolean boxLine(int depth, int width, int front, int side) {
+        return (depth == front && width <= side) || (width == side && depth <= front);
+    }
+
+    private static void clearOldFixtures(ServerLevel level) {
+        for (BlockPos p : BlockPos.betweenClosed(361, 64, 20, 407, 67, 26)) {
+            if (p.getX() != 361 && p.getX() != 363 && p.getX() != 405 && p.getX() != 407) continue;
+            var state = level.getBlockState(p);
+            if (state.is(Blocks.QUARTZ_PILLAR) || state.is(Blocks.SMOOTH_QUARTZ) || state.is(Blocks.GLASS))
+                set(level, p, Blocks.AIR);
         }
-        for (int x : new int[]{351, 355}) {
-            set(level, new BlockPos(x, 64, 11), colour("blue_carpet"));
-            set(level, new BlockPos(x, 64, 12), colour("blue_carpet"));
-            set(level, new BlockPos(x, 64, 13), colour("blue_carpet"));
-            set(level, new BlockPos(x, 64, 14), Blocks.SPRUCE_SLAB);
+        for (int x = 372; x <= 396; x++) for (int row = 0; row < 3; row++) {
+            BlockPos p = new BlockPos(x, 64, 9 - row);
+            for (int y = 0; y <= row; y++) {
+                var state = level.getBlockState(p.above(y));
+                if (state.is(Blocks.SMOOTH_STONE) || state.is(Blocks.POLISHED_ANDESITE)) set(level, p.above(y), Blocks.AIR);
+            }
         }
-        set(level, new BlockPos(350, 64, 10), Blocks.BARREL);
-        set(level, new BlockPos(356, 64, 10), Blocks.BARREL);
-        set(level, new BlockPos(353, 64, 10), Blocks.SEA_LANTERN);
-        NapoliEmploymentMap.sign(level, new BlockPos(356, 64, 17), "SPOGLIATOIO", "Corsia a sinistra");
+        for (int x : new int[]{368, 400}) for (int y = 64; y <= 69; y++) {
+            BlockPos p = new BlockPos(x, y, 8);
+            var state = level.getBlockState(p);
+            if (state.is(Blocks.ANDESITE_WALL) || state.is(Blocks.LANTERN)) set(level, p, Blocks.AIR);
+        }
     }
 
     private static Block colour(String name) {

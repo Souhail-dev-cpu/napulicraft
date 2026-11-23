@@ -345,56 +345,63 @@ final class CityTest {
                 var commands = p.level().getServer().getCommands();
                 footballEntry = p.blockPosition();
                 commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio gioca");
-                assertTrue(p.blockPosition().getX() > 365 && p.blockPosition().getZ() == 23, "player enters the pitch");
-                var field = p.getBoundingBox().inflate(52);
+                assertTrue(p.blockPosition().getX() > 365 && p.blockPosition().getZ() == 33, "player enters the pitch");
+                var field = p.getBoundingBox().inflate(75);
                 var actors = p.level().getEntitiesOfClass(NapoliResident.class, field, n -> n.entityTags().contains("napuli_practice_actor"));
                 assertTrue(actors.size() == 9, "player replaces one of ten footballers");
-            });
-            case 67 -> server(mc, p -> {
                 p.setYRot(-40);
                 p.setXRot(0);
-                var commands = p.level().getServer().getCommands();
                 commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio tira");
             });
-            case 87 -> server(mc, p -> {
+            case 135 -> server(mc, p -> {
                 var stats = dev.napuli.FootballPractice.statistics(p.level());
                 assertTrue(stats.shots() >= 1 && stats.playerKickDistance() > 1, "player shot moves the ball through the world");
             });
-            case 92 -> mc.player.connection.sendCommand("calcio guarda");
-            case 113 -> server(mc, p -> {
-                assertTrue(p.blockPosition().getY() == 67 && p.blockPosition().getZ() == 7, "spectator reaches the stand");
-                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(52),
+            case 145 -> {
+                assertTrue(FootballControlsClient.visible(), "control card is visible on the pitch");
+                AutoTest.shot(mc, "fuorigrotta-in-campo");
+            }
+            case 152 -> mc.player.connection.sendCommand("calcio guarda");
+            case 173 -> server(mc, p -> {
+                assertTrue(p.blockPosition().getY() == 70 && p.blockPosition().getZ() == 3, "spectator reaches the stand");
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(75),
                         n -> n.entityTags().contains("napuli_practice_actor"));
                 assertTrue(actors.size() == 10, "NPC takes the place of the outgoing player");
                 firstRunner = actors.stream().filter(n -> n.getName().getString().equals("Vitale")).findFirst().orElseThrow().position();
             });
-            case 118 -> {
+            case 178 -> {
+                assertTrue(!FootballControlsClient.visible(), "control card clears in the stands");
                 if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
-                server(mc, p -> view(p, 384.5, 67, 7.5, 0, 16));
+                server(mc, p -> view(p, 399.5, 70, 3.5, 0, 19));
             }
-            case 136 -> AutoTest.shot(mc, "fuorigrotta-partita");
-            case 195 -> server(mc, p -> {
-                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(52),
+            case 196 -> AutoTest.shot(mc, "fuorigrotta-partita");
+            case 255 -> server(mc, p -> {
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(75),
                         n -> n.entityTags().contains("napuli_practice_actor"));
                 var runner = actors.stream().filter(n -> n.getName().getString().equals("Vitale")).findFirst().orElseThrow();
 
                 assertTrue(runner.position().distanceToSqr(firstRunner) > .3, "NPC runs during the match");
                 var stats = dev.napuli.FootballPractice.statistics(p.level());
                 assertTrue(stats.passes() > 0 && stats.interceptions() > 0, "NPCs pass and intercept the ball");
+                expectBlock(p, 435, 63, 33, Blocks.CALCITE);
+                expectBlock(p, 405, 65, 20, Blocks.AIR);
             });
-            case 205 -> mc.player.connection.sendCommand("calcio palestra");
-            case 220 -> mc.options.keyUp.setDown(true);
-            case 292 -> mc.options.keyUp.setDown(false);
-            case 298 -> server(mc, p -> {
+            case 261 -> AutoTest.shot(mc, "fuorigrotta-partita-azione");
+            case 265 -> server(mc, p -> view(p, 354.5, 64, 17.5, 180, 0));
+            case 273 -> AutoTest.shot(mc, "fuorigrotta-palestra");
+            case 275 -> clickStaff(mc, NapoliResident.Role.SHIFT_LEAD);
+            case 280 -> mc.options.keyUp.setDown(true);
+            case 352 -> mc.options.keyUp.setDown(false);
+            case 358 -> server(mc, p -> {
                 assertTrue(p.blockPosition().getZ() >= 35, "player can run through the training lane");
                 assertTrue(dev.napuli.FootballPractice.fitness(p) == 1, "training improves persistent fitness");
             });
-            case 302 -> {
+            case 362 -> {
                 if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
                 mc.gui.toastManager().clear();
                 mc.player.connection.sendCommand("calcio");
             }
-            case 313 -> {
+            case 373 -> {
                 assertTrue(ridersInChat, "scooter dialogue remains in chat");
                 assertTrue(!footballNoticeInChat, "football notices stay out of chat");
                 var profile = Component.translatable("napuli.football.profile", 0, 0, 1);
@@ -402,24 +409,30 @@ final class CityTest {
                         "football profile appears as a screen notification");
                 AutoTest.shot(mc, "fuorigrotta-avviso-schermo");
             }
-            case 320 -> mc.player.connection.sendCommand("calcio torna");
-            case 345 -> server(mc, p -> {
+            case 380 -> mc.player.connection.sendCommand("calcio torna");
+            case 405 -> server(mc, p -> {
                 assertTrue(p.blockPosition().equals(footballEntry), "football return reaches the original city location");
+                for (var oldSign : java.util.List.of(
+                        new net.minecraft.core.BlockPos(365, 64, 3), new net.minecraft.core.BlockPos(358, 64, 15),
+                        new net.minecraft.core.BlockPos(355, 64, 19), new net.minecraft.core.BlockPos(356, 64, 17))) {
+                    assertTrue(!(p.level().getBlockEntity(oldSign) instanceof net.minecraft.world.level.block.entity.SignBlockEntity),
+                            "old sports interaction sign is absent at " + oldSign.toShortString());
+                }
                 view(p, 365.5, 64, 4.5, 180, 0);
             });
-            case 362 -> {
+            case 422 -> {
                 mc.gui.toastManager().clear();
-                employmentClick(mc, 365, 64, 3);
+                clickStaff(mc, NapoliResident.Role.EMPLOYMENT_CLERK);
             }
-            case 380 -> {
+            case 440 -> {
                 var screen = mc.gui.screen();
                 var watch = Component.translatable("napuli.football.watch_option").getString();
                 assertTrue(screen instanceof FootballMenuScreen && descendants(screen).filter(AbstractButton.class::isInstance)
                         .map(AbstractButton.class::cast).anyMatch(button -> button.getMessage().getString().equals(watch)),
-                        "clicking the Fuorigrotta sign opens the football menu");
+                        "talking to the match attendant opens the football menu");
                 AutoTest.shot(mc, "fuorigrotta-menu");
             }
-            case 390 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
+            case 450 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
     }

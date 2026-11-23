@@ -21,6 +21,18 @@ See the [Italian gameplay guide](docs/CUCINA.md) and [all 71 recipes](docs/CUCIN
 Install the same updated JAR on the server and every client; the new items and HUD are synchronized by the server.
 Server kitchen tests run with `./gradlew build`; `./gradlew runKitchentest` also checks the real client interactions.
 
+## Smarter residents, police pursuits and vandalism
+
+Residents can plan ladder routes, climb to upper floors and descend again, open wooden doors and negotiate steps.
+Carabinieri replan quickly, prefer available detours and can use an iron pickaxe to breach a nearby player-built
+barricade during a pursuit. Mining shows tool swings, cracks and the correct block drops, and respects the server's
+mob block-damage rule. Arrests require clear reach, including at waist height.
+
+Breaking original furniture or building blocks inside city homes is **vandalism**, using the existing witness,
+fine and prison system. Newly placed player construction is tracked separately and saved with the world.
+See the [Italian police and NPC guide](docs/IA_POLIZIA.md). `runPoliceaitest` verifies real client placement,
+block breaking, vandalism, pickaxe breaches, fines and chasing a player onto a roof.
+
 ## No songs included — bring your own
 
 The mod ships **without any music**. Every player picks their own:

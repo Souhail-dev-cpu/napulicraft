@@ -518,5 +518,15 @@
 	"napuli.resident.guardiano_presepe": "Il Guardiano del Presepe",
 	"napuli.local.guardiano_presepe.intro": "Il presepe di San Gregorio Armeno va illuminato per il Natale.",
 	"napuli.local.guardiano_presepe.lesson": "Comprare o fabbricare candele va bene. Portale qui e le metteremo tra le botteghe.",
-	"napuli.local.guardiano_presepe.task": "Portami tre candele per il presepe."
+	"napuli.local.guardiano_presepe.task": "Portami tre candele per il presepe.",
+	"napuli.cc.seen.vandalism": "Vandalismo! Hai danneggiato la casa di un residente.",
+	"napuli.cc.breach": "CARABINIERE: Esci! Apriamo un varco con il piccone di ferro.",
+	"napuli.cc.reason": "Reato: %s.",
+	"napuli.cc.fine.reason": "CARABINIERE: %s. Multa: %s euro.",
+	"napuli.cc.crime.theft": "Furto",
+	"napuli.cc.crime.pizzo": "Estorsione",
+	"napuli.cc.crime.shooting": "Spari",
+	"napuli.cc.crime.assault": "Aggressione",
+	"napuli.cc.crime.casco": "Guida senza casco",
+	"napuli.cc.crime.vandalism": "Vandalismo"
 }

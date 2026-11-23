@@ -283,6 +283,7 @@ final class NapoliCentro {
 		int dir = north ? 1 : -1;                    // from the front towards the street
 		int zMin = Math.min(front, back), zMax = Math.max(front, back);
 		int top = 63 + floors * 4 + 1;
+        CityProperty.recordHome(world, new BlockPos(x1, 63, zMin), new BlockPos(x2, top, zMax));
 		fill(x1, 64, zMin, x2, top, zMax, wall);
 		fill(x1 + 1, 64, zMin + 1, x2 - 1, top - 1, zMax - 1, Blocks.AIR);
 		for (int f = 1; f < floors; f++) fill(x1 + 1, 63 + f * 4 + 1, zMin + 1, x2 - 1, 63 + f * 4 + 1, zMax - 1, Blocks.SPRUCE_PLANKS);

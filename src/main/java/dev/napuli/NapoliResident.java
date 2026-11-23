@@ -57,11 +57,17 @@ public final class NapoliResident extends PathfinderMob {
 
     public NapoliResident(EntityType<? extends NapoliResident> type, Level level) {
         super(type, level);
+        moveControl = new ResidentNavigation.LadderMoveControl(this);
         setPersistenceRequired();
     }
 
     public static AttributeSupplier.Builder attributes() {
-        return createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.23).add(Attributes.ATTACK_DAMAGE, 3);
+        return createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.23).add(Attributes.ATTACK_DAMAGE, 3)
+                .add(Attributes.FOLLOW_RANGE, 48).add(Attributes.STEP_HEIGHT, 1);
+    }
+
+    @Override protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
+        return new ResidentNavigation(this, level);
     }
 
     @Override

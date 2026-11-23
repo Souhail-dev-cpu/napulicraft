@@ -6,6 +6,12 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+		policeaitest {
+			client()
+			name "Napuli police navigation test"
+			vmArg "-Dnapuli.policeaitest=true"
+			runDir "run-autotest"
+		}
 		kitchentest {
 			client()
 			name "Napuli kitchen integration test"
@@ -144,6 +150,13 @@ tasks.named('runPeppetest') {
 }
 
 def motorinoTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runPoliceaitest') {
+	doLast {
+		if (!motorinoTestLog.asFile.exists() || !motorinoTestLog.asFile.text.contains('[POLICEAITEST] ALL PASSED')) {
+			throw new GradleException('Police AI integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
 tasks.named('runKitchentest') {
 	doLast {
 		if (!motorinoTestLog.asFile.exists() || !motorinoTestLog.asFile.text.contains('[KITCHENTEST] ALL PASSED')) {

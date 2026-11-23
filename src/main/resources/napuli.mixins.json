@@ -2,6 +2,6 @@
     "required": true,
     "package": "dev.napuli.mixin",
     "compatibilityLevel": "JAVA_25",
-    "mixins": ["ConsumableMixin", "CraftedStackMixin"],
+    "mixins": ["ConsumableMixin", "CraftedStackMixin", "PlacedBlockMixin"],
     "injectors": {"defaultRequire": 1}
 }

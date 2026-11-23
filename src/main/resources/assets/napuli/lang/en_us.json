@@ -518,5 +518,15 @@
 	"napuli.resident.guardiano_presepe": "The Nativity Keeper",
 	"napuli.local.guardiano_presepe.intro": "The nativity scene of San Gregorio Armeno needs lights for Christmas.",
 	"napuli.local.guardiano_presepe.lesson": "Buy or craft candles and bring them over. We’ll put them among the workshops.",
-	"napuli.local.guardiano_presepe.task": "Bring me three candles for the nativity scene."
+	"napuli.local.guardiano_presepe.task": "Bring me three candles for the nativity scene.",
+	"napuli.cc.seen.vandalism": "Vandalism! You damaged a resident's home.",
+	"napuli.cc.breach": "CARABINIERE: Come out! We are opening a passage with an iron pickaxe.",
+	"napuli.cc.reason": "Offence: %s.",
+	"napuli.cc.fine.reason": "CARABINIERE: %s. Fine: €%s.",
+	"napuli.cc.crime.theft": "Theft",
+	"napuli.cc.crime.pizzo": "Extortion",
+	"napuli.cc.crime.shooting": "Shooting",
+	"napuli.cc.crime.assault": "Assault",
+	"napuli.cc.crime.casco": "Riding without a helmet",
+	"napuli.cc.crime.vandalism": "Vandalism"
 }

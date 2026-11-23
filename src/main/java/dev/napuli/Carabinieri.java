@@ -39,7 +39,7 @@ public final class Carabinieri {
 	private Carabinieri() {}
 
 	public enum Crime {
-		THEFT(1, 28), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20);
+		THEFT(1, 28), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32);
 		final int gravity, witnessRange;
 		Crime(int gravity, int witnessRange) { this.gravity = gravity; this.witnessRange = witnessRange; }
 		String id() { return name().toLowerCase(); }
@@ -71,6 +71,10 @@ public final class Carabinieri {
 	private static int nextCell;
 
 	public static void register() {
+		CityProperty.register();
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
+			if (entity instanceof NapoliResident npc && npc.role() == NapoliResident.Role.CARABINIERE) PoliceTactics.stop(npc);
+		});
 		// no zombies, skeletons, creepers, phantoms... in the city: dark rooms in palaces and churches spawned them.
 		// Only our own creatures (Munaciello, the giant) may haunt Naples.
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
@@ -111,8 +115,9 @@ public final class Carabinieri {
 
 	/** is this carabiniere busy chasing someone (then he doesn't wander around) */
 	static boolean chasing(ServerLevel level, NapoliResident cc) {
+		if (PoliceTactics.active(cc)) return true;
 		for (ServerPlayer p : level.players())
-			if (WANTED.containsKey(p.getUUID()) && p.distanceToSqr(cc) < 36 * 36) return true;
+			if (WANTED.containsKey(p.getUUID()) && p.distanceToSqr(cc) < PoliceTactics.RANGE * PoliceTactics.RANGE) return true;
 		return false;
 	}
 	public static boolean isJailed(ServerPlayer p) { return p.hasAttached(JAIL); }
@@ -135,6 +140,8 @@ public final class Carabinieri {
 			w.crime = c;
 			w.lastSeen = now;
 			p.sendSystemMessage(Component.translatable("napuli.cc.worse"));
+		} else {
+			w.lastSeen = now;
 		}
 	}
 
@@ -176,6 +183,11 @@ public final class Carabinieri {
 		// players who left the city stop being wanted (they got away), jail time keeps counting if they log out
 		WANTED.keySet().removeIf(id -> server.getPlayerList().getPlayer(id) == null
 				|| server.getPlayerList().getPlayer(id).level() != city);
+		for (var entity : city.getAllEntities()) if (entity instanceof NapoliResident cc && cc.role() == NapoliResident.Role.CARABINIERE) {
+			boolean pursuing = false;
+			for (ServerPlayer player : city.players()) if (WANTED.containsKey(player.getUUID()) && PoliceTactics.assignedTo(cc, player)) { pursuing = true; break; }
+			if (!pursuing) PoliceTactics.stop(cc);
+		}
 		if (now % 100 == 0 && !city.players().isEmpty()) keepPatrol(city);
 		if (now % 20 == 0) helmetCheck(city);
 		if (now % 100 == 0) JAILED_NPC.entrySet().removeIf(e -> {
@@ -187,13 +199,14 @@ public final class Carabinieri {
 	}
 
 	private static void chase(ServerLevel city, ServerPlayer p, Wanted w, long now) {
-		List<NapoliResident> near = carabinieri(city, p.blockPosition(), 36);
+		List<NapoliResident> near = carabinieri(city, p.blockPosition(), PoliceTactics.RANGE);
 		boolean caught = false;
 		for (NapoliResident cc : near) {
-			if (cc.hasLineOfSight(p)) w.lastSeen = now;
-			if (now % 8 == 0) cc.getNavigation().moveTo(p, 1.3);
-			cc.getLookControl().setLookAt(p, 30, 30);
-			if (cc.distanceToSqr(p) < 1.9 * 1.9) caught = true;
+			if (!PoliceTactics.assignedTo(cc, p)) continue;
+			PoliceTactics.pursue(cc, p, now);
+			boolean visible = cc.hasLineOfSight(p);
+			if (visible || PoliceTactics.breaching(cc)) w.lastSeen = now;
+            if (PoliceTactics.canGrab(cc, p)) caught = true;
 		}
 		if (now % 40 == 0) siren(city, p);
 		w.grip = caught ? w.grip + 1 : Math.max(0, w.grip - 2);
@@ -207,10 +220,11 @@ public final class Carabinieri {
 	private static void arrest(ServerLevel city, ServerPlayer p, Wanted w) {
 		WANTED.remove(p.getUUID());
 		for (NapoliResident cc : carabinieri(city, p.blockPosition(), 36)) cc.getNavigation().stop();
+		p.sendSystemMessage(Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));
 		if (w.gravity <= 1 && NapoliStreet.cash(p) >= FINE) {
 			NapoliStreet.credit(p, -FINE);
 			title(p, "napuli.cc.fine.title", "napuli.cc.fine");
-			p.sendSystemMessage(Component.translatable("napuli.cc.fine.chat", FINE));
+			p.sendSystemMessage(Component.translatable("napuli.cc.fine.reason", Component.translatable("napuli.cc.crime." + w.crime.id()), FINE));
 			return;
 		}
 		// jail: weapons confiscated, into the cell, adventure mode so the walls can't be dug

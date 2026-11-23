@@ -210,6 +210,7 @@ public final class NapoliMap {
 
     private void home(int x, int z, int index) {
         int height = 12 + Math.floorMod(index, 4) * 3;
+        CityProperty.recordHome(world, new BlockPos(x, 63, z), new BlockPos(x + 10, 64 + height, z + 11));
         Block facade = FACADES[Math.floorMod(index, FACADES.length)];
         fill(x, 64, z, x + 10, 63 + height, z + 11, facade);
         fill(x + 1, 64, z + 1, x + 9, 62 + height, z + 10, Blocks.AIR);

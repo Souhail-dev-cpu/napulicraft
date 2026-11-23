@@ -11,12 +11,12 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 /** Only authored lamps in loaded houses are changed. Player lamps and builds are left alone. */
 final class CityAtmosphere {
     private static final Map<ServerLevel,Long> PERIODS=new WeakHashMap<>();
-    static BlockPos lamp(NapoliMergellina.House h){return new BlockPos(h.x()+h.width()-2,67,h.z()+h.depth()-2);}
+    static BlockPos lamp(NapoliMergellina.House h){return new BlockPos(h.x()+h.width()-2,h.ground()+3,h.z()+h.depth()-2);}
     static boolean lit(NapoliMergellina.House h,long time){
         int offset=Math.floorMod(h.id().hashCode(),1800);return time>=12000+offset&&time<17500+offset;
     }
     static boolean rush(long time){return time>=1800&&time<3200||time>=10500&&time<12000;}
-    static void fixtures(ServerLevel city){for(var h:CityLivingHomes.all())if(city.isEmptyBlock(lamp(h)))city.setBlock(lamp(h),Blocks.REDSTONE_LAMP.defaultBlockState(),2);}
+    static void fixtures(ServerLevel city){for(var h:CityLivingHomes.all())if(!h.id().startsWith("atlas_")&&city.isEmptyBlock(lamp(h)))city.setBlock(lamp(h),Blocks.REDSTONE_LAMP.defaultBlockState(),2);}
     static void tick(ServerLevel city){
         long time=NapoliBroadcast.time(city),period=time/600;
         boolean sound=!Objects.equals(PERIODS.put(city,period),period);

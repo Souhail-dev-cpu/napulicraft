@@ -1,0 +1,56 @@
+package dev.napuli;
+
+import com.google.gson.*;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.util.ReferenceCountUtil;
+import java.nio.file.*;
+import java.util.*;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.common.*;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.*;
+import net.minecraft.server.network.CommonListenerCookie;
+
+/** Opt-in real dedicated-server connections, moving vehicles and save/restart verification. */
+public final class DistrictSoakTest implements ModInitializer {
+    private final List<ServerPlayer> players=new ArrayList<>();
+    private final List<EmbeddedChannel> channels=new ArrayList<>();
+    private final String[][] trips={{"M6","augusto","lala"},{"B5","garibaldi","direzionale"},{"T1","mercato","carmine"}};
+    private final boolean[] boarded=new boolean[3],arrived=new boolean[3];
+    private MinecraftServer server;private ServerLevel city;private int ticks;private boolean done,read,bought,resumeBooked;private UUID baker;private BlockPos workerStart;private double walked;private final int[] fares=new int[3];
+    private static final Path CHECKPOINT=Path.of("district-checkpoint.json");
+    @Override public void onInitialize(){if(!Boolean.getBoolean("napuli.districtsoak"))return;read=System.getProperty("napuli.soak.phase","write").equals("read");ServerLifecycleEvents.SERVER_STARTED.register(s->{try{start(s);}catch(Throwable e){fail(e);}});ServerTickEvents.END_SERVER_TICK.register(s->{if(server!=null&&!done)try{tick();}catch(Throwable e){fail(e);}});}
+    private void start(MinecraftServer s)throws Exception{
+        server=s;city=Objects.requireNonNull(s.getLevel(NapoliMap.LEVEL));NapoliMap.ensureBuilt(city);CityLifeConfig.settings.maximumPopulation=384;DistrictLife.seed(city);
+        for(int i=0;i<4;i++)connect(i);
+        if(read){var saved=JsonParser.parseString(Files.readString(CHECKPOINT)).getAsJsonObject();for(int i=0;i<4;i++)check(NapoliStreet.cash(players.get(i))==saved.getAsJsonArray("wallets").get(i).getAsInt(),"Actual player wallets survive server restart");check(city.getAttachedOrElse(DistrictLife.SETTLED,Set.of()).size()==saved.get("settled").getAsInt(),"District identities survive restart");check(city.getAttachedOrElse(DistrictShops.LEDGERS,Map.of()).size()==saved.get("shops").getAsInt(),"Shop ledgers survive restart");check(players.getFirst().getAttached(CityNetwork.TICKET)!=null&&players.getFirst().getAttached(CityNetwork.TICKET).state().equals("riding"),"An interrupted paid journey survives restart");}
+        else{check(!Files.exists(CHECKPOINT),"Use a fresh -PsoakRun for the write phase");server.getCommands().performPrefixedCommand(server.createCommandSourceStack(),"time set 2300");server.getCommands().performPrefixedCommand(server.createCommandSourceStack(),"weather clear");
+            for(int i=0;i<3;i++){var p=players.get(i);NapoliStreet.credit(p,100-NapoliStreet.cash(p));fares[i]=NapoliStreet.cash(p);var stop=CityNetwork.stop(trips[i][1]);CityNetwork.ensureStation(city,stop);move(p,stop.boarding(CityNetwork.line(trips[i][0])));check(CityNetwork.book(p,trips[i][2],trips[i][0])==1,"Player can book an actual trip: "+trips[i][0]);check(NapoliStreet.cash(p)==fares[i],"Booking does not charge before boarding");}
+            var d=DistrictLife.districts().getFirst();baker=DistrictLife.identity(d,0);workerStart=NapoliCivicLife.home(NapoliCivicLife.profile(city,baker));for(int x=(d.homes().getFirst().x()-32)>>4;x<=(d.business().x()+64)>>4;x++)for(int z=Math.min(d.homes().getFirst().z(),d.business().z())>>4;z<=(Math.max(d.homes().getFirst().z(),d.business().z())+32)>>4;z++){var c=city.getChunk(x,z);NapoliExpansion.generate(city,c);DistrictLife.fit(city,c);CityRailway.fit(city,c);}move(players.get(3),workerStart.above(3));
+        }
+        s.tickRateManager().requestGameToSprint(read?1200:27000);Napuli.LOGGER.info("[DISTRICTSOAK] {} started with four connections",read?"READ":"WRITE");
+    }
+    private void connect(int i){var profile=new GameProfile(UUID.nameUUIDFromBytes(("district-soak/"+i).getBytes(java.nio.charset.StandardCharsets.UTF_8)),"DistrictTest"+i);var p=new ServerPlayer(server,city,profile,ClientInformation.createDefault());var connection=new Connection(PacketFlow.SERVERBOUND);var channel=new EmbeddedChannel(connection);
+        if(read)server.getPlayerList().loadPlayerData(new net.minecraft.server.players.NameAndId(profile)).ifPresent(nbt->{var input=net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,server.registryAccess(),nbt);p.load(input);input.read("Pos",net.minecraft.world.phys.Vec3.CODEC).ifPresent(p::setPos);});server.getPlayerList().placeNewPlayer(connection,p,CommonListenerCookie.createInitial(profile,false));players.add(p);channels.add(channel);p.setPermanentlyInvulnerable(true);p.getAbilities().mayfly=true;p.getAbilities().flying=true;p.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());}
+    private void move(ServerPlayer p,BlockPos pos){p.teleportTo(city,pos.getX()+.5,pos.getY(),pos.getZ()+.5,Set.of(),0,0,true);city.getChunkSource().move(p);}
+    private void tick()throws Exception{
+        ticks++;network();if(read){if(ticks==1000){check(server.getPlayerList().getPlayerCount()==4,"Four connections remain online after reload");check(players.getFirst().getAttached(CityNetwork.TICKET)==null,"Interrupted journey resumes and arrives after restart");var saved=JsonParser.parseString(Files.readString(CHECKPOINT)).getAsJsonObject();check(NapoliStreet.cash(players.getFirst())==saved.getAsJsonArray("wallets").get(0).getAsInt(),"Restoring a paid trip does not charge a second fare");finish("READ");}return;}
+        if(ticks<4500&&ticks%100==0)server.getCommands().performPrefixedCommand(server.createCommandSourceStack(),"time set 2300");
+        for(int i=0;i<3;i++){var p=players.get(i);var ticket=p.getAttached(CityNetwork.TICKET);if(ticket!=null&&ticket.state().equals("riding")){boarded[i]=true;check(p.getVehicle() instanceof CityVehicle,"Passenger rides a real moving entity");check(NapoliStreet.cash(p)==fares[i]-2,"Fare charged exactly once");}if(boarded[i]&&ticket==null&&!arrived[i]){arrived[i]=true;var target=CityNetwork.stop(trips[i][2]);check(p.blockPosition().distSqr(target.boarding(CityNetwork.line(trips[i][0])))<24*24,"Passenger alights at booked destination: "+trips[i][0]);if(i==0)check(CityNetwork.lift(p,target.id())==1&&p.getBlockY()>50,"Passenger can return to the street from the metro");move(p,target.entrance().east(16).above(4));Napuli.LOGGER.info("[DISTRICTSOAK] actual {} trip completed at tick {}",trips[i][0],ticks);}}
+        var worker=city.getEntity(baker);if(worker!=null){walked=Math.max(walked,Math.sqrt(worker.blockPosition().distSqr(workerStart)));var observer=players.get(3);if(observer.distanceToSqr(worker)>20*20)move(observer,worker.blockPosition().above(4).east(8));var d=DistrictLife.districts().getFirst();if(!bought&&DistrictShops.staff(city,d)!=null){move(observer,worker.blockPosition().east(3));NapoliStreet.credit(observer,100-NapoliStreet.cash(observer));int stock=DistrictShops.quantity(city,d,"mele"),money=NapoliStreet.cash(observer),till=DistrictShops.ledger(city,d.id()).till();check(DistrictShops.buy(observer,d.id(),"mele")==1,"A present shopkeeper sells actual goods to a connected player");check(DistrictShops.quantity(city,d,"mele")==stock-1&&NapoliStreet.cash(observer)<money&&DistrictShops.ledger(city,d.id()).till()>till,"Purchase transfers stock, cash and goods exactly once");bought=true;move(observer,worker.blockPosition().above(4).east(8));}}
+        if(ticks%1000==0){for(int index=0;index<3;index++){var passenger=players.get(index);var ticket=passenger.getAttached(CityNetwork.TICKET);var vehicle=ticket==null?null:CityNetwork.vehicle(city,ticket.vehicle());Napuli.LOGGER.info("[DISTRICTSOAK] ride {} ticket={} actor={} vehicle={} target={} delay={}",index,ticket,passenger.blockPosition(),vehicle==null?null:vehicle.position(),vehicle==null?null:CityNetwork.position(city,CityNetwork.line(trips[index][0]),Integer.parseInt(vehicle.networkKey().split("/")[1])),ticket==null?0:CityNetwork.delay(city,ticket.vehicle()));}Napuli.LOGGER.info("[DISTRICTSOAK] tick={} boarded={} arrived={} worker={} walked={} bought={}",ticks,Arrays.toString(boarded),Arrays.toString(arrived),worker==null?"virtual":worker.blockPosition(),walked,bought);check(server.getPlayerList().getPlayerCount()==4,"All four connections remain online");}
+        if(ticks==4500){for(boolean ok:arrived)check(ok,"All three public transport modes complete their trips");check(walked>8&&bought,"A district resident visibly travels from home to the working shop");}
+        if(ticks>=24000&&!resumeBooked){server.getCommands().performPrefixedCommand(server.createCommandSourceStack(),"time set 2300");var p=players.getFirst();var stop=CityNetwork.stop("augusto");CityNetwork.ensureStation(city,stop);move(p,stop.boarding(CityNetwork.line("M6")));fares[0]=NapoliStreet.cash(p);p.removeAttached(CityNetwork.PASS);check(CityNetwork.book(p,"lala","M6")==1,"Book a journey to interrupt at server shutdown");resumeBooked=true;}
+        if(resumeBooked&&players.getFirst().getAttached(CityNetwork.TICKET)!=null&&players.getFirst().getAttached(CityNetwork.TICKET).state().equals("riding")){var data=new JsonObject();var wallets=new JsonArray();for(var p:players)wallets.add(NapoliStreet.cash(p));data.add("wallets",wallets);data.addProperty("settled",city.getAttachedOrElse(DistrictLife.SETTLED,Set.of()).size());data.addProperty("shops",city.getAttachedOrElse(DistrictShops.LEDGERS,Map.of()).size());Files.writeString(CHECKPOINT,new Gson().toJson(data));server.saveEverything(true,true,true);finish("WRITE");}
+    }
+    private void network(){for(int i=0;i<channels.size();i++){var channel=channels.get(i);var p=players.get(i);p.connection.tick();p.level().getChunkSource().move(p);channel.runPendingTasks();Object packet;int budget=512;while(budget-->0&&(packet=channel.readOutbound())!=null)try{if(packet instanceof ClientboundKeepAlivePacket keep)p.connection.handleKeepAlive(new ServerboundKeepAlivePacket(keep.getId()));if(packet instanceof ClientboundChunkBatchFinishedPacket)p.connection.handleChunkBatchReceived(new ServerboundChunkBatchReceivedPacket(64));if(packet instanceof ClientboundPlayerPositionPacket tp)p.connection.handleAcceptTeleportPacket(new ServerboundAcceptTeleportationPacket(tp.id(),p.getX(),p.getY(),p.getZ(),p.getYRot(),p.getXRot()));}finally{ReferenceCountUtil.release(packet);}}}
+    private void finish(String phase){done=true;Napuli.LOGGER.info("[DISTRICTSOAK] {} PASSED: ticks={}, players=4",phase,ticks);server.halt(false);}
+    private void fail(Throwable e){done=true;Napuli.LOGGER.error("[DISTRICTSOAK] FAILED at tick="+ticks,e);if(server!=null)server.halt(false);}
+    private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
+}

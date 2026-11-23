@@ -15,12 +15,13 @@ final class NapoliMergellina {
         House(String id, String name, int x, int z, int price, Block wall) { this(id, name, x, z, price, wall, 11, 12, 2, -1); }
         int civic() { return 2 * (-x - 123) + 1; }
         String address() { return name + " · " + civic(); }
-        BlockPos entrance() { return new BlockPos(x + width / 2, 64, z + depth); }
+        int ground(){return id.startsWith("atlas_")?DistrictLife.floor(this):64;}
+        BlockPos entrance() { return new BlockPos(x + width / 2, ground(), z + depth); }
         BlockPos sign() { return entrance().east(2); }
-        BlockPos inside() { return new BlockPos(x + 5, 64, z + 8); }
+        BlockPos inside() { return new BlockPos(x + 5, ground(), z + 8); }
         boolean contains(BlockPos p) {
             return p.getX() >= x && p.getX() < x + width && p.getZ() >= z && p.getZ() < z + depth
-                    && p.getY() >= 61 && p.getY() <= Math.max(78, 64 + floors * 5);
+                    && p.getY() >= ground()-3 && p.getY() <= Math.max(ground()+14, ground() + floors * 5);
         }
     }
 

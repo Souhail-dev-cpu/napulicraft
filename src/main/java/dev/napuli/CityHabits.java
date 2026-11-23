@@ -14,7 +14,7 @@ final class CityHabits {
     static int cooking(ServerLevel city,UUID id){return Math.min(100,20+Math.floorMod(id.hashCode()*31,41)+city.getAttachedOrElse(PRACTICE,Map.of()).getOrDefault(id.toString(),0));}
     static void practice(ServerLevel city,UUID id){var all=new HashMap<>(city.getAttachedOrElse(PRACTICE,Map.of()));all.put(id.toString(),Math.min(40,all.getOrDefault(id.toString(),0)+1));city.setAttached(PRACTICE,Map.copyOf(all));}
     static boolean working(NapoliCivicLife.Citizen c,long time,long day){
-        long personal=time-offset(c.id());return c.profession()!=null&&CityProfessions.open(c.profession(),Math.floorMod(personal,24000),day+Math.floorDiv(personal,24000));
+        long personal=time-offset(c.id());if(DistrictLife.resident(c)&&c.profession()==NapoliCivicLife.Job.BAKER){long local=Math.floorMod(personal,24000),weekday=Math.floorMod(day+Math.floorDiv(personal,24000),7);return local>=1800&&local<(weekday==6?6500:11000);}return c.profession()!=null&&CityProfessions.open(c.profession(),Math.floorMod(personal,24000),day+Math.floorDiv(personal,24000));
     }
     static UUID cook(ServerLevel city,NapoliCivicLife.Citizen person,long time){
         var agreement=CityRelationships.agreement(city,person);if(agreement!=null){var assigned=NapoliCivicLife.profile(city,UUID.fromString(agreement.cook()));if(assigned!=null&&!working(assigned,time,NapoliBroadcast.day(city))&&CitySimulation.life(city,assigned.id()).health()>=45)return assigned.id();}

@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -45,9 +46,11 @@ public final class CityProperty {
     }
     public static boolean mayBuild(ServerLevel level, ServerPlayer player, BlockPos pos) {
         if (level.dimension() != NapoliMap.LEVEL) return true;
+        if(DistrictLife.homes().stream().anyMatch(h->h.contains(pos)&&level.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()).containsKey(h.id())&&!NapoliProperties.owns(player,h)))return false;
         return NapoliMergellina.PROPERTIES.stream().noneMatch(h -> h.contains(pos) && !NapoliProperties.owns(player, h));
     }
     static boolean storageAllowed(ServerPlayer player,BlockPos pos){
+        if(DistrictLife.homes().stream().anyMatch(h->h.contains(pos)&&NapoliProperties.hasAccess(player,h)))return true;
         return NapoliMergellina.PROPERTIES.stream().anyMatch(h->h.contains(pos)&&NapoliProperties.hasAccess(player,h));
     }
     static void forget(ServerLevel level, BlockPos pos) {

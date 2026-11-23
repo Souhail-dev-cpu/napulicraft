@@ -352,3 +352,15 @@ intermedi, il cammino sul marciapiede e il tentativo di ricreare un'entità anco
 
 Riferimenti di progettazione: [Paradox, economia e produzione](https://www.paradoxinteractive.com/games/cities-skylines-ii/features/economy-production)
 e [Ubisoft, abitanti persistenti e routine osservabili](https://news.ubisoft.com/en-us/article/4po3S9Pwp1YcgBmGPmQxAh/watch-dogs-legion-the-tools-that-built-london).
+
+## Nuvolette degli NPC
+
+Le battute di passanti, residenti, artigiani e passeggeri del motorino compaiono sopra chi parla.
+La nuvoletta segue il personaggio, si orienta verso la camera, manda il testo a capo e scompare
+automaticamente. Le risposte lunghe scorrono in piccole pagine; due persone possono parlare
+con nuvolette distinte. Le conversazioni raggiungono solo i giocatori vicini a cui sono rivolte.
+
+Installare lo stesso JAR aggiornato sul server e sui client. Non occorrono comandi per attivare
+le nuvolette. Il task ./gradlew runSpeechTest controlla sul client reale ricezione, movimento,
+leggibilità, pagine, distanza, scadenza e cambio di dimensione; salva schermate speech-*.png in
+run-autotest/screenshots. I GameTest verificano anche identità del parlante, traduzione e destinatari.

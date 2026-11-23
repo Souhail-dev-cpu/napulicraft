@@ -26,6 +26,11 @@ The living city adds **120 persistent citizens**, **85 NPC professions**, **35 p
 families, growing children, needs, careers, mortgages, an animated fictional football broadcast and local traffic.
 See the [Italian living-city guide](docs/NAPOLI_VIVA.md) for commands, the server configuration and verification.
 
+The expanded city also has **19 inhabited neighborhoods**, **38 additional homes**, **19 working shops**
+and up to **76 additional persistent residents**, within the configured population limit. Ten usable bus,
+tram and metro lines connect the districts, with actual passengers, limited seats and saved tickets.
+Use `/negozio` and `/trasporti`; see the [districts and transport guide](docs/QUARTIERI_E_TRASPORTI.md).
+
 Residents can plan ladder routes, climb to upper floors and descend again, open wooden doors and negotiate steps.
 Carabinieri replan quickly, prefer available detours and can use an iron pickaxe to breach a nearby player-built
 barricade during a pursuit. Mining shows tool swings, cracks and the correct block drops, and respects the server's

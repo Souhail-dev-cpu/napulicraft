@@ -15,7 +15,8 @@ final class CityLifeConfig {
     }
     static final class Settings {
         int population = 120;
-        int maximumPopulation = 160;
+        int maximumPopulation = 384;
+        int districtPopulation = 76;
         int needsIntervalTicks = 600;
         int daysPerYear = 7;
         int retirementAge = 70;
@@ -37,6 +38,7 @@ final class CityLifeConfig {
             Napuli.LOGGER.warn("Cannot read city settings; using defaults", error);
         }
         settings.maximumPopulation = Math.clamp(settings.maximumPopulation, 24, 512);
+        settings.districtPopulation = Math.clamp(settings.districtPopulation,0,256);
         settings.population = Math.clamp(settings.population, 8, settings.maximumPopulation);
         settings.needsIntervalTicks = Math.clamp(settings.needsIntervalTicks, 400, 1200);
         settings.daysPerYear = Math.clamp(settings.daysPerYear, 1, 365);

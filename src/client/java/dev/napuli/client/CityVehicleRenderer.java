@@ -26,6 +26,6 @@ final class CityVehicleRenderer extends MobRenderer<CityVehicle,CityVehicleRende
     }
     static final class Model extends EntityModel<State>{
         Model(ModelPart root){super(root);}
-        @Override public void setupAnim(State s){super.setupAnim(s);root.zScale=s.kind==0?1:1.7f;root.yScale=s.kind==0?1:1.2f;}
+        @Override public void setupAnim(State s){super.setupAnim(s);root.zScale=s.kind==0?1:s.kind==3?2.5f:1.7f;root.yScale=s.kind==0?1:1.2f;}
     }
 }

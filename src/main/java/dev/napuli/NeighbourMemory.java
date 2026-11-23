@@ -34,7 +34,7 @@ final class NeighbourMemory {
 
     static void greet(ServerPlayer p, NapoliResident npc) {
         var b=CitySocial.meet(p.level(),npc.getUUID(),p.getUUID(),NapoliBroadcast.day(p.level()));
-        if(b.meetings()>1||b.grievances()>0)p.sendSystemMessage(Component.literal(npc.getName().getString()+": "+CitySocial.greeting(b,p.getName().getString())));
-        String heard=CityReputation.tell(p,npc.getUUID());if(!heard.isEmpty())p.sendSystemMessage(Component.literal(npc.getName().getString()+": "+heard));
+        if(b.meetings()>1||b.grievances()>0)NpcSpeech.say(p,npc,Component.literal(CitySocial.greeting(b,p.getName().getString())));
+        String heard=CityReputation.tell(p,npc.getUUID());if(!heard.isEmpty())NpcSpeech.say(p,npc,Component.literal(heard));
     }
 }

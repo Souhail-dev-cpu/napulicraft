@@ -32,7 +32,7 @@ final class HouseGuests {
             .buildAndRegister(Napuli.id("house_guests"));
 
     private static NapoliMergellina.House house(String id) {
-        return NapoliMergellina.PROPERTIES.stream().filter(h -> h.id().equals(id)).findFirst().orElse(null);
+        return CityLivingHomes.find(id);
     }
 
     static boolean host(ServerLevel city, String house, UUID id) {

@@ -31,11 +31,12 @@ final class CityDomestic {
     }
     static void release(ServerLevel city,UUID id){CityMovement.release(city,id);}
     static CityLivingHomes.UsePoint point(NapoliMergellina.House h,int stage){
+        int y=h.ground();
         return switch(stage){
             case 0->CityLivingHomes.use(h,CityLivingHomes.Furniture.FRIDGE);
-            case 1->new CityLivingHomes.UsePoint(CityLivingHomes.Room.KITCHEN,CityLivingHomes.Furniture.DESK,new BlockPos(h.x()+4,64,h.z()+5),new BlockPos(h.x()+5,64,h.z()+5));
+            case 1->new CityLivingHomes.UsePoint(CityLivingHomes.Room.KITCHEN,CityLivingHomes.Furniture.DESK,new BlockPos(h.x()+4,y,h.z()+5),new BlockPos(h.x()+5,y,h.z()+5));
             case 2->CityLivingHomes.use(h,CityLivingHomes.Furniture.STOVE);
-            case 3,4->new CityLivingHomes.UsePoint(CityLivingHomes.Room.KITCHEN,CityLivingHomes.Furniture.TABLE,new BlockPos(h.x()+4,65,h.z()+7),new BlockPos(h.x()+5,64,h.z()+7));
+            case 3,4->new CityLivingHomes.UsePoint(CityLivingHomes.Room.KITCHEN,CityLivingHomes.Furniture.TABLE,new BlockPos(h.x()+4,y+1,h.z()+7),new BlockPos(h.x()+5,y,h.z()+7));
             default->CityLivingHomes.use(h,CityLivingHomes.Furniture.SINK);
         };
     }

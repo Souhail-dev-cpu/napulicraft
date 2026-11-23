@@ -234,6 +234,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	}
 
 	static final class State extends HumanoidRenderState {
+		NpcSpeechBubbles.Bubble speech;
 		Role role = Role.GENNARO;
 		int variant;
 		dev.napuli.CityGestures.Gesture gesture=dev.napuli.CityGestures.Gesture.NONE;

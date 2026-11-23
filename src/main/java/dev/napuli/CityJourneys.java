@@ -25,6 +25,7 @@ final class CityJourneys {
         return j.destination();
     }
     static List<BlockPos> route(BlockPos from,BlockPos to){
+        if(!NapoliAtlas.ORIGINAL.contains(from.getX(),from.getZ())||!NapoliAtlas.ORIGINAL.contains(to.getX(),to.getZ()))return CityNetwork.walkRoute(from,to);
         var points=new ArrayList<BlockPos>();points.add(from.immutable());
         var origin=CityLivingHomes.all().stream().filter(h->h.contains(from)).findFirst().orElse(null);
         var destination=CityLivingHomes.all().stream().filter(h->h.contains(to)).findFirst().orElse(null);

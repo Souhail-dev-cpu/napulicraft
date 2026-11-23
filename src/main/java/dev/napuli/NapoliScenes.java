@@ -93,7 +93,7 @@ public final class NapoliScenes {
                     if (!npc.role().social()) continue;
                     var bond = NapoliDialogue.bond(player, npc.role());
                     if (bond.interest() < 35) continue;
-                    player.sendSystemMessage(Component.translatable("napuli.dialog." + npc.role().id() + ".approach", player.getName()));
+                    NpcSpeech.say(player,npc,Component.translatable("napuli.dialog." + npc.role().id() + ".approach", player.getName()));
                     visits.greetings = now + 20 * 95;
                     break;
                 }
@@ -138,7 +138,8 @@ public final class NapoliScenes {
         // the song plays from the scooter itself (station PARADE), so it moves with the boys and stops when they vanish
         for (ServerPlayer player : listeners) {
             if (Music.current(player) != null) Music.stop(player);
-            player.sendSystemMessage(Component.translatable("napuli.meme.motorino"));
+            for (var passenger : bike.getPassengers()) if (passenger instanceof NapoliResident rider && (rider.role()==NapoliResident.Role.ENZO || rider.role()==NapoliResident.Role.GENNARO))
+                NpcSpeech.say(player,rider,Component.translatable("napuli.meme.motorino."+rider.role().id()));
         }
         level.playSound(null, start, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 0.95f, 0.75f);
         Napuli.LOGGER.info("Napoli motorino started: {} riders, {} listeners", bike.getPassengers().size(), listeners.size());

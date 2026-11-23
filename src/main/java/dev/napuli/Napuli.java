@@ -132,6 +132,8 @@ public class Napuli implements ModInitializer {
 		Radio.register();
 		Hud.register();
 		NapoliNotice.register();
+		NpcSpeech.register();
+		CityRailway.register();
 		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
 		GIGANTE_EGG = item("munaciello_gigante_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(GIGANTE));
 		NAPULETANO_EGG = item("napuletano_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(RESIDENT));
@@ -156,6 +158,9 @@ public class Napuli implements ModInitializer {
 		Situazioni.register();
 		NapoliMap.registerSpawn();
 		NapoliExpansion.register();
+		DistrictLife.register();
+		DistrictShops.register();
+		CityNetwork.register();
 		NapoliAtlasGuide.register();
 		NapoliStreet.register();
 		NapoliLocalJobs.register();

@@ -34,7 +34,7 @@ final class CityEconomy {
     static final BlockPos DEPOT=new BlockPos(-328,64,45);
     static final List<String> SHOPS=List.of("forno","mercato");
     static boolean merchant(NapoliCivicLife.Citizen c){return c.profession()!=null&&(c.profession().category==CityProfessions.Category.FOOD||c.profession().category==CityProfessions.Category.TRADE);}
-    static String business(NapoliCivicLife.Citizen c){return c.profession()!=null&&c.profession().category==CityProfessions.Category.FOOD?"forno":"mercato";}
+    static String business(NapoliCivicLife.Citizen c){if(DistrictLife.resident(c))return DistrictShops.key(c);return c.profession()!=null&&c.profession().category==CityProfessions.Category.FOOD?"forno":"mercato";}
     static BlockPos site(String shop){return (shop.equals("forno")?CityProfessions.Category.FOOD:CityProfessions.Category.TRADE).site().offset(8,0,7);}
     static Stock stock(ServerLevel city,String shop){BakeryStock.migrate(city);return city.getAttachedOrElse(STOCKS,Map.of()).getOrDefault(shop,shop.equals("mercato")?new Stock(0,0,48,-1,-1):Stock.initial());}
     static void put(ServerLevel city,String shop,Stock stock){var all=new HashMap<>(city.getAttachedOrElse(STOCKS,Map.of()));all.put(shop,stock);city.setAttached(STOCKS,Map.copyOf(all));}
@@ -58,6 +58,7 @@ final class CityEconomy {
         if(count>0)put(city,shop,new Stock(s.grain(),s.flour(),s.bread()-count,s.processed(),s.delivered()));return count;
     }
     static void shopResident(ServerLevel city,NapoliCivicLife.Citizen c){
+        if(DistrictLife.resident(c)){DistrictShops.shopResident(city,c);return;}
         if(CityTraces.cargo(city,c.id())!=null)return;
         var l=CitySimulation.life(city,c.id());int bought=buyMeals(city,"mercato",Math.max(0,6-l.food()),c.balance());if(bought==0)return;
         CitySimulation.put(city,c.id(),l.withNeeds(l.needs(),l.food()+bought,l.last(),l.water(),l.energy()));
@@ -72,6 +73,7 @@ final class CityEconomy {
         }p.getInventory().setChanged();return true;
     }
     static int buy(ServerPlayer p,UUID id){
+        var local=NapoliCivicLife.profile(p.level(),id);if(DistrictLife.resident(local))return DistrictShops.buy(p,DistrictLife.district(local).id(),"pane");
         var c=CitySocial.nearby(p,id);if(c==null||!merchant(c)||!CityProfessions.open(c.profession(),NapoliBroadcast.time(p.level()),NapoliBroadcast.day(p.level())))return 0;
         if(CitySocial.bond(p.level(),id,p.getUUID()).trust()<15){p.sendSystemMessage(Component.literal("Prima dobbiamo risolvere la nostra questione."));return 0;}
         var shop=business(c);var s=stock(p.level(),shop);int cost=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),2));
@@ -81,6 +83,7 @@ final class CityEconomy {
         CitySocial.purchased(p.level(),id,p.getUUID());return 1;
     }
     static void offer(ServerPlayer p,UUID id){
+        var local=NapoliCivicLife.profile(p.level(),id);if(DistrictLife.resident(local)){DistrictShops.menu(p,DistrictLife.district(local).id());return;}
         var c=CitySocial.nearby(p,id);if(c==null||!merchant(c))return;var shop=business(c);var s=stock(p.level(),shop);
         int price=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),2));
         p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal(c.name()+" · Bottega"),Optional.empty(),true,false,DialogAction.CLOSE,

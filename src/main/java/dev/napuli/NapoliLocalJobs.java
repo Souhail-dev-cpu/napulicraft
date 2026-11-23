@@ -184,7 +184,7 @@ final class NapoliLocalJobs {
         Job job = s.job();
         switch (action) {
             case "learn" -> {
-                player.sendSystemMessage(Component.translatable(job.key() + ".lesson"));
+                NpcSpeech.say(player,s.npc(),Component.translatable(job.key() + ".lesson"));
                 if (job == Job.PIZZA) {
                     for (String id : List.of("pizza", "pizza_marinara")) {
                         var recipe = net.minecraft.resources.ResourceKey.create(
@@ -197,13 +197,13 @@ final class NapoliLocalJobs {
             case "accept" -> {
                 mark(player, ACCEPTED, job);
                 if (job == Job.FISH) give(player, new ItemStack(Items.FISHING_ROD));
-                NapoliNotice.show(player, Component.translatable(job.key() + ".task"));
+                NpcSpeech.say(player,s.npc(),Component.translatable(job.key() + ".task"));
             }
             case "report" -> report(player, job);
             case "access" -> {
                 if (player.level().dimension() != NapoliMap.LEVEL) return 0;
                 if (job == Job.BUCATO) {
-                    if (!has(player, ACCEPTED, job)) { say(player, "accept_first"); return 0; }
+                    if (!has(player, ACCEPTED, job)) { reply(player,s.npc(), "accept_first"); return 0; }
                     travel(player, s.npc().getY() > 80 ? NapoliLocalMap.LAUNDRY : NapoliLocalMap.ROOF);
                 } else travel(player, s.npc().getY() < 50 ? NapoliLocalMap.TUNNEL_ENTRY : NapoliLocalMap.TUNNEL_START);
             }
@@ -213,11 +213,11 @@ final class NapoliLocalJobs {
                     souvenir.set(DataComponents.CUSTOM_NAME, Component.translatable("napuli.local.souvenir"));
                     give(player, souvenir);
                     complete(player, job);
-                } else player.sendSystemMessage(Component.translatable(job.key() + ".lesson"));
+                } else NpcSpeech.say(player,s.npc(),Component.translatable(job.key() + ".lesson"));
             }
-            case "vesuvius", "crypt" -> say(player, "wrong_direction");
+            case "vesuvius", "crypt" -> reply(player,s.npc(), "wrong_direction");
             case "listen" -> {
-                say(player, "melody");
+                reply(player,s.npc(), "melody");
                 player.setAttached(DEMO, new Demo(s.npc(), player.level().getGameTime()));
             }
             case "low", "middle", "high" -> {
@@ -227,7 +227,7 @@ final class NapoliLocalJobs {
                         SoundSource.RECORDS, 0.8f, PITCHES.get(note));
                 if (note != MELODY.get(index)) {
                     player.removeAttached(BEAT);
-                    say(player, "beat_retry");
+                    reply(player,s.npc(), "beat_retry");
                 } else if (index == MELODY.size() - 1) {
                     player.removeAttached(BEAT);
                     complete(player, job);
@@ -242,10 +242,10 @@ final class NapoliLocalJobs {
             default -> {
                 Offer offer = offer(action);
                 if (offer == null) return 0;
-                if (NapoliStreet.cash(player) < offer.price()) { say(player, "poor"); return 0; }
+                if (NapoliStreet.cash(player) < offer.price()) { reply(player,s.npc(), "poor"); return 0; }
                 NapoliStreet.credit(player, -offer.price());
                 give(player, offer.stack());
-                say(player, "bought");
+                reply(player,s.npc(), "bought");
             }
         }
         return 1;
@@ -326,6 +326,10 @@ final class NapoliLocalJobs {
 
     private static void give(ServerPlayer player, ItemStack stack) {
         if (!player.getInventory().add(stack)) player.spawnAtLocation(player.level(), stack);
+    }
+
+    private static void reply(ServerPlayer player,NapoliResident npc,String suffix) {
+        NpcSpeech.say(player,npc,Component.translatable("napuli.local."+suffix));
     }
 
     private static void say(ServerPlayer player, String suffix) {

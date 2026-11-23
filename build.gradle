@@ -122,6 +122,18 @@ loom {
 			vmArg "-Dnapuli.maptest=true"
 			runDir "run-autotest"
 		}
+		districtTest {
+			client()
+			name "Napoli districts and transit client test"
+			vmArg "-Dnapuli.districttest=true"
+			runDir "run-autotest"
+		}
+		speechTest {
+			client()
+			name "Napoli NPC speech bubble client test"
+			vmArg "-Dnapuli.speechtest=true"
+			runDir "run-autotest"
+		}
 		atlasTest {
 			client()
 			vmArg "-Dnapuli.atlastest=true"
@@ -183,6 +195,25 @@ loom.runs {
 		vmArg '-Xmx3G'
 	}
 }
+loom.runs {
+	districtSoak {
+		server()
+		source sourceSets.gametest
+		runDir ".gradle/soak/${soakRun}"
+		vmArg '-Dnapuli.districtsoak=true'
+		vmArg "-Dnapuli.soak.phase=${soakPhase}"
+		vmArg '-Xmx3G'
+	}
+}
+tasks.named('runDistrictSoak') {
+	dependsOn 'prepareCitySoak'
+	def directory = soakDirectory
+	def phase = soakPhase
+	doLast {
+		def log = new File(directory.asFile, 'logs/latest.log')
+		if (!log.exists() || !log.text.contains("[DISTRICTSOAK] ${phase.toUpperCase()} PASSED")) throw new GradleException("District multiplayer test failed; see ${log}")
+	}
+}
 tasks.register('prepareCitySoak') {
 	def directory = soakDirectory
 	doLast {
@@ -242,6 +273,18 @@ tasks.named('runAtlasTest') {
 	mustRunAfter 'runLivingCityTest', 'runFootballTest'
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[ATLASTEST] ALL PASSED')) throw new GradleException('Napoli atlas client tour failed; see run-autotest/logs/latest.log')
+	}
+}
+
+tasks.named('runDistrictTest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[DISTRICTTEST] ALL PASSED')) throw new GradleException('District client test failed; see run-autotest/logs/latest.log')
+	}
+}
+
+tasks.named('runSpeechTest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[SPEECHTEST] ALL PASSED')) throw new GradleException('NPC speech bubble test failed; see run-autotest/logs/latest.log')
 	}
 }
 tasks.named('runFootballTest') {

@@ -18,7 +18,8 @@ final class CityTransit {
         double best=Double.MAX_VALUE;for(var entity:city.getAllEntities())if(entity instanceof CityVehicle bus&&bus.kind()==1)best=Math.min(best,bus.distanceToStop(stop)/(.11*(city.isRaining()?.8:1))+bus.remainingStop());
         return best==Double.MAX_VALUE?-1:(long)Math.ceil(best);
     }
-    static int menu(ServerPlayer p){if(p.level().dimension()!=NapoliMap.LEVEL)return 0;var body=new ArrayList<net.minecraft.server.dialog.body.DialogBody>();
+    static int menu(ServerPlayer p){return CityNetwork.menu(p);}
+    static int legacyMenu(ServerPlayer p){if(p.level().dimension()!=NapoliMap.LEVEL)return 0;var body=new ArrayList<net.minecraft.server.dialog.body.DialogBody>();
         body.add(new PlainMessage(Component.literal("Linea Partenope · stime dai mezzi realmente in servizio. Pioggia, traffico e scioperi possono ritardare il passaggio."),270));
         for(boolean south:new boolean[]{true,false})for(int z:STOPS){var stop=stop(z,south);long eta=eta(p.level(),stop);body.add(new PlainMessage(Component.literal("Fermata "+z+" · direzione "+(south?"corti":"botteghe")+": "+(eta<0?"mezzo non disponibile; percorso a piedi":Math.max(1,(eta+19)/20)+" s stimati")),270));}
         p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal("Fermate e passaggi"),Optional.empty(),true,false,DialogAction.CLOSE,body,List.of()),List.of(CitySocial.button("Servizi del quartiere","/servizi")),Optional.empty(),1)));return 1;

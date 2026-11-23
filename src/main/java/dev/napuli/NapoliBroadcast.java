@@ -212,7 +212,7 @@ final class NapoliBroadcast {
             var fans=level.getEntitiesOfClass(NapoliResident.class,player.getBoundingBox().inflate(32));
             if(!fans.isEmpty()) {
                 level.playSound(null,fans.getFirst().blockPosition(),SoundEvents.VILLAGER_CELEBRATE,SoundSource.NEUTRAL,.7f,1.1f);
-                player.sendSystemMessage(Component.literal(fans.getFirst().getDisplayName().getString()+": FORZA NAPOLI!"));
+                NpcSpeech.say(player,fans.getFirst(),Component.literal("FORZA NAPOLI!"));
             }
         }
         for (ServerPlayer player : level.players()) {

@@ -37,7 +37,7 @@ final class CityTest {
     private static int localCash;
     private static NapoliResident resident;
 
-    private static boolean ridersInChat, footballNoticeInChat;
+    private static boolean ridersInChat, ridersSpoke, footballNoticeInChat;
 
     static void register() {
         if (Boolean.getBoolean("napuli.footballtest")) {
@@ -67,6 +67,8 @@ final class CityTest {
         }
         if (mc.player == null || mc.getSingleplayerServer() == null) return;
         mc.options.pauseOnLostFocus = false;
+        if (Boolean.getBoolean("napuli.footballtest")) for (var npc : mc.level.getEntitiesOfClass(NapoliResident.class,mc.player.getBoundingBox().inflate(32)))
+            if ((npc.role()==NapoliResident.Role.ENZO||npc.role()==NapoliResident.Role.GENNARO)&&NpcSpeechBubbles.hasBubble(npc.getUUID())) ridersSpoke=true;
         if (mc.gui.screen() instanceof PauseScreen) mc.gui.setScreen(null);
         if (tick == 60 && (mc.player.level().dimension() != NapoliMap.LEVEL || mc.gui.screen() != null)) {
             if (++waitingTicks >= 2400) {
@@ -405,7 +407,7 @@ final class CityTest {
                 mc.player.connection.sendCommand("calcio");
             }
             case 523 -> {
-                assertTrue(ridersInChat, "scooter dialogue remains in chat");
+                assertTrue(ridersSpoke&&!ridersInChat, "scooter dialogue appears above its riders instead of chat");
                 assertTrue(!footballNoticeInChat, "football notices stay out of chat");
                 var profile = Component.translatable("napuli.football.profile", 0, 0, 1);
                 assertTrue(mc.gui.toastManager().getToast(NapoliNoticeToast.class, profile) != null,

@@ -18,13 +18,14 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 final class CityLivingHomes {
     static final List<NapoliMergellina.House> PUBLIC_HOMES = java.util.stream.IntStream.range(0,28)
             .mapToObj(i->new NapoliMergellina.House("public_"+i,"Corte dei residenti "+(i+1),-534+i%7*27,70+i/7*35,0,Blocks.SMOOTH_SANDSTONE,17,18,2,100+i)).toList();
-    static List<NapoliMergellina.House> all() { return java.util.stream.Stream.concat(NapoliMergellina.PROPERTIES.stream(),PUBLIC_HOMES.stream()).toList(); }
+    private static final class Catalogue {static final List<NapoliMergellina.House> ALL=java.util.stream.Stream.concat(java.util.stream.Stream.concat(NapoliMergellina.PROPERTIES.stream(),PUBLIC_HOMES.stream()),DistrictLife.homes().stream()).toList();}
+    static List<NapoliMergellina.House> all() { return Catalogue.ALL; }
     enum Room { KITCHEN, BATHROOM, LIVING, DOUBLE_BEDROOM, CHILD_BEDROOM, STUDY, LAUNDRY, BALCONY }
     enum Furniture { STOVE, FRIDGE, SINK, SHOWER, TOILET, SOFA, TV, BED, WARDROBE, DESK, WASHER, TABLE }
     record UsePoint(Room room, Furniture furniture, BlockPos block, BlockPos stand) {}
     static List<UsePoint> points(NapoliMergellina.House h) {
-        int x = h.x(), z = h.z(), upstairs = h.style() >= 0 ? 69 : 68;
-        return List.of(point(Room.KITCHEN, Furniture.STOVE, x+3,64,z+2, x+3,64,z+3),
+        boolean expanded=h.id().startsWith("atlas_");int x = h.x(), z = h.z(), upstairs = expanded?64:h.style() >= 0 ? 69 : 68;
+        var points=List.of(point(Room.KITCHEN, Furniture.STOVE, x+3,64,z+2, x+3,64,z+3),
                 point(Room.KITCHEN,Furniture.FRIDGE,x+2,64,z+2,x+3,64,z+3),
                 point(Room.BATHROOM,Furniture.SINK,x+7,64,z+2,x+7,64,z+3),
                 point(Room.BATHROOM,Furniture.SHOWER,x+8,64,z+9,x+8,64,z+9),
@@ -36,6 +37,7 @@ final class CityLivingHomes {
                 point(Room.CHILD_BEDROOM,Furniture.BED,x+7,upstairs,z+4,x+7,upstairs,z+5),
                 point(Room.STUDY,Furniture.DESK,x+7,upstairs,z+8,x+7,upstairs,z+7),
                 point(Room.LAUNDRY,Furniture.WASHER,x+7,64,z+8,x+7,64,z+7));
+        if(!expanded)return points;return points.stream().map(p->{int dx=p.furniture()==Furniture.BED?9:p.furniture()==Furniture.WARDROBE?10:p.furniture()==Furniture.DESK?5:0,dz=p.furniture()==Furniture.BED?3:p.furniture()==Furniture.DESK?5:0;return new UsePoint(p.room(),p.furniture(),p.block().offset(dx,h.ground()-64,dz),p.stand().offset(dx,h.ground()-64,dz+(p.furniture()==Furniture.SHOWER?1:0)));}).toList();
     }
     private static UsePoint point(Room r,Furniture f,int x,int y,int z,int sx,int sy,int sz) {
         return new UsePoint(r,f,new BlockPos(x,y,z),new BlockPos(sx,sy,sz));

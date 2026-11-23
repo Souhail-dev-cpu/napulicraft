@@ -42,7 +42,7 @@ final class CityPublicOrder {
             if(suspect.distanceToSqr(npc)<5){
                 var updated=new HashMap<>(cases);updated.put(entry.getKey(),new Incident(state.offence(),state.wantedUntil(),now+1800,state.cell()));city.setAttached(INCIDENTS,Map.copyOf(updated));
                 suspect.stopRiding();city.getChunkAt(state.cell());suspect.getNavigation().stop();suspect.snapTo(state.cell().getX()+.5,state.cell().getY(),state.cell().getZ()+.5,0,0);
-                for(var p:city.players())if(p.distanceToSqr(npc)<40*40)p.sendSystemMessage(Component.literal("Carabinieri: fermato "+suspect.getDisplayName().getString()+" per "+state.offence().toLowerCase(Locale.ROOT)+"."));
+                for(var p:city.players())if(p.distanceToSqr(npc)<40*40)NpcSpeech.say(p,npc,Component.literal("Fermato "+suspect.getDisplayName().getString()+" per "+state.offence().toLowerCase(Locale.ROOT)+"."));
             }
             return true;
         }

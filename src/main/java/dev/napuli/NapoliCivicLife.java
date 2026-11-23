@@ -379,6 +379,7 @@ final class NapoliCivicLife {
         for (int i = 0; i < updated.size(); i++) {
             Citizen c = updated.get(i);
             if (c.spawned()) continue;
+            if(CityNetwork.inTransit(city,c.id()))continue;
             BlockPos desired = CitySimulation.location(city,c);
             var targetHome=CityLivingHomes.all().stream().filter(h->h.contains(desired)).findFirst().orElse(null);
             BlockPos spawn = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.entrance().south():CityJourneys.spawn(city,desired);
@@ -406,17 +407,17 @@ final class NapoliCivicLife {
         if (c == null) return;
         CitySimulation.describe(player,c);
         Job job = c.profession();
-        NapoliNotice.show(player, Component.translatable("napuli.civic.profile", c.name(), c.age(Math.max(census(player.level()).day(), NapoliBroadcast.day(player.level()))),
+        NpcSpeech.say(player,npc, Component.translatable("napuli.civic.profile", c.name(), c.age(Math.max(census(player.level()).day(), NapoliBroadcast.day(player.level()))),
                 Component.translatable(job == null ? "napuli.civic.no_job" : job.key()), job == null ? 0 : job.wage, c.balance()));
         if (!c.partner().isEmpty()) {
             Citizen partner = profile(player.level(), UUID.fromString(c.partner()));
-            if (partner != null) NapoliNotice.show(player, Component.translatable("napuli.civic.partner", partner.name()));
+            if (partner != null) NpcSpeech.say(player,npc, Component.translatable("napuli.civic.partner", partner.name()));
         }
         if (!c.parents().isEmpty()) {
             Citizen parent = profile(player.level(), UUID.fromString(c.parents()));
-            if (parent != null) NapoliNotice.show(player, Component.translatable("napuli.civic.parent", parent.name()));
+            if (parent != null) NpcSpeech.say(player,npc, Component.translatable("napuli.civic.parent", parent.name()));
         }
         for (var house : NapoliMergellina.PROPERTIES) if (house.id().equals(c.property()))
-            NapoliNotice.show(player, Component.translatable("napuli.civic.house", house.name()));
+            NpcSpeech.say(player,npc, Component.translatable("napuli.civic.house", house.name()));
     }
 }

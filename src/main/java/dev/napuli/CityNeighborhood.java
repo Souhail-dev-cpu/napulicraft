@@ -25,7 +25,7 @@ final class CityNeighborhood {
     static void say(ServerLevel city,NapoliResident npc,String text,int range){
         var heard=HEARD.computeIfAbsent(city,k->new HashMap<>());long now=city.getGameTime();
         for(var p:city.players())if(!p.isSpectator()&&p.distanceToSqr(npc)<range*range&&now>=heard.getOrDefault(p.getUUID(),0L)){
-            p.sendSystemMessage(Component.literal(npc.getName().getString()+": "+text));heard.put(p.getUUID(),now+200);
+            NpcSpeech.say(p,npc,Component.literal(text));heard.put(p.getUUID(),now+200);
         }
         city.playSound(null,npc.blockPosition(),SoundEvents.VILLAGER_AMBIENT,SoundSource.NEUTRAL,.25f,1);
     }

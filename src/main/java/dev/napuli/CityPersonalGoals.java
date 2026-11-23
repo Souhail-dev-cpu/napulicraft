@@ -67,14 +67,14 @@ final class CityPersonalGoals {
         if(!g.helper().isEmpty()){
             var helper=city.getServer().getPlayerList().getPlayer(UUID.fromString(g.helper()));
             if(pay||g.contributions()>0)CitySocial.helped(city,c.id(),UUID.fromString(g.helper()),NapoliBroadcast.day(city));
-            if(helper!=null&&pay){int reward=g.kind().equals("oven")?16:8;NapoliStreet.credit(helper,reward);helper.sendSystemMessage(Component.literal(c.name()+": Grazie! Obiettivo completato, +"+reward+" €."));}
+            if(helper!=null&&pay){int reward=g.kind().equals("oven")?16:8;NapoliStreet.credit(helper,reward);if(!NpcSpeech.say(helper,c.id(),Component.literal("Grazie! Obiettivo completato, +"+reward+" €.")))helper.sendSystemMessage(Component.literal("Obiettivo completato: +"+reward+" €."));}
         }
     }
     static int act(ServerPlayer p,UUID id,String action){
         var c=CitySocial.nearby(p,id);if(c==null)return 0;var g=goal(p.level(),id);if(g==null||g.complete())return 0;
         if(!g.helper().isEmpty()&&!g.helper().equals(p.getUUID().toString())){p.sendOverlayMessage(Component.literal("Un altro vicino sta già aiutando questa persona."));return 0;}
         var accepted=new Goal(g.kind(),g.home(),g.opened(),p.getUUID().toString(),false,g.contributions(),g.promised()<0?NapoliBroadcast.day(p.level()):g.promised());
-        if(action.equals("accetta")){put(p.level(),id,accepted);p.sendSystemMessage(Component.literal(c.name()+": "+description(g)+(g.kind().equals("home")?"":" Ti aspetto entro tre giorni.")));return 1;}
+        if(action.equals("accetta")){put(p.level(),id,accepted);NpcSpeech.say(p,c.id(),Component.literal(description(g)+(g.kind().equals("home")?"":" Ti aspetto entro tre giorni.")));return 1;}
         if(g.kind().equals("home")&&action.equals("contribuisci")){
             if(NapoliStreet.cash(p)<5)return 0;NapoliStreet.credit(p,-5);money(p.level(),c,5,c.job());
             put(p.level(),id,new Goal(g.kind(),g.home(),g.opened(),p.getUUID().toString(),false,g.contributions()+5,g.promised()));return 1;

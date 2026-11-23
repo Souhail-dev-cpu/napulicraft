@@ -101,13 +101,13 @@ final class CitySocial {
         if(action.equals("scusa")) {
             if(b.grievances()==0||b.apologized()>=day)return 0;
             put(p.level(),id,p.getUUID(),new Bond(Math.min(60,b.trust()+5),b.meetings(),b.purchases(),b.favors(),b.grievances(),b.met(),b.helped(),day));
-            p.sendSystemMessage(Component.literal(c.name()+": Apprezzo le scuse. Dimostrami che posso fidarmi."));return 1;
+            NpcSpeech.say(p,c.id(),Component.literal("Apprezzo le scuse. Dimostrami che posso fidarmi."));return 1;
         }
         if(!action.equals("aiuta")||b.helped()>=day||!CityEconomy.take(p,net.minecraft.world.item.Items.WHEAT,4))return 0;
         CityEconomy.supply(p.level(),CityEconomy.business(c),4);
         helped(p.level(),id,p.getUUID(),day);
         var l=CitySimulation.life(p.level(),id);CitySimulation.put(p.level(),id,l.career(l.health(),l.reputation(),l.experience(),l.rank(),l.absences(),CitySimulation.memory(l,"Aiutato con le provviste da "+p.getName().getString())));
-        p.sendSystemMessage(Component.literal(c.name()+": Grazie, queste provviste ci servivano davvero."));return 1;
+        NpcSpeech.say(p,c.id(),Component.literal("Grazie, queste provviste ci servivano davvero."));return 1;
     }
     static void register() {
         CommandRegistrationCallback.EVENT.register((d,a,e)->{

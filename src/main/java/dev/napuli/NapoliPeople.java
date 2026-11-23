@@ -76,7 +76,7 @@ final class NapoliPeople {
 	}
 
 	private static void say(ServerPlayer p, NapoliResident npc, String key) {
-		p.sendSystemMessage(Component.empty().append(npc.getDisplayName()).append(": ").append(Component.translatable(key)));
+		NpcSpeech.say(p,npc,Component.translatable(key));
 		npc.getLookControl().setLookAt(p, 30, 30);
 	}
 }

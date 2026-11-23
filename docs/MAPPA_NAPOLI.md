@@ -65,6 +65,10 @@ vicini: un monumento attraversato da un confine viene completato con le stesse r
 
 ## Fonti dei luoghi
 
+L'espansione ora comprende anche famiglie persistenti, case arredate, botteghe con scorte locali e
+collegamenti utilizzabili da NPC e giocatori. Comandi, configurazione e prove sono descritti nella
+[guida ai quartieri e ai trasporti](QUARTIERI_E_TRASPORTI.md).
+
 Nomenclatura e collocazione per quartiere consultate il **23 novembre 2026**:
 
 - [Comune di Napoli, municipalità e mappa dei quartieri, deliberazione 2026](https://static-www.comune.napoli.it/wp-content/uploads/2026/01/DELIBERAZIONE-DI-CONSIGLIO-COMUNALE-N.-1-DEL-29-GENNAIO-2026.pdf).

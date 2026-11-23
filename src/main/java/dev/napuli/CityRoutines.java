@@ -55,6 +55,7 @@ final class CityRoutines {
         return best==null?goal:best;
     }
     static BlockPos localGoal(ServerLevel city,NapoliResident npc,BlockPos goal){
+        if(!NapoliAtlas.ORIGINAL.contains(npc.getBlockX(),npc.getBlockZ())||!NapoliAtlas.ORIGINAL.contains(goal.getX(),goal.getZ()))return DistrictLife.localGoal(city,npc,goal);
         for(var home:CityLivingHomes.all())if(home.contains(npc.blockPosition())&&!home.contains(goal))return home.entrance().south();
         for(var service:CityProfessions.Category.values())if(inside(service.site(),npc.blockPosition())&&!inside(service.site(),goal))return service.site().offset(8,0,13);
         if(city.hasChunkAt(goal)&&goal.distToCenterSqr(npc.position())<40*40){var direct=npc.getNavigation().createPath(goal,0);if(direct!=null&&direct.canReach())return goal;}

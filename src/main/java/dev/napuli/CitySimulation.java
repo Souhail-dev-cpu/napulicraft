@@ -149,7 +149,7 @@ final class CitySimulation {
                 }
                 case SLEEP -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12))n=n.change(0,35,0,0,0,0);}
                 case WASH -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12)){n=n.change(0,0,45,0,0,45);water++;energy++;CityTraces.soiled(city,person.property());}}
-                case SHOP -> {if(city.getEntity(person.id())==null&&CityJourneys.at(city,person,CityProfessions.Category.TRADE.site().offset(8,0,7),8))shoppers.add(person.id());}
+                case SHOP -> {if(city.getEntity(person.id())==null&&CityJourneys.at(city,person,DistrictLife.resident(person)?DistrictLife.shop(person):CityProfessions.Category.TRADE.site().offset(8,0,7),8))shoppers.add(person.id());}
                 case MATCH,PLAY,REST -> n=n.change(0,0,0,20,15,0);
                 case CARE -> {} // Treatment is completed by an available clinician, with medicine and a saved visit.
                 default -> {}
@@ -203,6 +203,7 @@ final class CitySimulation {
         }
         if(distance>=80*80) {npc.getNavigation().stop();return;}
         if(CityTraces.carry(npc,city,c))return;
+        if(DistrictLife.tick(npc,city,c,action))return;
         if(CityOccupations.delivering(city,c)&&CityOccupations.tick(npc,city,c))return;
         if(CityPersonalGoals.move(npc,city,c))return;
         if(CityServices.tick(npc,city,c,action))return;
@@ -285,13 +286,14 @@ final class CitySimulation {
         var meeting=CityRelationships.socialDestination(city,c);if(meeting!=null&&!CityHabits.working(c,NapoliBroadcast.time(city),NapoliBroadcast.day(city)))return meeting;
         var visit=visitingHouse(city,c);if(visit!=null)return visit.inside();
         var action=activity(city,c,life(city,c.id()),NapoliBroadcast.time(city));
+        if(DistrictLife.resident(c))return DistrictLife.destination(city,c,action);
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)return CityOccupations.kind(c).isEmpty()?CityOccupations.workplace(c):CityOccupations.target(city,c);
         if(action==NapoliHouseholds.Activity.CARE)return CityProfessions.Category.HEALTH.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SCHOOL)return CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SHOP)return CityProfessions.Category.TRADE.site().offset(8,0,7);
         return NapoliCivicLife.home(c);
     }
-    private static NapoliMergellina.House visitingHouse(ServerLevel city,NapoliCivicLife.Citizen c) {
+    static NapoliMergellina.House visitingHouse(ServerLevel city,NapoliCivicLife.Citizen c) {
         var scheduled=CityGatherings.visitingHome(city,c.id());if(!scheduled.isEmpty())return CityLivingHomes.find(scheduled);
         if(CityGatherings.departing(city,c.id()))return null;
         long time=NapoliBroadcast.time(city);

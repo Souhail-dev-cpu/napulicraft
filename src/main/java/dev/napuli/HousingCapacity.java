@@ -51,8 +51,8 @@ final class HousingCapacity {
         if (layout.equals(state.layout)) return state.homes;
         var homes = new ArrayList<Home>();
         for (var h : AUTHORED) homes.add(new Home(new CityProperty.Home(
-                new BlockPos(h.x(), 61, h.z()),
-                new BlockPos(h.x() + h.width() - 1, Math.max(78, 64 + h.floors() * 5), h.z() + h.depth() - 1)),
+                new BlockPos(h.x(), h.ground()-3, h.z()),
+                new BlockPos(h.x() + h.width() - 1, Math.max(h.ground()+14, h.ground() + h.floors() * 5), h.z() + h.depth() - 1)),
                 h.entrance().south(), h.id()));
         // The four inhabited Borgo Marinari buildings predate the property registry.
         for (int i = 0; i < 4; i++) {
@@ -63,6 +63,7 @@ final class HousingCapacity {
         }
         // Include older homes and houses registered with the city's property system.
         for (var bounds : layout) {
+            if (DistrictLife.districts().stream().anyMatch(d->d.business().x()==bounds.min().getX()&&d.business().z()==bounds.min().getZ())) continue;
             if (homes.stream().anyMatch(h -> h.bounds().min().getX() == bounds.min().getX()
                     && h.bounds().min().getZ() == bounds.min().getZ())) continue;
             homes.add(new Home(bounds, new BlockPos((bounds.min().getX() + bounds.max().getX()) / 2,

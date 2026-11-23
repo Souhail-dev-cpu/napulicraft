@@ -83,21 +83,12 @@ public final class NapoliExpansion {
     static void register(){
         // CHUNK_LOAD runs before the full-chunk future is completed. Editing through Level there
         // would wait on that same future; defer until the next server tick and cap the work per tick.
-        ServerChunkEvents.CHUNK_LOAD.register((city,chunk,newlyGenerated)->{if(city.dimension()==NapoliMap.LEVEL&&intersects(chunk)&&revision(chunk)<REVISION)PENDING.computeIfAbsent(city,k->new HashMap<>()).put(chunk.getPos().pack(),chunk);});
+        ServerChunkEvents.CHUNK_LOAD.register((city,chunk,newlyGenerated)->{if(city.dimension()==NapoliMap.LEVEL&&NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(),chunk.getPos().getMinBlockZ()))PENDING.computeIfAbsent(city,k->new HashMap<>()).put(chunk.getPos().pack(),chunk);});
         ServerTickEvents.START_SERVER_TICK.register(server->{var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;var pending=PENDING.get(city);if(pending==null||pending.isEmpty())return;
             var batch=pending.values().stream().sorted(Comparator.comparingDouble(c->city.players().stream().mapToDouble(p->p.blockPosition().distSqr(c.getPos().getMiddleBlockPosition(64))).min().orElse(0))).limit(4).toList();
-            for(var chunk:batch){pending.remove(chunk.getPos().pack());if(city.getChunkSource().getChunkNow(chunk.getPos().x(),chunk.getPos().z())==chunk)generate(city,chunk);}
+            for(var chunk:batch){pending.remove(chunk.getPos().pack());if(city.getChunkSource().getChunkNow(chunk.getPos().x(),chunk.getPos().z())==chunk){generate(city,chunk);DistrictLife.fit(city,chunk);CityRailway.fit(city,chunk);}}
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server->PENDING.clear());
-        ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%100!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;
-            var spawned=city.getAttachedOrElse(WALKERS,Set.of());Set<String> changed=null;
-            for(var p:NapoliAtlas.PLACES)if(!p.original())for(int i=0;i<2;i++){
-                String key=p.id()+"/"+i;if(spawned.contains(key))continue;var pos=p.arrival().offset(i*4,0,4);if(!city.hasChunkAt(pos)||city.players().stream().noneMatch(player->pos.distToCenterSqr(player.position())<48*48))continue;
-                var uuid=UUID.nameUUIDFromBytes(("napuli:atlas-walker:"+key).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                if(!CityJourneys.known(city,uuid)){var role=p.kind()==NapoliAtlas.Kind.SEASIDE?NapoliResident.Role.PESCATORE:i==0?NapoliResident.Role.PASSERBY:NapoliResident.Role.TURISTA;var npc=NapoliResident.create(city,role,pos,0);npc.setUUID(uuid);npc.setHomeTo(pos,12);if(!city.addFreshEntity(npc))continue;}
-                if(changed==null)changed=new HashSet<>(spawned);changed.add(key);
-            }if(changed!=null)city.setAttached(WALKERS,Set.copyOf(changed));
-        });
     }
 
     private static final class Writer {

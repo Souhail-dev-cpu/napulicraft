@@ -341,7 +341,7 @@ public final class NapoliResident extends PathfinderMob {
             return InteractionResult.SUCCESS;
         }
         if (hand == InteractionHand.MAIN_HAND && NapoliHouseholds.family(role())) {
-            if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
+            if (player instanceof ServerPlayer sp) NpcSpeech.say(sp,this,Component.translatable(
                     "napuli.family." + activity().name().toLowerCase(Locale.ROOT)));
             return InteractionResult.SUCCESS;
         }
@@ -354,7 +354,7 @@ public final class NapoliResident extends PathfinderMob {
             return InteractionResult.SUCCESS;
         }
         if (hand == InteractionHand.MAIN_HAND && role() == Role.CARABINIERE) {
-            if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable(
+            if (player instanceof ServerPlayer sp) NpcSpeech.say(sp,this,Component.translatable(
                     Carabinieri.isWanted(sp) ? "napuli.cc.talk.wanted" : "napuli.cc.talk." + random.nextInt(4)));
             return InteractionResult.SUCCESS;
         }

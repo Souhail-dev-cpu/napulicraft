@@ -293,7 +293,7 @@ public final class NapoliStreet {
             case MICHELE, ROSA -> List.of(Action.CONTACT);
             default -> List.of();
         };
-        if (options.isEmpty()) { message(player, levelGreeting(player)); return; }
+        if (options.isEmpty()) { reply(player,npc,levelGreeting(player)); return; }
         NeighbourMemory.greet(player, npc);
         String token = UUID.randomUUID().toString();
         player.setAttached(DIALOG, new Session(npc, token, player.level().getGameTime() + 1200, options));
@@ -365,9 +365,9 @@ public final class NapoliStreet {
         if (offer != null) {
             if(CitySocial.bond(player.level(),session.npc().getUUID(),player.getUUID()).trust()<15)return 0;
             int price = NeighbourMemory.price(player, session.npc(), action==Action.BREAD?2*offer.stack().getCount():offer.cost());
-            if (cash(player) < price) { message(player, "poor"); return 0; }
+            if (cash(player) < price) { reply(player,session.npc(), "poor"); return 0; }
             if (action == Action.BREAD && !BakeryStock.reserveBread(player.level(), offer.stack().getCount())) {
-                message(player, BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");
+                reply(player,session.npc(), BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");
                 return 0;
             }
             credit(player, -price);
@@ -400,14 +400,14 @@ public final class NapoliStreet {
                 return result;
             }
             case DELIVERY -> {
-                if (player.getAttachedOrElse(DELIVERY, 0L) > now) { message(player, "route"); return 0; }
+                if (player.getAttachedOrElse(DELIVERY, 0L) > now) { reply(player,session.npc(), "route"); return 0; }
                 player.setAttached(DELIVERY, now + 20 * 240);
-                message(player, "route");
+                reply(player,session.npc(), "route");
             }
             case TURN_IN -> {
                 if (player.getAttachedOrElse(DELIVERY, 0L) <= now) {
                     player.removeAttached(DELIVERY);
-                    message(player, "no_delivery");
+                    reply(player,session.npc(), "no_delivery");
                     return 0;
                 }
                 player.removeAttached(DELIVERY);
@@ -417,12 +417,12 @@ public final class NapoliStreet {
                 scheduleThief(player, now);
             }
             default -> {
-                if (cash(player) < 2) { message(player, "poor"); return 0; }
-                if (now < player.getAttachedOrElse(GAME, 0L)) { message(player, "wait"); return 0; }
+                if (cash(player) < 2) { reply(player,session.npc(), "poor"); return 0; }
+                if (now < player.getAttachedOrElse(GAME, 0L)) { reply(player,session.npc(), "wait"); return 0; }
                 player.setAttached(GAME, now + 20 * 30);
                 boolean win = player.getRandom().nextInt(5) == 0;
                 credit(player, win ? 4 : -2);
-                message(player, win ? "cups_win" : "cups_lose");
+                reply(player,session.npc(), win ? "cups_win" : "cups_lose");
             }
         }
         return 1;
@@ -433,6 +433,10 @@ public final class NapoliStreet {
             player.setAttached(TROUBLE, now + 20 * 16);
             player.setAttached(NEXT_THIEF, now + 20 * 80);
         }
+    }
+
+    private static void reply(ServerPlayer player,NapoliResident npc,String key,Object... arguments) {
+        NpcSpeech.say(player,npc,Component.translatable("napuli.street."+key,arguments));
     }
 
     private static void message(ServerPlayer player, String key, Object... arguments) {

@@ -36,6 +36,8 @@ public class NapuliClient implements ClientModInitializer {
 		RadioClient.register();
 		HudClient.register();
 		NapoliNoticeToast.register();
+		NpcSpeechBubbles.register();
+		SpeechBubbleTest.register();
 		FootballScreen.register();
 		FootballMenuScreen.register();
 		FootballControlsClient.register();
@@ -43,6 +45,7 @@ public class NapuliClient implements ClientModInitializer {
 		TelevisionScreen.register();
 		dev.napuli.LivingCityTest.register();
 		dev.napuli.AtlasTest.register();
+		dev.napuli.DistrictClientTest.register();
 		AutoTest.register();
 		CityTest.register();
 		PoliceTest.register();
@@ -120,6 +123,15 @@ public class NapuliClient implements ClientModInitializer {
 			return texture(state.role, state.variant);
 		}
 		@Override public NapoliResidentModel.State createRenderState() { return new NapoliResidentModel.State(); }
+		@Override public void submit(NapoliResidentModel.State state, PoseStack pose, net.minecraft.client.renderer.SubmitNodeCollector collector,
+				net.minecraft.client.renderer.state.level.CameraRenderState camera) {
+			super.submit(state,pose,collector,camera);
+			NpcSpeechBubbles.submit(state.speech,getFont(),state,pose,collector,camera);
+		}
+		@Override protected net.minecraft.world.phys.AABB getBoundingBoxForCulling(dev.napuli.NapoliResident npc,float partialTick) {
+			var bounds=super.getBoundingBoxForCulling(npc,partialTick);
+			return NpcSpeechBubbles.hasBubble(npc.getUUID())?bounds.inflate(2,2,2):bounds;
+		}
 		@Override
 		protected void scale(NapoliResidentModel.State s, PoseStack pose) {
 			if (s.role == dev.napuli.NapoliResident.Role.SCUGNIZZO || s.role == dev.napuli.NapoliResident.Role.FAMILY_CHILD
@@ -133,6 +145,7 @@ public class NapuliClient implements ClientModInitializer {
 		@Override
 		public void extractRenderState(dev.napuli.NapoliResident npc, NapoliResidentModel.State state, float partialTick) {
 			super.extractRenderState(npc, state, partialTick);
+			state.speech=NpcSpeechBubbles.extract(npc,partialTick);
 			state.role = npc.role();
 			state.variant = npc.variant();
 			state.alternateCivic = (state.role == dev.napuli.NapoliResident.Role.CIVIC_WOMAN || state.role == dev.napuli.NapoliResident.Role.CIVIC_MAN) && (npc.getUUID().hashCode() & 1) == 0;

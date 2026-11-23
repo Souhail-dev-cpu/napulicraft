@@ -25,7 +25,7 @@ final class CityArrivals {
     private static final Map<ServerLevel,Map<UUID,Wait>> WAITING=new WeakHashMap<>();
     private static final Map<ServerLevel,Map<String,Long>> BELLS=new WeakHashMap<>();
     static BlockPos bell(NapoliMergellina.House h){return h.entrance().east().above();}
-    static NapoliMergellina.House house(String id){return NapoliMergellina.PROPERTIES.stream().filter(h->h.id().equals(id)).findFirst().orElse(null);}
+    static NapoliMergellina.House house(String id){return CityLivingHomes.find(id);}
     static void fixtures(ServerLevel city){
         // Connect the courts to the existing Partenope street without rebuilding any house.
         for(int row=0;row<4;row++)for(int x=-536;x<=-337;x++){
@@ -56,8 +56,8 @@ final class CityArrivals {
         if(npc instanceof NapoliResident resident&&h.contains(npc.blockPosition())){
             npc.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES,p.getEyePosition());
             if(CitySocial.bond(city,owner,p.getUUID()).trust()>=65&&HouseGuests.grant(city,id,owner,p)){
-                p.sendSystemMessage(Component.literal(resident.getName().getString()+": Entra pure, sei il benvenuto!"));
-            }else p.sendSystemMessage(Component.literal(resident.getName().getString()+": Chi è? Oggi non aspettavo visite."));answered=true;
+                NpcSpeech.say(p,resident,Component.literal("Entra pure, sei il benvenuto!"));
+            }else NpcSpeech.say(p,resident,Component.literal("Chi è? Oggi non aspettavo visite."));answered=true;
         }
         p.sendOverlayMessage(Component.literal(answered?"Il campanello ha avvisato chi abita qui.":"Nessuna risposta. Puoi ripassare più tardi."));return 1;
     }

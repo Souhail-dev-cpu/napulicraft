@@ -71,7 +71,7 @@ public final class GiorgiaMeloni {
             Long deadline = player.getAttached(APPROACH_DEADLINE);
             if (deadline != null && server.overworld().getGameTime() >= deadline) {
                 if (Carabinieri.jailForTaxEvasion(player)) {
-                    player.sendSystemMessage(Component.translatable("napuli.tax.timeout"));
+                    NapoliNotice.show(player, Component.translatable("napuli.tax.timeout"));
                     finishVisit(player);
                 }
                 continue;
@@ -132,14 +132,14 @@ public final class GiorgiaMeloni {
     private static void beginApproach(ServerPlayer player) {
         if (player.hasAttached(APPROACH_DEADLINE)) return;
         player.setAttached(APPROACH_DEADLINE, player.level().getServer().overworld().getGameTime() + APPROACH_TIMEOUT);
-        player.sendSystemMessage(Component.translatable("napuli.tax.approach_warning"));
+        NapoliNotice.show(player, Component.translatable("napuli.tax.approach_warning"));
     }
 
     private static boolean startVisit(ServerPlayer player, NapoliResident npc) {
         if (!player.level().addFreshEntity(npc)) return false;
         player.setAttached(COLLECTOR, npc);
         player.removeAttached(SESSION);
-        player.sendSystemMessage(Component.translatable("napuli.tax.arriving"));
+        NapoliNotice.show(player, Component.translatable("napuli.tax.arriving"));
         return true;
     }
 
@@ -172,7 +172,7 @@ public final class GiorgiaMeloni {
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/napulitassa " + token + " soldi")))));
         actions.add(new ActionButton(new CommonButtonData(Component.translatable("napuli.tax.refuse"), 330),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/napulitassa " + token + " rifiuta")))));
-        player.sendSystemMessage(Component.translatable("napuli.tax.reopen"));
+        NapoliNotice.show(player, Component.translatable("napuli.tax.reopen"));
         player.openDialog(Holder.direct(new MultiActionDialog(data, actions, Optional.empty(), 1)));
     }
 
@@ -188,29 +188,29 @@ public final class GiorgiaMeloni {
         }
         if (payment == Payment.ITEMS) {
             if (TaxPayment.amount(player.getInventory().getNonEquipmentItems()) == 0 && NapoliStreet.cash(player) > 0) {
-                player.sendSystemMessage(Component.translatable("napuli.tax.no_materials"));
+                NapoliNotice.show(player, Component.translatable("napuli.tax.no_materials"));
                 open(player, npc);
                 return 0;
             }
             int taken = TaxPayment.collect(player.getInventory().getNonEquipmentItems());
             player.getInventory().setChanged();
             player.inventoryMenu.broadcastChanges();
-            player.sendSystemMessage(Component.translatable(taken == 0 ? "napuli.tax.exempt" : "napuli.tax.paid", taken));
+            NapoliNotice.show(player, Component.translatable(taken == 0 ? "napuli.tax.exempt" : "napuli.tax.paid", taken));
         } else if (payment == Payment.CASH) {
             int tax = TaxPayment.cashAmount(NapoliStreet.cash(player));
             // Requote a changed bill instead of withdrawing an amount the player has not reviewed.
             if (tax != session.cashTax()) {
-                player.sendSystemMessage(Component.translatable("napuli.tax.balance_changed"));
+                NapoliNotice.show(player, Component.translatable("napuli.tax.balance_changed"));
                 open(player, npc);
                 return 0;
             }
             if (tax == 0 && TaxPayment.amount(player.getInventory().getNonEquipmentItems()) > 0) {
-                player.sendSystemMessage(Component.translatable("napuli.tax.no_cash"));
+                NapoliNotice.show(player, Component.translatable("napuli.tax.no_cash"));
                 open(player, npc);
                 return 0;
             }
             NapoliStreet.credit(player, -tax);
-            player.sendSystemMessage(Component.translatable(tax == 0 ? "napuli.tax.exempt" : "napuli.tax.cash_paid",
+            NapoliNotice.show(player, Component.translatable(tax == 0 ? "napuli.tax.exempt" : "napuli.tax.cash_paid",
                     tax, NapoliStreet.cash(player)));
         } else if (!Carabinieri.jailForTaxEvasion(player)) return 0;
         finishVisit(player);
@@ -233,12 +233,12 @@ public final class GiorgiaMeloni {
     /** Operator-only shortcut, available under /napuli meloni. */
     public static int summon(ServerPlayer player) {
         if (!eligible(player)) {
-            player.sendSystemMessage(Component.translatable("napuli.tax.survival_only"));
+            NapoliNotice.show(player, Component.translatable("napuli.tax.survival_only"));
             return 0;
         }
         player.setAttached(NEXT_VISIT, player.level().getServer().overworld().getOverworldClockTime());
         boolean spawned = spawnVisit(player);
-        if (!spawned) player.sendSystemMessage(Component.translatable("napuli.tax.no_space"));
+        if (!spawned) NapoliNotice.show(player, Component.translatable("napuli.tax.no_space"));
         return spawned ? 1 : 0;
     }
 }

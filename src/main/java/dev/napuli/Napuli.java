@@ -130,6 +130,7 @@ public class Napuli implements ModInitializer {
 		NapoliKitchen.register();
 		Radio.register();
 		Hud.register();
+		NapoliNotice.register();
 		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
 		GIGANTE_EGG = item("munaciello_gigante_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(GIGANTE));
 		NAPULETANO_EGG = item("napuletano_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(RESIDENT));
@@ -158,6 +159,7 @@ public class Napuli implements ModInitializer {
 		NapoliProperties.register();
 		HouseGuests.register();
 		NapoliBroadcast.register();
+		FootballPractice.register();
 		NapoliCivicLife.register();
 		CitySimulation.register();
 		NapoliEmployment.register();

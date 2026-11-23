@@ -197,7 +197,7 @@ final class NapoliLocalJobs {
             case "accept" -> {
                 mark(player, ACCEPTED, job);
                 if (job == Job.FISH) give(player, new ItemStack(Items.FISHING_ROD));
-                player.sendSystemMessage(Component.translatable(job.key() + ".task"));
+                NapoliNotice.show(player, Component.translatable(job.key() + ".task"));
             }
             case "report" -> report(player, job);
             case "access" -> {
@@ -235,7 +235,7 @@ final class NapoliLocalJobs {
                     return 1;
                 } else {
                     player.setAttached(BEAT, index + 1);
-                    player.sendSystemMessage(Component.translatable("napuli.local.beat_progress", index + 1, MELODY.size()));
+                    NapoliNotice.show(player, Component.translatable("napuli.local.beat_progress", index + 1, MELODY.size()));
                 }
                 open(player, s.npc(), job);
             }
@@ -288,7 +288,7 @@ final class NapoliLocalJobs {
             complete(player, job);
             return;
         }
-        player.sendSystemMessage(Component.translatable(job.key() + ".task"));
+        NapoliNotice.show(player, Component.translatable(job.key() + ".task"));
     }
 
     private static Offer offer(String action) {
@@ -321,7 +321,7 @@ final class NapoliLocalJobs {
         if (has(player, COMPLETED, job)) return;
         mark(player, COMPLETED, job);
         NapoliStreet.credit(player, job.reward);
-        player.sendSystemMessage(Component.translatable("napuli.local.done", job.reward));
+        NapoliNotice.show(player, Component.translatable("napuli.local.done", job.reward));
     }
 
     private static void give(ServerPlayer player, ItemStack stack) {
@@ -329,6 +329,6 @@ final class NapoliLocalJobs {
     }
 
     private static void say(ServerPlayer player, String suffix) {
-        player.sendSystemMessage(Component.translatable("napuli.local." + suffix));
+        NapoliNotice.show(player, Component.translatable("napuli.local." + suffix));
     }
 }

@@ -386,17 +386,17 @@ final class NapoliCivicLife {
         if (c == null) return;
         CitySimulation.describe(player,c);
         Job job = c.profession();
-        player.sendSystemMessage(Component.translatable("napuli.civic.profile", c.name(), c.age(Math.max(census(player.level()).day(), NapoliBroadcast.day(player.level()))),
+        NapoliNotice.show(player, Component.translatable("napuli.civic.profile", c.name(), c.age(Math.max(census(player.level()).day(), NapoliBroadcast.day(player.level()))),
                 Component.translatable(job == null ? "napuli.civic.no_job" : job.key()), job == null ? 0 : job.wage, c.balance()));
         if (!c.partner().isEmpty()) {
             Citizen partner = profile(player.level(), UUID.fromString(c.partner()));
-            if (partner != null) player.sendSystemMessage(Component.translatable("napuli.civic.partner", partner.name()));
+            if (partner != null) NapoliNotice.show(player, Component.translatable("napuli.civic.partner", partner.name()));
         }
         if (!c.parents().isEmpty()) {
             Citizen parent = profile(player.level(), UUID.fromString(c.parents()));
-            if (parent != null) player.sendSystemMessage(Component.translatable("napuli.civic.parent", parent.name()));
+            if (parent != null) NapoliNotice.show(player, Component.translatable("napuli.civic.parent", parent.name()));
         }
         for (var house : NapoliMergellina.PROPERTIES) if (house.id().equals(c.property()))
-            player.sendSystemMessage(Component.translatable("napuli.civic.house", house.name()));
+            NapoliNotice.show(player, Component.translatable("napuli.civic.house", house.name()));
     }
 }

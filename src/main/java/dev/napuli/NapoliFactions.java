@@ -232,6 +232,6 @@ public final class NapoliFactions {
     }
 
     private static void say(ServerPlayer player, String key, Object... args) {
-        player.sendSystemMessage(Component.translatable("napuli.factions." + key, args));
+        NapoliNotice.show(player, Component.translatable("napuli.factions." + key, args));
     }
 }

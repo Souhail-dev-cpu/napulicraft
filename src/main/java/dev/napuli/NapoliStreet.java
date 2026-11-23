@@ -130,7 +130,7 @@ public final class NapoliStreet {
         dispatcher.register(Commands.literal("portafoglio").executes(c -> {
             var p = c.getSource().getPlayerOrException();
             message(p, "stats", cash(p), p.getAttachedOrElse(FULLNESS, 0));
-            p.sendSystemMessage(NapoliFactions.status(p));
+            NapoliNotice.show(p, NapoliFactions.status(p));
             return 1;
         }));
         dispatcher.register(Commands.literal("napulistrada").then(Commands.argument("turno", StringArgumentType.word())
@@ -238,7 +238,7 @@ public final class NapoliStreet {
         if (before < 16 && after >= 16) message(player, "full");
         if (before < 50 && after >= 50) {
             KitchenEffects.effect(player, net.minecraft.world.effect.MobEffects.SLOWNESS, 10, 1);
-            player.sendSystemMessage(Component.translatable("napuli.kitchen.extreme"));
+            NapoliNotice.show(player, Component.translatable("napuli.kitchen.extreme"));
         }
     }
 
@@ -422,6 +422,6 @@ public final class NapoliStreet {
     }
 
     private static void message(ServerPlayer player, String key, Object... arguments) {
-        player.sendSystemMessage(Component.translatable("napuli.street." + key, arguments));
+        NapoliNotice.show(player, Component.translatable("napuli.street." + key, arguments));
     }
 }

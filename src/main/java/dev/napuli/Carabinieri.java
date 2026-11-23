@@ -139,7 +139,7 @@ public final class Carabinieri {
 			w.gravity = c.gravity;
 			w.crime = c;
 			w.lastSeen = now;
-			p.sendSystemMessage(Component.translatable("napuli.cc.worse"));
+			NapoliNotice.show(p, Component.translatable("napuli.cc.worse"));
 		} else {
 			w.lastSeen = now;
 		}
@@ -220,11 +220,11 @@ public final class Carabinieri {
 	private static void arrest(ServerLevel city, ServerPlayer p, Wanted w) {
 		WANTED.remove(p.getUUID());
 		for (NapoliResident cc : carabinieri(city, p.blockPosition(), 36)) cc.getNavigation().stop();
-		p.sendSystemMessage(Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));
+		NapoliNotice.show(p, Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));
 		if (w.gravity <= 1 && NapoliStreet.cash(p) >= FINE) {
 			NapoliStreet.credit(p, -FINE);
 			title(p, "napuli.cc.fine.title", "napuli.cc.fine");
-			p.sendSystemMessage(Component.translatable("napuli.cc.fine.reason", Component.translatable("napuli.cc.crime." + w.crime.id()), FINE));
+			NapoliNotice.show(p, Component.translatable("napuli.cc.fine.reason", Component.translatable("napuli.cc.crime." + w.crime.id()), FINE));
 			return;
 		}
 		// jail: weapons confiscated, into the cell, adventure mode so the walls can't be dug
@@ -235,7 +235,7 @@ public final class Carabinieri {
 		int seconds = JAIL_SECONDS * Math.max(1, w.gravity - 1);
 		if (!imprison(city, p, seconds)) return;
 		title(p, "napuli.cc.jail.title", "napuli.cc.jail");
-		p.sendSystemMessage(Component.translatable("napuli.cc.jail.chat", seconds, taken));
+		NapoliNotice.show(p, Component.translatable("napuli.cc.jail.chat", seconds, taken));
 		Napuli.LOGGER.info("[cc] {} jailed for {} s ({} weapons taken)", p.getName().getString(), seconds, taken);
 	}
 
@@ -243,14 +243,14 @@ public final class Carabinieri {
 	static boolean jailForTaxEvasion(ServerPlayer p) {
 		ServerLevel city = p.level().getServer().getLevel(NapoliMap.LEVEL);
 		if (city == null) {
-			p.sendSystemMessage(Component.translatable("napuli.city.unavailable"));
+			NapoliNotice.show(p, Component.translatable("napuli.city.unavailable"));
 			return false;
 		}
 		NapoliMap.ensureBuilt(city);
 		if (!imprison(city, p, JAIL_SECONDS)) return false;
 		WANTED.remove(p.getUUID());
 		title(p, "napuli.cc.jail.title", "napuli.tax.evasion");
-		p.sendSystemMessage(Component.translatable("napuli.tax.jailed", JAIL_SECONDS));
+		NapoliNotice.show(p, Component.translatable("napuli.tax.jailed", JAIL_SECONDS));
 		return true;
 	}
 
@@ -344,7 +344,7 @@ public final class Carabinieri {
 		}
 		cc.getNavigation().stop();
 		for (ServerPlayer p : level.getPlayers(pl -> pl.distanceToSqr(bike) < 48 * 48)) {
-			p.sendSystemMessage(Component.translatable("napuli.casco.carcere", jailed));
+			NapoliNotice.show(p, Component.translatable("napuli.casco.carcere", jailed));
 			title(p, "napuli.casco.carcere.title", "napuli.casco.carcere.sub");
 		}
 		level.playSound(null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.IRON_DOOR_CLOSE, SoundSource.HOSTILE, 1.5f, 0.8f);

@@ -179,7 +179,7 @@ public final class NapoliScenes {
             default -> throw new IllegalArgumentException(role.toString());
         }
         if (charm && role != NapoliResident.Role.MBRIANA)
-            player.sendSystemMessage(Component.translatable("napuli.folklore.charm"));
+            NapoliNotice.show(player, Component.translatable("napuli.folklore.charm"));
     }
 
     static void answerSpirit(ServerPlayer player, NapoliResident spirit) {
@@ -209,7 +209,7 @@ public final class NapoliScenes {
         level.sendParticles(ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(),
                 24, 0.32, 0.5, 0.32, 0.03);
         level.playSound(null, spirit.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 0.8f, 1.1f);
-        player.sendSystemMessage(Component.translatable("napuli.horror.answer_" + spirit.role().id()));
+        NapoliNotice.show(player, Component.translatable("napuli.horror.answer_" + spirit.role().id()));
         spirit.discard();
     }
 

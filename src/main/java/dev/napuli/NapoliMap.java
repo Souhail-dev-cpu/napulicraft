@@ -59,11 +59,11 @@ public final class NapoliMap {
     public static int visit(ServerPlayer player) {
         ServerLevel city = player.level().getServer().getLevel(LEVEL);
         if (city == null) {
-            player.sendSystemMessage(Component.translatable("napuli.city.unavailable"));
+            NapoliNotice.show(player, Component.translatable("napuli.city.unavailable"));
             return 0;
         }
         if (player.level().dimension() == LEVEL) {
-            player.sendSystemMessage(Component.translatable("napuli.city.guide"));
+            NapoliNotice.show(player, Component.translatable("napuli.city.guide"));
             return 1;
         }
         ensureBuilt(city);
@@ -73,7 +73,7 @@ public final class NapoliMap {
                 Set.of(), 0, 0, true)) return 0;
         player.setAttached(RETURN, origin);
         NapoliScenes.motorino(player);
-        player.sendSystemMessage(Component.translatable("napuli.city.guide"));
+        NapoliNotice.show(player, Component.translatable("napuli.city.guide"));
         return 1;
     }
 

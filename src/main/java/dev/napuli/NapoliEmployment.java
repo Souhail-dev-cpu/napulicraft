@@ -147,7 +147,7 @@ final class NapoliEmployment {
                     break;
                 }
                 if (!found) {
-                    p.sendSystemMessage(Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
+                    NapoliNotice.show(p, Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
                     return 0;
                 }
             }
@@ -160,7 +160,7 @@ final class NapoliEmployment {
         if (sign.equals(contract.clock) && stage == 2) {
             p.setAttached(WORK, new Work(state.contract(), day, 0, day));
             NapoliStreet.credit(p, contract.job.wage);
-            p.sendSystemMessage(Component.translatable("napuli.work.paid", contract.job.wage));
+            NapoliNotice.show(p, Component.translatable("napuli.work.paid", contract.job.wage));
             return 1;
         }
         return status(p);
@@ -174,10 +174,10 @@ final class NapoliEmployment {
         var objective = objective(p);
         if (objective == null) { say(p, "already_paid"); return 1; }
         var target = objective.target();
-        p.sendSystemMessage(Component.translatable("napuli.work.status", contract.nameLabel(),
+        NapoliNotice.show(p, Component.translatable("napuli.work.status", contract.nameLabel(),
                 Component.translatable(objective.key()), target.getX(), target.getY(), target.getZ()));
         if (state.day() == NapoliBroadcast.day(p.level()) && state.stage() == 1 && contract.supplies != null)
-            p.sendSystemMessage(Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
+            NapoliNotice.show(p, Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
         return 1;
     }
 
@@ -215,6 +215,6 @@ final class NapoliEmployment {
     }
 
     private static void say(ServerPlayer p, String message) {
-        p.sendSystemMessage(Component.translatable("napuli.work." + message));
+        NapoliNotice.show(p, Component.translatable("napuli.work." + message));
     }
 }

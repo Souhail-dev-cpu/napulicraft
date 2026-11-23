@@ -87,7 +87,7 @@ public final class KitchenEffects {
             case "PUZZLE" -> {
                 if (!player.getAttachedOrElse(KitchenProgress.PUZZLE_CLAIMED, false)) {
                     player.setAttached(KitchenProgress.PUZZLE_READY, true);
-                    player.sendSystemMessage(Component.translatable("napuli.kitchen.puzzle_ready"));
+                    NapoliNotice.show(player, Component.translatable("napuli.kitchen.puzzle_ready"));
                 }
             }
             case "LIMONCELLO" -> {
@@ -121,7 +121,7 @@ public final class KitchenEffects {
                 if (advance(player, CAPITONE)) {
                     NapoliStreet.addFullness(player, 40);
                     effect(player, MobEffects.SLOWNESS, 20, 2); effect(player, MobEffects.WEAKNESS, 10, 0);
-                    player.sendSystemMessage(Component.translatable("napuli.kitchen.extreme"));
+                    NapoliNotice.show(player, Component.translatable("napuli.kitchen.extreme"));
                 }
                 if (advance(player, DRINK_WINDOW)) player.removeAttached(DRINKS);
                 advance(player, COOLING);
@@ -138,7 +138,7 @@ public final class KitchenEffects {
             if (player.getAttachedOrElse(COOLING, 0) > 0) delta = Math.min(-2, delta);
             int after = Math.clamp(before + delta, 0, 100);
             player.setAttached(HEAT, after);
-            if (before < 80 && after >= 80) player.sendSystemMessage(Component.translatable("napuli.kitchen.hot"));
+            if (before < 80 && after >= 80) NapoliNotice.show(player, Component.translatable("napuli.kitchen.hot"));
             if (after >= 80) effect(player, MobEffects.WEAKNESS, 2, 0);
         }
     }

@@ -135,8 +135,8 @@ final class NapoliProperties {
         var owners = new HashMap<>(player.level().getAttachedOrElse(OWNERS, Map.of()));
         owners.put(id, player.getUUID());
         player.level().setAttached(OWNERS, Map.copyOf(owners));
-        CityHousingFinance.ownOutright(player.level(),id,player.getUUID());
-        player.sendSystemMessage(Component.translatable("napuli.property.bought", house.address()));
+        CityHousingFinance.ownOutright(player.level(), id, player.getUUID());
+        NapoliNotice.show(player, Component.translatable("napuli.property.bought", house.address()));
         return 1;
     }
 

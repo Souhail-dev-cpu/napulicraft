@@ -94,7 +94,7 @@ public class Munaciello extends Monster {
 					var fallen = spawnAtLocation(level, recovered);
 					if (fallen != null) fallen.setGlowingTag(true);
 				}
-				player.sendSystemMessage(Component.translatable("napuli.horror.bargain", recoveredName));
+				NapoliNotice.show(player, Component.translatable("napuli.horror.bargain", recoveredName));
 				vanish(level, false);
 			}
 			return net.minecraft.world.InteractionResult.SUCCESS;
@@ -107,12 +107,12 @@ public class Munaciello extends Monster {
 			if (!player.getUUID().equals(feeder)) { feeder = player.getUUID(); treats = 0; }
 			treats++;
 			serverPlayer.level().sendParticles(ParticleTypes.HEART, getX(), getY() + 1.2, getZ(), 5, .3, .2, .3, .02);
-			serverPlayer.sendSystemMessage(Component.translatable("napuli.munaciello.sweet", treats));
+			NapoliNotice.show(serverPlayer, Component.translatable("napuli.munaciello.sweet", treats));
 			if (treats >= 3) {
 				owner = player.getUUID(); entityData.set(TAMED, true); setPersistenceRequired();
 				if (hasLoot()) returnLoot(serverPlayer.level());
 				fleeTicks = -1; target = null; getNavigation().stop();
-				serverPlayer.sendSystemMessage(Component.translatable("napuli.munaciello.tamed"));
+				NapoliNotice.show(serverPlayer, Component.translatable("napuli.munaciello.tamed"));
 			}
 		}
 		return net.minecraft.world.InteractionResult.SUCCESS;
@@ -187,7 +187,7 @@ public class Munaciello extends Monster {
 		this.fleeTicks = 0;
 		this.getNavigation().stop();
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), Napuli.RISATA, SoundSource.HOSTILE, 1.2f, 1.4f);
-		p.sendSystemMessage(Component.translatable("napuli.munaciello.steal", stolen.getHoverName()));
+		NapoliNotice.show(p, Component.translatable("napuli.munaciello.steal", stolen.getHoverName()));
 		if (p instanceof net.minecraft.server.level.ServerPlayer sp) Music.play(sp, Music.Situation.FURTO);
 	}
 
@@ -206,7 +206,7 @@ public class Munaciello extends Monster {
 		ItemStack loot = getMainHandItem().copy();
 		if (original != null) {
 			NapoliKitchen.give(original, loot);
-			original.sendSystemMessage(Component.translatable("napuli.munaciello.returned"));
+			NapoliNotice.show(original, Component.translatable("napuli.munaciello.returned"));
 		} else {
 			var fallen = spawnAtLocation(level, loot);
 			if (fallen != null) fallen.setGlowingTag(true);

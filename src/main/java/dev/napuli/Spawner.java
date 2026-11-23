@@ -48,7 +48,7 @@ public final class Spawner {
 	public static void addRaggia(ServerLevel level, Player p) {
 		int v = p.getAttachedOrElse(Napuli.RAGGIA, 0) + 1;
 		p.setAttached(Napuli.RAGGIA, v);
-		p.sendSystemMessage(Component.translatable(v >= 3 ? "napuli.raggia.max" : "napuli.raggia." + v));
+		NapoliNotice.show(p, Component.translatable(v >= 3 ? "napuli.raggia.max" : "napuli.raggia." + v));
 	}
 
 	public static boolean spawnMunaciello(ServerLevel level, Player p) {

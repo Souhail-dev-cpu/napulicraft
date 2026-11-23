@@ -36,7 +36,16 @@ final class CityTest {
     private static int localCash;
     private static NapoliResident resident;
 
+    private static boolean ridersInChat, footballNoticeInChat;
+
     static void register() {
+        if (Boolean.getBoolean("napuli.footballtest")) {
+            net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+                if (overlay || !(message.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents text)) return;
+                if (text.getKey().equals("napuli.meme.motorino")) ridersInChat = true;
+                if (text.getKey().startsWith("napuli.football.")) footballNoticeInChat = true;
+            });
+        }
         if (Boolean.getBoolean("napuli.citytest")) ClientTickEvents.END_CLIENT_TICK.register(CityTest::tick);
     }
 
@@ -66,6 +75,10 @@ final class CityTest {
             return;
         }
         ++tick;
+        if (Boolean.getBoolean("napuli.footballtest") && tick > 60) {
+            football(mc, tick);
+            return;
+        }
         if (Boolean.getBoolean("napuli.employmenttest") && tick > 60) {
             employment(mc, tick);
             return;
@@ -320,6 +333,76 @@ final class CityTest {
     private static boolean hasGhost(ServerPlayer p, NapoliResident.Role role) {
         return p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(20)).stream()
                 .anyMatch(npc -> npc.role() == role);
+    }
+
+
+    private static net.minecraft.world.phys.Vec3 firstRunner;
+
+    private static void football(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> {
+                var commands = p.level().getServer().getCommands();
+                commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio gioca");
+                assertTrue(p.blockPosition().getX() > 365 && p.blockPosition().getZ() == 23, "player enters the pitch");
+                var field = p.getBoundingBox().inflate(52);
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class, field, n -> n.entityTags().contains("napuli_practice_actor"));
+                assertTrue(actors.size() == 9, "player replaces one of ten footballers");
+            });
+            case 67 -> server(mc, p -> {
+                p.setYRot(-40);
+                p.setXRot(0);
+                var commands = p.level().getServer().getCommands();
+                commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio tira");
+            });
+            case 87 -> server(mc, p -> {
+                var stats = dev.napuli.FootballPractice.statistics(p.level());
+                assertTrue(stats.shots() >= 1 && stats.playerKickDistance() > 1, "player shot moves the ball through the world");
+            });
+            case 92 -> mc.player.connection.sendCommand("calcio guarda");
+            case 113 -> server(mc, p -> {
+                assertTrue(p.blockPosition().getY() == 67 && p.blockPosition().getZ() == 7, "spectator reaches the stand");
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(52),
+                        n -> n.entityTags().contains("napuli_practice_actor"));
+                assertTrue(actors.size() == 10, "NPC takes the place of the outgoing player");
+                firstRunner = actors.stream().filter(n -> n.getName().getString().equals("Vitale")).findFirst().orElseThrow().position();
+            });
+            case 118 -> {
+                if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+                server(mc, p -> view(p, 384.5, 67, 7.5, 0, 16));
+            }
+            case 136 -> AutoTest.shot(mc, "fuorigrotta-partita");
+            case 195 -> server(mc, p -> {
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(52),
+                        n -> n.entityTags().contains("napuli_practice_actor"));
+                var runner = actors.stream().filter(n -> n.getName().getString().equals("Vitale")).findFirst().orElseThrow();
+
+                assertTrue(runner.position().distanceToSqr(firstRunner) > .3, "NPC runs during the match");
+                var stats = dev.napuli.FootballPractice.statistics(p.level());
+                assertTrue(stats.passes() > 0 && stats.interceptions() > 0, "NPCs pass and intercept the ball");
+            });
+            case 205 -> mc.player.connection.sendCommand("calcio palestra");
+            case 220 -> mc.options.keyUp.setDown(true);
+            case 292 -> mc.options.keyUp.setDown(false);
+            case 298 -> server(mc, p -> {
+                assertTrue(p.blockPosition().getZ() >= 35, "player can run through the training lane");
+                assertTrue(dev.napuli.FootballPractice.fitness(p) == 1, "training improves persistent fitness");
+            });
+            case 302 -> {
+                if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+                mc.gui.toastManager().clear();
+                mc.player.connection.sendCommand("calcio");
+            }
+            case 313 -> {
+                assertTrue(ridersInChat, "scooter dialogue remains in chat");
+                assertTrue(!footballNoticeInChat, "football notices stay out of chat");
+                var profile = Component.translatable("napuli.football.profile", 0, 0, 1);
+                assertTrue(mc.gui.toastManager().getToast(NapoliNoticeToast.class, profile) != null,
+                        "football profile appears as a screen notification");
+                AutoTest.shot(mc, "fuorigrotta-avviso-schermo");
+            }
+            case 320 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
+            default -> {}
+        }
     }
 
     private static void employment(Minecraft mc, int step) {

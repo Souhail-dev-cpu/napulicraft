@@ -130,7 +130,7 @@ public class MunacielloGigante extends Monster {
 	private void startChase(ServerLevel level) {
 		chasing = true;
 		Songs.urlo(level, prey.position());
-		prey.sendSystemMessage(Component.translatable("napuli.gigante.chase"));
+		NapoliNotice.show(prey, Component.translatable("napuli.gigante.chase"));
 		if (level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, prey.blockPosition()) < 12)
 			prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 45, 0, false, false));
 	}

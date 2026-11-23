@@ -39,7 +39,7 @@ final class NapoliHygiene {
                 int current = Math.max(0, before - (p.isSprinting() || p.isSwimming() ? 4 : 2));
                 p.setAttached(CLEAN, current);
                 if (before > 25 && current <= 25)
-                    p.sendSystemMessage(Component.translatable("napuli.hygiene.dirty"));
+                    NapoliNotice.show(p, Component.translatable("napuli.hygiene.dirty"));
                 if (current <= 15) p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 230, 0, false, false));
             }
         });

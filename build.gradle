@@ -24,6 +24,13 @@ loom {
 			vmArg "-Dnapuli.taxtest=true"
 			runDir "run-autotest"
 		}
+		localJobsTest {
+			client()
+			name "Napoli local jobs play-test"
+			vmArg "-Dnapuli.citytest=true"
+			vmArg "-Dnapuli.localjobstest=true"
+			runDir "run-autotest"
+		}
 		cityTest {
 			client()
 			name "Napoli city play-test"

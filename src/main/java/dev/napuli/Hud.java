@@ -41,6 +41,10 @@ public final class Hud {
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 			if (!ServerPlayNetworking.canSend(p, State.TYPE)) continue;
 			var obj = NapoliFactions.objective(p);
+			if (obj.key().equals("none") || obj.key().equals("cooldown")) {
+				var local = NapoliLocalJobs.objective(p);
+				if (local != null) obj = local;
+			}
 			NapoliFactions.Side ally = NapoliFactions.ally(p);
 			ServerPlayNetworking.send(p, new State(p.level().dimension() == NapoliMap.LEVEL, NapoliStreet.cash(p),
 					NapoliFactions.reputation(p, NapoliFactions.Side.LANTERNE), NapoliFactions.reputation(p, NapoliFactions.Side.MAREE),

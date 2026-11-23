@@ -132,6 +132,14 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case SCUGNIZZO -> Set.of("cap", "fringe");
 			case PRESEPAIO -> Set.of("coppola");
 			case PIZZAIOLO -> Set.of("toque");
+			case BUCATO -> Set.of("headscarf", "skirt");
+			case TURISTA -> Set.of("cap", "bag");
+			case PESCATORE -> Set.of("beret", "scarf");
+			case CUSTODE_TUNNEL -> Set.of("hood", "scarf");
+			case CARTOMANTE -> Set.of("long_hair", "hairband", "earrings", "skirt");
+			case MERCATANTE -> Set.of("coppola");
+			case MUSICISTA -> Set.of("side_part", "mandolin");
+			case GUARDIANO_PRESEPE -> Set.of("coppola", "scarf");
 			case PASSERBY -> switch (variant) {
 				case 0 -> Set.of("coppola");                    // 'o nonno
 				case 1 -> Set.of("bun", "skirt", "earrings");    // 'a signora

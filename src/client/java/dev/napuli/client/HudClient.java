@@ -116,7 +116,9 @@ final class HudClient {
 			line = "Esci tra " + s.jail() + " s";
 		} else {
 			title = "MISSIONE";
-			line = Component.translatable("napuli.hud.obj." + s.objective(), s.cooldown()).getString();
+			String objective = s.objective();
+			String key = objective.startsWith("napuli.local.") ? objective : "napuli.hud.obj." + objective;
+			line = Component.translatable(key, s.cooldown()).getString();
 		}
 		var wrapped = f.split(Component.literal(line), w - 6);
 		int th = 14 + wrapped.size() * 10 + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);

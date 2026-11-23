@@ -90,7 +90,7 @@ public final class HousingCapacityGameTest {
         helper.succeed();
     }
 
-    @GameTest public void legacyLodgingAndBorgoHomesAlsoRejectTheSixthNpc(GameTestHelper helper) {
+    @GameTest(maxTicks = 200) public void legacyLodgingAndBorgoHomesAlsoRejectTheSixthNpc(GameTestHelper helper) {
         var city = helper.getLevel();
         var positions = List.of(NapoliWestQuarter.WORKER_HOME.inside(), new BlockPos(22, 68, 87));
         var forced = new ArrayList<net.minecraft.world.level.ChunkPos>();
@@ -99,8 +99,15 @@ public final class HousingCapacityGameTest {
             if (city.setChunkForced(chunk.x(), chunk.z(), true)) forced.add(chunk);
             city.getChunkAt(inside);
         }
-        // These legacy buildings are far outside the test arena; wait for entity visibility.
-        helper.runAfterDelay(20, () -> {
+        // Chunk/entity loading is asynchronous, especially on a fresh CI world.
+        // A fixed 20-tick delay also raced the default 20-tick test deadline.
+        helper.runBeforeTestEnd(() -> { for (var chunk : forced) city.setChunkForced(chunk.x(), chunk.z(), false); });
+        helper.startSequence().thenWaitUntil(() -> {
+            for (var inside : positions) {
+                var chunk = new net.minecraft.world.level.ChunkPos(Math.floorDiv(inside.getX(), 16), Math.floorDiv(inside.getZ(), 16));
+                helper.assertTrue(city.areEntitiesActuallyLoadedAndTicking(chunk), "Legacy home entities must be loaded at " + inside);
+            }
+        }).thenExecute(() -> {
             try {
                 for (var inside : positions) {
                     var npcs = new ArrayList<NapoliResident>();
@@ -113,8 +120,7 @@ public final class HousingCapacityGameTest {
                     } finally { for (var npc : npcs) npc.discard(); }
                 }
             } finally { for (var chunk : forced) city.setChunkForced(chunk.x(), chunk.z(), false); }
-            helper.succeed();
-        });
+        }).thenSucceed();
     }
 
     private static void fixture(GameTestHelper helper, BlockPos floor) {

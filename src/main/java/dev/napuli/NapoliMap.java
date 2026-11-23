@@ -34,6 +34,8 @@ public final class NapoliMap {
             .persistent(GlobalPos.CODEC).copyOnDeath().buildAndRegister(Napuli.id("napoli_return"));
     private static final AttachmentType<Boolean> BUILT = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("napoli_built"));
+    private static final AttachmentType<Boolean> TRACK_UNDERGROUND = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).copyOnDeath().buildAndRegister(Napuli.id("track_underground"));
     private static final BlockPos ENTRANCE = new BlockPos(0, 64, -37);
     private static final Block[] FACADES = {Blocks.SMOOTH_SANDSTONE, Blocks.TERRACOTTA,
             block("orange_terracotta"), block("yellow_terracotta"), block("white_terracotta")};
@@ -53,7 +55,22 @@ public final class NapoliMap {
     static void register(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> d) {
         d.register(net.minecraft.commands.Commands.literal("napoli")
                 .executes(c -> visit(c.getSource().getPlayerOrException()))
+                .then(net.minecraft.commands.Commands.literal("sotterranea").executes(c -> trackUnderground(c.getSource().getPlayerOrException())))
                 .then(net.minecraft.commands.Commands.literal("esci").executes(c -> leave(c.getSource().getPlayerOrException()))));
+    }
+
+    private static int trackUnderground(ServerPlayer player) {
+        boolean active = !player.getAttachedOrElse(TRACK_UNDERGROUND, false);
+        player.setAttached(TRACK_UNDERGROUND, active);
+        NapoliNotice.show(player, Component.translatable("napuli.hud.obj." + (active ? "underground_entry" : "underground_off")));
+        return 1;
+    }
+
+    static NapoliFactions.Objective undergroundObjective(ServerPlayer player) {
+        if (player.level().dimension() != LEVEL || !player.getAttachedOrElse(TRACK_UNDERGROUND, false)) return null;
+        boolean below = player.getY() < 50 && player.blockPosition().distSqr(CRYPT) < 70 * 70;
+        return below ? new NapoliFactions.Objective("underground_crypt", CRYPT)
+                : new NapoliFactions.Objective("underground_entry", NapoliLocalMap.TUNNEL_ENTRY);
     }
 
     public static int visit(ServerPlayer player) {

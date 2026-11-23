@@ -43,7 +43,9 @@ public final class Hud {
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 			if (!ServerPlayNetworking.canSend(p, State.TYPE)) continue;
 			var obj = NapoliFactions.objective(p);
-			if (NapoliEmployment.trackingOffice(p)) obj = NapoliEmployment.office(p);
+			var underground = NapoliMap.undergroundObjective(p);
+			if (underground != null) obj = underground;
+			else if (NapoliEmployment.trackingOffice(p)) obj = NapoliEmployment.office(p);
 			else if (obj.key().equals("none") || obj.key().equals("cooldown")) {
 				var local = NapoliLocalJobs.objective(p);
 				if (local != null) obj = local;

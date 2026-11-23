@@ -91,7 +91,8 @@ final class NapoliEmployment {
     private static final AttachmentType<Timecard> HOURS = AttachmentRegistry.<Timecard>builder()
             .persistent(Timecard.CODEC).copyOnDeath().buildAndRegister(Napuli.id("work_timecard"));
 
-    private static final AttachmentType<Boolean> TRACK_OFFICE = AttachmentRegistry.create(Napuli.id("track_employment_office"));
+    private static final AttachmentType<Boolean> TRACK_OFFICE = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).copyOnDeath().buildAndRegister(Napuli.id("track_employment_office"));
     private NapoliEmployment() {}
 
     static void register() {
@@ -239,7 +240,7 @@ final class NapoliEmployment {
 
     private static int trackOffice(ServerPlayer p) {
         if (!eligible(p)) return 0;
-        boolean active = !p.getAttachedOrElse(TRACK_OFFICE, false);
+        boolean active = office(p) == null;
         p.setAttached(TRACK_OFFICE, active);
         say(p, active ? "visit" : "untrack");
         return 1;
@@ -248,8 +249,7 @@ final class NapoliEmployment {
     static boolean trackingOffice(ServerPlayer player) { return eligible(player) && player.getAttachedOrElse(TRACK_OFFICE, false); }
 
     static NapoliFactions.Objective office(ServerPlayer player) {
-        if (!eligible(player)) return null;
-        if (!trackingOffice(player)) return null;
+        if (!eligible(player) || !player.getAttachedOrElse(TRACK_OFFICE, player.getAttached(WORK) == null)) return null;
         return new NapoliFactions.Objective("napuli.work.visit", staffTarget(player.level(), CLERK_POST, CLERK));
     }
 

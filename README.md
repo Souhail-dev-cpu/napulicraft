@@ -1,184 +1,519 @@
 # Napulicraft
 
-Minecraft in napulitano: 'o Munaciello che t'arrobba, 'o Munaciello gigante, Napoli intera (Galleria Umberto I,
-Piazza del Plebiscito, Castel dell'Ovo, Borgo Marinari, 'o Vesuvio), 'e carabiniere, 'o motorino cu 'a radio stile GTA…
-e 'a musica **ca sciglie tu**.
+**Una Napoli da esplorare e abitare in Minecraft, con cittadini persistenti, vita di quartiere e un'identità napoletana.**
 
-*Minecraft in Neapolitan: a meme mod with a whole Naples to explore, a thieving ghost monk, carabinieri, scooters with a
-GTA-style radio, and the soundtrack **you** choose.*
+Napulicraft è una mod Fabric che unisce esplorazione, simulazione cittadina e contenuti umoristici. La città comprende monumenti e quartieri ispirati a Napoli, abitazioni arredate, negozi con scorte, lavori, servizi pubblici e trasporti utilizzabili. Gli NPC hanno famiglia, bisogni, occupazione, memoria e routine che proseguono nella simulazione anche quando sono lontani dai giocatori.
 
-> Fabric · Minecraft 26.3 · Java 25 · requires [Fabric API](https://modrinth.com/mod/fabric-api) on client and server.
+Il progetto conserva il proprio carattere parodistico: Munaciello, motorini con radio personalizzabile, cucina napoletana e situazioni comiche convivono con economia, proprietà e conseguenze delle azioni del giocatore.
 
-## Neapolitan kitchen
+[Scarica le beta](https://github.com/Souhail-dev-cpu/napulicraft/releases) · [Segnala un problema](https://github.com/Souhail-dev-cpu/napulicraft/issues) · [Codice sorgente](https://github.com/Souhail-dev-cpu/napulicraft)
 
-Craft the requested Neapolitan dishes, renewable ingredients, regenerating fry bag and four portable kitchen
-stations. Use the pizza and coffee counters like crafting tables, and the wood oven and frying counter like furnaces. The additions include timed food effects, team healing, a Sartu puzzle, pizza-making reputation,
-NPC quest helpers, the Neapolitan fullness/heat HUD and a sweet-tamed Munaciello who hides items in your last opened
-chest and leaves redeemable coins.
+## Indice
 
-See the [Italian gameplay guide](docs/CUCINA.md) and [all 71 recipes](docs/CUCINA_RICETTE.md).
-Install the same updated JAR on the server and every client; the new items and HUD are synchronized by the server.
-Server kitchen tests run with `./gradlew build`; `./gradlew runKitchentest` also checks the real client interactions.
+- [Requisiti e installazione](#requisiti-e-installazione)
+- [Primi passi](#primi-passi)
+- [Funzionalità principali](#funzionalità-principali)
+- [La città e i suoi quartieri](#la-città-e-i-suoi-quartieri)
+- [Come funzionano gli NPC](#come-funzionano-gli-npc)
+- [Case, proprietà e ospitalità](#case-proprietà-e-ospitalità)
+- [Economia, negozi e lavoro](#economia-negozi-e-lavoro)
+- [Bus, tram, metropolitana e motorini](#bus-tram-metropolitana-e-motorini)
+- [Cucina napoletana](#cucina-napoletana)
+- [Calcio, televisione ed eventi](#calcio-televisione-ed-eventi)
+- [Missioni, folklore e personaggi](#missioni-folklore-e-personaggi)
+- [Carabinieri, reati e tasse](#carabinieri-reati-e-tasse)
+- [Musica e radio personalizzabili](#musica-e-radio-personalizzabili)
+- [Comandi e controlli](#comandi-e-controlli)
+- [Configurazione del server](#configurazione-del-server)
+- [Multiplayer e salvataggi](#multiplayer-e-salvataggi)
+- [Compilazione e verifiche](#compilazione-e-verifiche)
+- [Documentazione e licenza](#documentazione-e-licenza)
 
-## Smarter residents, police pursuits and vandalism
+## Requisiti e installazione
 
-The living city adds **120 persistent citizens**, **85 NPC professions**, **35 purchasable furnished homes**,
-families, growing children, needs, careers, mortgages, an animated fictional football broadcast and local traffic.
-See the [Italian living-city guide](docs/NAPOLI_VIVA.md) for commands, the server configuration and verification.
+| Componente | Versione richiesta |
+| --- | --- |
+| Minecraft | **26.3** |
+| Java | **25 o successiva** |
+| Fabric Loader | **0.20.1 o successiva** |
+| Fabric API | Compatibile con Minecraft 26.3; dipendenza di sviluppo: **0.166.2+26.3** |
+| Napulicraft | Lo stesso JAR sul server e su tutti i client |
 
-The expanded city also has **19 inhabited neighborhoods**, **38 additional homes**, **19 working shops**
-and up to **76 additional persistent residents**, within the configured population limit. Ten usable bus,
-tram and metro lines connect the districts, with actual passengers, limited seats and saved tickets.
-Use `/negozio` and `/trasporti`; see the [districts and transport guide](docs/QUARTIERI_E_TRASPORTI.md).
+1. Installa Minecraft 26.3 con Fabric Loader.
+2. Scarica il JAR di Napulicraft dalle [release](https://github.com/Souhail-dev-cpu/napulicraft/releases) e [Fabric API](https://modrinth.com/mod/fabric-api) per la stessa versione di Minecraft.
+3. Copia entrambi i JAR nella cartella `mods` dell'istanza di gioco.
+4. Avvia Minecraft con il profilo Fabric.
 
-Residents can plan ladder routes, climb to upper floors and descend again, open wooden doors and negotiate steps.
-Carabinieri replan quickly, prefer available detours and can use an iron pickaxe to breach a nearby player-built
-barricade during a pursuit. Mining shows tool swings, cracks and the correct block drops, and respects the server's
-mob block-damage rule. Arrests require clear reach, including at waist height.
+Per un server dedicato, installa le stesse mod nella sua cartella `mods`. È supportato anche il multiplayer tramite **Apri alla LAN**. Le beta sono versioni preliminari: il numero completo della versione deve coincidere fra server e giocatori.
 
-Breaking original furniture or building blocks inside city homes is **vandalism**, using the existing witness,
-fine and prison system. Newly placed player construction is tracked separately and saved with the world.
-See the [Italian police and NPC guide](docs/IA_POLIZIA.md). `runPoliceaitest` verifies real client placement,
-block breaking, vandalism, pickaxe breaches, fines and chasing a player onto a roof.
+## Primi passi
 
-## No songs included — bring your own
+Al primo ingresso il giocatore viene accompagnato automaticamente nella dimensione di Napoli. Puoi usare `/napoli` per raggiungerla e `/napoli esci` per tornare al punto di provenienza registrato. I normali comandi di esplorazione non richiedono privilegi da operatore.
 
-The mod ships **without any music**. Every player picks their own:
+1. Apri `/napoli luoghi`, scegli una meta e segui distanza e direzione durante il cammino.
+2. Parla con i cittadini con il **tasto destro**: consulta le informazioni e le azioni disponibili, conosci le loro necessità e costruisci rapporti nel tempo.
+3. Usa `/lavoro` e `/lavoro segui` per consultare gli incarichi e raggiungere lo sportello del collocamento.
+4. Consulta `/casa` e i cartelli degli immobili per acquistare, affittare o richiedere un mutuo.
+5. Apri `/negozio` per una bottega di quartiere e `/trasporti` per la rete cittadina.
+6. Premi **J** per aggiungere la tua musica e configurare la radio.
 
-1. Start the game once, then put your audio files (`.mp3`, `.ogg`, `.wav`) in
-   `.minecraft/napulicraft/canzoni/` (in-game: press **J** → **📂 Apri cartella**).
-2. Every **sub-folder** becomes a **radio station** for the scooter (`canzoni/Radio d'o Vico/*.mp3`).
-3. Press **J** to open the **Canzoni** screen and choose, for every situation (dying, fights, the giant, love,
-   night, diamonds…), which song plays and from which second (`-5s` / `+5s`, click the title to listen).
-   Leave it on **Casuale** and a random song from your folder is used.
-4. **⬇ Scarica link**: paste a *direct* link to an audio file and it is downloaded into the folder.
-   Streaming sites (YouTube, Spotify, SoundCloud…) are not supported.
+## Funzionalità principali
 
-Only use music you have the right to use. Free sources: [Free Music Archive](https://freemusicarchive.org),
-[Jamendo](https://www.jamendo.com), [Internet Archive](https://archive.org/details/audio),
-[Pixabay Music](https://pixabay.com/music/), or your own recordings.
+| Sistema | Contenuti |
+| --- | --- |
+| Città | Area di 4.096 × 1.360 blocchi, dieci volte l'area precedente; atlante con 50 mete, di cui 45 nuove |
+| Popolazione | 120 cittadini iniziali nel nucleo e fino a 76 aggiuntivi nell'espansione, secondo la configurazione |
+| Quartieri abitati | 19 quartieri dell'espansione con 38 case per le famiglie e 19 botteghe |
+| NPC | Identità persistenti, età, famiglie, bisogni, personalità, memoria, relazioni, gesti e routine |
+| Abitare | 35 immobili acquistabili o affittabili, mutui, bollette, chiavi, campanelli, ospiti e cene |
+| Lavoro | Catalogo di 85 professioni NPC e otto contratti cittadini giocabili |
+| Trasporti | Dieci linee di bus, tram e metro con fermate, passeggeri, capienza, biglietti e cambi |
+| Cucina | 71 ricette, quattro postazioni, ingredienti rinnovabili, effetti alimentari e progressione da pizzaiolo |
+| Attività | Calcio giocabile, torneo dei quartieri, TV, eventi, missioni e obiettivi personali degli abitanti |
+| Contenuti caratteristici | Motorini a tre posti, radio locale, Munaciello, personaggi parodistici e sistema di polizia |
 
-Choices are saved in `.minecraft/config/napulicraft-canzoni.json`. You can also add stations by hand there:
+Le **38 case dell'espansione sono alloggi per le famiglie**, distinti dai **35 immobili del catalogo acquistabile** tramite `/casa`.
+
+## La città e i suoi quartieri
+
+Napoli si trova nella dimensione dedicata `napuli:napoli`. L'area ampliata misura **5.570.560 blocchi quadrati**, esattamente dieci volte quella precedente, e collega il nucleo originario alle nuove destinazioni.
+
+Il centro conserva luoghi come Galleria Umberto I, Piazza del Plebiscito, Castel dell'Ovo, Borgo Marinari, Spaccanapoli, Mergellina e le pendici del Vesuvio. L'espansione aggiunge, fra gli altri:
+
+| Zona | Luoghi rappresentati |
+| --- | --- |
+| Vomero e Arenella | Piazza Vanvitelli, Castel Sant'Elmo, Certosa di San Martino, Villa Floridiana, Piazza degli Artisti e Piazza Medaglie d'Oro |
+| Chiaia | Piazza Amedeo, Piazza dei Martiri, Piazza Vittoria, Villa Comunale e Piazza Sannazaro |
+| Posillipo | Palazzo Donn'Anna, Marechiaro, Parco Virgiliano e Pausilypon |
+| Fuorigrotta | Stadio Diego Armando Maradona, Mostra d'Oltremare e Piazzale Tecchio |
+| Bagnoli | Pontile nord, Città della Scienza e panorama di Nisida |
+| Soccavo e Pianura | Piazza Giovanni XXIII e Piazza San Giorgio |
+| Scampia e Secondigliano | Parco Ciro Esposito e Corso Secondigliano |
+| Stella, Sanità e Capodimonte | MANN, Piazza Cavour, Basilica di Santa Maria della Sanità, Fontanelle, Catacombe di San Gennaro, Museo e Real Bosco di Capodimonte |
+| Foria, San Lorenzo e Vicaria | Orto Botanico, Piazza Carlo III, Real Albergo dei Poveri, Duomo, Porta Capuana, Piazza Garibaldi, Napoli Centrale e Piazza Nazionale |
+| Poggioreale e Mercato | Centro Direzionale, Piazza Mercato e Piazza del Carmine |
+| Napoli est | Piazze di Ponticelli, Barra e San Giovanni a Teduccio e Museo Ferroviario di Pietrarsa |
+
+La ricostruzione adatta scala, distanze e architetture a Minecraft. Nomi e riferimenti geografici seguono Napoli, mentre isolati e collegamenti sono sintetizzati per il gioco. L'atlante offre indicazioni a piedi e conserva la meta scelta: consultare un luogo non teletrasporta il giocatore.
+
+I nuovi settori vengono generati nei chunk esplorati, con un massimo di quattro chunk per tick. Gli edifici hanno interni accessibili. Le strade collinari raccordano le quote con gradini continui e fondazioni, mantenendo le altezze degli edifici. Gli ingressi residenziali hanno porte inserite in vani con muratura completa ai lati e sopra.
+
+L'[atlante della città](docs/MAPPA_NAPOLI.md) raccoglie dimensioni, luoghi e fonti geografiche.
+
+## Come funzionano gli NPC
+
+### Identità e simulazione persistente
+
+I cittadini appartengono a un'anagrafe gestita dal server. Ogni abitante conserva identità, nome, età, famiglia, indirizzo, lavoro, denaro, provviste, personalità, reputazione, relazioni ed eventi personali.
+
+Vicino ai giocatori, l'abitante è un'entità che cammina, usa gli ambienti e svolge le proprie attività. Lontano dai giocatori continua attraverso i dati: posizione, viaggio, tempi, bisogni e progressi vengono conservati senza tenere caricata l'intera città. Quando torna visibile riprende dalla situazione registrata. L'identità viene mantenuta evitando di creare un secondo corpo dello stesso cittadino.
+
+La configurazione predefinita permette **196 residenti iniziali**: 120 nel nucleo cittadino e fino a 76 nei quartieri aggiuntivi, oltre ai personaggi specifici delle attività e della trama. Il totale effettivo dipende dal limite configurato e può cambiare con nascite e decessi.
+
+### Bisogni, orari e spostamenti
+
+Fame, riposo, igiene, socialità, divertimento, bisogni fisiologici, salute e umore influenzano le priorità. Abitudini individuali introducono differenze negli orari; pioggia, malattia, stanchezza e impegni possono cambiare il programma.
+
+Una giornata può comprendere scuola o lavoro, spesa, preparazione dei pasti, faccende, incontri, TV e sonno. Medici, infermieri, autisti e carabinieri possono avere turni serali. Gli abitanti usano percorsi a piedi e trasporto pubblico; se un mezzo tarda troppo o è pieno possono proseguire a piedi.
+
+La navigazione comprende porte di legno, gradini, scale a pioli, rampicanti e alcune botole. Porte, postazioni e fermate gestiscono attese e prenotazioni; le sedute hanno un singolo occupante. Gli NPC presenti aspettano i veicoli prima di attraversare.
+
+### Attività domestiche e mestieri visibili
+
+Un pasto segue una sequenza concreta: **frigo → preparazione → cottura → apparecchiatura → consumo → lavaggio**. Il residente raggiunge le postazioni e usa ingredienti e risorse disponibili. La fame migliora quando mangia; lavare i piatti richiede acqua. Se una postazione è occupata, può aspettare o dedicarsi a un'altra fase compatibile.
+
+Gesti, oggetti impugnati, suoni, particelle ed espressioni rendono riconoscibili le azioni. Stanchezza e umore influenzano postura e movimento. Spesa, pacchi, piatti, bucato e rifiuti lasciano tracce persistenti; quando piove i panni bagnati vengono ritirati.
+
+Anche alcuni lavori hanno fasi materiali: il fornaio trasforma ingredienti in pane, il barista serve clienti consumando caffè, il corriere consegna pacchi, il netturbino porta i rifiuti al bidone, il manutentore usa ricambi e il medico consuma medicine. Materiali prenotati e fasi completate vengono salvati per evitare prodotti o compensi duplicati.
+
+### Memoria, dialoghi e reputazione
+
+I cittadini ricordano incontri in giorni diversi, acquisti, favori, aggressioni e promesse. Un cliente abituale può essere riconosciuto; la fiducia modifica saluti, disponibilità commerciale e prezzi. Ripetere clic nello stesso giorno non costruisce da solo un'amicizia.
+
+Le conversazioni contestuali tengono conto di bisogni, turno, scorte e obiettivi. Un testimone può riferire dove ha visto una persona, indicando quando: la sua conoscenza deriva da avvistamenti effettivi. Le notizie passano fra persone vicine, con una fonte e una credibilità che diminuisce nei passaggi. `/quartiere voci` mostra ciò che è stato raccontato al giocatore.
+
+Le battute compaiono in **nuvolette sopra la testa di chi parla**. Seguono il personaggio, si orientano verso la camera, vanno a capo e scompaiono automaticamente; i testi lunghi sono suddivisi in pagine. Le conversazioni raggiungono i destinatari vicini. Avvisi di sistema e menu mantengono le proprie interfacce.
+
+### Famiglie, relazioni e obiettivi
+
+Le famiglie possono formare coppie, avere figli e cercare un'abitazione adatta. Le nascite rispettano disponibilità economica, provviste, posti in casa e limite di popolazione. I neonati rimangono a casa; i bambini crescono, frequentano la scuola e cercano lavoro da adulti. La scala iniziale è di **sette giorni Minecraft per un anno**, configurabile dal server.
+
+Amicizie e relazioni richiedono incontri ripetuti e affinità. Compleanni, traslochi, lutti e separazioni lasciano ricordi; pensionamento ed eredità fanno parte del ciclo di vita. Le faccende familiari vengono assegnate secondo capacità e disponibilità.
+
+Alcuni abitanti vogliono riparare un forno, trovare un impiego o risparmiare per una casa. Puoi accettare un aiuto dal dialogo e seguirlo con `/abitanti`. Consegnare materiali, accompagnare una persona al municipio o contribuire al risparmio produce conseguenze effettive; gli impegni hanno condizioni e, in alcuni casi, scadenze.
+
+### Quartieri e servizi
+
+Scene brevi coinvolgono cittadini esistenti: anziani al bar, conversazioni fra vicini, panari dai balconi, genitori con bambini e richieste di silenzio. Orario, meteo, età e presenza dei partecipanti determinano quando possono verificarsi.
+
+Scuola, ambulatorio e municipio dipendono da orari, personale disponibile e risorse. Una visita richiede un medico e medicine; la scuola richiede un insegnante e presenza dell'alunno; il collocamento richiede un impiegato. `/servizi` mostra la situazione.
+
+Nei 19 quartieri aggiuntivi le famiglie iniziali comprendono due adulti e due bambini. Ogni quartiere ha un fornaio e un secondo lavoratore fra insegnante, medico, netturbino e corriere. La seconda casa offre spazio alla crescita delle famiglie. Le routine usano gli stessi sistemi del nucleo cittadino.
+
+## Case, proprietà e ospitalità
+
+Il catalogo comprende **35 immobili acquistabili o affittabili**, con identificativi stabili. Le famiglie hanno anche alloggi iniziali; l'espansione aggiunge altre 38 case assegnabili agli abitanti.
+
+Le case includono punti d'uso per cucina, bagno, soggiorno, camere, studio e lavanderia. Secondo il modello sono presenti crafting, fornace, affumicatore, forno a legna, frigo e armadi con inventario, tavolo, divano, TV, lavabo, WC, doccia, letti e scrivania. Frigoriferi e armadi usano inventari vanilla; gli alimenti conservano il normale comportamento Minecraft.
+
+Dal cartello puoi comprare, affittare o richiedere un mutuo. Il mutuo richiede un **acconto del 20%**, applica un **interesse totale del 10%** e prevede **12 rate**. Le scadenze sono ogni sette giorni di gioco; le rate comprendono 2 € di bollette e il server tenta il pagamento automatico. Tre scadenze insolute portano alla chiusura di un affitto o di un mutuo non estinto. La rivendita avviene all'80% del prezzo, dopo il saldo del debito.
+
+### Cinque occupanti ordinari, con ospiti autorizzati
+
+Ogni casa ha **cinque posti ordinari complessivi per NPC e giocatori, bambini inclusi**. Il proprietario o l'inquilino può invitare amici e NPC: **gli ospiti autorizzati possono entrare e restare anche oltre il limite di cinque**, senza consumare i posti dei residenti.
+
+Gli inviti si gestiscono dal cartello, con **Ospiti e inviti**, o tramite `/casa ospiti ID`. Sono salvati con il mondo e rimangono validi fino alla revoca; vendita, cambio di proprietario o fine dell'affitto li annullano. Un invito permette l'ospitalità e l'uso degli ambienti, mentre proprietà, costruzione, vendita e gestione degli inviti rimangono al titolare.
+
+Il campanello permette di chiedere accesso. Le chiavi funzionano soltanto per chi possiede ancora un'autorizzazione valida: conservarne una copia non aggira una revoca. Gli NPC invitati possono venire nel tempo libero serale. Un abitante senza posto o invito aspetta all'ingresso e può proporre un incontro al bar.
+
+### Cene organizzate
+
+Scegli **Organizza una cena** dal cartello oppure usa `/cena organizza ID MINUTI`, con un anticipo da 1 a 30 minuti. Invita giocatori o NPC, raccogli le conferme e aggiungi pane alle porzioni condivise con `/cena cibo ID QUANTITÀ`.
+
+Gli NPC valutano salute, fiducia e impegni prima di accettare e possono portare una razione dalla propria dispensa. Consumare una porzione richiede la presenza in casa. Il menu mostra invitati, arrivi e cibo; al termine gli ospiti tornano alle proprie attività. Il padrone può annullare la cena e ritirare gli avanzi una sola volta.
+
+La cena concede agli ospiti confermati un accesso temporaneo anche oltre i cinque posti. Alla fine scade quel permesso; eventuali inviti permanenti rimangono validi.
+
+## Economia, negozi e lavoro
+
+Il denaro del giocatore è gestito dal server e consultabile con `/portafoglio`. Stipendi, acquisti, casa, trasporti, tasse e premi utilizzano il sistema economico della città.
+
+### Botteghe e filiera alimentare
+
+Le **19 botteghe dell'espansione** hanno scorte e cassa separate. Vendono pane, caffè, mele, pesce cotto, torce e attrezzi. Una vendita consegna oggetti reali, riduce le disponibilità e trasferisce il pagamento alla bottega. Servono un negoziante presente, un turno aperto e denaro sufficiente.
+
+Produzione, ingredienti e consegne incidono sulle scorte. Il forno e il mercato del nucleo cittadino condividono una filiera in cui il grano diventa farina e la farina diventa pane; il mercato compra dal forno. Scioperi, guasti o lavoratori assenti possono rallentare il servizio. Fiducia, reputazione e mercato modificano i prezzi previsti dai rispettivi sistemi commerciali.
+
+Quando manca grano puoi accettare una consegna dal dialogo del commerciante. Gli incarichi per forno e mercato richiedono otto grano e pagano 12 €, ridotti a 6 € dopo cinque minuti. La consegna entra nelle scorte e può essere riscossa una sola volta.
+
+### Professioni NPC e contratti del giocatore
+
+Il catalogo degli NPC comprende **85 professioni** in ristorazione, commercio, servizi, trasporti, cultura e media, edilizia, uffici, sanità, pubblico e sicurezza. Ogni impiego prevede luogo di lavoro, strumenti, paga, turni e posti disponibili. Presenze, esperienza, reputazione, salute e riposo contribuiscono alle promozioni; le assenze ripetute possono portare al licenziamento. I carabinieri hanno otto gradi.
+
+Il giocatore dispone di **otto contratti cittadini**: fornaio, facchino, mercante, netturbino, giardiniere, pescatore, corriere e falegname. `/lavoro` mostra stato e offerte; il collocamento e i punti di lavoro guidano attraverso mansioni e pagamento.
+
+## Bus, tram, metropolitana e motorini
+
+### Rete pubblica
+
+Dieci linee collegano il centro e i nuovi quartieri:
+
+| Linea | Collegamenti principali nel gioco |
+| --- | --- |
+| M1 | Scampia, Medaglie d'Oro, Vanvitelli, Museo, Dante, Municipio, Duomo, Garibaldi e Centro Direzionale |
+| M6 | Mostra, Augusto, Lala, Mergellina, Arco Mirelli, San Pasquale, Chiaia e Municipio |
+| B1 | Arenella, Soccavo, Pianura e Fuorigrotta |
+| B2 | Mergellina, Posillipo e Bagnoli |
+| B3 | Sanità, Capodimonte, Secondigliano e Scampia |
+| B4 | Foria, San Lorenzo, Vicaria e Centrale |
+| B5 | Centrale, Centro Direzionale, Ponticelli, Barra e San Giovanni |
+| B6 | Vomero, San Martino, Floridiana e Chiaia |
+| N7 | Collegamento notturno fra Secondigliano, Centrale, Municipio e Mercato |
+| T1 | Tram fra Municipio, Mercato, Carmine, San Giovanni e Pietrarsa |
+
+Bus, tram e metro hanno rispettivamente **8, 12 e 16 posti**. Le fermate distinguono direzioni, attese e code. Pioggia, ostacoli, ritardi e scioperi influiscono sul servizio. Le stazioni della metropolitana comprendono banchine, gallerie, binari, illuminazione, scale e ascensori.
+
+Il biglietto costa **2 € di gioco**, si paga alla salita e vale 6.000 tick, includendo i cambi del viaggio. Se il mezzo è pieno non viene addebitato. Destinazione, pagamento e cambi restanti vengono salvati per riprendere dopo una riconnessione senza pagare nuovamente la stessa corsa.
+
+Usa `/trasporti`, il cartello della fermata o `/trasporti viaggia DESTINAZIONE` da una fermata vicina. Anche gli NPC usano la rete per i tragitti lunghi e percorrono a piedi l'ultimo tratto.
+
+Le linee sono un adattamento per Napulicraft: M1 seleziona alcune fermate principali e M6 riprende gli otto nomi della linea reale. Percorsi di superficie, frequenze, capienze e tariffe appartengono alla simulazione. La [guida ai trasporti](docs/QUARTIERI_E_TRASPORTI.md) riporta dettagli e riferimenti.
+
+### Motorino a tre posti
+
+Il motorino può ospitare **tre giocatori**. Il primo è il conducente; il secondo e il terzo occupano i posti successivi. Il conducente accelera con **W**, arretra con **S** e orienta il mezzo con il mouse. **Shift** fa scendere.
+
+Se il conducente scende o si disconnette, il passeggero successivo prende il comando e mantiene la stazione radio selezionata. Solo il conducente può cambiare radio. Un quarto giocatore non può salire.
+
+**Shift + tasto destro** raccoglie un motorino vuoto. Un mezzo occupato non può essere raccolto; se l'inventario è pieno rimane nel mondo. La radio si spegne quando il mezzo resta vuoto.
+
+## Cucina napoletana
+
+La cucina comprende **71 ricette** disponibili in sopravvivenza, nel ricettario e nella scheda creativa. Gli ingredienti aggiuntivi si ricavano da risorse vanilla rinnovabili; le ricette sono accessibili senza completare missioni o raggiungere una reputazione.
+
+| Postazione | Funzione |
+| --- | --- |
+| Forno a Legna Portatile | Cottura di pizze, dolci e preparazioni, con tronchi come combustibile |
+| Tavolo da Pizzaiolo | Ingredienti, impasti, preparazioni crude e insalate |
+| Banca della Frittura | Cottura dei fritti con olio |
+| Banca del Caffè | Chicchi, caffè, rum da cucina, limoncello e acqua di cocomero |
+
+Le postazioni si possono costruire, piazzare, usare e trasportare. Fra le pietanze ci sono pizza margherita e a portafoglio, fritto misto, sfogliatelle, babà, pastiera, zeppole, struffoli, roccocò, mustaccioli, casatiello, lasagne, chiacchiere, spaghetti alle vongole, baccalà, capitone, minestra maritata, insalata di rinforzo, salsiccia e friarielli, gattò e sartù.
+
+Gli alimenti hanno effetti differenti: cure, rigenerazione, fortuna, resistenza e bonus temporanei, talvolta seguiti da penalità. Gli struffoli curano anche i compagni della stessa squadra vanilla vicini. La pizza a portafoglio e le chiacchiere si consumano rapidamente senza interrompere la corsa.
+
+La **Borsa del Fritto** contiene porzioni e ne rigenera una al minuto fino al limite previsto. Il **Sartù di Riso** sblocca un enigma con ricompensa unica. Preparare pizze aumenta una reputazione personale: alle soglie di 5, 15 e 30 pizze si ottiene il supporto di uno, due o tre aiutanti durante le missioni dei clan.
+
+L'interfaccia mostra **Fame Napoletana**, che rappresenta la sazietà eccessiva, e **Calore**. Troppi fritti appesantiscono il personaggio; sole, ambienti caldi e fuoco fanno salire la temperatura. Acqua di cocomero, ombra e acqua aiutano a rinfrescarsi. **H** mostra o nasconde il pannello insieme a quello cittadino.
+
+La [guida alla cucina](docs/CUCINA.md) e il [ricettario completo](docs/CUCINA_RICETTE.md) indicano ingredienti, quantità, effetti e durate.
+
+## Calcio, televisione ed eventi
+
+Il centro sportivo permette di **giocare o assistere alle partite**, scegliere un ruolo, allenarsi in palestra e sviluppare la carriera calcistica. Passaggi, tiri, effetto, pallonetti, richieste di palla, intercetti e roulette hanno comandi dedicati e un'interfaccia con stamina e azioni disponibili.
+
+Il **torneo dei quartieri** coinvolge Partenope, Mergellina, Centro storico e Fuorigrotta, con sei partite in tre giornate, classifica e premi. I giocatori possono occupare entrambi gli schieramenti. Risultati, partecipazione e premi sono persistenti; una partita rimasta senza partecipanti può essere ripresa dopo il riavvio. `/calcio campionato` apre il torneo.
+
+Le televisioni si accendono con il tasto destro; **Shift + tasto destro** cambia canale. Sport, notizie e meteo hanno schermate dedicate. La trasmissione sportiva mostra una partita fittizia animata con campo, giocatori, pallone e risultato. Il calendario predefinito propone Napoli–Juventus ogni sette giorni di gioco: avversario, orario e risultato sono configurabili e indipendenti dal calcio reale.
+
+Vittorie e sconfitte influenzano umore e atmosfera del quartiere. I festeggiamenti possono includere richiami, clacson ed effetti pirotecnici. Il calendario propone anche mercati, concerti, feste, beneficenza, scioperi, assemblee, esercitazioni, allerte meteo, lavori e inaugurazioni.
+
+Suoni domestici, serrande, traffico nelle ore di punta, TV e finestre illuminate seguono il momento della giornata. Le luci si spengono a orari differenti, accompagnando le routine degli abitanti.
+
+## Missioni, folklore e personaggi
+
+### Missioni e fazioni
+
+Le **Lanterne dei Quartieri Spagnoli** e le **Maree di Borgo Marinari** sono fazioni fittizie con reputazione e incarichi. Dialoghi e missioni comprendono rifornimenti, ricognizioni, attività minerarie e altri obiettivi di quartiere. Le scelte influenzano rapporti e reazioni locali. Napoli sotterranea offre un percorso dedicato, rintracciabile con `/napoli sotterranea`.
+
+Sono presenti equipaggiamenti e oggetti arcade, fra cui pistola, coltello, tirapugni, manganello, casco, bomba carta e la Ciabatta 'e Mammà. Alcune azioni attirano l'attenzione delle forze dell'ordine.
+
+### Munaciello e Munaciello gigante
+
+Il **Munaciello** può comparire al buio e sottrarre un singolo oggetto. Cerca di nasconderlo nell'ultima cassa effettivamente aperta dal giocatore, se vicina, caricata e disponibile; lascia anche Monete del Munaciello convertibili in euro. Se non trova un deposito adatto restituisce il bottino secondo le regole della mod.
+
+Puoi renderlo amichevole offrendogli **tre dolci** con il tasto destro. Da addomesticato segue il proprietario, smette di rubare e può essere curato con altri dolci. Proprietario e fiducia vengono salvati.
+
+Il **Munaciello gigante** appartiene agli incontri notturni: osserva il giocatore, reagisce allo sguardo e può inseguirlo. Interrompere il contatto visivo o raggiungere una zona illuminata aiuta a interrompere la caccia; all'alba si allontana.
+
+### Commercianti e contenuti umoristici
+
+**Peppe Fetish**, personaggio adulto di fantasia, vende su Spaccanapoli vicino a `(-4, 64, -125)`:
+
+- **Calzini sporchi, 6 €:** riutilizzabili, richiedono 1,2 secondi d'uso e applicano nausea per 15 secondi e rigenerazione per 10, con una pausa di cinque secondi fra gli utilizzi.
+- **Formaggio odor piede, 10 €:** consumabile anche a fame piena; concede Velocità II per 10 secondi e Forza V per tre, poi Lentezza I per 20 secondi e Debolezza I per sei. Le penalità in attesa sono salvate con il giocatore.
+
+Altri venditori offrono l'**Ampolla d'aria di Napoli**, che concede fortuna, e l'**Acqua da bagno dell'influencer**, oggetto fittizio che applica Velocità I e Fame I per 30 secondi. Acquisti e disponibilità dipendono dalle condizioni del venditore e dal portafoglio.
+
+I richiami di **Mammà**, la ciabatta volante e le scene sui motorini completano i contenuti comici della mod.
+
+## Carabinieri, reati e tasse
+
+### Reati e inseguimenti
+
+Furto, aggressione, spari, rapina, pizzo e vandalismo possono attivare segnalazioni e inseguimenti. Testimoni e carabinieri presenti influiscono sull'intervento. Il sistema opera nella dimensione di Napoli e può applicare multe o detenzione secondo il reato e la situazione del giocatore.
+
+Gli agenti rivalutano il percorso, usano porte, scale e passaggi disponibili e devono raggiungere il sospetto con un contatto libero per arrestarlo. Se una barricata del giocatore impedisce l'inseguimento, possono usare un piccone di ferro per aprire un varco vicino, mostrando animazione, crepe e drop. Lo scavo rispetta la regola di danneggiamento dei blocchi da parte dei mob e i limiti dell'attrezzo; contenitori e strutture originali della città sono esclusi da questo comportamento.
+
+Distruggere muri o arredi originali delle case può costituire **vandalismo**. I blocchi piazzati dai giocatori sono tracciati separatamente: rimuoverli non equivale a danneggiare gli arredi originali. È presente anche `/colpo`, per tentativi di rapina presso i bersagli previsti, con attesa, ricompensa e conseguenze penali.
+
+La [guida a polizia e navigazione](docs/IA_POLIZIA.md) descrive regole, limiti e verifiche.
+
+### Visita fiscale parodistica
+
+Un NPC fittizio ispirato a **Giorgia Meloni** visita i giocatori in Sopravvivenza o Avventura ogni **tre giorni Minecraft**. Il dialogo la presenta come tassa settimanale; l'intervallo effettivo della mod è di tre giorni.
+
+Puoi pagare con un massimo di **15 oggetti tassabili**, oppure versare il **30% del portafoglio**, arrotondato all'euro superiore. Armi, armature, strumenti, equipaggiamento e contenitori portatili sono protetti dal prelievo. Se non possiedi né materiali tassabili né denaro è disponibile l'esenzione.
+
+Il rifiuto comporta **90 secondi di detenzione**; anche impedire alla riscossora di raggiungerti entro due minuti può portare alla detenzione per evasione. Chiudere il dialogo lascia la richiesta in sospeso. Pagamenti pendenti e pene persistono attraverso morte e riavvio; Creativa e Spettatore sono esenti dalle visite.
+
+## Musica e radio personalizzabili
+
+La mod **non include canzoni**. Ogni giocatore può usare i propri file `.mp3`, `.ogg` e `.wav`:
+
+1. Avvia il gioco almeno una volta.
+2. Premi **J → Apri cartella**, oppure apri `napulicraft/canzoni/` nella cartella dell'istanza Minecraft.
+3. Copia i brani e organizza eventuali sottocartelle: ognuna diventa una stazione radio, per esempio `canzoni/Radio del Vico/`.
+4. Dalla schermata **Canzoni**, associa i brani alle situazioni di gioco e scegli il secondo di partenza. **Casuale** seleziona un file disponibile.
+
+La schermata può scaricare un file da un **collegamento diretto a un audio**. I collegamenti alle pagine di servizi come YouTube, Spotify e SoundCloud non sono supportati. Usa brani che hai il diritto di utilizzare.
+
+Sul motorino, tieni premuto **R** per aprire la ruota delle stazioni e rilascia per scegliere; un tocco passa alla stazione successiva. Le scelte sono salvate in `config/napulicraft-canzoni.json` nella stessa istanza.
+
+In multiplayer viene sincronizzata la stazione scelta, mentre i file audio rimangono locali a ciascun giocatore.
+
+## Comandi e controlli
+
+### Comandi principali
+
+Le azioni sono disponibili anche tramite dialoghi e cartelli. Gli identificativi si consultano nei menu o con i suggerimenti dei comandi; `UUID` indica l'identificativo di un cittadino.
+
+| Comando | Funzione |
+| --- | --- |
+| `/napoli` · `/napoli esci` | Entra in città o torna al punto di provenienza |
+| `/napoli luoghi` · `/napoli mappa` | Apre l'atlante |
+| `/napoli meta ID` · `/napoli annulla` | Imposta o interrompe una destinazione a piedi |
+| `/napoli sotterranea` | Attiva o disattiva le indicazioni per il percorso sotterraneo |
+| `/citta` · `/portafoglio` | Mostra lo stato della città o il denaro disponibile |
+| `/lavoro` · `/lavoro segui` | Consulta l'impiego e segue le indicazioni per il collocamento |
+| `/casa` | Elenca immobili, identificativi e coordinate |
+| `/casa compra ID` · `/casa affitta ID` · `/casa mutuo ID` | Avvia un contratto presso il cartello dell'immobile |
+| `/casa paga ID` · `/casa lascia ID` · `/casa vendi ID` | Gestisce pagamenti, affitto e rivendita |
+| `/casa vai ID` | Raggiunge l'ingresso della propria casa |
+| `/casa ospiti ID` | Gestisce ospiti e inviti |
+| `/casa invita ID NOME` · `/casa revoca ID NOME` · `/casa fineospiti ID` | Invita un giocatore, revoca un invito o conclude le ospitalità |
+| `/casa suona ID` · `/casa chiave ID` | Suona il campanello vicino all'ingresso o ritira una chiave autorizzata |
+| `/cena organizza ID MINUTI` · `/cena invita ID NOME_O_UUID` | Programma una cena e invita partecipanti |
+| `/cena si ID` · `/cena no ID` | Risponde all'invito |
+| `/cena cibo ID QUANTITÀ` · `/cena mangia ID` | Aggiunge pane alle porzioni o consuma il proprio pasto |
+| `/cena annulla ID` · `/cena avanzi ID` | Annulla la cena o recupera gli avanzi |
+| `/negozio` · `/negozio apri QUARTIERE` | Apre la bottega più vicina o quella scelta |
+| `/negozio compra QUARTIERE ARTICOLO` | Acquista un articolo disponibile |
+| `/quartiere incarico forno` · `/quartiere incarico mercato` | Accetta una consegna disponibile |
+| `/quartiere consegna forno` · `/quartiere consegna mercato` | Consegna il grano alla bottega |
+| `/quartiere voci` | Consulta le notizie raccontate al giocatore |
+| `/parla UUID stai` · `/parla UUID piani` · `/parla UUID chiuso` | Chiede stato, programmi o motivo della chiusura |
+| `/parla UUID visto ALTRO_UUID` | Chiede un avvistamento effettivo |
+| `/abitanti` | Mostra gli obiettivi personali che stai aiutando a completare |
+| `/abitanti accetta UUID` · `/abitanti completa UUID` · `/abitanti contribuisci UUID` | Accetta un aiuto, lo completa o versa 5 € al risparmio familiare |
+| `/servizi` · `/servizi trasporti` | Consulta servizi pubblici e informazioni sul servizio locale |
+| `/trasporti` · `/trasporti linea ID` · `/trasporti fermata ID` | Mostra rete, linea o fermata |
+| `/trasporti cerca ID` · `/trasporti ascensore ID` | Segue una fermata o usa l'ascensore della stazione vicina |
+| `/trasporti viaggia DESTINAZIONE` · `/trasporti corsa LINEA DESTINAZIONE` | Prenota un viaggio, anche con una linea specifica |
+| `/trasporti annulla` | Interrompe una prenotazione o un viaggio |
+| `/calcio` · `/calcio gioca` · `/calcio guarda` | Apre il profilo sportivo, partecipa o assiste |
+| `/calcio campionato` · `/calcio quartiere NOME` | Consulta il torneo e sceglie la squadra |
+| `/calcio partita ID` · `/calcio premi` | Entra in una partita disponibile o ritira premi pendenti |
+| `/calcio nuova_stagione` | Apre la stagione successiva quando il campionato è concluso |
+| `/colpo` | Avvia un tentativo presso un bersaglio previsto |
+
+I comandi **`/napuli ...`** sono riservati agli operatori e servono a richiamare contenuti o verificare il gioco. Fra questi: `/napuli motorino`, `/napuli munaciello`, `/napuli gigante`, `/napuli peppe`, `/napuli meloni` e `/napuli libera`.
+
+### Tasti predefiniti
+
+I tasti aggiuntivi sono modificabili nelle impostazioni dei comandi di Minecraft.
+
+| Tasto o azione | Funzione |
+| --- | --- |
+| Tasto destro su NPC, cartello o postazione | Interazione e menu disponibili |
+| J | Gestione delle canzoni |
+| R sul motorino | Tocco: stazione successiva; pressione prolungata: ruota della radio, per il conducente |
+| H | Mostra o nasconde i pannelli della città e della cucina |
+| W / S e mouse sul motorino | Avanzamento, retromarcia e direzione |
+| Shift | Scende dal mezzo |
+| Shift + tasto destro sul motorino vuoto | Raccoglie il mezzo |
+| Tasto destro / Shift + tasto destro sulla TV | Accende o spegne / cambia canale |
+| G / V durante il calcio | Passaggio / tiro |
+| K / M durante il calcio | Tiro a effetto / pallonetto |
+| B / N / U durante il calcio | Richiesta di palla / intercetto / roulette |
+
+## Configurazione del server
+
+Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a server spento e riavvia per applicare le impostazioni. Nelle nuove installazioni i valori predefiniti sono:
 
 ```json
 {
-  "situazioni": { "lite": { "canzone": "my song.mp3", "da": 61 } },
-  "stazioni": [ { "nome": "Radio Core 'e Mamma", "dj": "Assuntina", "colore": "#F06292",
-                  "canzoni": ["song a.mp3", "song b.mp3"] } ]
+  "population": 120,
+  "maximumPopulation": 384,
+  "districtPopulation": 76,
+  "needsIntervalTicks": 600,
+  "daysPerYear": 7,
+  "retirementAge": 70,
+  "maximumAge": 95,
+  "fixtures": [
+    {
+      "opponent": "Juventus",
+      "everyDays": 7,
+      "dayOffset": 0,
+      "kickoff": 13000,
+      "fullTime": 15000,
+      "napoliGoals": -1,
+      "opponentGoals": -1
+    }
+  ]
 }
 ```
 
-## Controls
-
-| Key | What |
+| Campo | Significato |
 | --- | --- |
-| **R** (hold, on the scooter) | Radio wheel: point at a station, release R. Tap R = next station |
-| **J** | Canzoni: pick your songs |
+| `population` | Popolazione iniziale del nucleo cittadino |
+| `maximumPopulation` | Tetto complessivo dei cittadini, regolabile fino a 512 |
+| `districtPopulation` | Limite delle aggiunte dei quartieri; i nuclei iniziali completi richiedono 76 posti |
+| `needsIntervalTicks` | Intervallo di aggiornamento dei bisogni, normalmente 600 tick |
+| `daysPerYear` | Giorni Minecraft per un anno di età |
+| `retirementAge` / `maximumAge` | Soglie per pensionamento e fine del ciclo di vita |
+| `fixtures` | Calendario delle partite televisive simulate |
 
-## Multiplayer and three-seat scooters
+Nel calendario, `napoliGoals` e `opponentGoals` a `-1` lasciano scegliere il risultato alla simulazione. Gli orari sono unità del giorno Minecraft. A 20 tick al secondo, 600 tick corrispondono a 30 secondi; su un server rallentato i tempi reali aumentano.
 
-Install the **same Napulicraft beta and Fabric API** on the Fabric server and on every player's client
-(Minecraft 26.3, Java 25 or newer). You can also play together through **Open to LAN**.
-The server runs gameplay, wallets, shops, taxes and prison sentences; rendering and music run on each client.
-Each player supplies their own music files: the selected radio station is synchronized, while audio files stay local.
+Le configurazioni già presenti mantengono i propri valori. Un massimo di 160 con 120 cittadini esistenti consente al più 40 aggiunte nei quartieri; per tutte le famiglie iniziali serve spazio per almeno 196 residenti. Cambiare la scala dell'età conserva età e legami già registrati. Il server limita automaticamente i valori fuori intervallo.
 
-Right-click a scooter to board, with a maximum of **three players** in boarding order:
+## Multiplayer e salvataggi
 
-1. **First:** driver, using W and the mouse; only the driver can change the radio with R.
-2. **Second:** middle seat.
-3. **Third:** rear seat. A fourth player cannot board.
+Il **server è responsabile della simulazione**: identità, inventari, portafogli, negozi, permessi, case, biglietti, sanzioni e risultati sportivi vengono validati e salvati sul server. I client gestiscono visualizzazione, interfacce, nuvolette e audio locale. Installa la stessa versione della mod e Fabric API su tutti i partecipanti.
 
-Use **Shift** to dismount. When a rider leaves or disconnects, the remaining riders move forward in order;
-the next rider becomes the driver and keeps the selected radio station. The radio switches off when empty.
-**Shift + right-click** picks up an empty scooter; occupied scooters cannot be collected, and a full inventory
-leaves the scooter safely in the world.
+La simulazione usa distanze diverse per contenere il lavoro di navigazione. Gli abitanti lontani continuano attraverso i dati senza caricare i loro quartieri; le corse senza passeggeri possono essere virtuali. Durante un viaggio con passeggeri, il mezzo diventa un'entità e mantiene caricati i settori necessari.
 
-`./gradlew runGameTest` runs headless server tests with up to four simulated players, checking seat order and
-positions, passenger synchronization packets, driver promotion, radio permissions, capacity and safe pickup.
-These tests also run during `./gradlew build` and the GitHub beta workflow.
-The opt-in `./gradlew runMotorinotest` additionally runs a real client with two simulated remote players,
-checking synchronized seats, movement with three riders, rejected passenger radio packets, and taking over the
-controls after the driver dismounts. It creates a disposable world and saves a screenshot in `run-autotest/screenshots`.
+Gli aggiornamenti dei salvataggi vengono applicati per revisione. Il nucleo precedente mantiene le coordinate; i nuovi quartieri si completano durante l'esplorazione. Le migrazioni previste correggono vecchi vani porta e dislivelli delle strade quando i settori vengono ricaricati, senza ricostruire ogni volta la zona. Le riparazioni riconoscono le strutture generate e saltano le personalizzazioni incompatibili; i blocchi tracciati come piazzati dai giocatori sono protetti.
 
-## Peppe Fetish and the dirty socks
+Proprietà, inviti, progressi familiari, lavoro e molti stati intermedi delle attività persistono dopo il riavvio. I biglietti conservano il pagamento del viaggio e i premi riscossi vengono registrati per impedirne la duplicazione.
 
-**Peppe Fetish** is an original adult fictional merchant on **Spaccanapoli**, near **(-4, 64, -125)**.
-He wears a grey hoodie over a blue T-shirt, jeans and trainers, and has a ginger beard. Right-click him to buy a pair
-of **dirty socks for 6 €** using your wallet balance.
+## Compilazione e verifiche
 
-Hold **right-click for 1.2 seconds** with the socks in either hand to sniff their provolone aroma:
+Il repository include il Gradle Wrapper. Per compilare occorre un **JDK 25 o successivo**; versione base e dipendenze sono in [gradle.properties](gradle.properties).
 
-- **Nausea I:** 15 seconds.
-- **Regeneration I:** 10 seconds, gradually restoring hearts.
-- The socks are **reusable** and have a **5-second cooldown**. Sniffing leaves hunger unchanged;
-  releasing the button early cancels the effects.
+Su Windows, da PowerShell:
 
-They also appear in the mod's creative tab. Operators can use **`/napuli peppe`** to visit his stall.
-Peppe also sells **Foot-aroma cheese for 10 €**: a fictional cheese advertised as smelling of a woman's feet
-unwashed for three months. Eating one portion (even at full hunger) gives **Speed II for 10 seconds** and
-**Strength V for 3 seconds**. Once the 10-second rush ends, **Slowness I lasts 20 seconds** and
-**Weakness I lasts 6 seconds**. A portion is consumed, and the pending crash is saved with the player and pauses
-while logged out, like potion durations. A new portion restarts the countdown; death clears it.
-
-The opt-in **`./gradlew runPeppetest`** checks both real shop buttons, prices, insufficient funds, interrupted and
-completed sniffing, actual healing, cooldown, offhand reuse, cheese consumption at full hunger, timed bonuses and
-the delayed penalties through their expiry in a disposable world.
-
-## Giorgia Meloni and the weekly tax
-
-A fictional Giorgia Meloni NPC, with blonde hair, a black suit and a white shirt, visits each Survival/Adventure
-player every **3 Minecraft days** (72,000 day-clock ticks, including nights skipped by sleeping).
-She appears about **50 blocks away**, finds a safe walking route and approaches you with a **weekly tax** dialog.
-If she cannot reach you within **2 minutes** (2,400 server ticks), she disappears and sends you to prison for tax
-evasion. A barricade does not prevent her visit: she can appear safely outside it while attempting to reach you.
-The approach deadline survives a collector respawn, logout, death or dimension change. Reaching you and opening
-the dialog cancels it; skipped nights and changes to the day clock do not shorten these two minutes.
-
-- **Pay with items:** up to **15 individual items in total**, preferring building blocks, then ores and other materials/consumables.
-  Weapons, armor, tools, equipment and portable containers are protected, including the mod's weapons and ciabatta.
-- **Pagamento partita iva:** pay **30% of your current wallet balance**, rounded up to whole euros (100 € → 30 €;
-  101 € → 31 €). This option leaves your inventory intact. The dialog shows the amount before you confirm;
-  if your balance changes enough to change the tax, you must review the new amount before paying.
-- **No taxable materials and no money:** confirm the exemption. If only one payment method is available, use that one.
-- **Refuse:** **90 seconds in the Napoli prison for tax evasion**, in Adventure mode. Your equipment stays with you;
-  your previous game mode is restored when the sentence ends.
-
-Closing the dialog leaves the request pending; right-click her to reopen it. The next visit is due three days after
-payment, exemption or refusal. Pending taxes and prison sentences survive death and server restarts; changing
-dimensions does not escape a sentence. Creative and Spectator players are exempt from visits.
-
-Operators can use **`/napuli meloni`** to trigger a visit immediately while in Survival/Adventure mode.
-The opt-in integration test **`./gradlew runTaxtest`** creates a disposable world, checks the schedule, approach,
-inventory protection, both payment methods, rounding, zero balance, approach timeout, refusal and release,
-saves screenshots in `run-autotest/screenshots`, and exits.
-
-## Expanded Naples
-
-The [expanded Naples atlas](docs/MAPPA_NAPOLI.md) covers ten times the previous city envelope, with
-45 new real-world destinations, streamed district generation and `/napoli luoghi` walking directions.
-
-## Building
-
-Every push to GitHub (on any branch or tag) runs the **Build and publish beta** workflow:
-it builds the mod with Java 25 and publishes the installable JAR in a new
-[GitHub pre-release](https://github.com/Souhail-dev-cpu/napulicraft/releases).
-The beta version includes the workflow run number and attempt, for example
-`1.1.0-beta.42.1`, in the JAR filename, mod metadata, and release tag (`v1.1.0-beta.42.1`).
-Re-running a workflow creates a new beta, and a failed build does not publish a release.
-The workflow can also be started manually from **Actions → Build and publish beta → Run workflow**.
-It uses the automatic `GITHUB_TOKEN`; no extra secrets or manually created tags are needed.
-
-To build locally:
-
-```
-./gradlew build        # jar in build/libs
-./gradlew runClient    # dev client
+```powershell
+.\gradlew.bat --no-daemon build
+.\gradlew.bat runClient
 ```
 
-Dev play-tests (screenshots in `run-autotest/screenshots`): `runMaptest`, `runRadiotest`, `runPolicetest`,
-`runSpawntest`, `runCitytest`.
+Su Linux e macOS:
 
-## Licence
+```sh
+bash ./gradlew --no-daemon build
+bash ./gradlew runClient
+```
 
-Code and textures: [MIT](LICENSE). The mod bundles [JLayer](https://github.com/umjammer/jlayer) 1.0.1 (LGPL-2.1)
-to decode MP3 files. It's a parody/meme mod: names of real places and institutions are used for fun.
+Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. Il parametro `-Pversion=...` imposta una versione di compilazione.
+
+### Test automatici e client
+
+`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **102 test**, comprendendo anche ingressi, strade, capienza, ospiti e persistenza. Le prove grafiche e prolungate si avviano separatamente.
+
+| Task Gradle | Ambito |
+| --- | --- |
+| `runGameTest` | Suite automatica del server |
+| `runLivingCityTest` | Case, pasti, gesti, inviti, chiavi, campanelli, servizi, TV e interazioni sul client |
+| `runAtlasTest` | Destinazioni dell'espansione, atlante e ricaricamento dei chunk |
+| `runDistrictTest` | Botteghe, menu dei trasporti e viaggio in metro |
+| `runSpeechTest` | Nuvolette, parlante, movimento, pagine, distanza e scadenza |
+| `runEntranceTest` | Porte, muri, migrazione degli ingressi e conservazione delle modifiche |
+| `runStreetTest` | Attraversamento senza salti, fondazioni e riparazione dopo un vero ricaricamento dei chunk |
+| `runPoliceaitest` | Navigazione degli agenti, vandalismo, barricata, multa e inseguimento sul tetto |
+| `runMotorinotest` | Tre passeggeri, sincronizzazione, radio e cambio di conducente |
+| `runKitchentest` | Interfacce di cucina, effetti, enigma e addomesticamento |
+| `runFootballTest` | Menu e interazioni calcistiche |
+| `runPeppetest` / `runTaxtest` | Commerciante, consumabili e visita fiscale |
+
+I task client creano mondi temporanei e salvano schermate in `run-autotest/screenshots`. Su Windows usa, per esempio, `.\gradlew.bat runStreetTest`. I task di verifica con un marcatore finale controllano che il log ne confermi il completamento.
+
+### Prove multiplayer prolungate
+
+Sono disponibili prove con **server dedicato e quattro connessioni locali simulate**, protocollo e salvataggi reali. Per ciascuna coppia di esecuzioni usa lo stesso identificativo; per ripetere da zero scegline uno nuovo.
+
+```sh
+# Simulazione cittadina, poi verifica dopo il riavvio
+bash ./gradlew runCitySoak -PsoakRun=citta-1 -PsoakPhase=write
+bash ./gradlew runCitySoak -PsoakRun=citta-1 -PsoakPhase=read
+
+# Quartieri, botteghe e trasporto pubblico, poi riavvio
+bash ./gradlew runDistrictSoak -PsoakRun=quartieri-1 -PsoakPhase=write
+bash ./gradlew runDistrictSoak -PsoakRun=quartieri-1 -PsoakPhase=read
+```
+
+Su Windows sostituisci `bash ./gradlew` con `.\gradlew.bat`. I mondi di prova rimangono in `.gradle/soak/<identificativo>`.
+
+Le verifiche documentate comprendono **168.000 tick** di simulazione cittadina e **10.500 tick** dopo il riavvio, oltre a una prova dei quartieri di **24.837 tick** seguita da altri **1.000 tick**. Sono stati controllati ospiti oltre la capienza, pasti e avanzi, UUID, inventari, scuola e cure, mestieri, partite, premi, viaggi su M6/B5/T1 e ripresa senza un secondo addebito. Si tratta di automazione con quattro profili connessi; non equivale a una sessione manuale di quattro persone su Internet.
+
+### Build e pubblicazione delle beta
+
+Il workflow [Build and publish beta](.github/workflows/beta-release.yml) compila con Java 25 a ogni push ed è avviabile manualmente da GitHub Actions. Dopo una build riuscita pubblica il JAR in una pre-release.
+
+La versione include numero di esecuzione e tentativo, per esempio `1.1.0-beta.42.1`. Una build fallita non pubblica una nuova release. Prove client e prove multiplayer prolungate rimangono task separati dalla build ordinaria.
+
+## Documentazione e licenza
+
+| Guida | Contenuti |
+| --- | --- |
+| [Napoli viva](docs/NAPOLI_VIVA.md) | Simulazione, famiglie, case, memoria, attività e verifiche approfondite |
+| [Mappa di Napoli](docs/MAPPA_NAPOLI.md) | Atlante, dimensioni, luoghi, generazione e fonti geografiche |
+| [Quartieri e trasporti](docs/QUARTIERI_E_TRASPORTI.md) | Nuovi residenti, botteghe, linee, biglietti e prove multiplayer |
+| [Cucina](docs/CUCINA.md) | Postazioni, alimenti, effetti, progressione e Munaciello |
+| [Ricettario completo](docs/CUCINA_RICETTE.md) | Le 71 ricette con ingredienti e quantità |
+| [NPC e polizia](docs/IA_POLIZIA.md) | Navigazione, inseguimenti, barricata e vandalismo |
+
+Codice e texture del progetto sono distribuiti con [licenza MIT](LICENSE). Il JAR include **JLayer 1.0.1**, distribuito con licenza **LGPL-2.1**, per decodificare i file MP3.
+
+Napulicraft è un progetto indipendente a carattere parodistico. Luoghi reali, istituzioni e personaggi pubblici sono rappresentati in un contesto di finzione; calendario sportivo, attività, economia e trasporti seguono le regole della mod.

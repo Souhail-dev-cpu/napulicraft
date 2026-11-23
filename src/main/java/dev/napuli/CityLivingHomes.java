@@ -77,7 +77,7 @@ final class CityLivingHomes {
             if (wall && y<roof && (y-64)%5>=1 && (y-64)%5<=2 && (bx-x+bz-z+h.style())%4==1) b=Blocks.GLASS;
             put(city,new BlockPos(bx,y,bz),b);
         }
-        fill(city,x+w/2,64,z+d-1,x+w/2,66,z+d-1,Blocks.AIR);
+        put(city,new BlockPos(x+w/2,66,z+d-1),h.wall());
         var door=Blocks.OAK_DOOR.defaultBlockState().setValue(net.minecraft.world.level.block.DoorBlock.FACING,Direction.SOUTH);
         city.setBlock(new BlockPos(x+w/2,64,z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER),2);
         city.setBlock(new BlockPos(x+w/2,65,z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER),2);

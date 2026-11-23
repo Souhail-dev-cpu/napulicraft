@@ -46,6 +46,8 @@ public class NapuliClient implements ClientModInitializer {
 		dev.napuli.LivingCityTest.register();
 		dev.napuli.AtlasTest.register();
 		dev.napuli.DistrictClientTest.register();
+		dev.napuli.EntranceClientTest.register();
+		dev.napuli.StreetClientTest.register();
 		AutoTest.register();
 		CityTest.register();
 		PoliceTest.register();

@@ -67,6 +67,7 @@ final class CitySimulation {
             var owners=new HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));
             var transferTo=heirs.isEmpty()?null:heirs.getFirst().id();
             for(var entry:List.copyOf(owners.entrySet()))if(entry.getValue().equals(deceased.id())) {
+                HouseGuests.clear(city,entry.getKey());
                 if(transferTo==null)owners.remove(entry.getKey());else owners.put(entry.getKey(),transferTo);
             }
             city.setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));
@@ -199,6 +200,8 @@ final class CitySimulation {
         }
         if(distance>=80*80) {npc.getNavigation().stop();return;}
         var house=CityLivingHomes.find(c.property());
+        var visit = visitingHouse(city,c);
+        if(visit!=null) {house=visit;action=NapoliBroadcast.time(city)<11600?NapoliHouseholds.Activity.EAT:NapoliHouseholds.Activity.MATCH;npc.setActivity(action);}
         BlockPos home=NapoliCivicLife.home(c);
         BlockPos target=home;
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=c.profession().site;
@@ -245,12 +248,19 @@ final class CitySimulation {
         CityResidentShop.offer(p,c);
     }
     static BlockPos location(ServerLevel city,NapoliCivicLife.Citizen c) {
+        var visit=visitingHouse(city,c);if(visit!=null)return visit.inside();
         var action=activity(city,c,life(city,c.id()),NapoliBroadcast.time(city));
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)return c.profession().site;
         if(action==NapoliHouseholds.Activity.CARE)return CityProfessions.Category.HEALTH.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SCHOOL)return CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SHOP)return CityProfessions.Category.TRADE.site().offset(8,0,7);
         return NapoliCivicLife.home(c);
+    }
+    private static NapoliMergellina.House visitingHouse(ServerLevel city,NapoliCivicLife.Citizen c) {
+        long time=NapoliBroadcast.time(city);
+        if(time<10500||time>=16000||life(city,c.id()).health()<45||CityPublicOrder.jailed(city,c.id())
+                ||c.profession()!=null&&CityProfessions.open(c.profession(),time,NapoliBroadcast.day(city)))return null;
+        return CityLivingHomes.find(HouseGuests.visitingHome(city,c.id()));
     }
     private CitySimulation() {}
 }

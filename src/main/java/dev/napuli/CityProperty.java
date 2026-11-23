@@ -43,6 +43,10 @@ public final class CityProperty {
         var positions = new HashSet<>(level.getAttachedOrElse(PLACED, Set.of()));
         positions.add(pos.asLong()); level.setAttached(PLACED, Set.copyOf(positions));
     }
+    public static boolean mayBuild(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        if (level.dimension() != NapoliMap.LEVEL) return true;
+        return NapoliMergellina.PROPERTIES.stream().noneMatch(h -> h.contains(pos) && !NapoliProperties.owns(player, h));
+    }
     static void forget(ServerLevel level, BlockPos pos) {
         var positions = level.getAttachedOrElse(PLACED, Set.of());
         if (!positions.contains(pos.asLong())) return;

@@ -123,7 +123,7 @@ public final class HousingCapacityGameTest {
         CityProperty.recordHome(city, floor, floor.offset(6, 5, 6));
     }
 
-    private static void withPlayers(GameTestHelper helper, int count, Consumer<List<ServerPlayer>> body) {
+    static void withPlayers(GameTestHelper helper, int count, Consumer<List<ServerPlayer>> body) {
         var players = new ArrayList<ServerPlayer>(); var channels = new ArrayList<EmbeddedChannel>();
         try {
             for (int i = 0; i < count; i++) {

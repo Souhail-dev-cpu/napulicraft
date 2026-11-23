@@ -15,7 +15,7 @@ final class HousingCapacity {
     private static final Map<ServerLevel, State> STATES = new WeakHashMap<>();
     private static final List<NapoliMergellina.House> AUTHORED = authored();
 
-    private record Home(CityProperty.Home bounds, BlockPos entrance) {}
+    private record Home(CityProperty.Home bounds, BlockPos entrance, String property) {}
     private static final class State {
         List<CityProperty.Home> layout;
         List<Home> homes;
@@ -52,20 +52,20 @@ final class HousingCapacity {
         for (var h : AUTHORED) homes.add(new Home(new CityProperty.Home(
                 new BlockPos(h.x(), 61, h.z()),
                 new BlockPos(h.x() + h.width() - 1, Math.max(78, 64 + h.floors() * 5), h.z() + h.depth() - 1)),
-                h.entrance().south()));
+                h.entrance().south(), h.id()));
         // The four inhabited Borgo Marinari buildings predate the property registry.
         for (int i = 0; i < 4; i++) {
             int x = 19 + i * 7;
             int floors = i % 2 == 0 ? 3 : 4;
             homes.add(new Home(new CityProperty.Home(new BlockPos(x, 63, 82),
-                    new BlockPos(x + 6, 64 + floors * 4, 91)), new BlockPos(x + 3, 64, 80)));
+                    new BlockPos(x + 6, 64 + floors * 4, 91)), new BlockPos(x + 3, 64, 80), ""));
         }
         // Include older homes and houses registered with the city's property system.
         for (var bounds : layout) {
             if (homes.stream().anyMatch(h -> h.bounds().min().getX() == bounds.min().getX()
                     && h.bounds().min().getZ() == bounds.min().getZ())) continue;
             homes.add(new Home(bounds, new BlockPos((bounds.min().getX() + bounds.max().getX()) / 2,
-                    bounds.min().getY() + 1, bounds.max().getZ() + 2)));
+                    bounds.min().getY() + 1, bounds.max().getZ() + 2), ""));
         }
         state.layout = List.copyOf(layout);
         state.homes = List.copyOf(homes);
@@ -81,9 +81,11 @@ final class HousingCapacity {
         var homes = homes(city);
         var home = at(homes, destination);
         if (home == null) return true;
+        if (HouseGuests.capacityExempt(city, home.property(), entrant)) return true;
         int count = 0;
         for (var entity : city.getAllEntities()) {
             if (occupant(entity) && !entity.getUUID().equals(entrant)
+                    && !HouseGuests.capacityExempt(city, home.property(), entity.getUUID())
                     && home.equals(at(homes, entity.blockPosition())) && ++count >= MAX_OCCUPANTS) return false;
         }
         return true;
@@ -94,7 +96,8 @@ final class HousingCapacity {
         var ids = new HashSet<UUID>();
         for (var citizen : residents) if (citizen.property().equals(house.id())) ids.add(citizen.id());
         for (var entity : city.getAllEntities())
-            if (occupant(entity) && house.contains(entity.blockPosition())) ids.add(entity.getUUID());
+            if (occupant(entity) && house.contains(entity.blockPosition())
+                    && !HouseGuests.capacityExempt(city, house.id(), entity.getUUID())) ids.add(entity.getUUID());
         return ids.size();
     }
 
@@ -113,9 +116,13 @@ final class HousingCapacity {
         for (var entry : groups.entrySet()) {
             var home = entry.getKey();
             var inside = entry.getValue();
+            // Invited visitors have additional places and never displace the normal occupants.
+            inside.removeIf(e -> HouseGuests.capacityExempt(city, home.property(), e.getUUID()));
+            if (inside.isEmpty()) continue;
             var previous = state.admitted.getOrDefault(home, List.of());
             // Existing occupants keep their places; simultaneous arrivals use a stable order.
             inside.sort(Comparator.<Entity>comparingInt(e -> {
+                if (HouseGuests.host(city, home.property(), e.getUUID())) return -1;
                 int index = previous.indexOf(e.getUUID());
                 return index < 0 ? MAX_OCCUPANTS : index;
             }).thenComparingInt(Entity::getId));

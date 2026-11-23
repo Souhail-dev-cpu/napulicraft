@@ -44,7 +44,7 @@ final class NapoliProperties {
                     return InteractionResult.SUCCESS;
                 }
                 if ((house.contains(hit.getBlockPos()) || house.contains(hit.getBlockPos().relative(hit.getDirection())))
-                        && player instanceof ServerPlayer serverPlayer && !owns(serverPlayer, house)) {
+                        && player instanceof ServerPlayer serverPlayer && !hasAccess(serverPlayer, house)) {
                     say(serverPlayer, "private");
                     return InteractionResult.FAIL;
                 }
@@ -62,7 +62,7 @@ final class NapoliProperties {
             if (city == null) return;
             for (ServerPlayer player : city.players()) {
                 if (player.isSpectator()) continue;
-                for (var house : NapoliMergellina.PROPERTIES) if (house.contains(player.blockPosition()) && !owns(player, house)) {
+                for (var house : NapoliMergellina.PROPERTIES) if (house.contains(player.blockPosition()) && !hasAccess(player, house)) {
                     visit(player, house.entrance().south());
                     say(player, "private");
                     break;
@@ -91,7 +91,7 @@ final class NapoliProperties {
     private static int list(ServerPlayer player) {
         if (player.level().dimension() != NapoliMap.LEVEL) { say(player, "city"); return 0; }
         var actions = NapoliMergellina.PROPERTIES.stream().map(house -> {
-            boolean owned = owns(player, house);
+            boolean owned = hasAccess(player, house);
             var label = owned ? Component.translatable("napuli.property.enter", house.address())
                     : Component.translatable("napuli.property.locate", house.address(), house.sign().getX(), house.sign().getZ());
             return owned ? button(label, "/casa vai " + house.id()) : new ActionButton(new CommonButtonData(label, 250), Optional.empty());
@@ -102,6 +102,11 @@ final class NapoliProperties {
 
     private static void open(ServerPlayer player, NapoliMergellina.House house) {
         if (player.isSpectator()) return;
+        if (!owns(player, house) && HouseGuests.invited(player.level(), house.id(), player.getUUID())) {
+            show(player, Component.literal(house.address()), Component.translatable("napuli.guest.welcome"),
+                    List.of(button(Component.translatable("napuli.property.go"), "/casa vai " + house.id())));
+            return;
+        }
         UUID owner = owner(player.level(), house);
         if (owner != null && !owns(player,house)) { say(player, "sold"); return; }
         boolean owned = owns(player,house);
@@ -113,7 +118,10 @@ final class NapoliProperties {
         if(!owned) {
             actions.add(button(Component.literal("Affitta · acconto "+Math.max(5,house.price()/12)+" €"),"/casa affitta "+house.id()));
             actions.add(button(Component.literal("Mutuo · acconto "+((house.price()+4)/5)+" € · 10% interessi"),"/casa mutuo "+house.id()));
-        } else actions.add(button(Component.literal("Paga rate e bollette"),"/casa paga "+house.id()));
+        } else {
+            actions.add(button(Component.literal("Paga rate e bollette"),"/casa paga "+house.id()));
+            actions.add(button(Component.translatable("napuli.guest.title"), "/casa ospiti " + house.id()));
+        }
         show(player, Component.literal(house.address()), body, actions);
     }
 
@@ -134,7 +142,7 @@ final class NapoliProperties {
 
     private static int go(ServerPlayer player, String id) {
         var house = find(id);
-        if (house == null || player.level().dimension() != NapoliMap.LEVEL || !owns(player, house)
+        if (house == null || player.level().dimension() != NapoliMap.LEVEL || !hasAccess(player, house)
                 || player.isSpectator() || Carabinieri.isJailed(player) || Carabinieri.isWanted(player)) return 0;
         visit(player, house.entrance().south());
         return 1;
@@ -152,10 +160,14 @@ final class NapoliProperties {
     static boolean owns(ServerPlayer player, NapoliMergellina.House house) {
         return player.getUUID().equals(owner(player.level(), house)) || CityHousingFinance.tenant(player.level(),house.id(),player.getUUID());
     }
+    static boolean hasAccess(ServerPlayer player, NapoliMergellina.House house) {
+        return owns(player, house) || HouseGuests.invited(player.level(), house.id(), player.getUUID());
+    }
 
     static boolean claimForResident(ServerLevel city, NapoliMergellina.House house, UUID resident) {
         UUID existing = owner(city, house);
         if (existing != null) return existing.equals(resident);
+        HouseGuests.clear(city,house.id());
         var updated = new HashMap<>(city.getAttachedOrElse(OWNERS, Map.of()));
         updated.put(house.id(), resident);
         city.setAttached(OWNERS, Map.copyOf(updated));

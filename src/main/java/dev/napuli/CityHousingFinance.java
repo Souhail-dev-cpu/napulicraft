@@ -25,6 +25,7 @@ final class CityHousingFinance {
     static final UUID LANDLORD=UUID.nameUUIDFromBytes("napulicraft:landlord".getBytes(java.nio.charset.StandardCharsets.UTF_8));
     static boolean tenant(ServerLevel city,String house,UUID id) { var account=city.getAttachedOrElse(ACCOUNTS,Map.of()).get(house);return account!=null&&account.tenant().equals(id); }
     static void ownOutright(ServerLevel city,String id,UUID owner) {
+        HouseGuests.clear(city,id);
         var accounts=new HashMap<>(city.getAttachedOrElse(ACCOUNTS,Map.of()));accounts.put(id,new Account(owner,0,0,0,0,0,NapoliBroadcast.day(city),false));city.setAttached(ACCOUNTS,Map.copyOf(accounts));
     }
     static void register() {
@@ -71,6 +72,7 @@ final class CityHousingFinance {
                 int debt=Math.max(0,a.debt()-a.installment()*(a.missed()+1));
                 if(debt==0)accounts.remove(entry.getKey());else accounts.put(entry.getKey(),new Account(a.tenant(),debt,a.installment(),a.periods()-1,0,0,day,false));
             } else if(a.missed()>=2) {
+                HouseGuests.clear(city,entry.getKey());
                 accounts.remove(entry.getKey());
                 var owners=new HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));owners.remove(entry.getKey());city.setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));
                 for(var person:List.copyOf(people.values()))if(person.property().equals(entry.getKey()))people.put(person.id(),person.withHousehold(person.partner(),"public_0",person.balance()));
@@ -87,6 +89,7 @@ final class CityHousingFinance {
         int principal=rental?0:((h.price()-deposit)*110+99)/100;
         int installment=rental?Math.max(4,h.price()/18):(principal+11)/12;
         NapoliStreet.credit(p,-deposit);
+        HouseGuests.clear(p.level(),id);
         var owners=new HashMap<>(p.level().getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));
         owners.put(id,rental?LANDLORD:p.getUUID());p.level().setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));
         var accounts=new HashMap<>(p.level().getAttachedOrElse(ACCOUNTS,Map.of()));
@@ -114,6 +117,7 @@ final class CityHousingFinance {
     static void inherit(ServerLevel city,UUID from,UUID to) {
         var accounts=new HashMap<>(city.getAttachedOrElse(ACCOUNTS,Map.of()));
         for(var entry:List.copyOf(accounts.entrySet()))if(entry.getValue().tenant().equals(from)) {
+            HouseGuests.clear(city,entry.getKey());
             var a=entry.getValue();
             if(to==null) {
                 accounts.remove(entry.getKey());
@@ -130,6 +134,7 @@ final class CityHousingFinance {
         remove(p.level(),id,true);NapoliStreet.credit(p,proceeds);p.sendSystemMessage(Component.literal("Casa venduta. Saldo: "+proceeds+" €."));return 1;
     }
     private static void remove(ServerLevel city,String id,boolean ownership) {
+        HouseGuests.clear(city,id);
         var accounts=new HashMap<>(city.getAttachedOrElse(ACCOUNTS,Map.of()));accounts.remove(id);city.setAttached(ACCOUNTS,Map.copyOf(accounts));
         if(ownership){var owners=new HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));owners.remove(id);city.setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));}
     }

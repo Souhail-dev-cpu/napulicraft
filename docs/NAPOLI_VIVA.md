@@ -23,10 +23,18 @@ Gli NPC sportivi possono restare svegli per festeggiare il Napoli. Meteo, salute
 
 ## Case e arredi
 
-Ogni casa può contenere **al massimo 5 occupanti complessivi**, sommando NPC e giocatori, bambini inclusi.
+Ogni casa ha **5 posti ordinari**, sommando NPC e giocatori, bambini inclusi. Proprietario e inquilino possono
+invitare amici per una cena, una visita o un soggiorno: **gli ospiti invitati possono superare il limite di 5**
+e non occupano i posti dei residenti. Chi non ha un invito continua a rispettare il limite normale.
 Il controllo è sul server e vale anche per alloggi pubblici, case preesistenti e ingressi tramite teletrasporto.
-Chi arriva per sesto viene riportato fuori; un posto si libera quando qualcuno esce. Anche le nascite tengono
-conto dei residenti e degli ospiti presenti, senza contare due volte gli NPC già materializzati.
+Le nascite continuano a rispettare i cinque posti dei residenti; le visite autorizzate non li riducono.
+
+Dal cartello della propria casa scegli **Ospiti e inviti**, oppure usa `/casa ospiti ID`. Il menu permette di
+invitare giocatori online e cittadini vicini e di revocare gli inviti, anche dopo una disconnessione.
+Un amico può entrare, guardare la TV, usare la cucina e il bagno e fermarsi anche con la casa piena.
+L'invito non concede proprietà o permessi per costruire, rompere blocchi, vendere la casa o invitare altre persone.
+Gli NPC invitati vengono a trovare l'ospitante nel tempo libero serale. Gli inviti restano validi finché
+vengono revocati e sono salvati con il mondo; vendita, cambio di proprietario o fine dell'affitto li annullano.
 
 Ci sono **35 immobili acquistabili**, con identificativi stabili: i sette indirizzi originari e `viva_1`–`viva_28`.
 Le nuove case variano dimensioni, piani, pareti, distribuzione, balconi, terrazzi e arredi. Le famiglie iniziano
@@ -52,6 +60,10 @@ controllati dal server anche in multiplayer. Le case occupate non possono essere
 | `/casa lascia ID` | Chiude un affitto dopo aver saldato gli arretrati |
 | `/casa vendi ID` | Rivendita all'80%, saldando prima il debito |
 | `/casa vai ID` | Raggiunge l'ingresso della propria casa |
+| `/casa ospiti ID` | Menu per invitare amici e NPC vicini |
+| `/casa invita ID NomeGiocatore` | Invita un giocatore, anche oltre i cinque occupanti |
+| `/casa revoca ID NomeGiocatore` | Revoca un invito |
+| `/casa fineospiti ID` | Conclude tutte le ospitalità della casa |
 
 La scadenza finanziaria è ogni sette giorni di gioco. Le rate includono 2 € di bollette; il server prova il
 pagamento automatico dal portafoglio. Tre scadenze insolute portano alla chiusura del contratto e al rilascio
@@ -125,7 +137,8 @@ Il file server `config/napulicraft-city.json` viene creato al primo avvio. Modif
 `-1` sceglie il risultato dal calendario simulato. Il limite massimo dei cittadini può essere portato fino
 a 512; il server limita automaticamente valori e intervalli invalidi.
 
-`./gradlew build` include i GameTest per anagrafe, salvataggi, eredità, crescita, routine, cataloghi e rate.
+`./gradlew build` include i GameTest per anagrafe, salvataggi, eredità, crescita, routine, cataloghi, rate,
+capienza delle case, inviti e revoche degli ospiti.
 `./gradlew runLivingCityTest` crea un mondo usa e getta e verifica case generate, punti d'uso raggiungibili,
-mutui, pagamenti unici, TV sul client, traffico ed effetti della bottiglia. Salva schermate in
+mutui, pagamenti unici, TV sul client, menu degli ospiti, permessi di costruzione, traffico ed effetti della bottiglia. Salva schermate in
 `run-autotest/screenshots/living-city-*.png` e fallisce se la verifica non termina correttamente.

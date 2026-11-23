@@ -701,5 +701,17 @@
 	"napuli.family.social": "In compagnia",
 	"napuli.family.celebrate": "FORZA NAPOLI!",
 	"napuli.family.care": "Visita in ospedale",
-	"napuli.property.full": "House full: at most %s NPCs and players combined."
+	"napuli.property.full": "House full: at most %s NPCs and players combined.",
+	"napuli.guest.owner_only": "Only the owner or tenant can manage this home’s invitations.",
+	"napuli.guest.not_found": "Choose an online player or an NPC from the guest menu.",
+	"napuli.guest.invited": "You invited %s to %s, including beyond five occupants.",
+	"napuli.guest.received": "%s invites you to %s. You can stay even when the house is full. Click to reach Naples or the entrance.",
+	"napuli.guest.revoked": "Invitation for %s revoked.",
+	"napuli.guest.ended": "Hospitality ended: all invitations for this home have been revoked.",
+	"napuli.guest.title": "Guests and invitations",
+	"napuli.guest.help": "Invite friends and nearby citizens for dinner, a visit or a stay. Invited guests may exceed five occupants. Invitations can be revoked and do not grant ownership.",
+	"napuli.guest.add": "Invite %s",
+	"napuli.guest.remove": "Revoke invitation for %s",
+	"napuli.guest.end": "End all hospitality",
+	"napuli.guest.welcome": "You are a guest of this home. You can enter and use its furniture even when its five regular places are occupied."
 }

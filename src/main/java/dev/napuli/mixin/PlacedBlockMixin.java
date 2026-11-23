@@ -14,6 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockItem.class)
 abstract class PlacedBlockMixin {
+    @Inject(method = "placeBlock", at = @At("HEAD"), cancellable = true)
+    private void napuli$checkConstruction(BlockPlaceContext context, BlockState state, CallbackInfoReturnable<Boolean> result) {
+        if (context.getPlayer() instanceof ServerPlayer player && context.getLevel() instanceof ServerLevel level
+                && !CityProperty.mayBuild(level, player, context.getClickedPos())) result.setReturnValue(false);
+    }
+
     @Inject(method = "placeBlock", at = @At("RETURN"))
     private void napuli$recordConstruction(BlockPlaceContext context, BlockState state, CallbackInfoReturnable<Boolean> result) {
         if (result.getReturnValue() && context.getPlayer() instanceof ServerPlayer

@@ -156,6 +156,7 @@ public class Napuli implements ModInitializer {
 		NapoliStreet.register();
 		NapoliLocalJobs.register();
 		NapoliProperties.register();
+		HouseGuests.register();
 		NapoliBroadcast.register();
 		NapoliCivicLife.register();
 		CitySimulation.register();

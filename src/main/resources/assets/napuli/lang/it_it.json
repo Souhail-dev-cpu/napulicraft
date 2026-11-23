@@ -701,5 +701,17 @@
 	"napuli.family.social": "In compagnia",
 	"napuli.family.celebrate": "FORZA NAPOLI!",
 	"napuli.family.care": "Visita in ospedale",
-	"napuli.property.full": "Casa piena: massimo %s occupanti tra NPC e giocatori."
+	"napuli.property.full": "Casa piena: massimo %s occupanti tra NPC e giocatori.",
+	"napuli.guest.owner_only": "Solo il proprietario o l’inquilino può gestire gli inviti della casa.",
+	"napuli.guest.not_found": "Scegli un giocatore online o un NPC dal menu degli ospiti.",
+	"napuli.guest.invited": "Hai invitato %s a %s, anche oltre i cinque occupanti.",
+	"napuli.guest.received": "%s ti invita a %s. Puoi fermarti anche se la casa è piena. Clicca per raggiungere Napoli o l’ingresso.",
+	"napuli.guest.revoked": "Invito di %s revocato.",
+	"napuli.guest.ended": "Ospitalità conclusa: tutti gli inviti della casa sono revocati.",
+	"napuli.guest.title": "Ospiti e inviti",
+	"napuli.guest.help": "Invita amici e cittadini vicini per una cena, una visita o un soggiorno. Gli invitati possono superare i cinque occupanti. Gli inviti sono revocabili e non concedono proprietà.",
+	"napuli.guest.add": "Invita %s",
+	"napuli.guest.remove": "Revoca invito di %s",
+	"napuli.guest.end": "Concludi tutte le ospitalità",
+	"napuli.guest.welcome": "Sei ospite di questa casa. Puoi entrare e usare gli arredi anche quando i cinque posti ordinari sono occupati."
 }

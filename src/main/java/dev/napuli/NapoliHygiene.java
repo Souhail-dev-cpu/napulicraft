@@ -52,7 +52,7 @@ final class NapoliHygiene {
             }
             for (var house : NapoliMergellina.PROPERTIES) if (pos.equals(shower(house)) || (pos.equals(shower(house).above()) && NapoliShower.isColumn(level, pos))) {
                 if (player instanceof ServerPlayer p) {
-                    if (NapoliProperties.owns(p, house)) wash(p, pos, 100);
+                    if (NapoliProperties.hasAccess(p, house)) wash(p, pos, 100);
                     else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
                 }
                 return InteractionResult.SUCCESS;

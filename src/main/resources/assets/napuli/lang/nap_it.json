@@ -1016,7 +1016,7 @@
 	"item.napuli.bomba_carta": "Bomba carta",
 	"key.napuli.football.roulette": "Roulette",
 	"napuli.football.hud.roulette": "%s · Roulette",
-	"napuli.football.attributes": "%s · Tiro %s/10 · Velocità %s/10 · Difesa %s/10 · Fisico %s/10 · Stamina %s",
+	"napuli.football.attributes": "%s · Tiro %s/99 · Velocità %s/99 · Difesa %s/99 · Fisico %s/99 · Stamina %s/99",
 	"napuli.football.stamina": "Stamina %s%%",
 	"napuli.football.foul": "Fallo ’a dereto! ’A palla è ’a toja.",
 	"napuli.football.roulette": "Roulette!",

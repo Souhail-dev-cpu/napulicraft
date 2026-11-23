@@ -55,15 +55,16 @@ public final class FootballPractice {
     private static final AttachmentType<Long> RUN_STARTED = AttachmentRegistry.create(Napuli.id("football_training_run"));
 
     private enum Position {
-        ATTACCANTE(7, 6, 3, 5), CENTROCAMPISTA(5, 6, 5, 5), DIFENSORE(3, 5, 7, 7);
+        ATTACCANTE(68, 65, 34, 51, 55), CENTROCAMPISTA(54, 62, 52, 52, 66), DIFENSORE(38, 52, 70, 69, 58);
 
-        final int shooting, speed, defense, strength;
+        final int shooting, speed, defense, strength, stamina;
 
-        Position(int shooting, int speed, int defense, int strength) {
+        Position(int shooting, int speed, int defense, int strength, int stamina) {
             this.shooting = shooting;
             this.speed = speed;
             this.defense = defense;
             this.strength = strength;
+            this.stamina = stamina;
         }
     }
 
@@ -311,7 +312,7 @@ public final class FootballPractice {
             if (now - start < 30 || player.isCreative() || player.isSpectator()) return;
             Career career = career(player);
             long day = NapoliBroadcast.day(city);
-            if (day <= career.trainingDay() || roleTraining(player) >= 10) {
+            if (day <= career.trainingDay() || fullyTrained(player)) {
                 say(player, "rest");
                 return;
             }
@@ -343,7 +344,7 @@ public final class FootballPractice {
     private static int attributes(ServerPlayer p) {
         Position role = position(p);
         say(p, "attributes", Component.translatable("napuli.football.position." + role.name().toLowerCase(java.util.Locale.ROOT)),
-                shooting(p), pace(p), defending(p), strength(p), capacity(p));
+                shooting(p), pace(p), defending(p), strength(p), staminaRating(p));
         return 1;
     }
 
@@ -358,7 +359,7 @@ public final class FootballPractice {
             if (movement.hasModifier(MOVEMENT_BONUS)) movement.removeModifier(MOVEMENT_BONUS);
             return;
         }
-        double bonus = (pace(player) - 5) * .025 - (game.seat(player).stamina < 12 ? .27 : 0);
+        double bonus = FootballRatings.paceBonus(pace(player));
         var old = movement.getModifier(MOVEMENT_BONUS);
         if (old == null || old.amount() != bonus) movement.addOrUpdateTransientModifier(
                 new net.minecraft.world.entity.ai.attributes.AttributeModifier(MOVEMENT_BONUS, bonus,
@@ -366,22 +367,30 @@ public final class FootballPractice {
     }
 
     private static int shooting(ServerPlayer p) {
-        return Math.min(10, position(p).shooting + (position(p) == Position.ATTACCANTE ? roleTraining(p) / 2 + fitness(p) / 5 : fitness(p) / 5));
+        return FootballRatings.trained(position(p).shooting, roleTraining(p), fitness(p), position(p) == Position.ATTACCANTE);
     }
 
     private static int pace(ServerPlayer p) {
-        return Math.min(10, position(p).speed + (position(p) == Position.CENTROCAMPISTA ? roleTraining(p) / 2 + fitness(p) / 5 : fitness(p) / 5));
+        return FootballRatings.trained(position(p).speed, roleTraining(p), fitness(p), position(p) == Position.CENTROCAMPISTA);
     }
 
     private static int defending(ServerPlayer p) {
-        return Math.min(10, position(p).defense + (position(p) == Position.DIFENSORE ? roleTraining(p) / 2 + fitness(p) / 5 : fitness(p) / 5));
+        return FootballRatings.trained(position(p).defense, roleTraining(p), fitness(p), position(p) == Position.DIFENSORE);
     }
 
     private static int strength(ServerPlayer p) {
-        return Math.min(10, position(p).strength + (position(p) == Position.DIFENSORE ? roleTraining(p) / 2 + fitness(p) / 5 : fitness(p) / 5));
+        return FootballRatings.trained(position(p).strength, roleTraining(p), fitness(p), position(p) == Position.DIFENSORE);
     }
 
-    private static int capacity(ServerPlayer p) { return 75 + pace(p) * 4 + fitness(p) * 3; }
+    private static int staminaRating(ServerPlayer p) {
+        return FootballRatings.trained(position(p).stamina, roleTraining(p), fitness(p), position(p) == Position.CENTROCAMPISTA);
+    }
+
+    private static boolean fullyTrained(ServerPlayer p) {
+        return shooting(p) == 99 && pace(p) == 99 && defending(p) == 99 && strength(p) == 99 && staminaRating(p) == 99;
+    }
+
+    private static int capacity(ServerPlayer p) { return 60 + staminaRating(p); }
 
     private static int skill(ServerPlayer p) {
         Game game = GAMES.get(p.level());
@@ -423,8 +432,8 @@ public final class FootballPractice {
             Vec3 current = player.position();
             movement = previous == null ? Vec3.ZERO : flat(current.subtract(previous));
             previous = current;
-            if (player.isSprinting()) stamina = Math.max(0, stamina - .7 + pace(player) * .025);
-            else stamina = Math.min(capacity(player), stamina + .48);
+            if (player.isSprinting()) stamina = Math.max(0, stamina - FootballRatings.staminaDrain(pace(player), staminaRating(player)));
+            else stamina = Math.min(capacity(player), stamina + .32 + staminaRating(player) * .004);
             if (stamina <= 1) player.setSprinting(false);
         }
     }
@@ -561,9 +570,9 @@ public final class FootballPractice {
             seat.nextInterception = ticks + 16;
             seat.stamina -= 8;
             Vec3 toBall = flat(ball.subtract(player.position()));
-            double range = 1.7 + defending(player) * .10;
+            double range = FootballRatings.interceptionRange(defending(player));
             if (toBall.lengthSqr() > range * range || Math.abs(player.getY() - ball.y) > 1.3
-                    || toBall.lengthSqr() > .16 && flat(player.getLookAngle()).normalize().dot(toBall.normalize()) < .35) {
+                    || toBall.lengthSqr() > .16 && flat(player.getLookAngle()).normalize().dot(toBall.normalize()) < FootballRatings.minimumFacing(defending(player))) {
                 say(player, "intercept_missed");
                 return 0;
             }
@@ -580,7 +589,9 @@ public final class FootballPractice {
             if (facing.lengthSqr() < .01) return false;
             if (shot != Kick.PASS) {
                 shots++;
-                double fitnessBoost = shooting(p) * .030;
+                int rating = shooting(p);
+                double fitnessBoost = FootballRatings.shotBoost(rating);
+                facing = aimShot(slot, facing, rating);
                 if (seat.stamina < 12) fitnessBoost -= .16;
                 seat.stamina = Math.max(0, seat.stamina - 5);
                 switch (shot) {
@@ -612,6 +623,17 @@ public final class FootballPractice {
                 else pass(target);
             }
             return true;
+        }
+
+        private Vec3 aimShot(int slot, Vec3 facing, int rating) {
+            double goalX = slot < 5 ? FootballGround.MAX_X + 1 : FootballGround.MIN_X;
+            double centreZ = FootballGround.MID_Z + .5;
+            double keeperZ = position(slot < 5 ? 5 : 0).z;
+            double targetZ = centreZ + (keeperZ >= centreZ ? -1.85 : 1.85);
+            Vec3 towardsGoal = flat(new Vec3(goalX, ball.y, targetZ).subtract(ball));
+            if (towardsGoal.horizontalDistanceSqr() > 33 * 33 || facing.dot(towardsGoal.normalize()) < .78)
+                return facing;
+            return facing.lerp(towardsGoal.normalize(), FootballRatings.aimAssist(rating)).normalize();
         }
 
         boolean tick(ServerLevel city) {
@@ -714,6 +736,8 @@ public final class FootballPractice {
                 }
                 target = new Vec3(Math.clamp(target.x, FootballGround.MIN_X + 1.5, FootballGround.MAX_X - .5),
                         64, Math.clamp(target.z, FootballGround.MIN_Z + 1.5, FootballGround.MAX_Z - .5));
+                // Sprint speeds for the CPU mirror its positional strengths.
+                speed *= .86 + FootballRatings.paceBonus(npcPace(role));
                 Vec3 delta = flat(target.subtract(pos));
                 Vec3 desired = delta.normalize().scale(Math.min(speed, delta.horizontalDistance() * .22));
                 Vec3 movement = motion[slot].lerp(desired, .24);
@@ -781,7 +805,7 @@ public final class FootballPractice {
                 ball = new Vec3(pos.x, 64, pos.z).add(travel.normalize().scale(.62));
                 held++;
                 for (int i = owner < 5 ? 5 : 0; i < (owner < 5 ? 10 : 5); i++) {
-                    if (held > 18 && players[i] == null && (carrier != null
+                    if (held > (carrier == null ? 24 : 18) && players[i] == null && (carrier != null
                             ? playerDuel(carrier, i) : ball.distanceToSqr(position(i)) < .62)) {
                         interceptions++;
                         setOwner(i);
@@ -846,6 +870,10 @@ public final class FootballPractice {
             }
         }
 
+        private static int npcPace(int role) {
+            return role == 2 || role == 3 ? 67 : role == 1 ? 54 : 60;
+        }
+
         private boolean playerDuel(Seat carrier, int opponent) {
             if (ticks < carrier.protectedUntil) return false;
             ServerPlayer p = carrier.player;
@@ -861,7 +889,13 @@ public final class FootballPractice {
                         net.minecraft.sounds.SoundSource.PLAYERS, .8f, 1.65f);
             }
             double movingForward = carrier.movement.dot(delta.normalize());
-            return angle > .48 && delta.lengthSqr() < .85 - strength(p) * .025
+            Seat challenger = players[opponent];
+            int chasingPace = challenger == null ? npcPace(opponent % 5) : pace(challenger.player);
+            if (chasingPace < pace(p) && carrier.movement.horizontalDistanceSqr() > .04
+                    && carrier.movement.normalize().dot(movement(opponent).normalize()) > .65) return false;
+            int defense = challenger == null ? (opponent % 5 == 1 ? 66 : 50) : defending(challenger.player);
+            double reach = FootballRatings.tackleDistance(defense, strength(p));
+            return angle > .48 && delta.lengthSqr() < reach * reach
                     && movingForward > .025;
         }
 
@@ -875,7 +909,7 @@ public final class FootballPractice {
                 return;
             }
             Vec3 target = null;
-            double best = held < 30 && owner % 5 != 0 ? 2.0 : -4.0;
+            double best = held < 22 && owner % 5 != 0 ? 2.0 : -12.0;
             for (int i = owner < 5 ? 0 : 5; i < (owner < 5 ? 5 : 10); i++) {
                 if (i == owner) continue;
                 Vec3 receiver = position(i).add(movement(i).scale(7));

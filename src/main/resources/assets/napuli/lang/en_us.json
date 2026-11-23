@@ -802,7 +802,7 @@
 	"item.napuli.bomba_carta": "Paper banger",
 	"key.napuli.football.roulette": "Roulette",
 	"napuli.football.hud.roulette": "%s · Roulette",
-	"napuli.football.attributes": "%s · Shooting %s/10 · Pace %s/10 · Defense %s/10 · Strength %s/10 · Stamina %s",
+	"napuli.football.attributes": "%s · Shooting %s/99 · Pace %s/99 · Defense %s/99 · Strength %s/99 · Stamina %s/99",
 	"napuli.football.stamina": "Stamina %s%%",
 	"napuli.football.foul": "Foul from behind. Your ball: restart play.",
 	"napuli.football.roulette": "Roulette!",

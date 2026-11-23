@@ -358,6 +358,8 @@ final class CityTest {
                 var stats = dev.napuli.FootballPractice.statistics(p.level());
                 assertTrue(stats.shots() >= 1 && stats.playerKickDistance() > 1 && stats.playerKickHeight() > .6,
                         "chip shot lifts the ball off the pitch");
+                var movement = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+                assertTrue(movement.getValue() > movement.getBaseValue(), "pace increases actual movement speed on the pitch");
             });
             case 145 -> {
                 assertTrue(FootballControlsClient.visible(), "control card is visible on the pitch");

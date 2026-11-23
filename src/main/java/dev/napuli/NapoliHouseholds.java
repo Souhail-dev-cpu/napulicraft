@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public final class NapoliHouseholds {
-    public enum Activity { REST, COOK, MATCH, PLAY, WASH, EAT, SLEEP }
+    public enum Activity { REST, COOK, MATCH, PLAY, WASH, EAT, SLEEP, WORK, SCHOOL, STUDY, SHOP, SOCIAL, CELEBRATE, CARE }
     private static final List<BlockPos> HOUSES = List.of(new BlockPos(-173, 64, 12), new BlockPos(-201, 64, 28));
     private static final List<NapoliResident.Role> ROLES = List.of(NapoliResident.Role.FAMILY_MOTHER,
             NapoliResident.Role.FAMILY_FATHER, NapoliResident.Role.FAMILY_CHILD, NapoliResident.Role.FAMILY_CHILD_TWO);
@@ -54,6 +54,7 @@ public final class NapoliHouseholds {
         if (post == null) return;
         int member = ROLES.indexOf(npc.role());
         BlockPos house = post.offset(-4 - member, 0, -9);
+        if(!HousingCapacity.canEnter(level,house.offset(4,0,9),npc.getUUID())) {npc.getNavigation().stop();return;}
         long time = Math.floorMod(level.getOverworldClockTime(), 24000);
         boolean sportsChannel = member == 1 && NapoliBroadcast.channel(level, tv(house)) == NapoliBroadcast.Channel.SPORT;
         Activity routine = activity(member, time);
@@ -85,7 +86,7 @@ public final class NapoliHouseholds {
             case PLAY -> house.offset(4 + member % 2, 0, 6 + (int) (level.getGameTime() / 80 % 3));
             case WASH -> house.offset(7, 0, 9);
             case EAT -> house.offset(5 + member % 2, 0, 5 + member / 2 * 2);
-            case SLEEP, REST -> post;
+            default -> post;
         };
         if (spot.distToCenterSqr(npc.position()) > 1.25) {
             var path = npc.getNavigation().createPath(spot, 0);
@@ -117,6 +118,10 @@ public final class NapoliHouseholds {
             BlockPos center = tv(house);
             if (clicked.getY() == center.getY() && clicked.getZ() == center.getZ()
                     && Math.abs(clicked.getX() - center.getX()) <= 1) return center;
+        }
+        for(var house:CityLivingHomes.all()) {
+            var center=CityLivingHomes.use(house,CityLivingHomes.Furniture.TV).block();
+            if(clicked.getY()==center.getY()&&clicked.getZ()==center.getZ()&&Math.abs(clicked.getX()-center.getX())<=1)return center;
         }
         return null;
     }

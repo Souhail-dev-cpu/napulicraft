@@ -57,6 +57,11 @@ public final class CityProperty {
         for (Home home : level.getAttachedOrElse(EXTRA_HOMES, List.of())) if (home.contains(pos)) return true;
         return false;
     }
+    static List<Home> homes(ServerLevel level) {
+        var homes = new ArrayList<>(CATALOGUE);
+        homes.addAll(level.getAttachedOrElse(EXTRA_HOMES, List.of()));
+        return homes;
+    }
     static void recordHome(ServerLevel level, BlockPos min, BlockPos max) {
         Home home = new Home(min.immutable(), max.immutable());
         if (CATALOGUE.contains(home)) return;

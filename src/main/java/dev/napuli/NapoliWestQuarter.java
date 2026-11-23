@@ -7,6 +7,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 final class NapoliWestQuarter {
+    static final NapoliMergellina.House WORKER_HOME = new NapoliMergellina.House(
+            "posto", "Casa dei Lavoratori", -278, 9, 0, Blocks.SMOOTH_SANDSTONE);
     private NapoliWestQuarter() {}
 
     static void build(ServerLevel level) {
@@ -58,7 +60,7 @@ final class NapoliWestQuarter {
         level.setBlock(NapoliHygiene.PUBLIC_SINK, Blocks.WATER_CAULDRON.defaultBlockState()
                 .setValue(BlockStateProperties.LEVEL_CAULDRON, 3), Block.UPDATE_CLIENTS);
         NapoliEmploymentMap.sign(level, NapoliHygiene.PUBLIC_SINK.above(), "LAVABO", "Uso pubblico");
-        var lodging = new NapoliMergellina.House("posto", "Casa dei Lavoratori", -278, 9, 0, Blocks.SMOOTH_SANDSTONE);
+        var lodging = WORKER_HOME;
         NapoliMergellina.buildHouse(level, lodging, false);
         NapoliEmploymentMap.sign(level, lodging.sign(), "CASA DEI", "LAVORATORI");
         for (int x : new int[]{-268, -292, -309}) {

@@ -61,7 +61,7 @@ final class NapoliHygiene {
         });
     }
 
-    private static void wash(ServerPlayer player, BlockPos pos, int result) {
+    static void wash(ServerPlayer player, BlockPos pos, int result) {
         player.setAttached(CLEAN, result);
         player.level().playSound(null, pos, SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, .45f, .9f);
         player.level().sendParticles(ParticleTypes.SPLASH, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, 14, .2, .2, .2, .025);

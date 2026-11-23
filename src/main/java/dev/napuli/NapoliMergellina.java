@@ -11,26 +11,37 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.properties.BedPart;
 
 final class NapoliMergellina {
-    record House(String id, String name, int x, int z, int price, Block wall) {
+    record House(String id, String name, int x, int z, int price, Block wall, int width, int depth, int floors, int style) {
+        House(String id, String name, int x, int z, int price, Block wall) { this(id, name, x, z, price, wall, 11, 12, 2, -1); }
         int civic() { return 2 * (-x - 123) + 1; }
         String address() { return name + " · " + civic(); }
-        BlockPos entrance() { return new BlockPos(x + 5, 64, z + 12); }
+        BlockPos entrance() { return new BlockPos(x + width / 2, 64, z + depth); }
         BlockPos sign() { return entrance().east(2); }
         BlockPos inside() { return new BlockPos(x + 5, 64, z + 8); }
         boolean contains(BlockPos p) {
-            return p.getX() >= x && p.getX() <= x + 10 && p.getZ() >= z && p.getZ() <= z + 11
-                    && p.getY() >= 61 && p.getY() <= 78;
+            return p.getX() >= x && p.getX() < x + width && p.getZ() >= z && p.getZ() < z + depth
+                    && p.getY() >= 61 && p.getY() <= Math.max(78, 64 + floors * 5);
         }
     }
 
-    static final List<House> PROPERTIES = List.of(
+    static final List<House> PROPERTIES = properties();
+
+    private static List<House> properties() {
+        var houses = new java.util.ArrayList<>(List.of(
             new House("leone", "Casa del Leone", -157, 28, 55, Blocks.SMOOTH_SANDSTONE),
             new House("chiara", "Casa delle Terrazze", -182, 28, 85, Blocks.CUT_SANDSTONE),
             new House("golfo", "Casa sul Golfo", -214, 28, 120, Blocks.BRICKS),
             new House("limoni", "Casa dei Limoni", -232, 10, 70, Blocks.SMOOTH_SANDSTONE),
             new House("approdo", "Casa dell’Approdo", -272, 28, 95, Blocks.CUT_SANDSTONE),
             new House("giardini", "Casa dei Giardini", -294, 9, 110, Blocks.BRICKS),
-            new House("ponente", "Casa di Ponente", -315, 28, 130, Blocks.SMOOTH_SANDSTONE));
+            new House("ponente", "Casa di Ponente", -315, 28, 130, Blocks.SMOOTH_SANDSTONE)));
+        String[] names = {"Vico Azzurro", "Casa del Glicine", "Villa Partenope", "Corte dei Musicisti", "Loft del Porto", "Attico Vesuvio", "Casa del Corno"};
+        Block[] walls = {Blocks.BRICKS, Blocks.SMOOTH_SANDSTONE, Blocks.TERRACOTTA, Blocks.CALCITE};
+        for (int i = 0; i < 28; i++) houses.add(new House("viva_" + (i + 1), names[i % 7] + " " + (i / 7 + 1),
+                -534 + i % 7 * 27, -196 + i / 7 * 35, 145 + i * 13, walls[i % walls.length],
+                15 + i % 4 * 2, 16 + i / 4 % 3 * 2, 2 + i % 3 / 2, i));
+        return List.copyOf(houses);
+    }
 
     private static final List<House> RESIDENCES = List.of(
             new House("corte", "Corte di Mergellina", -153, 4, 0, Blocks.CUT_SANDSTONE),
@@ -98,6 +109,7 @@ final class NapoliMergellina {
         var houses = new java.util.ArrayList<>(PROPERTIES);
         houses.addAll(RESIDENCES);
         for (House h : houses) {
+            if (h.style() >= 0) continue;
             int x = h.x(), z = h.z();
             boolean empty = true;
             for (BlockPos pos : BlockPos.betweenClosed(x + 1, 67, z + 1, x + 9, 70, z + 10)) {
@@ -127,6 +139,7 @@ final class NapoliMergellina {
     }
 
     static void buildHouse(ServerLevel level, House h, boolean forSale) {
+        if (h.style() >= 0) { CityLivingHomes.buildHouse(level, h); return; }
         int x = h.x(), z = h.z();
         fill(level, x, 63, z, x + 10, 71, z + 11, h.wall());
         fill(level, x + 1, 64, z + 1, x + 9, 70, z + 10, Blocks.AIR);

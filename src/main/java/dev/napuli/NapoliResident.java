@@ -46,7 +46,7 @@ public final class NapoliResident extends PathfinderMob {
         /** slimmer arms, girl faces and hairstyles in the model */
         public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
-        public int variants() { return this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
+        public int variants() { return civic() ? 12 : this == PASSERBY ? 6 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
     }
 
@@ -70,6 +70,7 @@ public final class NapoliResident extends PathfinderMob {
     private int commuteTicks;
 
     public int variant() { return entityData.get(VARIANT); }
+    void setCivicAppearance(int variant) { entityData.set(VARIANT,Math.floorMod(variant,12)); }
 
     public NapoliResident(EntityType<? extends NapoliResident> type, Level level) {
         super(type, level);
@@ -168,7 +169,8 @@ public final class NapoliResident extends PathfinderMob {
         if (isNoAi() || isPassenger() || role().spirit() || role().fighter()) return;
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
         if (level() instanceof ServerLevel city) {
-            if (role().civic()) { NapoliCivicLife.commute(this, city); return; }
+            if(CityPublicOrder.tickEntity(this,city))return;
+            if (role().civic() || NapoliCivicLife.profile(city,getUUID())!=null) { NapoliCivicLife.commute(this, city); return; }
             if (NapoliHouseholds.family(role())) { NapoliHouseholds.tick(this, city); return; }
             if (runResidentialSchedule(city)) return;
         }
@@ -199,6 +201,7 @@ public final class NapoliResident extends PathfinderMob {
         if ((tickCount + getId()) % 20 == 0) {
             if (night && nightPost == null) nightPost = NapoliResidentHomes.destination(city, dayPost, offset);
             BlockPos destination = night ? nightPost : dayPost;
+            if(destination!=null&&!HousingCapacity.canEnter(city,destination,getUUID())) {getNavigation().stop();return true;}
             if (destination != null && destination.distToCenterSqr(position()) > 1.6) {
                 if (commuteTicks > 0) {
                     getNavigation().moveTo(destination.getX() + .5, destination.getY(), destination.getZ() + .5, 0.85);
@@ -288,13 +291,13 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     public boolean hurtServer(ServerLevel level, net.minecraft.world.damagesource.DamageSource source, float amount) {
-        return (role().fighter() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
+        return (role().fighter() || role().civic() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
                 && super.hurtServer(level, source, amount);
     }
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (hand == InteractionHand.MAIN_HAND && role().civic()) {
+        if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {
             if (player instanceof ServerPlayer sp) NapoliCivicLife.describe(sp, this);
             return InteractionResult.SUCCESS;
         }

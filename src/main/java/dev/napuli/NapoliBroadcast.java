@@ -45,17 +45,24 @@ final class NapoliBroadcast {
     }
 
     static Match match(long day) {
-        if (Math.floorMod(day, 7) != 0) return null;
-        long week = Math.floorDiv(day, 7);
-        return new Match(day, 1 + Math.floorMod(week, 3), Math.floorMod(week * 2, 4));
+        var fixture = fixture(day);
+        if (fixture == null) return null;
+        long week = Math.floorDiv(day, fixture.everyDays);
+        return new Match(day, fixture.napoliGoals >= 0 ? fixture.napoliGoals : 1 + Math.floorMod(week, 3),
+                fixture.opponentGoals >= 0 ? fixture.opponentGoals : Math.floorMod(week * 2, 4));
     }
+
+    static CityLifeConfig.Fixture fixture(long day) { return CityLifeConfig.settings.fixtures.stream()
+            .filter(f -> Math.floorMod(day-f.dayOffset,f.everyDays)==0).findFirst().orElse(null); }
+    static int finalTime(long day) { var f=fixture(day);return f==null?FINAL:f.fullTime; }
 
     static long day(ServerLevel level) { return Math.floorDiv(level.getOverworldClockTime(), DAY_LENGTH); }
     static long time(ServerLevel level) { return Math.floorMod(level.getOverworldClockTime(), DAY_LENGTH); }
 
     static boolean live(ServerLevel level) {
         long time = time(level);
-        return time >= KICKOFF && time < FINAL && match(day(level)) != null;
+        var fixture=fixture(day(level));
+        return fixture != null && time >= fixture.kickoff && time < fixture.fullTime;
     }
 
     static Channel channel(ServerLevel level, BlockPos television) {
@@ -64,6 +71,7 @@ final class NapoliBroadcast {
     }
 
     static void register() {
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(TelevisionProgram.TYPE,TelevisionProgram.CODEC);
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (level.dimension() != NapoliMap.LEVEL || hand != InteractionHand.MAIN_HAND || player.isSpectator()) return InteractionResult.PASS;
             BlockPos television = NapoliHouseholds.findTelevision(hit.getBlockPos());
@@ -89,7 +97,7 @@ final class NapoliBroadcast {
         });
     }
 
-    private static void showProgram(ServerPlayer player, Channel channel) {
+    static void showProgram(ServerPlayer player, Channel channel) {
         ServerLevel level = player.level();
         long day = day(level);
         long time = time(level);
@@ -103,18 +111,30 @@ final class NapoliBroadcast {
                     : time < FINAL ? Component.translatable("napuli.tv.live") : result(match);
         };
         player.sendSystemMessage(content);
+        if(channel!=Channel.OFF && net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player,TelevisionProgram.TYPE)) {
+            var f=fixture(day);boolean football=channel==Channel.SPORT&&f!=null&&time>=f.kickoff;
+            int minute=football?(int)Math.clamp((time-f.kickoff)*90/(f.fullTime-f.kickoff),0,90):0;
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,new TelevisionProgram(channel.name(),
+                    football?f.opponent:channel==Channel.WEATHER?(level.isRaining()?"Pioggia: porta l'ombrello.":"Sereno sul Golfo."):"",
+                    football?match.napoli():0,football?match.juventus():0,minute,level.getGameTime(),football?f.fullTime-f.kickoff:2000));
+        }
         if (channel != Channel.OFF) player.sendOverlayMessage(Component.translatable("napuli.tv.controls"));
     }
 
     private static Component result(Match match) {
-        return Component.translatable("napuli.tv.result", match.napoli(), match.juventus());
+        var fixture=fixture(match.day());
+        return Component.literal("Napoli " + match.napoli() + " – " + match.juventus() + " " + (fixture==null?"Juventus":fixture.opponent));
     }
 
     private static void tick(ServerLevel level) {
+        for(var home:CityLivingHomes.all()) {
+            var tv=CityLivingHomes.use(home,CityLivingHomes.Furniture.TV).block();
+            if(level.hasChunkAt(tv)&&level.getBlockState(tv).getBlock().getDescriptionId().contains("concrete"))NapoliHouseholds.paintTelevision(level,tv);
+        }
         long day = day(level);
         long time = time(level);
         Match match = match(day);
-        if (match == null || time < FINAL || time >= FESTA_END) return;
+        if (match == null || time < finalTime(day) || time >= 19000) return;
         if (day > level.getAttachedOrElse(ANNOUNCED, Long.MIN_VALUE)) {
             level.setAttached(ANNOUNCED, day);
             for (ServerPlayer player : level.players()) {
@@ -125,6 +145,13 @@ final class NapoliBroadcast {
         long pulse = level.getOverworldClockTime() / 100;
         if (!match.win() || time % 100 >= 20 || pulse == level.getAttachedOrElse(LAST_PULSE, Long.MIN_VALUE)) return;
         level.setAttached(LAST_PULSE, pulse);
+        if(time%400<20)for(var player:level.players()) {
+            var fans=level.getEntitiesOfClass(NapoliResident.class,player.getBoundingBox().inflate(32));
+            if(!fans.isEmpty()) {
+                level.playSound(null,fans.getFirst().blockPosition(),SoundEvents.VILLAGER_CELEBRATE,SoundSource.NEUTRAL,.7f,1.1f);
+                player.sendSystemMessage(Component.literal(fans.getFirst().getDisplayName().getString()+": FORZA NAPOLI!"));
+            }
+        }
         for (ServerPlayer player : level.players()) {
             if (player.blockPosition().distSqr(PIAZZA) < 56 * 56)
                 level.sendParticles(ParticleTypes.FIREWORK, PIAZZA.getX() + .5, PIAZZA.getY() + 8,

@@ -22,6 +22,10 @@ Server kitchen tests run with `./gradlew build`; `./gradlew runKitchentest` also
 
 ## Smarter residents, police pursuits and vandalism
 
+The living city adds **120 persistent citizens**, **85 NPC professions**, **35 purchasable furnished homes**,
+families, growing children, needs, careers, mortgages, an animated fictional football broadcast and local traffic.
+See the [Italian living-city guide](docs/NAPOLI_VIVA.md) for commands, the server configuration and verification.
+
 Residents can plan ladder routes, climb to upper floors and descend again, open wooden doors and negotiate steps.
 Carabinieri replan quickly, prefer available detours and can use an iron pickaxe to breach a nearby player-built
 barricade during a pursuit. Mining shows tool swings, cracks and the correct block drops, and respects the server's

@@ -28,12 +28,16 @@ public class NapuliClient implements ClientModInitializer {
 		EntityRendererRegistry.register(Napuli.GIGANTE, GiganteRenderer::new);
 		ModelLayerRegistry.registerModelLayer(MotorinoModel.LAYER, MotorinoModel::createLayer);
 		EntityRendererRegistry.register(Napuli.MOTORINO, MotorinoRenderer::new);
+		ModelLayerRegistry.registerModelLayer(CityVehicleRenderer.LAYER,CityVehicleRenderer::layer);
+		EntityRendererRegistry.register(Napuli.CITY_VEHICLE,CityVehicleRenderer::new);
 		EntityRendererRegistry.register(Napuli.CIABATTA, ThrownItemRenderer::new);
 		ModelLayerRegistry.registerModelLayer(NapoliResidentModel.LAYER, NapoliResidentModel::layer);
 		EntityRendererRegistry.register(Napuli.RESIDENT, ResidentRenderer::new);
 		RadioClient.register();
 		HudClient.register();
 		EmploymentScreen.register();
+		TelevisionScreen.register();
+		dev.napuli.LivingCityTest.register();
 		AutoTest.register();
 		CityTest.register();
 		PoliceTest.register();
@@ -92,8 +96,8 @@ public class NapuliClient implements ClientModInitializer {
 		static Identifier texture(dev.napuli.NapoliResident.Role role, int variant) {
 			String name = switch (role) {
 				case FAMILY_MOTHER -> "carmela";
-				case CIVIC_WOMAN -> "bucato";
-				case CIVIC_MAN -> "pescatore";
+				case CIVIC_WOMAN -> variant==10 ? "influencer" : "civic_woman_" + Math.floorMod(variant,10);
+				case CIVIC_MAN -> variant==10 ? "influencer" : "civic_man_" + Math.floorMod(variant,10);
 				case FAMILY_FATHER -> "tifoso";
 				case FAMILY_CHILD -> "scugnizzo";
 				case FAMILY_CHILD_TWO -> "passerby_3";

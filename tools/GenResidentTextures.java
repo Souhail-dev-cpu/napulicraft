@@ -71,6 +71,16 @@ public class GenResidentTextures {
 			ImageIO.write(img, "PNG", Path.of("src/main/resources/assets/napuli/textures/entity/" + l.name + ".png").toFile());
 		}
 		System.out.println("residents painted: " + looks.length);
+		if(args.length==0 || java.util.Arrays.asList(args).contains("civic")) {
+			int[] uniforms={0xf0eee6,0x759b59,0x528ea3,0x335488,0xe5b642,0x784cb3,0xd17b31,0x404b64,0xc4e4e0,0x20283a};
+			for(int category=0;category<uniforms.length;category++) for(boolean female:new boolean[]{false,true}) {
+				var look=look("civic_"+(female?"woman_":"man_")+category,female,0xc68e68,category%2==0?0x38251c:0x765039,0x4d5c65,uniforms[category],WHITE,0x354358,0x30282a,GOLD,i->{});
+				var img=new BufferedImage(128,128,BufferedImage.TYPE_INT_ARGB);base(img,look);
+				ImageIO.write(img,"PNG",Path.of("src/main/resources/assets/napuli/textures/entity/"+look.name()+".png").toFile());
+			}
+			var influencer=look("influencer",true,0xe0b090,0xed62ad,0x49728c,0xd96daa,WHITE,0x354566,0xeee7e8,0xed62ad,i->{});
+			var img=new BufferedImage(128,128,BufferedImage.TYPE_INT_ARGB);base(img,influencer);ImageIO.write(img,"PNG",Path.of("src/main/resources/assets/napuli/textures/entity/influencer.png").toFile());
+		}
 	}
 
 	static Look look(String n, boolean f, int skin, int hair, int eye, int top, int trim, int legs, int shoes, int accent, Consumer<BufferedImage> extra) {

@@ -14,6 +14,12 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+		livingCityTest {
+			client()
+			name "Napoli living city integration test"
+			vmArg "-Dnapuli.livingcitytest=true"
+			runDir "run-autotest"
+		}
 		policeaitest {
 			client()
 			name "Napuli police navigation test"
@@ -168,6 +174,13 @@ java {
 }
 
 def taxTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+tasks.named('runLivingCityTest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[LIVINGCITYTEST] ALL PASSED')) {
+			throw new GradleException('Living city integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
 tasks.named('runTaxtest') {
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[TAXTEST] ALL PASSED')) {

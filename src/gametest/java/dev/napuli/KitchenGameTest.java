@@ -34,6 +34,8 @@ public final class KitchenGameTest {
         var level = helper.getLevel();
         var initialCensus = level.removeAttached(NapoliCivicLife.CENSUS);
         var initialOwners = level.removeAttached(NapoliProperties.OWNERS);
+        var initialLife = level.removeAttached(CitySimulation.LIFE);
+        var initialAccounts = level.removeAttached(CityHousingFinance.ACCOUNTS);
         try {
             verifyCivicLife(helper, level);
         } finally {
@@ -41,6 +43,10 @@ public final class KitchenGameTest {
             else level.setAttached(NapoliCivicLife.CENSUS, initialCensus);
             if (initialOwners == null) level.removeAttached(NapoliProperties.OWNERS);
             else level.setAttached(NapoliProperties.OWNERS, initialOwners);
+            if (initialLife == null) level.removeAttached(CitySimulation.LIFE);
+            else level.setAttached(CitySimulation.LIFE, initialLife);
+            if (initialAccounts == null) level.removeAttached(CityHousingFinance.ACCOUNTS);
+            else level.setAttached(CityHousingFinance.ACCOUNTS, initialAccounts);
         }
     }
 

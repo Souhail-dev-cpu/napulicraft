@@ -72,6 +72,16 @@ final class NapoliProperties {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("casa")
                         .executes(c -> list(c.getSource().getPlayerOrException()))
+                        .then(Commands.literal("lascia").then(Commands.argument("id", StringArgumentType.word())
+                                .executes(c -> CityHousingFinance.leave(c.getSource().getPlayerOrException(),StringArgumentType.getString(c,"id")))))
+                        .then(Commands.literal("affitta").then(Commands.argument("id", StringArgumentType.word())
+                                .executes(c -> CityHousingFinance.acquire(c.getSource().getPlayerOrException(), StringArgumentType.getString(c,"id"), true))))
+                        .then(Commands.literal("mutuo").then(Commands.argument("id", StringArgumentType.word())
+                                .executes(c -> CityHousingFinance.acquire(c.getSource().getPlayerOrException(), StringArgumentType.getString(c,"id"), false))))
+                        .then(Commands.literal("paga").then(Commands.argument("id", StringArgumentType.word())
+                                .executes(c -> { var house=find(StringArgumentType.getString(c,"id")); return house==null?0:CityHousingFinance.pay(c.getSource().getPlayerOrException(),house); })))
+                        .then(Commands.literal("vendi").then(Commands.argument("id", StringArgumentType.word())
+                                .executes(c -> CityHousingFinance.sell(c.getSource().getPlayerOrException(), StringArgumentType.getString(c,"id")))))
                         .then(Commands.literal("compra").then(Commands.argument("id", StringArgumentType.word())
                                 .executes(c -> buy(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "id")))))
                         .then(Commands.literal("vai").then(Commands.argument("id", StringArgumentType.word())
@@ -93,13 +103,18 @@ final class NapoliProperties {
     private static void open(ServerPlayer player, NapoliMergellina.House house) {
         if (player.isSpectator()) return;
         UUID owner = owner(player.level(), house);
-        if (owner != null && !owner.equals(player.getUUID())) { say(player, "sold"); return; }
-        boolean owned = owner != null;
+        if (owner != null && !owns(player,house)) { say(player, "sold"); return; }
+        boolean owned = owns(player,house);
         var body = owned ? Component.translatable("napuli.property.mine")
                 : Component.translatable("napuli.property.price", house.price(), NapoliStreet.cash(player));
         var action = button(Component.translatable(owned ? "napuli.property.go" : "napuli.property.buy"),
                 "/casa " + (owned ? "vai " : "compra ") + house.id());
-        show(player, Component.literal(house.address()), body, List.of(action));
+        var actions=new java.util.ArrayList<ActionButton>();actions.add(action);
+        if(!owned) {
+            actions.add(button(Component.literal("Affitta · acconto "+Math.max(5,house.price()/12)+" €"),"/casa affitta "+house.id()));
+            actions.add(button(Component.literal("Mutuo · acconto "+((house.price()+4)/5)+" € · 10% interessi"),"/casa mutuo "+house.id()));
+        } else actions.add(button(Component.literal("Paga rate e bollette"),"/casa paga "+house.id()));
+        show(player, Component.literal(house.address()), body, actions);
     }
 
     private static int buy(ServerPlayer player, String id) {
@@ -112,6 +127,7 @@ final class NapoliProperties {
         var owners = new HashMap<>(player.level().getAttachedOrElse(OWNERS, Map.of()));
         owners.put(id, player.getUUID());
         player.level().setAttached(OWNERS, Map.copyOf(owners));
+        CityHousingFinance.ownOutright(player.level(),id,player.getUUID());
         player.sendSystemMessage(Component.translatable("napuli.property.bought", house.address()));
         return 1;
     }
@@ -134,7 +150,7 @@ final class NapoliProperties {
     }
 
     static boolean owns(ServerPlayer player, NapoliMergellina.House house) {
-        return player.getUUID().equals(owner(player.level(), house));
+        return player.getUUID().equals(owner(player.level(), house)) || CityHousingFinance.tenant(player.level(),house.id(),player.getUUID());
     }
 
     static boolean claimForResident(ServerLevel city, NapoliMergellina.House house, UUID resident) {

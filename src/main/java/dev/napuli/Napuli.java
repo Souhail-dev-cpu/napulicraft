@@ -58,6 +58,8 @@ public class Napuli implements ModInitializer {
 			EntityType.Builder.<MunacielloGigante>of(MunacielloGigante::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.74f).clientTrackingRange(16));
 	public static final EntityType<Motorino> MOTORINO = entity("motorino",
 			EntityType.Builder.<Motorino>of(Motorino::new, MobCategory.MISC).sized(1.05f, 1.5f).eyeHeight(0.9f).clientTrackingRange(10));
+	public static final EntityType<CityVehicle> CITY_VEHICLE = entity("city_vehicle",
+			EntityType.Builder.<CityVehicle>of(CityVehicle::new,MobCategory.MISC).sized(2.2f,1.5f).clientTrackingRange(12));
 	public static final EntityType<Ciabatta> CIABATTA = entity("ciabatta",
 			EntityType.Builder.<Ciabatta>of(Ciabatta::new, MobCategory.MISC).noLootTable().sized(0.25f, 0.25f).clientTrackingRange(4).updateInterval(10));
 
@@ -124,6 +126,7 @@ public class Napuli implements ModInitializer {
 						new AttributeModifier(id("casco_armor"), 2, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD).build())
 				.component(net.minecraft.core.component.DataComponents.EQUIPPABLE, net.minecraft.world.item.equipment.Equippable.builder(net.minecraft.world.entity.EquipmentSlot.HEAD)
 						.setEquipSound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_TURTLE).setAsset(net.minecraft.resources.ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, id("casco"))).build()));
+		CityLifeConfig.load();
 		NapoliKitchen.register();
 		Radio.register();
 		Hud.register();
@@ -138,11 +141,14 @@ public class Napuli implements ModInitializer {
 					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL,
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
 					NapoliKitchen.ITEMS.values().forEach(out::accept);
+					out.accept(CityResidentShop.AIR);out.accept(CityResidentShop.WATER);
 				}).build());
 
 		FabricDefaultAttributeRegistry.register(MUNACIELLO, Munaciello.attributes());
 		FabricDefaultAttributeRegistry.register(GIGANTE, MunacielloGigante.attributes());
 		FabricDefaultAttributeRegistry.register(MOTORINO, Motorino.attributes());
+		FabricDefaultAttributeRegistry.register(CITY_VEHICLE, CityVehicle.attributes());
+		CityVehicle.register();
 		ServerTickEvents.END_SERVER_TICK.register(Spawner::tick);
 		ServerTickEvents.END_SERVER_TICK.register(Situazioni::tick);
 		Situazioni.register();
@@ -152,15 +158,22 @@ public class Napuli implements ModInitializer {
 		NapoliProperties.register();
 		NapoliBroadcast.register();
 		NapoliCivicLife.register();
+		CitySimulation.register();
 		NapoliEmployment.register();
 		NapoliShower.register();
 		NapoliHygiene.register();
+		CityLivingHomes.register();
+		CityEvents.register();
+		CityPublicOrder.register();
+		CityResidentShop.register();
+		CityHousingFinance.register();
 		FabricDefaultAttributeRegistry.register(RESIDENT, NapoliResident.attributes());
 		ServerTickEvents.END_SERVER_TICK.register(NapoliScenes::tick);
 		ServerTickEvents.END_SERVER_TICK.register(Carabinieri::tick);
 		Carabinieri.register();
 		ServerTickEvents.END_SERVER_TICK.register(GiorgiaMeloni::tick);
 		ServerTickEvents.END_SERVER_TICK.register(FormaggioPiedeItem::tick);
+		HousingCapacity.register();
 		CommandRegistrationCallback.EVENT.register((d, ctx, sel) -> {
 			NapuliCommand.register(d);
 			NapoliDialogue.register(d);

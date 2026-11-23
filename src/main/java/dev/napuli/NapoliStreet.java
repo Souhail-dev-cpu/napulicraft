@@ -103,6 +103,10 @@ public final class NapoliStreet {
             support(player, rival);
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> {
+            if(entity instanceof NapoliResident resident && entity.level() instanceof ServerLevel city) {
+                var existing=city.getAttachedOrElse(STAFF,java.util.Map.of());
+                if(existing.containsValue(resident.getUUID())) { var updated=new java.util.HashMap<>(existing);updated.values().removeIf(resident.getUUID()::equals);city.setAttached(STAFF,java.util.Map.copyOf(updated)); }
+            }
             if (entity.getAttached(CREW) == null || !(entity.level() instanceof ServerLevel level)
                     || level.dimension() != NapoliMap.LEVEL) return;
             var attacker = damage.getEntity();
@@ -138,17 +142,28 @@ public final class NapoliStreet {
                 }))));
     }
 
+    private static final AttachmentType<java.util.Map<String,UUID>> STAFF = AttachmentRegistry.<java.util.Map<String,UUID>>builder()
+            .persistent(Codec.unboundedMap(Codec.STRING,net.minecraft.core.UUIDUtil.CODEC)).buildAndRegister(Napuli.id("street_staff"));
+
     static void tick(ServerLevel level, ServerPlayer player, long now) {
         NapoliFactions.recognize(player);
         NapoliFactions.explore(player);
         for (var ally : level.getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(35),
                 npc -> npc.getAttachedOrElse(ALLY_LIFE, Long.MAX_VALUE) <= now)) ally.discard();
+        var staff=new java.util.HashMap<>(level.getAttachedOrElse(STAFF,java.util.Map.of()));
         for (Spot spot : ALL_SPOTS) {
             if (spot.pos().distSqr(player.blockPosition()) > 35 * 35 || !level.hasChunkAt(spot.pos())) continue;
+            String key=spot.role().id()+":"+spot.pos().asLong();
+            if(staff.containsKey(key))continue;
+            long time=NapoliBroadcast.time(level);
+            if(spot.role()!=NapoliResident.Role.CARABINIERE&&(time<1000||time>=12600))continue;
             var around = new AABB(spot.pos()).inflate(10, 3, 10);
-            if (level.getEntitiesOfClass(NapoliResident.class, around, npc -> npc.role() == spot.role()).isEmpty())
-                NapoliResident.spawn(level, spot.role(), spot.pos(), spot.yaw());
+            var existing=level.getEntitiesOfClass(NapoliResident.class,around,npc->npc.role()==spot.role()&&!staff.containsValue(npc.getUUID()));
+            var employee=existing.isEmpty()?NapoliResident.spawn(level,spot.role(),spot.pos(),spot.yaw())
+                    :existing.stream().min(java.util.Comparator.comparingDouble(npc->npc.blockPosition().distSqr(spot.pos()))).orElseThrow();
+            staff.put(key,employee.getUUID());
         }
+        if(!staff.equals(level.getAttachedOrElse(STAFF,java.util.Map.of())))level.setAttached(STAFF,java.util.Map.copyOf(staff));
         if (!player.isCreative() && now >= player.getAttachedOrElse(TROUBLE, now + 1)) {
             player.removeAttached(TROUBLE);
             boolean giant = player.getAttachedOrElse(Napuli.RAGGIA, 0) >= 3;

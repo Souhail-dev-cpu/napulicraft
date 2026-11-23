@@ -1,6 +1,8 @@
 package dev.napuli;
 
 import java.util.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -8,6 +10,32 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffects;
 
 public final class CityLifeGameTest {
+
+    @GameTest public void cryptMigrationClosesTheOldStairsAndOpensTheAqueductPassage(GameTestHelper helper) {
+        var world = helper.getLevel();
+        var altar = new BlockPos(-53, 58, -36);
+        var stairs = new BlockPos(-52, 63, -16);
+        var facade = stairs.above().west(2);
+        world.setBlockAndUpdate(altar, Blocks.CHISELED_TUFF_BRICKS.defaultBlockState());
+        world.removeBlock(stairs, false);
+        world.setBlockAndUpdate(facade, Blocks.TERRACOTTA.defaultBlockState());
+
+        NapoliMap.relocateCrypt(world);
+
+        helper.assertTrue(world.getBlockState(stairs).is(Blocks.STONE_BRICKS),
+                "The old entrance is paved over");
+        helper.assertTrue(world.getBlockState(facade).is(Blocks.TERRACOTTA),
+                "The neighboring facade survives the migration");
+        helper.assertTrue(NapoliMap.inClosedCrypt(world, altar.above()), "Players in the old crypt can be relocated");
+        for (int x = 5; x <= NapoliMap.CRYPT.getX(); x++) {
+            var step = new BlockPos(x, 42, -119);
+            helper.assertTrue(world.getBlockState(step).isAir() && world.getBlockState(step.above()).isAir()
+                    && world.getBlockState(step.below()).is(Blocks.TUFF_BRICKS),
+                    "A walkable passage connects the aqueduct and the crypt");
+        }
+        helper.succeed();
+    }
+
     @GameTest public void censusPopulationAndNeedsSurviveSerialization(GameTestHelper helper) {
         var level=helper.getLevel();var previous=level.removeAttached(NapoliCivicLife.CENSUS);
         var previousLife=level.removeAttached(CitySimulation.LIFE);
@@ -124,8 +152,8 @@ public final class CityLifeGameTest {
     }
     @GameTest public void reportedNpcIsArrestedAndSentenceSerializes(GameTestHelper helper){
         var city=helper.getLevel();var previous=city.removeAttached(CityPublicOrder.INCIDENTS);var lives=city.removeAttached(CitySimulation.LIFE);
-        var suspect=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,helper.absolutePos(new net.minecraft.core.BlockPos(2,2,2)),0);
-        var officer=NapoliResident.spawn(city,NapoliResident.Role.CARABINIERE,helper.absolutePos(new net.minecraft.core.BlockPos(3,2,2)),0);
+        var suspect=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,helper.absolutePos(new BlockPos(2,2,2)),0);
+        var officer=NapoliResident.spawn(city,NapoliResident.Role.CARABINIERE,helper.absolutePos(new BlockPos(3,2,2)),0);
         try{
             CityPublicOrder.report(city,suspect.getUUID(),CityPublicOrder.Offence.THEFT);
             for(int tick=0;tick<20;tick++){officer.tickCount++;CityPublicOrder.tickEntity(officer,city);}

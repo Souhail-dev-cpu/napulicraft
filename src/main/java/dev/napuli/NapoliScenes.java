@@ -48,6 +48,12 @@ public final class NapoliScenes {
             if (!player.isAlive() || player.isSpectator()) continue;
             NapoliStreet.tick(level, player, now);
             BlockPos pos = player.blockPosition();
+            if (NapoliMap.inClosedCrypt(level, pos)) {
+                BlockPos entry = NapoliLocalMap.TUNNEL_START;
+                player.teleportTo(level, entry.getX() + 0.5, entry.getY(), entry.getZ() + 0.5,
+                        java.util.Set.of(), player.getYRot(), player.getXRot(), true);
+                continue;
+            }
             Visits visits = player.getAttachedOrCreate(VISITS, Visits::new);
             if (now >= NEXT_MOTORINO.getOrDefault(level, 0L) && pos.getY() >= NapoliMap.STREET
                     && Math.abs(pos.getX()) < 17 && pos.getZ() >= -51 && pos.getZ() < 39) {

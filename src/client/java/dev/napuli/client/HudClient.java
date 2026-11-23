@@ -72,9 +72,9 @@ final class HudClient {
 		int lh = 11;
 
 		// ---------------- the panel
+		int accent = 0xff58c4ed;
 		int lines = 6 + (s.stars() > 0 ? 1 : 0) + (s.ally() >= 0 ? 2 : 1);
-		g.fill(x - 4, y - 4, x + w, y + lines * lh + 2, 0x90000000);
-		g.fill(x - 4, y - 4, x - 2, y + lines * lh + 2, 0xFF29A9E1);          // Napoli azure stripe
+		card(g, x - 5, y - 5, x + w, y + lines * lh + 2, accent);
 		g.text(f, mc.player.getName().getString(), x, y, 0xFFFFFFFF, true);
 		y += lh + 2;
 		g.text(f, "€ " + s.cash(), x, y, 0xFF66BB6A, true);
@@ -112,21 +112,28 @@ final class HudClient {
 
 		// ---------------- the mission tracker
 		String title, line;
+		boolean employment = s.objective().startsWith("napuli.work.");
 		boolean jailed = s.jail() > 0;
 		if (jailed) {
 			title = "IN GALERA";
 			line = "Esci tra " + s.jail() + " s";
 		} else {
-			title = "MISSIONE";
+			title = Component.translatable(employment ? "napuli.hud.work" : "napuli.hud.route").getString();
 			String objective = s.objective();
-			String key = objective.startsWith("napuli.local.") ? objective : "napuli.hud.obj." + objective;
+			String key = objective.startsWith("napuli.local.") || objective.startsWith("napuli.work.") ? objective : "napuli.hud.obj." + objective;
 			line = Component.translatable(key, s.cooldown()).getString();
 		}
 		var wrapped = f.split(Component.literal(line), w - 6);
 		int th = 14 + wrapped.size() * 10 + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
-		g.fill(x - 4, y - 4, x + w, y + th, 0x90000000);
-		g.fill(x - 4, y - 4, x - 2, y + th, jailed ? 0xFFEF5350 : 0xFFFFD54F);
-		g.text(f, title, x, y, jailed ? 0xFFEF5350 : 0xFFFFD54F, true);
+				if (employment && !jailed) {
+			g.fill(x - 3, y - 3, x + w + 2, y + th + 2, 0x6605070c);
+			g.fill(x - 5, y - 5, x + w, y + th, 0xee122927);
+			g.fill(x - 5, y - 5, x - 2, y + th, 0xffdfab65);
+			g.fill(x - 2, y + 9, x + w, y + 10, 0x88dfab65);
+		} else {
+			card(g, x - 5, y - 5, x + w, y + th, jailed ? 0xffef5350 : 0xffe6b65c);
+		}
+		g.text(f, title, x, y, jailed ? 0xFFEF5350 : employment ? 0xffffe1a9 : 0xFFFFD54F, true);
 		y += 12;
 		for (var l : wrapped) { g.text(f, l, x, y, 0xFFFFFFFF, true); y += 10; }
 		if (s.tx() != Hud.NO_TARGET && !jailed) {
@@ -142,7 +149,7 @@ final class HudClient {
 
 	private static void drawKitchen(GuiGraphicsExtractor g, Font font, Hud.State state) {
 		int x = 6, y = 8, width = 110;
-		g.fill(x - 3, y - 3, x + width + 3, y + 39, 0x90000000);
+		card(g, x - 4, y - 4, x + width + 5, y + (state.inCity() ? 55 : 39), 0xffe6b65c);
 		g.text(font, Component.translatable("napuli.kitchen.hunger"), x, y, 0xFFFFD180, true);
 		g.fill(x, y + 10, x + width, y + 14, 0xFF383838);
 		g.fill(x, y + 10, x + Math.clamp(state.fullness(), 0, 60) * width / 60, y + 14,
@@ -151,6 +158,20 @@ final class HudClient {
 		g.text(font, Component.translatable("napuli.kitchen.heat"), x, y + 28, 0xFFBDBDBD, false);
 		g.fill(x + 40, y + 30, x + width, y + 34, 0xFF383838);
 		g.fill(x + 40, y + 30, x + 40 + Math.clamp(state.heat(), 0, 100) * (width - 40) / 100, y + 34, 0xFFFF7043);
+		if (state.inCity()) {
+			g.text(font, Component.translatable("napuli.hygiene.label"), x, y + 42, 0xffb5dfed, false);
+			int hygiene = Math.clamp(state.hygiene(), 0, 100);
+			g.fill(x + 40, y + 44, x + width, y + 48, 0xff354b58);
+			g.fill(x + 40, y + 44, x + 40 + (width - 40) * hygiene / 100, y + 48,
+					hygiene <= 25 ? 0xffec7857 : 0xff59c7da);
+		}
+	}
+
+	private static void card(GuiGraphicsExtractor g, int left, int top, int right, int bottom, int accent) {
+		g.fill(left + 2, top + 2, right + 2, bottom + 2, 0x6605070c);
+		g.fill(left, top, right, bottom, 0xe815222e);
+		g.fill(left, top, right, top + 2, accent);
+		g.fill(left, bottom - 1, right, bottom, 0xff456071);
 	}
 
 	// straight ahead, ahead-right, right, behind-right, behind, behind-left, left, ahead-left

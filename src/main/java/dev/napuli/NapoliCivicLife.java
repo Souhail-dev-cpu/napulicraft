@@ -24,7 +24,8 @@ final class NapoliCivicLife {
 
     enum Job {
         PORTER(10, -222, 62), BAKER(12, -151, 45), MERCHANT(11, -186, 50),
-        CLEANER(9, -166, 53), GARDENER(10, -219, 51);
+        CLEANER(9, -166, 53), GARDENER(10, -219, 51),
+        FISHER(11, -302, 69), COURIER(10, -265, 47), CARPENTER(13, -309, 54);
         final int wage;
         final BlockPos site;
 
@@ -94,6 +95,17 @@ final class NapoliCivicLife {
                 founder("Ciro Romano", false, day, Job.PORTER),
                 founder("Rosa Sorrentino", true, day, Job.MERCHANT),
                 founder("Gennaro Rizzo", false, day, Job.CLEANER))));
+    }
+
+    static void expand(ServerLevel city) {
+        Census census = census(city);
+        if (census == null || census.people().stream().anyMatch(c -> c.id().equals(identity("Lucia De Luca")))) return;
+        var people = new ArrayList<>(census.people());
+        people.add(founder("Lucia De Luca", true, census.day(), Job.COURIER));
+        people.add(founder("Salvatore Russo", false, census.day(), Job.FISHER));
+        people.add(founder("Teresa Marino", true, census.day(), Job.CARPENTER));
+        people.add(founder("Antonio De Rosa", false, census.day(), Job.GARDENER));
+        city.setAttached(CENSUS, new Census(census.day(), List.copyOf(people)));
     }
 
     private static Citizen founder(String name, boolean woman, long day, Job job) {
@@ -206,7 +218,10 @@ final class NapoliCivicLife {
 
     private static BlockPos home(Citizen citizen) {
         for (var house : NapoliMergellina.PROPERTIES) if (house.id().equals(citizen.property())) return house.inside();
-        return new BlockPos(HOME_X + Math.floorMod(citizen.id().hashCode(), 3) - 1, 64, HOME_Z);
+        int index = Math.floorMod(citizen.id().hashCode(), 3) - 1;
+        if (citizen.profession() != null && citizen.profession().site.getX() < -247)
+            return new BlockPos(-273 + index, 64, 17);
+        return new BlockPos(HOME_X + index, 64, HOME_Z);
     }
 
     private static void materializeNearby(ServerLevel city) {
@@ -247,6 +262,9 @@ final class NapoliCivicLife {
             case BAKER -> net.minecraft.world.item.Items.BREAD;
             case CLEANER -> net.minecraft.world.item.Items.BRUSH;
             case GARDENER -> net.minecraft.world.item.Items.WOODEN_HOE;
+            case FISHER -> net.minecraft.world.item.Items.FISHING_ROD;
+            case COURIER -> net.minecraft.world.item.Items.PAPER;
+            case CARPENTER -> net.minecraft.world.item.Items.WOODEN_AXE;
         } : net.minecraft.world.item.Items.AIR;
         if (npc.getMainHandItem().getItem() != workItem)
             npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(workItem));

@@ -64,6 +64,13 @@ loom {
 			vmArg "-Dnapuli.civictest=true"
 			runDir "run-autotest"
 		}
+		employmentTest {
+			client()
+			name "Napoli employment play-test"
+			vmArg "-Dnapuli.citytest=true"
+			vmArg "-Dnapuli.employmenttest=true"
+			runDir "run-autotest"
+		}
 		cityTest {
 			client()
 			name "Napoli city play-test"

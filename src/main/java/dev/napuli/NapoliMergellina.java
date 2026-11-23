@@ -12,6 +12,8 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 
 final class NapoliMergellina {
     record House(String id, String name, int x, int z, int price, Block wall) {
+        int civic() { return 2 * (-x - 123) + 1; }
+        String address() { return name + " · " + civic(); }
         BlockPos entrance() { return new BlockPos(x + 5, 64, z + 12); }
         BlockPos sign() { return entrance().east(2); }
         BlockPos inside() { return new BlockPos(x + 5, 64, z + 8); }
@@ -25,7 +27,10 @@ final class NapoliMergellina {
             new House("leone", "Casa del Leone", -157, 28, 55, Blocks.SMOOTH_SANDSTONE),
             new House("chiara", "Casa delle Terrazze", -182, 28, 85, Blocks.CUT_SANDSTONE),
             new House("golfo", "Casa sul Golfo", -214, 28, 120, Blocks.BRICKS),
-            new House("limoni", "Casa dei Limoni", -232, 10, 70, Blocks.SMOOTH_SANDSTONE));
+            new House("limoni", "Casa dei Limoni", -232, 10, 70, Blocks.SMOOTH_SANDSTONE),
+            new House("approdo", "Casa dell’Approdo", -272, 28, 95, Blocks.CUT_SANDSTONE),
+            new House("giardini", "Casa dei Giardini", -294, 9, 110, Blocks.BRICKS),
+            new House("ponente", "Casa di Ponente", -315, 28, 130, Blocks.SMOOTH_SANDSTONE));
 
     private static final List<House> RESIDENCES = List.of(
             new House("corte", "Corte di Mergellina", -153, 4, 0, Blocks.CUT_SANDSTONE),
@@ -37,6 +42,10 @@ final class NapoliMergellina {
             new House("pini", "Casa dei Pini", -237, 27, 0, Blocks.SMOOTH_SANDSTONE));
 
     private NapoliMergellina() {}
+
+    static List<House> allHouses() {
+        return java.util.stream.Stream.concat(PROPERTIES.stream(), RESIDENCES.stream()).toList();
+    }
 
     static List<BlockPos> homes() { return RESIDENCES.stream().map(House::inside).toList(); }
 
@@ -117,7 +126,7 @@ final class NapoliMergellina {
         }
     }
 
-    private static void buildHouse(ServerLevel level, House h, boolean forSale) {
+    static void buildHouse(ServerLevel level, House h, boolean forSale) {
         int x = h.x(), z = h.z();
         fill(level, x, 63, z, x + 10, 71, z + 11, h.wall());
         fill(level, x + 1, 64, z + 1, x + 9, 70, z + 10, Blocks.AIR);

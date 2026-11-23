@@ -152,6 +152,9 @@ public class Napuli implements ModInitializer {
 		NapoliProperties.register();
 		NapoliBroadcast.register();
 		NapoliCivicLife.register();
+		NapoliEmployment.register();
+		NapoliShower.register();
+		NapoliHygiene.register();
 		FabricDefaultAttributeRegistry.register(RESIDENT, NapoliResident.attributes());
 		ServerTickEvents.END_SERVER_TICK.register(NapoliScenes::tick);
 		ServerTickEvents.END_SERVER_TICK.register(Carabinieri::tick);

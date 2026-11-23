@@ -1,5 +1,7 @@
 package dev.napuli.client;
 
+import net.minecraft.world.level.block.Blocks;
+
 import dev.napuli.Motorino;
 import dev.napuli.Music;
 import dev.napuli.NapoliMap;
@@ -64,6 +66,10 @@ final class CityTest {
             return;
         }
         ++tick;
+        if (Boolean.getBoolean("napuli.employmenttest") && tick > 60) {
+            employment(mc, tick);
+            return;
+        }
         if (Boolean.getBoolean("napuli.civictest") && tick > 60) {
             civicLife(mc, tick);
             return;
@@ -314,6 +320,95 @@ final class CityTest {
     private static boolean hasGhost(ServerPlayer p, NapoliResident.Role role) {
         return p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(20)).stream()
                 .anyMatch(npc -> npc.role() == role);
+    }
+
+    private static void employment(Minecraft mc, int step) {
+        switch (step) {
+            case 65 -> server(mc, p -> {
+                view(p, -117.5, 64, 36.5, 180, 0);
+                AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set noon");
+            });
+            case 95 -> assertTrue(HudClient.state() != null && HudClient.state().tx() == -119
+                    && HudClient.state().objective().equals("napuli.work.visit"), "HUD points newcomers to the employment office");
+            case 100 -> employmentClick(mc, -119, 65, 33);
+            case 119 -> {
+                String job = Component.translatable("napuli.work.offer", Component.translatable("napuli.civic.job.cleaner"), 9).getString();
+                var screen = mc.gui.screen();
+                var button = screen == null ? java.util.Optional.<AbstractButton>empty()
+                        : descendants(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
+                            .filter(b -> b.getMessage().getString().equals(job)).findFirst();
+                assertTrue(screen instanceof EmploymentScreen && button.isPresent(), "custom employment screen offers cleaner contract");
+                AutoTest.shot(mc, "centro-impiego-offerte");
+                button.ifPresent(b -> b.onPress(new KeyEvent(257, 0, 0)));
+            }
+            case 139 -> server(mc, p -> view(p, -165.5, 64, 51.5, 0, 0));
+            case 166 -> employmentClick(mc, -166, 64, 53);
+            case 187 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 8, "clocking in does not grant payment");
+                view(p, -171.5, 64, 51.5, 0, 0);
+            });
+            case 211 -> employmentClick(mc, -172, 64, 53);
+            case 231 -> server(mc, p -> view(p, -165.5, 64, 51.5, 0, 0));
+            case 250 -> employmentClick(mc, -166, 64, 53);
+            case 272 -> server(mc, p -> assertTrue(dev.napuli.NapoliStreet.cash(p) == 17, "completed shift pays nine euros"));
+            case 280 -> employmentClick(mc, -166, 64, 53);
+            case 300 -> server(mc, p -> {
+                assertTrue(dev.napuli.NapoliStreet.cash(p) == 17, "cannot collect twice on the same day");
+                var civic = new net.minecraft.core.BlockPos(-154, 65, 40);
+                assertTrue(p.level().getBlockEntity(civic) instanceof net.minecraft.world.level.block.entity.SignBlockEntity,
+                        "Mergellina house has a numbered plaque");
+                view(p, -151.5, 64, 44.5, 180, -5);
+            });
+            case 325 -> AutoTest.shot(mc, "mergellina-civico");
+            case 330 -> server(mc, p -> view(p, -107.5, 65, 52.5, -90, 11));
+            case 365 -> AutoTest.shot(mc, "mergellina-raccordo");
+            case 385 -> server(mc, p -> {
+                dev.napuli.NapoliStreet.credit(p, 55);
+                view(p, -149.5, 64, 41.5, 180, 0);
+            });
+            case 404 -> mc.player.connection.sendCommand("casa compra leone");
+            case 423 -> server(mc, p -> view(p, -151.5, 64, 36.5, -90, 0));
+            case 455 -> {
+                assertTrue(HudClient.state() != null && HudClient.state().hygiene() < 100,
+                        "hygiene decreases with time");
+                employmentClick(mc, -149, 65, 37);
+            }
+            case 483 -> assertTrue(HudClient.state() != null && HudClient.state().hygiene() == 100,
+                    "owner's shower restores hygiene fully");
+            case 485 -> server(mc, p -> view(p, -152.0, 64, 37.5, -90, 9));
+            case 492 -> AutoTest.shot(mc, "mergellina-doccia");
+            case 500 -> server(mc, p -> view(p, -273, 65, 47, 90, 5));
+            case 532 -> AutoTest.shot(mc, "mergellina-approdo");
+            case 540 -> server(mc, p -> assertTrue(p.level().getEntitiesOfClass(NapoliResident.class,
+                    p.getBoundingBox().inflate(55)).stream().anyMatch(npc -> npc.getName().getString().equals("Lucia De Luca")),
+                    "new workers appear in the western quarter"));
+            case 555 -> server(mc, p -> {
+                expectBlock(p, 0, 63, -249, Blocks.POLISHED_DEEPSLATE);
+                expectBlock(p, -108, 63, -46, Blocks.POLISHED_DEEPSLATE);
+                expectBlock(p, -29, 63, 10, Blocks.POLISHED_DIORITE);
+                expectBlock(p, 89, 63, 59, Blocks.SMOOTH_STONE);
+                expectBlock(p, 340, 63, 0, Blocks.POLISHED_DEEPSLATE);
+                view(p, 307.5, 64, 31.5, -80, -16);
+            });
+            case 590 -> AutoTest.shot(mc, "napoli-municipio-isolati");
+            case 600 -> server(mc, p -> view(p, 6.5, 64, -219, -155, -12));
+            case 635 -> AutoTest.shot(mc, "napoli-centro-isolati");
+            case 645 -> { Napuli.LOGGER.info("[EMPLOYMENTTEST] completed, failed={}", failed); mc.stop(); }
+            default -> {}
+        }
+    }
+
+    private static void expectBlock(net.minecraft.server.level.ServerPlayer p, int x, int y, int z,
+                                    net.minecraft.world.level.block.Block expected) {
+        var pos = new net.minecraft.core.BlockPos(x, y, z);
+        assertTrue(p.level().getBlockState(pos).is(expected), "expanded district pavement at " + pos.toShortString());
+    }
+
+    private static void employmentClick(Minecraft mc, int x, int y, int z) {
+        var pos = new net.minecraft.core.BlockPos(x, y, z);
+        mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                        net.minecraft.core.Direction.SOUTH, pos, false));
     }
 
     private static NapoliResident citizenChild;

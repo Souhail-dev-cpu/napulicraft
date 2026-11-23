@@ -82,8 +82,8 @@ final class NapoliProperties {
         if (player.level().dimension() != NapoliMap.LEVEL) { say(player, "city"); return 0; }
         var actions = NapoliMergellina.PROPERTIES.stream().map(house -> {
             boolean owned = owns(player, house);
-            var label = owned ? Component.translatable("napuli.property.enter", house.name())
-                    : Component.translatable("napuli.property.locate", house.name(), house.sign().getX(), house.sign().getZ());
+            var label = owned ? Component.translatable("napuli.property.enter", house.address())
+                    : Component.translatable("napuli.property.locate", house.address(), house.sign().getX(), house.sign().getZ());
             return owned ? button(label, "/casa vai " + house.id()) : new ActionButton(new CommonButtonData(label, 250), Optional.empty());
         }).toList();
         show(player, Component.translatable("napuli.property.title"), Component.translatable("napuli.property.list"), actions);
@@ -99,7 +99,7 @@ final class NapoliProperties {
                 : Component.translatable("napuli.property.price", house.price(), NapoliStreet.cash(player));
         var action = button(Component.translatable(owned ? "napuli.property.go" : "napuli.property.buy"),
                 "/casa " + (owned ? "vai " : "compra ") + house.id());
-        show(player, Component.literal(house.name()), body, List.of(action));
+        show(player, Component.literal(house.address()), body, List.of(action));
     }
 
     private static int buy(ServerPlayer player, String id) {
@@ -112,7 +112,7 @@ final class NapoliProperties {
         var owners = new HashMap<>(player.level().getAttachedOrElse(OWNERS, Map.of()));
         owners.put(id, player.getUUID());
         player.level().setAttached(OWNERS, Map.copyOf(owners));
-        player.sendSystemMessage(Component.translatable("napuli.property.bought", house.name()));
+        player.sendSystemMessage(Component.translatable("napuli.property.bought", house.address()));
         return 1;
     }
 

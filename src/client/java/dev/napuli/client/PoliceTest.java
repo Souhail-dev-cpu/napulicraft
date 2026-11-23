@@ -24,6 +24,7 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
@@ -97,12 +98,19 @@ final class PoliceTest {
 			case 355 -> shot(mc, "08_puteca");
 			case 365 -> tp(server, 96, 64, -43, 180, 5);     // west arm: Pascà's tailor shop
 			case 390 -> shot(mc, "09_sartoria");
-			case 400 -> tp(server, 105, 64, 1, 0, -10);      // Comando Carabinieri from Via Toledo
-			case 425 -> shot(mc, "10_comando");
-			case 435 -> tp(server, 137, 64, 0, 0, -12);      // the prison walls and gate
+			case 400 -> tp(server, 105, 64, -6, 0, -13);      // Comando Carabinieri from Via Toledo
+			case 425 -> {
+				shot(mc, "10_comando");
+				server.execute(() -> verifyBuildings(city(server)));
+			}
+			case 426 -> tp(server, 105.5, 64, 12, 0, 0);
+			case 434 -> shot(mc, "10b_comando_sportello");
+			case 435 -> tp(server, 136, 64, -6, 0, -13);      // the prison walls and gate
 			case 460 -> shot(mc, "11_carcere");
-			case 470 -> tp(server, 136, 64, 41, 180, 0);     // cell block corridor
+			case 470 -> tp(server, 136.5, 64, 17, 0, 0);     // cell block corridor
 			case 495 -> shot(mc, "12_cellblock");
+			case 496 -> tp(server, 136.5, 64, 45, 0, 0);
+			case 504 -> shot(mc, "12b_carcere_cortile");
 			case 505 -> tp(server, 61, 64, -4, 180, 5);      // old caserma -> market
 			case 530 -> shot(mc, "13_mercato");
 			case 540 -> tp(server, 31, 64, 3, 180, 0);       // old gallery -> piazzetta
@@ -271,6 +279,27 @@ final class PoliceTest {
 
 	static void run(MinecraftServer server, String... cmds) {
 		for (String c : cmds) server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), c);
+	}
+
+	private static void verifyBuildings(ServerLevel level) {
+		for (int z : new int[]{8, 10, 14, 30}) requireAir(level, 105, z);
+		for (int z : new int[]{7, 9, 15, 44}) requireAir(level, 136, z);
+		for (int z = 17; z <= 37; z += 5) {
+			requireAir(level, 131, z);
+			requireAir(level, 141, z);
+			for (int x : new int[]{134, 138})
+				if (!level.getBlockState(new BlockPos(x, 65, z)).is(Blocks.IRON_BARS))
+					throw new IllegalStateException("Missing cell bars at " + x + ", " + z);
+		}
+		log("Passages at the station and prison are open; all ten cells have bars and a clear spawn");
+	}
+
+	private static void requireAir(ServerLevel level, int x, int z) {
+		for (int y = 64; y <= 65; y++) {
+			BlockPos pos = new BlockPos(x, y, z);
+			if (!level.getBlockState(pos).isAir())
+				throw new IllegalStateException("Blocked passage at " + pos);
+		}
 	}
 
 	static void shot(Minecraft mc, String name) {

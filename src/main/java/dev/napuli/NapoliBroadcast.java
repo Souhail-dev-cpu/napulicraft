@@ -7,6 +7,8 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -37,6 +39,8 @@ final class NapoliBroadcast {
             .persistent(Codec.LONG).buildAndRegister(Napuli.id("football_last_day"));
 
     private static final AttachmentType<Long> LAST_PULSE = AttachmentRegistry.create(Napuli.id("football_last_pulse"));
+
+    private static final AttachmentType<BlockPos> WATCHING = AttachmentRegistry.create(Napuli.id("watching_football"));
 
     private NapoliBroadcast() {}
 
@@ -72,6 +76,10 @@ final class NapoliBroadcast {
 
     static void register() {
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(TelevisionProgram.TYPE,TelevisionProgram.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(FootballBroadcast.Frame.TYPE, FootballBroadcast.Frame.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(FootballBroadcast.Leave.TYPE, FootballBroadcast.Leave.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(FootballBroadcast.Leave.TYPE,
+                (message, context) -> context.player().removeAttached(WATCHING));
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (level.dimension() != NapoliMap.LEVEL || hand != InteractionHand.MAIN_HAND || player.isSpectator()) return InteractionResult.PASS;
             BlockPos television = NapoliHouseholds.findTelevision(hit.getBlockPos());
@@ -79,13 +87,14 @@ final class NapoliBroadcast {
             if (player instanceof ServerPlayer viewer) {
                 var city = viewer.level();
                 Channel current = channel(city, television);
-                // Normal click reads the program and switches power. Sneak-click selects the channel.
                 Channel chosen = player.isShiftKeyDown() ? current.next()
-                        : current == Channel.OFF ? Channel.SPORT : Channel.OFF;
+                        : current == Channel.SPORT || current == Channel.OFF ? Channel.SPORT : Channel.OFF;
                 var channels = new HashMap<>(city.getAttachedOrElse(CHANNELS, Map.of()));
                 channels.put(television.asLong(), chosen.ordinal());
                 city.setAttached(CHANNELS, Map.copyOf(channels));
                 NapoliHouseholds.paintTelevision(city, television);
+                if (!player.isShiftKeyDown() && chosen == Channel.SPORT && openFootball(viewer, television))
+                    return InteractionResult.SUCCESS;
                 showProgram(viewer, chosen);
             }
             return InteractionResult.SUCCESS;
@@ -93,8 +102,59 @@ final class NapoliBroadcast {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (server.getTickCount() % 20 != 0) return;
             var city = server.getLevel(NapoliMap.LEVEL);
-            if (city != null && !city.players().isEmpty()) tick(city);
+            if (city != null && !city.players().isEmpty()) {
+                tick(city);
+                for (ServerPlayer viewer : city.players()) updateFootball(viewer);
+            }
         });
+    }
+
+    private static boolean openFootball(ServerPlayer viewer, BlockPos television) {
+        if (!ServerPlayNetworking.canSend(viewer, FootballBroadcast.Frame.TYPE)) return false;
+        FootballBroadcast.Frame frame = football(viewer.level(), true);
+        if (frame == null) return false;
+        viewer.setAttached(WATCHING, television);
+        ServerPlayNetworking.send(viewer, frame);
+        return true;
+    }
+
+    private static void updateFootball(ServerPlayer viewer) {
+        BlockPos television = viewer.getAttached(WATCHING);
+        if (television == null) return;
+        ServerLevel level = viewer.level();
+        var frame = television.distToCenterSqr(viewer.position()) <= 64 && channel(level, television) == Channel.SPORT
+                ? football(level, false) : null;
+        if (frame == null || !ServerPlayNetworking.canSend(viewer, FootballBroadcast.Frame.TYPE)) {
+            viewer.removeAttached(WATCHING);
+            if (ServerPlayNetworking.canSend(viewer, FootballBroadcast.Frame.TYPE))
+                ServerPlayNetworking.send(viewer, new FootballBroadcast.Frame(false, FootballBroadcast.Frame.CLOSED, 0, 0, 0, 0));
+        } else {
+            ServerPlayNetworking.send(viewer, frame);
+        }
+    }
+
+    private static FootballBroadcast.Frame football(ServerLevel level, boolean open) {
+        long time = time(level), day = day(level);
+        Match match = match(day);
+        int mode, minute;
+        if (time >= 7000 && time < 11600) {
+            match = match(day - 1 - Math.floorMod(day - 1, 7));
+            mode = FootballBroadcast.Frame.REPLAY;
+            minute = (int) ((time - 7000) * 90 / 4600);
+        } else if (match != null && time >= fixture(day).kickoff) {
+            var scheduled = fixture(day);
+            mode = time < scheduled.fullTime ? FootballBroadcast.Frame.LIVE : FootballBroadcast.Frame.FINAL;
+            minute = Math.min(90, (int) ((time - scheduled.kickoff) * 90 / (scheduled.fullTime - scheduled.kickoff)));
+        } else {
+            return null;
+        }
+        if (match == null || !fixture(match.day()).opponent.equalsIgnoreCase("Juventus")) return null;
+        return new FootballBroadcast.Frame(open, mode, minute, goalsAt(match.napoli(), minute, 13),
+                goalsAt(match.juventus(), minute, 21), level.getGameTime());
+    }
+
+    private static int goalsAt(int total, int minute, int first) {
+        return Math.min(total, Math.max(0, (minute - first + 24) / 24));
     }
 
     static void showProgram(ServerPlayer player, Channel channel) {

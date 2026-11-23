@@ -451,6 +451,8 @@ final class CityTest {
         }
     }
 
+    private static FootballPlay.Frame firstFootballFrame;
+
     private static void families(Minecraft mc, int step) {
         switch (step) {
             case 65 -> server(mc, p -> {
@@ -468,25 +470,65 @@ final class CityTest {
                 AutoTest.shot(mc, "famiglia-mergellina-pomeriggio");
             }
             case 124 -> clickFamilyTv(mc);
-            case 128 -> server(mc, p -> {
+            case 133 -> {
+                assertTrue(mc.gui.screen() instanceof FootballScreen, "clicking TV opens the sports replay");
+                if (mc.gui.screen() instanceof FootballScreen screen) {
+                    assertTrue(screen.broadcast().mode() == dev.napuli.FootballBroadcast.Frame.REPLAY, "afternoon match is a replay");
+                    firstFootballFrame = screen.action();
+                    assertTrue(firstFootballFrame.players().length == 22, "both football teams have eleven players");
+                }
+                AutoTest.shot(mc, "telenapoli-replica");
+            }
+            case 148 -> {
+                if (mc.gui.screen() instanceof FootballScreen screen) {
+                    var next = screen.action();
+                    assertTrue(firstFootballFrame != null && !next.ball().equals(firstFootballFrame.ball())
+                            && !java.util.Arrays.equals(next.players(), firstFootballFrame.players()), "players and ball move between rendered frames");
+                    AutoTest.shot(mc, "telenapoli-palla-in-movimento");
+                    screen.onClose();
+                } else assertTrue(false, "broadcast remains open");
+                mc.options.keyShift.setDown(true);
+            }
+            case 156, 161, 166 -> clickFamilyTv(mc);
+            case 171 -> mc.options.keyShift.setDown(false);
+            case 177 -> server(mc, p -> {
                 assertTrue(p.level().getBlockState(new net.minecraft.core.BlockPos(-171, 65, 20))
                         .is(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("black_concrete"))), "TV switches off");
                 assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER, dev.napuli.NapoliHouseholds.Activity.REST),
                         "father stops watching when the TV is off");
             });
-            case 130 -> clickFamilyTv(mc);
-            case 138 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 1150"));
-            case 172 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER,
+            case 180 -> clickFamilyTv(mc);
+            case 188 -> {
+                if (mc.gui.screen() instanceof FootballScreen screen) screen.onClose();
+                server(mc, p -> AutoTest.run(p.level().getServer(), "time set 1150"));
+            }
+            case 217 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_MOTHER,
                     dev.napuli.NapoliHouseholds.Activity.WASH), "mother visits the washbasin in the morning"));
-            case 180 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 10800"));
-            case 220 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
+            case 222 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 10800"));
+            case 250 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
                     dev.napuli.NapoliHouseholds.Activity.EAT), "family changes activity for dinner"));
-            case 224 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 14000"));
-            case 228 -> server(mc, p -> assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER,
-                    dev.napuli.NapoliHouseholds.Activity.MATCH), "father watches the scheduled evening fixture"));
-            case 232 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 15000"));
-            case 255 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set midnight"));
-            case 315 -> server(mc, p -> {
+            case 254 -> server(mc, p -> AutoTest.run(p.level().getServer(), "time set 13823"));
+            case 261 -> clickFamilyTv(mc);
+            case 273 -> {
+                assertTrue(mc.gui.screen() instanceof FootballScreen screen
+                        && screen.broadcast().mode() == dev.napuli.FootballBroadcast.Frame.LIVE
+                        && screen.broadcast().minute() == 37, "evening TV shows the live minute");
+                AutoTest.shot(mc, "telenapoli-diretta");
+                server(mc, p -> {
+                    assertTrue(familyActivity(p, NapoliResident.Role.FAMILY_FATHER, dev.napuli.NapoliHouseholds.Activity.MATCH),
+                            "father watches the scheduled evening fixture");
+                    AutoTest.run(p.level().getServer(), "time set 15000");
+                });
+            }
+            case 300 -> {
+                assertTrue(mc.gui.screen() instanceof FootballScreen screen
+                        && screen.broadcast().mode() == dev.napuli.FootballBroadcast.Frame.FINAL
+                        && screen.broadcast().minute() == 90 && screen.broadcast().napoli() == 1
+                        && screen.broadcast().juventus() == 0, "final television score matches the scheduled result");
+                if (mc.gui.screen() instanceof FootballScreen screen) screen.onClose();
+                server(mc, p -> AutoTest.run(p.level().getServer(), "time set midnight"));
+            }
+            case 350 -> server(mc, p -> {
                 var relatives = p.level().getEntitiesOfClass(NapoliResident.class, p.getBoundingBox().inflate(12));
                 assertTrue(relatives.stream().filter(npc -> npc.role() == NapoliResident.Role.FAMILY_MOTHER
                         || npc.role() == NapoliResident.Role.FAMILY_FATHER).filter(NapoliResident::isSleeping).count() == 2,
@@ -494,8 +536,8 @@ final class CityTest {
                 AutoTest.run(p.level().getServer(), "time set noon");
                 view(p, 4.5, 65, 26.5, 90, -6);
             });
-            case 355 -> AutoTest.shot(mc, "plebiscito-colonnato");
-            case 375 -> { Napuli.LOGGER.info("[FAMILYTEST] completed, failed={}", failed); mc.stop(); }
+            case 390 -> AutoTest.shot(mc, "plebiscito-colonnato");
+            case 410 -> { Napuli.LOGGER.info("[FAMILYTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
     }

@@ -69,15 +69,12 @@ final class CityResidentShop {
         var stack=new ItemStack(water?WATER:AIR);if(!p.getInventory().add(stack))return 0;
         NapoliStreet.credit(p,-cost);
         CitySocial.purchased(p.level(),id,p.getUUID());
-        if(entity instanceof NapoliResident npc)NeighbourMemory.remember(p,npc,2);
         var census=NapoliCivicLife.census(p.level());
         p.level().setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()
                 .map(person->person.id().equals(id)?person.withMoney(Math.min(99999,person.balance()+cost),person.job()):person).toList()));return 1;
     }
     private static int shopPrice(ServerPlayer p, UUID seller, int base) {
-        int local = CityEvents.price(p.level(), base);
-        int remembered=p.level().getEntity(seller) instanceof NapoliResident npc?NeighbourMemory.price(p,npc,local):local;
-        return CitySocial.price(p.level(),seller,p.getUUID(),remembered);
+        return CityEconomy.price(p,seller,base);
     }
 
     static void register() {

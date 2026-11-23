@@ -147,6 +147,11 @@ The opt-in integration test **`./gradlew runTaxtest`** creates a disposable worl
 inventory protection, both payment methods, rounding, zero balance, approach timeout, refusal and release,
 saves screenshots in `run-autotest/screenshots`, and exits.
 
+## Expanded Naples
+
+The [expanded Naples atlas](docs/MAPPA_NAPOLI.md) covers ten times the previous city envelope, with
+45 new real-world destinations, streamed district generation and `/napoli luoghi` walking directions.
+
 ## Building
 
 Every push to GitHub (on any branch or tag) runs the **Build and publish beta** workflow:

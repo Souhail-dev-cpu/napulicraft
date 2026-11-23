@@ -56,6 +56,9 @@ public final class CityProperty {
         var updated = new HashSet<>(positions); updated.remove(pos.asLong()); level.setAttached(PLACED, Set.copyOf(updated));
     }
     static boolean playerPlaced(ServerLevel level, BlockPos pos) { return level.getAttachedOrElse(PLACED, Set.of()).contains(pos.asLong()); }
+    static boolean playerBuiltInChunk(ServerLevel level,net.minecraft.world.level.ChunkPos chunk) {
+        for(long encoded:level.getAttachedOrElse(PLACED,Set.of())){var p=BlockPos.of(encoded);if((p.getX()>>4)==chunk.x()&&(p.getZ()>>4)==chunk.z())return true;}return false;
+    }
     static boolean isVandalism(ServerLevel level, BlockPos pos, BlockState broken) {
         return !broken.isAir() && !playerPlaced(level, pos) && home(level, pos);
     }

@@ -36,9 +36,15 @@ final class CityEconomy {
     static boolean merchant(NapoliCivicLife.Citizen c){return c.profession()!=null&&(c.profession().category==CityProfessions.Category.FOOD||c.profession().category==CityProfessions.Category.TRADE);}
     static String business(NapoliCivicLife.Citizen c){return c.profession()!=null&&c.profession().category==CityProfessions.Category.FOOD?"forno":"mercato";}
     static BlockPos site(String shop){return (shop.equals("forno")?CityProfessions.Category.FOOD:CityProfessions.Category.TRADE).site().offset(8,0,7);}
-    static Stock stock(ServerLevel city,String shop){return city.getAttachedOrElse(STOCKS,Map.of()).getOrDefault(shop,Stock.initial());}
+    static Stock stock(ServerLevel city,String shop){BakeryStock.migrate(city);return city.getAttachedOrElse(STOCKS,Map.of()).getOrDefault(shop,shop.equals("mercato")?new Stock(0,0,48,-1,-1):Stock.initial());}
     static void put(ServerLevel city,String shop,Stock stock){var all=new HashMap<>(city.getAttachedOrElse(STOCKS,Map.of()));all.put(shop,stock);city.setAttached(STOCKS,Map.copyOf(all));}
     static void supply(ServerLevel city,String shop,int count){var s=stock(city,shop);put(city,shop,new Stock(Math.min(512,s.grain()+count),s.flour(),s.bread(),s.processed(),s.delivered()));}
+    static void supplyFlour(ServerLevel city,int count){var s=stock(city,"forno");put(city,"forno",new Stock(s.grain(),s.flour()+Math.max(0,count),s.bread(),s.processed(),s.delivered()));}
+    static boolean reserveBread(ServerLevel city,String shop,int count){
+        if(count<=0)return false;var s=stock(city,shop);if(s.bread()<count)return false;
+        put(city,shop,new Stock(s.grain(),s.flour(),s.bread()-count,s.processed(),s.delivered()));return true;
+    }
+    static int price(ServerPlayer player,UUID seller,int base){return CitySocial.price(player.level(),seller,player.getUUID(),CityEvents.price(player.level(),base));}
     static Stock produce(Stock s,long period,boolean working){
         if(period<=s.processed())return s;
         if(!working)return new Stock(s.grain(),s.flour(),s.bread(),period,s.delivered());
@@ -48,13 +54,15 @@ final class CityEconomy {
     }
     /** Returns the actual units bought; insufficient money or stock never creates food. */
     static int buyMeals(ServerLevel city,String shop,int requested,int money){
-        var s=stock(city,shop);int count=Math.min(requested,Math.min(s.bread(),money/2));
+        var s=stock(city,shop);int count=Math.max(0,Math.min(requested,Math.min(s.bread(),money/2)));
         if(count>0)put(city,shop,new Stock(s.grain(),s.flour(),s.bread()-count,s.processed(),s.delivered()));return count;
     }
     static void shopResident(ServerLevel city,NapoliCivicLife.Citizen c){
+        if(CityTraces.cargo(city,c.id())!=null)return;
         var l=CitySimulation.life(city,c.id());int bought=buyMeals(city,"mercato",Math.max(0,6-l.food()),c.balance());if(bought==0)return;
         CitySimulation.put(city,c.id(),l.withNeeds(l.needs(),l.food()+bought,l.last(),l.water(),l.energy()));
         var census=NapoliCivicLife.census(city);city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(p->p.id().equals(c.id())?p.withMoney(p.balance()-bought*2,p.job()):p).toList()));
+        CityTraces.shopping(city,c,bought);
     }
     static boolean take(ServerPlayer p,Item item,int count){
         int found=0;for(int slot=0;slot<p.getInventory().getContainerSize();slot++)if(p.getInventory().getItem(slot).is(item))found+=p.getInventory().getItem(slot).getCount();
@@ -98,9 +106,14 @@ final class CityEconomy {
         long time=NapoliBroadcast.time(city),day=NapoliBroadcast.day(city),period=city.getGameTime()/600;
         for(var shop:SHOPS){
             var s=stock(city,shop);
+            if(shop.equals("mercato")){
+                var bakery=stock(city,"forno");int grain=Math.max(0,Math.min(32,Math.min(s.grain(),512-bakery.grain()))),bread=Math.max(0,Math.min(16,Math.min(bakery.bread(),96-s.bread())));
+                put(city,"forno",new Stock(bakery.grain()+grain,bakery.flour(),bakery.bread()-bread,bakery.processed(),bakery.delivered()));
+                put(city,shop,new Stock(s.grain()-grain,s.flour(),s.bread()+bread,period,s.delivered()));continue;
+            }
             // One finite daily shipment. A transport strike postpones it until the following morning.
             if(time>=1000&&s.delivered()<day&&!(CityEvents.event(day)==CityEvents.Event.STRIKE&&time<11500))s=new Stock(Math.min(512,s.grain()+Math.max(24,NapoliCivicLife.census(city).people().size())),s.flour(),s.bread(),s.processed(),day);
-            boolean working=time>=1000&&time<11000&&NapoliCivicLife.census(city).people().stream().anyMatch(c->merchant(c)&&business(c).equals(shop)&&CityProfessions.open(c.profession(),time,day)&&CitySimulation.life(city,c.id()).health()>=45&&!CityPublicOrder.jailed(city,c.id())&&(city.getEntity(c.id())==null||c.profession().site.distToCenterSqr(city.getEntity(c.id()).position())<64));
+            boolean working=!CityPersonalGoals.ovenBroken(city)&&time>=1000&&time<11000&&NapoliCivicLife.census(city).people().stream().anyMatch(c->merchant(c)&&business(c).equals(shop)&&CityHabits.working(c,time,day)&&CitySimulation.life(city,c.id()).health()>=45&&!CityPublicOrder.jailed(city,c.id())&&city.getEntity(c.id())==null&&CityJourneys.at(city,c,CityOccupations.workplace(c),10));
             put(city,shop,produce(s,period,working));
         }
     }

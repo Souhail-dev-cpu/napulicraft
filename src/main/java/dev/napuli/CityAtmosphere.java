@@ -22,7 +22,7 @@ final class CityAtmosphere {
         boolean sound=!Objects.equals(PERIODS.put(city,period),period);
         for(var h:CityLivingHomes.all()){
             var pos=lamp(h);if(!city.hasChunkAt(pos))continue;
-            var state=city.getBlockState(pos);boolean on=lit(h,time);
+            var state=city.getBlockState(pos);boolean on=lit(h,time)&&!CityTraces.brokenAt(city,pos);
             if(state.is(Blocks.REDSTONE_LAMP)&&state.getValue(BlockStateProperties.LIT)!=on)city.setBlock(pos,state.setValue(BlockStateProperties.LIT,on),2);
             if(!sound||city.players().stream().noneMatch(p->h.entrance().distToCenterSqr(p.position())<18*18))continue;
             SoundEvent ambient=null;

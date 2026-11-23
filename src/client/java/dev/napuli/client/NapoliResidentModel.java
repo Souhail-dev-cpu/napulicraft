@@ -23,11 +23,13 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 
 	private final ModelPart curls, ponytail, cap, scarf, fringe, bob, braid, curlsTop, earrings, hood, bag, waves, sidePart;
 	private final ModelPart peppePortrait;
+	private final ModelPart browRight,browLeft,lidRight,lidLeft;
 	private final ModelPart toque, coppola, mandolin, headscarf, longHair, bun, hairband, skirt, ccCap, beret, bandana;
 
 	NapoliResidentModel(ModelPart root) {
 		super(root);
 		peppePortrait = head.getChild("peppe_portrait");
+		browRight=head.getChild("brow_right");browLeft=head.getChild("brow_left");lidRight=head.getChild("lid_right");lidLeft=head.getChild("lid_left");
 		curls = head.getChild("curls"); ponytail = head.getChild("ponytail"); cap = head.getChild("cap");
 		scarf = body.getChild("scarf"); fringe = head.getChild("fringe"); bob = head.getChild("bob");
 		braid = head.getChild("braid"); curlsTop = head.getChild("curls_top"); earrings = head.getChild("earrings");
@@ -42,6 +44,10 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 		var mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0);
 		var head = mesh.getRoot().getChild("head");
 		var torso = mesh.getRoot().getChild("body");
+		head.addOrReplaceChild("brow_right",CubeListBuilder.create().texOffs(0,34).addBox(-.9f,0,0,1.8f,.22f,.08f),PartPose.offset(-2,-5.7f,-4.08f));
+		head.addOrReplaceChild("brow_left",CubeListBuilder.create().texOffs(0,34).addBox(-.9f,0,0,1.8f,.22f,.08f),PartPose.offset(2,-5.7f,-4.08f));
+		head.addOrReplaceChild("lid_right",CubeListBuilder.create().texOffs(8,8).addBox(-.9f,0,0,1.8f,1.1f,.08f),PartPose.offset(-2,-4.8f,-4.1f));
+		head.addOrReplaceChild("lid_left",CubeListBuilder.create().texOffs(8,8).addBox(-.9f,0,0,1.8f,1.1f,.08f),PartPose.offset(2,-4.8f,-4.1f));
 		// ---- original parts (UVs unchanged)
 		head.addOrReplaceChild("curls", CubeListBuilder.create().texOffs(0, 34).addBox(-4.3f, -8.9f, -4.3f, 8.6f, 3, 8.6f)
 				.texOffs(0, 47).addBox(-4.2f, -6.0f, 3, 8.4f, 3.5f, 1.5f), PartPose.ZERO);
@@ -178,6 +184,11 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 		head.skipDraw = peppe;
 		hat.visible = !peppe;
 		peppePortrait.visible = peppe;
+		browRight.visible=!peppe;browLeft.visible=!peppe;
+		float expression=(50-state.mood)/180f;browRight.zRot=expression;browLeft.zRot=-expression;
+		boolean blink=(state.ageInTicks+state.animationOffset)%120<4||state.sleeping;
+		lidRight.visible=!peppe&&(blink||state.vitality<25);lidLeft.visible=lidRight.visible;
+		lidRight.yScale=blink?1:.45f;lidLeft.yScale=lidRight.yScale;
 		Set<String> on = parts(state.role, state.variant);
 		curls.visible = on.contains("curls"); ponytail.visible = on.contains("ponytail"); cap.visible = on.contains("cap");
 		scarf.visible = on.contains("scarf"); fringe.visible = on.contains("fringe"); bob.visible = on.contains("bob");
@@ -190,7 +201,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 		// girls: slimmer arms (scaled around the shoulder, they stay attached to the body)
 		float arm = female(state.role, state.variant) ? 0.75f : 1f;
 		rightArm.xScale = arm; leftArm.xScale = arm; rightArm.zScale = arm == 1f ? 1f : 0.9f; leftArm.zScale = rightArm.zScale;
-		if (state.activity == dev.napuli.NapoliHouseholds.Activity.MATCH || state.isPassenger) {
+		if (state.isPassenger) {
 			rightLeg.xRot = -0.99f; leftLeg.xRot = -0.99f;
 			rightLeg.yRot = 0.23f; leftLeg.yRot = -0.23f;
 			rightLeg.zRot = 0.18f; leftLeg.zRot = -0.18f;
@@ -202,18 +213,32 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 				leftArm.xRot = -0.50f; rightArm.xRot = -0.50f;
 			}
 		}
-		if(state.activity==dev.napuli.NapoliHouseholds.Activity.PREPARE||state.activity==dev.napuli.NapoliHouseholds.Activity.COOK||state.activity==dev.napuli.NapoliHouseholds.Activity.CLEAN||state.activity==dev.napuli.NapoliHouseholds.Activity.DISHES){
-			float wave=(float)Math.sin(state.ageInTicks*.4f)*.2f;rightArm.xRot=-1.0f+wave;leftArm.xRot=-1.0f-wave;
-		}else if(state.activity==dev.napuli.NapoliHouseholds.Activity.EAT){
-			rightArm.xRot=-1.6f+(float)Math.sin(state.ageInTicks*.3f)*.15f;
-		}else if(state.activity==dev.napuli.NapoliHouseholds.Activity.FETCH||state.activity==dev.napuli.NapoliHouseholds.Activity.FRIDGE||state.activity==dev.napuli.NapoliHouseholds.Activity.SET_TABLE){
-			rightArm.xRot=-1.1f;leftArm.xRot=-.7f;
+		float t=state.ageInTicks+state.animationOffset,s=(float)Math.sin(t*.22),c=(float)Math.cos(t*.22);
+		if(state.vitality<30&&!state.sleeping){body.xRot+=.10f;head.xRot+=.12f;}
+		switch(state.gesture){
+			case CHOP->{rightArm.xRot=-1.15f+(float)Math.sin(t*.65)*.38f;leftArm.xRot=-1.0f;head.xRot+=.3f;}
+			case STIR->{rightArm.xRot=-1.1f+s*.13f;rightArm.yRot=c*.20f;leftArm.xRot=-.9f;leftArm.yRot=.15f;}
+			case CARRY,PACK->{rightArm.xRot=-1.18f;leftArm.xRot=-1.18f;rightArm.yRot=-.18f;leftArm.yRot=.18f;}
+			case EAT->{leftArm.xRot=-1.0f;rightArm.xRot=-1.65f+s*.28f;head.xRot+=s*.04f;}
+			case WASH->{rightArm.xRot=-1+s*.17f;leftArm.xRot=-1-s*.17f;rightArm.yRot=-.12f;leftArm.yRot=.12f;}
+			case YAWN->{rightArm.xRot=-2.0f;rightArm.yRot=-.45f;head.xRot-=.18f;body.xRot+=.05f;}
+			case WAVE->{rightArm.xRot=-2.5f;rightArm.zRot=.35f+s*.28f;head.zRot=.06f;}
+			case SAD->{body.xRot+=.15f;head.xRot+=.28f;leftArm.zRot=-.06f;rightArm.zRot=.06f;}
+			case HAPPY->{rightArm.xRot=-2.1f+s*.18f;leftArm.xRot=-2.1f-s*.18f;head.zRot=s*.08f;}
+			case SWEEP->{rightArm.xRot=-.8f+s*.3f;leftArm.xRot=-.5f+s*.25f;body.yRot=s*.12f;}
+			case EXAMINE->{head.xRot+=.4f;body.xRot+=.12f;rightArm.xRot=-1.1f+s*.08f;}
+			case WRITE->{head.xRot+=.35f;rightArm.xRot=-1.05f+s*.06f;rightArm.yRot=c*.08f;leftArm.xRot=-.8f;}
+			case TEACH->{rightArm.xRot=-1.7f+s*.12f;rightArm.yRot=-.35f;leftArm.xRot=-.8f;}
+			default->{}
 		}
 	}
 
 	static final class State extends HumanoidRenderState {
 		Role role = Role.GENNARO;
 		int variant;
+		dev.napuli.CityGestures.Gesture gesture=dev.napuli.CityGestures.Gesture.NONE;
+		int mood=70,vitality=80,animationOffset;
+		boolean sleeping;
 		boolean alternateCivic;
 		dev.napuli.NapoliHouseholds.Activity activity = dev.napuli.NapoliHouseholds.Activity.REST;
 	}

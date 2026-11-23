@@ -27,7 +27,7 @@ final class FootballMenuScreen extends Screen {
 
     @Override protected void init() {
         panelWidth = Math.min(width - 16, 354);
-        panelHeight = menu.canReturn() ? 188 : 158;
+        panelHeight = menu.canReturn() ? 217 : 187;
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
         int cell = (panelWidth - 28) / 2;
@@ -41,7 +41,8 @@ final class FootballMenuScreen extends Screen {
         option("role.attack", "ruolo attaccante", left + 10, top + 120, roleCell);
         option("role.midfield", "ruolo centrocampista", left + 14 + roleCell, top + 120, roleCell);
         option("role.defense", "ruolo difensore", left + 18 + 2 * roleCell, top + 120, roleCell);
-        if (menu.canReturn()) option("return_option", "torna", left + 10, top + 149, panelWidth - 20);
+        option("league_option", "campionato", left + 10, top + 149, panelWidth - 20);
+        if (menu.canReturn()) option("return_option", "torna", left + 10, top + 178, panelWidth - 20);
     }
 
     private void option(String key, String command, int x, int y, int width) {

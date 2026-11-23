@@ -20,11 +20,12 @@ import net.minecraft.world.entity.Entity;
 
 /** Revocable hospitality is separate from ownership, tenancy and permanent resident capacity. */
 final class HouseGuests {
-    record Invitation(UUID host, UUID guest, String name) {
+    record Invitation(UUID host, UUID guest, String name, String occasion) {
+        Invitation(UUID host,UUID guest,String name){this(host,guest,name,"");}
         static final Codec<Invitation> CODEC = RecordCodecBuilder.create(i -> i.group(
                 UUIDUtil.CODEC.fieldOf("host").forGetter(Invitation::host),
                 UUIDUtil.CODEC.fieldOf("guest").forGetter(Invitation::guest),
-                Codec.STRING.fieldOf("name").forGetter(Invitation::name)).apply(i, Invitation::new));
+                Codec.STRING.fieldOf("name").forGetter(Invitation::name),Codec.STRING.optionalFieldOf("occasion","").forGetter(Invitation::occasion)).apply(i, Invitation::new));
     }
     static final AttachmentType<Map<String, List<Invitation>>> INVITATIONS = AttachmentRegistry
             .<Map<String, List<Invitation>>>builder().persistent(Codec.unboundedMap(Codec.STRING, Invitation.CODEC.listOf()))
@@ -69,6 +70,18 @@ final class HouseGuests {
         if (!guests.removeIf(g -> g.guest().equals(guest))) return false;
         if (guests.isEmpty()) all.remove(home); else all.put(home, List.copyOf(guests));
         city.setAttached(INVITATIONS, Map.copyOf(all)); return true;
+    }
+    static boolean grantForEvent(ServerLevel city,String home,UUID owner,UUID guest,String name,String occasion){
+        if(!host(city,home,owner)||owner.equals(guest))return false;
+        if(invited(city,home,guest))return true;
+        if(NapoliCivicLife.profile(city,guest)==null&&city.getServer().getPlayerList().getPlayer(guest)==null)return false;
+        var all=new HashMap<>(city.getAttachedOrElse(INVITATIONS,Map.of()));var list=new ArrayList<>(all.getOrDefault(home,List.of()));
+        list.removeIf(g->g.guest().equals(guest));list.add(new Invitation(owner,guest,name,occasion));all.put(home,List.copyOf(list));city.setAttached(INVITATIONS,Map.copyOf(all));return true;
+    }
+    static void revokeEvent(ServerLevel city,String home,UUID owner,UUID guest,String occasion){
+        var all=new HashMap<>(city.getAttachedOrElse(INVITATIONS,Map.of()));var list=new ArrayList<>(all.getOrDefault(home,List.of()));
+        if(!list.removeIf(g->g.host().equals(owner)&&g.guest().equals(guest)&&g.occasion().equals(occasion)))return;
+        if(list.isEmpty())all.remove(home);else all.put(home,List.copyOf(list));city.setAttached(INVITATIONS,Map.copyOf(all));
     }
 
     static void clear(ServerLevel city, String home) {

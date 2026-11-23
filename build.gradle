@@ -122,6 +122,11 @@ loom {
 			vmArg "-Dnapuli.maptest=true"
 			runDir "run-autotest"
 		}
+		atlasTest {
+			client()
+			vmArg "-Dnapuli.atlastest=true"
+			runDir "run-autotest"
+		}
 		spawntest {
 			client()
 			name "Napoli spawn test"
@@ -163,6 +168,51 @@ fabricApi {
 	}
 }
 
+// Separate disposable multiplayer world; run write and read with the same -PsoakRun.
+def soakRun = providers.gradleProperty('soakRun').getOrElse('local')
+def soakPhase = providers.gradleProperty('soakPhase').getOrElse('write')
+if (!(soakRun ==~ /[A-Za-z0-9_-]+/) || !(soakPhase in ['write', 'read', 'route', 'shopping'])) throw new GradleException('Invalid soak run/phase')
+def soakDirectory = layout.projectDirectory.dir(".gradle/soak/${soakRun}")
+loom.runs {
+	citySoak {
+		server()
+		source sourceSets.gametest
+		runDir ".gradle/soak/${soakRun}"
+		vmArg '-Dnapuli.citysoak=true'
+		vmArg "-Dnapuli.soak.phase=${soakPhase}"
+		vmArg '-Xmx3G'
+	}
+}
+tasks.register('prepareCitySoak') {
+	def directory = soakDirectory
+	doLast {
+		directory.asFile.mkdirs()
+		new File(directory.asFile, 'eula.txt').text = 'eula=true\n'
+		new File(directory.asFile, 'server.properties').text = '''server-ip=127.0.0.1
+server-port=0
+online-mode=false
+enable-status=false
+view-distance=2
+simulation-distance=2
+spawn-protection=0
+pause-when-empty-seconds=0
+max-tick-time=-1
+level-name=city-soak-world
+level-type=minecraft:flat
+generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains"}
+'''
+	}
+}
+tasks.named('runCitySoak') {
+	dependsOn 'prepareCitySoak'
+	def directory = soakDirectory
+	def phase = soakPhase
+	doLast {
+		def log = new File(directory.asFile, 'logs/latest.log')
+		if (!log.exists() || !log.text.contains("[SOAK] ${phase.toUpperCase()} PASSED")) throw new GradleException("Multiplayer soak failed; see ${log}")
+	}
+}
+
 processResources {
 	def version = project.version
 	inputs.property "version", version
@@ -185,6 +235,20 @@ tasks.named('runLivingCityTest') {
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[LIVINGCITYTEST] ALL PASSED')) {
 			throw new GradleException('Living city integration test failed; see run-autotest/logs/latest.log')
+		}
+	}
+}
+tasks.named('runAtlasTest') {
+	mustRunAfter 'runLivingCityTest', 'runFootballTest'
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[ATLASTEST] ALL PASSED')) throw new GradleException('Napoli atlas client tour failed; see run-autotest/logs/latest.log')
+	}
+}
+tasks.named('runFootballTest') {
+	mustRunAfter 'runLivingCityTest'
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[FOOTBALLTEST] completed, failed=false')) {
+			throw new GradleException('Football client integration failed; see run-autotest/logs/latest.log')
 		}
 	}
 }

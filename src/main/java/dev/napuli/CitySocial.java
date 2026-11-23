@@ -27,7 +27,18 @@ final class CitySocial {
     static final AttachmentType<Map<String,Bond>> BONDS = AttachmentRegistry.<Map<String,Bond>>builder()
             .persistent(Codec.unboundedMap(Codec.STRING,Bond.CODEC)).buildAndRegister(Napuli.id("citizen_visitors"));
     private static String key(UUID citizen,UUID visitor) { return citizen+"/"+visitor; }
-    static Bond bond(ServerLevel city,UUID citizen,UUID visitor) { return city.getAttachedOrElse(BONDS,Map.of()).getOrDefault(key(citizen,visitor),Bond.fresh()); }
+    static Bond bond(ServerLevel city,UUID citizen,UUID visitor) {
+        var saved=city.getAttachedOrElse(BONDS,Map.of()).get(key(citizen,visitor));if(saved!=null)return saved;
+        var player=city.getServer().getPlayerList().getPlayer(visitor);
+        if(player!=null){
+            var legacy=player.getAttachedOrElse(NeighbourMemory.RELATIONS,Map.of());var old=legacy.get(citizen.toString());
+            if(old!=null){
+                int trust=Math.clamp(50+(old>=0?old*5/2:old*8),0,100);
+                saved=new Bond(trust,old>=6?3:0,Math.max(0,old/2),0,old<0?1:0,-1,-1,-1);put(city,citizen,visitor,saved);
+                var remaining=new HashMap<>(legacy);remaining.remove(citizen.toString());player.setAttached(NeighbourMemory.RELATIONS,Map.copyOf(remaining));return saved;
+            }
+        }return Bond.fresh();
+    }
     static void put(ServerLevel city,UUID citizen,UUID visitor,Bond bond) {
         var all=new HashMap<>(city.getAttachedOrElse(BONDS,Map.of()));all.put(key(citizen,visitor),bond);city.setAttached(BONDS,Map.copyOf(all));
     }
@@ -39,12 +50,18 @@ final class CitySocial {
     static void purchased(ServerLevel city,UUID citizen,UUID visitor) {
         var b=bond(city,citizen,visitor);put(city,citizen,visitor,new Bond(b.trust(),b.meetings(),b.purchases()+1,b.favors(),b.grievances(),b.met(),b.helped(),b.apologized()));
     }
+    static boolean helped(ServerLevel city,UUID citizen,UUID visitor,long day){
+        var b=bond(city,citizen,visitor);if(b.helped()>=day)return false;
+        put(city,citizen,visitor,new Bond(Math.min(100,b.trust()+8),b.meetings(),b.purchases(),b.favors()+1,Math.max(0,b.grievances()-1),b.met(),day,b.apologized()));
+        var player=city.getServer().getPlayerList().getPlayer(visitor);if(city.getEntity(citizen) instanceof NapoliResident||NapoliCivicLife.profile(city,citizen)!=null)CityReputation.record(city,visitor,citizen,"help",(player==null?"un vicino":player.getName().getString())+" ha mantenuto un impegno e mi ha aiutato.",8);return true;
+    }
     static void harm(ServerLevel city,UUID citizen,UUID visitor) {
         var b=bond(city,citizen,visitor);put(city,citizen,visitor,new Bond(Math.max(0,b.trust()-25),b.meetings(),b.purchases(),b.favors(),Math.min(20,b.grievances()+1),b.met(),b.helped(),b.apologized()));
+        var player=city.getServer().getPlayerList().getPlayer(visitor);if(city.getEntity(citizen) instanceof NapoliResident)CityReputation.record(city,visitor,citizen,"harm",(player==null?"un vicino":player.getName().getString())+" si è comportato male con me.",-15);
     }
     static int price(ServerLevel city,UUID citizen,UUID visitor,int base) {
         var b=bond(city,citizen,visitor);
-        int percent=b.trust()<30?125:b.trust()>=65&&b.meetings()>=3?90:100;
+        int trust=CityReputation.trust(city,citizen,visitor,b.trust());int percent=(trust<30?125:trust>=65&&b.meetings()>=3?90:100)+CityReputation.priceAdjustment(city,citizen,visitor);
         return Math.max(1,(base*percent+99)/100);
     }
     static String greeting(Bond b,String visitor) {
@@ -62,15 +79,19 @@ final class CitySocial {
     static void open(ServerPlayer p,NapoliCivicLife.Citizen c) {
         var b=meet(p.level(),c.id(),p.getUUID(),NapoliBroadcast.day(p.level()));
         var buttons=new ArrayList<ActionButton>();
+        buttons.add(button("Facciamo due chiacchiere","/parla "+c.id()+" stai"));
         buttons.add(button("Porta provviste (4 grano)","/vicino aiuta "+c.id()));
         if(b.grievances()>0)buttons.add(button("Chiedi scusa","/vicino scusa "+c.id()));
         if(CityResidentShop.merchant(c))buttons.add(button("Guarda la merce","/vicino bottega "+c.id()));
         if(CityEconomy.merchant(c))buttons.add(button("Bottega e consegne","/quartiere bottega "+c.id()));
         String doing=CityDomestic.description(p.level(),c.id());
+        String heard=CityReputation.tell(p,c.id());
+        String football=CityLeague.fanLine(p);if(!football.isEmpty())heard+=(heard.isEmpty()?"":"\n")+football;
+        var goal=CityPersonalGoals.goal(p.level(),c.id());CityPersonalGoals.addButtons(buttons,c,goal);
         p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal(c.name()),Optional.empty(),true,false,DialogAction.CLOSE,
                 List.of(new PlainMessage(Component.literal(greeting(b,p.getName().getString())),270),
                         new PlainMessage(Component.literal("Fiducia: "+b.trust()+" · incontri in giorni diversi: "+b.meetings()+
-                                (doing.isEmpty()?"":"\n"+doing)),270)),List.of()),buttons,Optional.empty(),1)));
+                                (doing.isEmpty()?"":"\n"+doing)+(goal==null?"":"\n"+CityPersonalGoals.description(goal))+(heard.isEmpty()?"":"\n"+heard)),270)),List.of()),buttons,Optional.empty(),1)));
     }
     static ActionButton button(String text,String command) { return new ActionButton(new CommonButtonData(Component.literal(text),250),Optional.of(new StaticAction(new ClickEvent.RunCommand(command)))); }
     static int act(ServerPlayer p,UUID id,String action) {
@@ -84,7 +105,7 @@ final class CitySocial {
         }
         if(!action.equals("aiuta")||b.helped()>=day||!CityEconomy.take(p,net.minecraft.world.item.Items.WHEAT,4))return 0;
         CityEconomy.supply(p.level(),CityEconomy.business(c),4);
-        put(p.level(),id,p.getUUID(),new Bond(Math.min(100,b.trust()+8),b.meetings(),b.purchases(),b.favors()+1,Math.max(0,b.grievances()-1),b.met(),day,b.apologized()));
+        helped(p.level(),id,p.getUUID(),day);
         var l=CitySimulation.life(p.level(),id);CitySimulation.put(p.level(),id,l.career(l.health(),l.reputation(),l.experience(),l.rank(),l.absences(),CitySimulation.memory(l,"Aiutato con le provviste da "+p.getName().getString())));
         p.sendSystemMessage(Component.literal(c.name()+": Grazie, queste provviste ci servivano davvero."));return 1;
     }

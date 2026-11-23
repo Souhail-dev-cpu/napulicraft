@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 final class NeighbourMemory {
-    private static final AttachmentType<Map<String, Integer>> RELATIONS = AttachmentRegistry
+    static final AttachmentType<Map<String, Integer>> RELATIONS = AttachmentRegistry
             .<Map<String, Integer>>builder().persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
             .buildAndRegister(Napuli.id("neighbour_memory"));
 
@@ -18,24 +18,23 @@ final class NeighbourMemory {
     private static String key(ServerPlayer p, NapoliResident npc) { return npc.getUUID().toString(); }
 
     static int trust(ServerPlayer p, NapoliResident npc) {
-        return p.getAttachedOrElse(RELATIONS, Map.of()).getOrDefault(key(p, npc), 0);
+        int value=CitySocial.bond(p.level(),npc.getUUID(),p.getUUID()).trust()-50;return value>=0?value*2/5:value/8;
     }
 
     static void remember(ServerPlayer p, NapoliResident npc, int change) {
-        Map<String, Integer> copy = new HashMap<>(p.getAttachedOrElse(RELATIONS, Map.of()));
-        copy.put(key(p, npc), Math.clamp(trust(p, npc) + change, -20, 20));
-        p.setAttached(RELATIONS, Map.copyOf(copy));
+        var city=p.level();var id=npc.getUUID();
+        if(change<0){CitySocial.harm(city,id,p.getUUID());return;}
+        CitySocial.meet(city,id,p.getUUID(),NapoliBroadcast.day(city));
+        if(change<=2)CitySocial.purchased(city,id,p.getUUID());else CitySocial.helped(city,id,p.getUUID(),NapoliBroadcast.day(city));
     }
 
     static int price(ServerPlayer p, NapoliResident npc, int base) {
-        int trust = trust(p, npc);
-        return Math.max(1, base + (trust >= 6 ? -1 : trust <= -3 ? 2 : 0));
+        return CityEconomy.price(p,npc.getUUID(),base);
     }
 
     static void greet(ServerPlayer p, NapoliResident npc) {
-        int trust = trust(p, npc);
-        if (trust == 0) return;
-        String key = trust < 0 ? "distrust" : trust >= 6 ? "regular" : "returning";
-        p.sendSystemMessage(Component.translatable("napuli.neighbour." + key, npc.getDisplayName()));
+        var b=CitySocial.meet(p.level(),npc.getUUID(),p.getUUID(),NapoliBroadcast.day(p.level()));
+        if(b.meetings()>1||b.grievances()>0)p.sendSystemMessage(Component.literal(npc.getName().getString()+": "+CitySocial.greeting(b,p.getName().getString())));
+        String heard=CityReputation.tell(p,npc.getUUID());if(!heard.isEmpty())p.sendSystemMessage(Component.literal(npc.getName().getString()+": "+heard));
     }
 }

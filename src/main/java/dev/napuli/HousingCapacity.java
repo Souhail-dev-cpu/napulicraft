@@ -19,6 +19,7 @@ final class HousingCapacity {
     private static final class State {
         List<CityProperty.Home> layout;
         List<Home> homes;
+        final Map<Long,List<Home>> index=new HashMap<>();
         final Map<Home, List<UUID>> admitted = new HashMap<>();
         final Map<UUID, Vec3> outside = new HashMap<>();
         final Map<UUID, Long> notified = new HashMap<>();
@@ -69,24 +70,28 @@ final class HousingCapacity {
         }
         state.layout = List.copyOf(layout);
         state.homes = List.copyOf(homes);
+        state.index.clear();
+        for(var home:homes)for(int x=home.bounds().min().getX()>>4;x<=home.bounds().max().getX()>>4;x++)for(int z=home.bounds().min().getZ()>>4;z<=home.bounds().max().getZ()>>4;z++)
+            state.index.computeIfAbsent(net.minecraft.world.level.ChunkPos.pack(x,z),k->new ArrayList<>()).add(home);
         return state.homes;
     }
 
-    private static Home at(List<Home> homes, BlockPos position) {
-        for (var home : homes) if (home.bounds().contains(position)) return home;
+    private static Home at(State state, BlockPos position) {
+        for (var home : state.index.getOrDefault(net.minecraft.world.level.ChunkPos.pack(position),List.of())) if (home.bounds().contains(position)) return home;
         return null;
     }
 
     static boolean canEnter(ServerLevel city, BlockPos destination, UUID entrant) {
         var homes = homes(city);
-        var home = at(homes, destination);
+        var state=STATES.get(city);
+        var home = at(state, destination);
         if (home == null) return true;
         if (HouseGuests.capacityExempt(city, home.property(), entrant)) return true;
         int count = 0;
         for (var entity : city.getAllEntities()) {
             if (occupant(entity) && !entity.getUUID().equals(entrant)
                     && !HouseGuests.capacityExempt(city, home.property(), entity.getUUID())
-                    && home.equals(at(homes, entity.blockPosition())) && ++count >= MAX_OCCUPANTS) return false;
+                    && home.equals(at(state, entity.blockPosition())) && ++count >= MAX_OCCUPANTS) return false;
         }
         return true;
     }
@@ -109,7 +114,7 @@ final class HousingCapacity {
         for (var entity : city.getAllEntities()) {
             if (!occupant(entity)) continue;
             present.add(entity.getUUID());
-            var home = at(homes, entity.blockPosition());
+            var home = at(state, entity.blockPosition());
             if (home == null) state.outside.put(entity.getUUID(), entity.position());
             else groups.computeIfAbsent(home, ignored -> new ArrayList<>()).add(entity);
         }
@@ -152,12 +157,13 @@ final class HousingCapacity {
     }
 
     private static Vec3 exit(ServerLevel city, List<Home> homes, Home home, Vec3 previous) {
-        if (previous != null && at(homes, BlockPos.containing(previous)) == null
+        var state=STATES.get(city);
+        if (previous != null && at(state, BlockPos.containing(previous)) == null
                 && NapoliResidentHomes.walkable(city, BlockPos.containing(previous))) return previous;
         var entrance = home.entrance();
         for (int radius = 0; radius <= 8; radius++) {
             for (var pos : BlockPos.betweenClosed(entrance.offset(-radius, 0, -radius), entrance.offset(radius, 0, radius))) {
-                if (at(homes, pos) == null && NapoliResidentHomes.walkable(city, pos)) return Vec3.atBottomCenterOf(pos);
+                if (at(state, pos) == null && NapoliResidentHomes.walkable(city, pos)) return Vec3.atBottomCenterOf(pos);
             }
         }
         // A completely barricaded exit must not trap an extra occupant inside the house.

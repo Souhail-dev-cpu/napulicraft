@@ -149,6 +149,7 @@ final class NapoliProperties {
         } else {
             actions.add(button(Component.literal("Paga rate e bollette"),"/casa paga "+house.id()));
             actions.add(button(Component.translatable("napuli.guest.title"), "/casa ospiti " + house.id()));
+            actions.add(CitySocial.button("Organizza una cena","/cena menu "+house.id()));
             actions.add(CitySocial.button("Ritira la chiave","/casa chiave "+house.id()));
         }
         show(player, Component.literal(house.address()), body, actions);

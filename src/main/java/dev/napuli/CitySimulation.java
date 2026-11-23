@@ -78,6 +78,7 @@ final class CitySimulation {
                 people.put(heir.id(),heir.withHousehold(heir.partner().equals(deceased.id().toString())?"":heir.partner(),
                         heir.property().isEmpty()?deceased.property():heir.property(),Math.min(99999,heir.balance()+share)));
                 var memory=life(city,heir.id());put(city,heir.id(),memory.career(memory.health(),memory.reputation(),memory.experience(),memory.rank(),memory.absences(),memory(memory,"Eredità di "+deceased.name())));
+                CityRelationships.loss(city,heir.id(),deceased,day);
             }
             put(city,deceased.id(),l.career(0,l.reputation(),l.experience(),l.rank(),l.absences(),memory(l,"Decesso, giorno "+day)));
             people.remove(deceased.id());
@@ -121,6 +122,7 @@ final class CitySimulation {
         var census=NapoliCivicLife.census(city);if(census==null)return;
         long now=city.getGameTime(), time=NapoliBroadcast.time(city);
         var states=new HashMap<>(city.getAttachedOrElse(LIFE,Map.of()));
+        var shoppers=new ArrayList<UUID>();
         for(var person:census.people()) {
             Life l=states.getOrDefault(person.id().toString(),fresh(person.id()));
             if(now-l.last()<CityLifeConfig.settings.needsIntervalTicks)continue;
@@ -130,6 +132,7 @@ final class CitySimulation {
             var action=activity(city,person,l,time);
             CityRoutines.attendance(city,person,action==NapoliHouseholds.Activity.WORK);
             int food=l.food(),water=l.water(),energy=l.energy();
+            if(food==0&&CityJourneys.at(city,person,NapoliCivicLife.home(person),12)&&CityTraces.takePantry(city,person.property()))food=1;
             if(food==0&&!person.parents().isEmpty()) {
                 var parent=NapoliCivicLife.profile(city,UUID.fromString(person.parents()));
                 if(parent!=null) {
@@ -141,39 +144,24 @@ final class CitySimulation {
                 case EAT,COOK -> {
                     // Visible meals are completed by the kitchen state machine, never by a timer alone.
                     var entity=city.getEntity(person.id());
-                    if(!(entity instanceof NapoliResident)||CityLivingHomes.find(person.property())==null)
+                    if((!(entity instanceof NapoliResident)||CityLivingHomes.find(person.property())==null)&&CityJourneys.at(city,person,NapoliCivicLife.home(person),12))
                         if(food>0) { n=n.change(35,0,0,3,5,0);food--; }
                 }
-                case SLEEP -> n=n.change(0,35,0,0,0,0);
-                case WASH -> { n=n.change(0,0,45,0,0,45);water++;energy++; }
+                case SLEEP -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12))n=n.change(0,35,0,0,0,0);}
+                case WASH -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12)){n=n.change(0,0,45,0,0,45);water++;energy++;CityTraces.soiled(city,person.property());}}
+                case SHOP -> {if(city.getEntity(person.id())==null&&CityJourneys.at(city,person,CityProfessions.Category.TRADE.site().offset(8,0,7),8))shoppers.add(person.id());}
                 case MATCH,PLAY,REST -> n=n.change(0,0,0,20,15,0);
-                case CARE -> l=l.career(Math.min(100,l.health()+8),l.reputation(),l.experience(),l.rank(),l.absences(),l.memories());
+                case CARE -> {} // Treatment is completed by an available clinician, with medicine and a saved visit.
                 default -> {}
             }
             if(!person.partner().isEmpty()) n=n.change(0,0,0,0,8,0);
             states.put(person.id().toString(),l.withNeeds(n,food,now,water,energy));
         }
         city.setAttached(LIFE,Map.copyOf(states));
+        for(var id:shoppers){var person=NapoliCivicLife.profile(city,id);if(person!=null)CityEconomy.shopResident(city,person);}
     }
     static NapoliHouseholds.Activity activity(ServerLevel city,NapoliCivicLife.Citizen c,Life l,long time) {
-        int age=c.age(NapoliBroadcast.day(city));
-        boolean child=age<NapoliCivicLife.ADULT_AGE;
-        if(l.health()<45)return NapoliHouseholds.Activity.CARE;
-        if(CityEvents.celebrating(city)&&time<19000&&l.personality().equals("sportivo"))return NapoliHouseholds.Activity.CELEBRATE;
-        if(CityEvents.danger(city))return NapoliHouseholds.Activity.REST;
-        if((time>=16500||time<900)&&!CityProfessions.night(c.profession()))return NapoliHouseholds.Activity.SLEEP;
-        if(child&&age>=3&&time>=2500&&time<8000&&Math.floorMod(NapoliBroadcast.day(city),7)<5)return NapoliHouseholds.Activity.SCHOOL;
-        if(!child&&c.profession()!=null&&age<CityLifeConfig.settings.retirementAge
-                &&CityProfessions.open(c.profession(),time,NapoliBroadcast.day(city)))return NapoliHouseholds.Activity.WORK;
-        if(l.food()==0&&l.needs().hunger()<60&&!child)return NapoliHouseholds.Activity.SHOP;
-        if(l.needs().hunger()<35||time>=1000&&time<1900||time>=10500&&time<11600)return NapoliHouseholds.Activity.EAT;
-        if(l.needs().hygiene()<40||l.needs().bladder()<30||time>=14500&&time<15600)return NapoliHouseholds.Activity.WASH;
-        if(child&&age<3)return NapoliHouseholds.Activity.REST;
-        if(child)return time<10000?NapoliHouseholds.Activity.STUDY:NapoliHouseholds.Activity.PLAY;
-        if(time>=9500&&time<10500&&l.food()<5)return NapoliHouseholds.Activity.SHOP;
-        if(time>=10000&&time<12000&&c.woman())return NapoliHouseholds.Activity.COOK;
-        if(time>=12000&&time<16000)return NapoliHouseholds.Activity.MATCH;
-        return city.isRaining()?NapoliHouseholds.Activity.REST:NapoliHouseholds.Activity.SOCIAL;
+        return CityHabits.choose(city,c,l,time);
     }
     static NapoliCivicLife.Citizen daily(ServerLevel city,NapoliCivicLife.Citizen c,long day,int wage) {
         Life l=life(city,c.id());
@@ -193,7 +181,7 @@ final class CitySimulation {
         if(absence>=4&&job>=0) {job=-1;rank=0;memories=memory(l,"Licenziamento per assenze ripetute");}
         int money=Math.clamp(c.balance()+(working?wage+l.rank()*4:0)-3,0,99999);
         int food=l.food();
-        if(food<6&&money>=2) {int bought=CityEconomy.buyMeals(city,"mercato",6-food,money);money-=bought*2;food+=bought;}
+        if(food<6&&money>=2&&CityJourneys.get(city,c.id())==null) {int bought=CityEconomy.buyMeals(city,"mercato",6-food,money);money-=bought*2;food+=bought;}
         int utilities=(l.water()+l.energy())/8;
         if(utilities>0&&money>=utilities) money-=utilities;
         Life next=new Life(l.needs(),hp,clamp(l.reputation()+(working?1:-1)),xp,rank,absence,food,l.last(),l.personality(),l.relations(),memories,l.water()%8,l.energy()%8,l.lastBirth());
@@ -209,16 +197,22 @@ final class CitySimulation {
         int age=c.age(NapoliBroadcast.day(city));npc.setCivicAge(age);
         if(npc.role().civic())npc.setCivicAppearance(c.profession()==NapoliCivicLife.Job.INFLUENCER?10:c.profession()==null?11:c.profession().category.ordinal());
         var l=life(city,c.id());var action=activity(city,c,l,NapoliBroadcast.time(city));npc.setActivity(action);
+        if(action!=NapoliHouseholds.Activity.MATCH&&action!=NapoliHouseholds.Activity.REST&&action!=NapoliHouseholds.Activity.SOCIAL)CityMovement.stand(npc);
         if(distance>=128*128) {
-            var census=NapoliCivicLife.census(city);
-            city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()
-                    .map(p->p.id().equals(c.id())?new NapoliCivicLife.Citizen(p.id(),p.name(),p.woman(),p.birth(),p.balance(),p.job(),p.partner(),p.property(),p.parents(),false,p.childhoodDays()):p).toList()));
-            npc.discard();return;
+            CityJourneys.withdraw(city,npc);return;
         }
         if(distance>=80*80) {npc.getNavigation().stop();return;}
+        if(CityTraces.carry(npc,city,c))return;
+        if(CityOccupations.delivering(city,c)&&CityOccupations.tick(npc,city,c))return;
+        if(CityPersonalGoals.move(npc,city,c))return;
+        if(CityServices.tick(npc,city,c,action))return;
+        if(CityTraces.chores(npc,city,c,action))return;
+        if(CityRelationships.visit(npc,city,c))return;
+        if(action==NapoliHouseholds.Activity.WORK&&CityServices.work(npc,city,c))return;
+        if(action==NapoliHouseholds.Activity.WORK&&CityOccupations.tick(npc,city,c))return;
         var house=CityLivingHomes.find(c.property());
         var visit = visitingHouse(city,c);
-        if(visit!=null) {house=visit;action=NapoliBroadcast.time(city)<11600?NapoliHouseholds.Activity.EAT:NapoliHouseholds.Activity.MATCH;npc.setActivity(action);}
+        if(visit!=null) {house=visit;var party=CityGatherings.attending(city,c.id());action=party!=null?(city.getGameTime()<party.starts()?NapoliHouseholds.Activity.SOCIAL:CityGatherings.hasMeal(city,c.id())?NapoliHouseholds.Activity.EAT:NapoliHouseholds.Activity.MATCH):NapoliBroadcast.time(city)<11600?NapoliHouseholds.Activity.EAT:NapoliHouseholds.Activity.MATCH;npc.setActivity(action);}
         BlockPos home=NapoliCivicLife.home(c);
         BlockPos target=home;
         if(action!=NapoliHouseholds.Activity.WORK&&action!=NapoliHouseholds.Activity.CARE&&action!=NapoliHouseholds.Activity.SLEEP
@@ -227,14 +221,14 @@ final class CitySimulation {
             if(DomesticMeals.act(city,npc,house,l.food()))return;
         }
         if(CityNeighborhood.tick(npc,city,c,action))return;
-        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=c.profession().site;
+        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=CityOccupations.workplace(c);
         else if(action==NapoliHouseholds.Activity.CARE)target=CityProfessions.Category.HEALTH.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.SCHOOL)target=CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.SHOP)target=CityProfessions.Category.TRADE.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.CELEBRATE)target=house==null?home.south(5):house.entrance().south(2);
         else if(house!=null) {
             if(!HousingCapacity.canEnter(city,house.inside(),npc.getUUID())) { CityArrivals.waitOutside(npc,city,house);return; }
-            var furniture=switch(action) {case COOK,EAT->CityLivingHomes.Furniture.STOVE;case WASH->CityLivingHomes.Furniture.SHOWER;
+            var furniture=switch(action) {case COOK,EAT->CityLivingHomes.Furniture.STOVE;case WASH->CityLivingHomes.Furniture.SHOWER;case CLEAN,DISHES->CityLivingHomes.Furniture.SINK;
                 case SLEEP->CityLivingHomes.Furniture.BED;case STUDY->CityLivingHomes.Furniture.DESK;default->CityLivingHomes.Furniture.SOFA;};
             var point=CityLivingHomes.use(house,furniture);
             if(action==NapoliHouseholds.Activity.SLEEP&&age<NapoliCivicLife.ADULT_AGE)point=CityLivingHomes.points(house).stream().filter(p->p.room()==CityLivingHomes.Room.CHILD_BEDROOM).findFirst().orElse(point);
@@ -259,9 +253,12 @@ final class CitySimulation {
         if((action==NapoliHouseholds.Activity.WORK||action==NapoliHouseholds.Activity.SCHOOL)&&target.distToCenterSqr(npc.position())>64)npc.setActivity(NapoliHouseholds.Activity.COMMUTE);
         target=CityRoutines.sheltered(city,npc,CityRoutines.localGoal(city,npc,target));
         if(!city.hasChunkAt(target))return;
+        if(!CityMovement.beforeMove(npc,target))return;
+        if(house!=null&&(action==NapoliHouseholds.Activity.MATCH||action==NapoliHouseholds.Activity.REST)&&target.distToCenterSqr(npc.position())<=2)
+            CityMovement.sit(npc,CityLivingHomes.use(house,CityLivingHomes.Furniture.SOFA).block());
         if(target.distToCenterSqr(npc.position())>2&&!npc.isSleeping()) {
             var path=npc.getNavigation().createPath(target,0);
-            if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,city.isRaining()?.72:.85);
+            if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,CityGestures.pace(npc));
             else npc.getNavigation().stop(); // Never teleport a visible inhabitant through a wall.
         } else if(action==NapoliHouseholds.Activity.COOK||action==NapoliHouseholds.Activity.WASH)npc.swingForAttack(InteractionHand.MAIN_HAND);
         var tool=action==NapoliHouseholds.Activity.WORK&&c.profession()!=null?c.profession().category.tool
@@ -280,15 +277,23 @@ final class CitySimulation {
         CitySocial.open(p,c);
     }
     static BlockPos location(ServerLevel city,NapoliCivicLife.Citizen c) {
+        return CityJourneys.position(city,c,destination(city,c));
+    }
+    static BlockPos destination(ServerLevel city,NapoliCivicLife.Citizen c) {
+        var cargo=CityTraces.cargo(city,c.id());if(cargo!=null){var h=CityLivingHomes.find(cargo.home());if(h!=null)return h.inside();}
+        if(CityOccupations.delivering(city,c))return CityOccupations.target(city,c);
+        var meeting=CityRelationships.socialDestination(city,c);if(meeting!=null&&!CityHabits.working(c,NapoliBroadcast.time(city),NapoliBroadcast.day(city)))return meeting;
         var visit=visitingHouse(city,c);if(visit!=null)return visit.inside();
         var action=activity(city,c,life(city,c.id()),NapoliBroadcast.time(city));
-        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)return c.profession().site;
+        if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)return CityOccupations.kind(c).isEmpty()?CityOccupations.workplace(c):CityOccupations.target(city,c);
         if(action==NapoliHouseholds.Activity.CARE)return CityProfessions.Category.HEALTH.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SCHOOL)return CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         if(action==NapoliHouseholds.Activity.SHOP)return CityProfessions.Category.TRADE.site().offset(8,0,7);
         return NapoliCivicLife.home(c);
     }
     private static NapoliMergellina.House visitingHouse(ServerLevel city,NapoliCivicLife.Citizen c) {
+        var scheduled=CityGatherings.visitingHome(city,c.id());if(!scheduled.isEmpty())return CityLivingHomes.find(scheduled);
+        if(CityGatherings.departing(city,c.id()))return null;
         long time=NapoliBroadcast.time(city);
         if(time<10500||time>=16000||life(city,c.id()).health()<45||CityPublicOrder.jailed(city,c.id())
                 ||c.profession()!=null&&CityProfessions.open(c.profession(),time,NapoliBroadcast.day(city)))return null;

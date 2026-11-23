@@ -32,6 +32,7 @@ final class CityTest {
     private static boolean started;
     private static volatile boolean failed;
     private static int waitingTicks;
+    private static int waitingStaffTicks;
     private static double initialZ;
     private static int localCash;
     private static NapoliResident resident;
@@ -424,6 +425,7 @@ final class CityTest {
             });
             case 572 -> {
                 mc.gui.toastManager().clear();
+                if(mc.player.level().getEntitiesOfClass(NapoliResident.class,mc.player.getBoundingBox().inflate(5),n->n.role()==NapoliResident.Role.FOOTBALL_CLERK).isEmpty()&&waitingStaffTicks++<200){tick--;return;}
                 clickStaff(mc, NapoliResident.Role.FOOTBALL_CLERK);
             }
             case 590 -> {
@@ -433,8 +435,14 @@ final class CityTest {
                         .map(AbstractButton.class::cast).anyMatch(button -> button.getMessage().getString().equals(watch)),
                         "talking to the match attendant opens the football menu");
                 AutoTest.shot(mc, "fuorigrotta-menu");
+                var league=descendants(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast)
+                        .filter(b->b.getMessage().getString().equals(Component.translatable("napuli.football.league_option").getString())).findFirst();
+                assertTrue(league.isPresent(),"The sports menu offers the neighborhood league");
+                league.ifPresent(b->b.onPress(new KeyEvent(257,0,0)));
             }
             case 595 -> {
+                assertTrue(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,"The league button opens the server calendar and standings");
+                AutoTest.shot(mc,"fuorigrotta-campionato");
                 if (mc.gui.screen() != null) mc.gui.setScreen(null);
                 mc.player.connection.sendCommand("calcio gioca ospiti");
             }

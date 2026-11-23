@@ -42,6 +42,7 @@ public class NapuliClient implements ClientModInitializer {
 		EmploymentScreen.register();
 		TelevisionScreen.register();
 		dev.napuli.LivingCityTest.register();
+		dev.napuli.AtlasTest.register();
 		AutoTest.register();
 		CityTest.register();
 		PoliceTest.register();
@@ -135,6 +136,8 @@ public class NapuliClient implements ClientModInitializer {
 			state.role = npc.role();
 			state.variant = npc.variant();
 			state.alternateCivic = (state.role == dev.napuli.NapoliResident.Role.CIVIC_WOMAN || state.role == dev.napuli.NapoliResident.Role.CIVIC_MAN) && (npc.getUUID().hashCode() & 1) == 0;
+			state.gesture=npc.gesture();state.mood=npc.mood();state.vitality=npc.vitality();state.animationOffset=Math.floorMod(npc.getUUID().hashCode(),97);
+			state.sleeping=npc.isSleeping();
 			state.activity = npc.activity();
 			if (npc.getVehicle() instanceof Motorino bike) {
 				state.bodyRot = bike.getYRot(partialTick);

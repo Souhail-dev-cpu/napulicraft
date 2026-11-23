@@ -61,6 +61,7 @@ public final class NapoliHouseholds {
         Activity routine = activity(member, time);
         Activity activity = sportsChannel && NapoliBroadcast.live(level) ? Activity.MATCH
                 : !sportsChannel && routine == Activity.MATCH ? Activity.REST : routine;
+        if(member<2&&activity(0,time)==Activity.COOK){int cook=Math.floorMod((int)NapoliBroadcast.day(level)+house.hashCode(),2);activity=member==cook?Activity.COOK:Activity.SET_TABLE;}
         if (npc.activity() != activity) {
             npc.setActivity(activity);
             var item = switch (activity) {
@@ -77,6 +78,7 @@ public final class NapoliHouseholds {
         if (activity != Activity.SLEEP && npc.isSleeping()) npc.stopSleeping();
         if (activity == Activity.SLEEP) {
             npc.getNavigation().stop();
+            if(bed.distToCenterSqr(npc.position())>9){CityDomestic.move(npc,CityRoutines.localGoal(level,npc,bed.south()));return;}
             if (!npc.isSleeping() && level.getBlockState(bed).getBlock() instanceof net.minecraft.world.level.block.BedBlock)
                 npc.startSleeping(bed);
             return;
@@ -92,8 +94,7 @@ public final class NapoliHouseholds {
         if (spot.distToCenterSqr(npc.position()) > 1.25) {
             var path = npc.getNavigation().createPath(spot, 0);
             if (path != null && path.canReach()) npc.getNavigation().moveTo(path, 0.75);
-            else if (NapoliResidentHomes.walkable(level, spot))
-                npc.snapTo(spot.getX() + .5, spot.getY(), spot.getZ() + .5, npc.getYRot(), 0);
+            else CityDomestic.move(npc,CityRoutines.localGoal(level,npc,spot));
         } else {
             npc.getNavigation().stop();
             BlockPos focus = switch (activity) {
@@ -105,7 +106,7 @@ public final class NapoliHouseholds {
             };
             npc.getLookControl().setLookAt(focus.getX() + .5, focus.getY() + .5, focus.getZ() + .5, 35, 35);
             if (activity == Activity.COOK || activity == Activity.WASH) {
-                npc.swingForAttack(net.minecraft.world.InteractionHand.MAIN_HAND);
+                npc.animate(CityGestures.action(activity),30);
                 level.sendParticles(activity == Activity.COOK ? ParticleTypes.CAMPFIRE_COSY_SMOKE : ParticleTypes.SPLASH,
                         focus.getX() + .5, focus.getY() + .5, focus.getZ() + .5, 2, .15, .12, .15, .015);
             }

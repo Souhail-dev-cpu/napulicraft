@@ -250,6 +250,7 @@ final class NapoliCivicLife {
             formHouseholds(city, people, day);
             CitySimulation.inherit(city, people, day);
             CitySimulation.relationships(city,people,day);
+            CityRelationships.daily(city,people,day);
         }
         for(var child:List.copyOf(people.values())) if(!child.parents().isEmpty()) {
             var parent=people.get(UUID.fromString(child.parents()));
@@ -380,11 +381,12 @@ final class NapoliCivicLife {
             if (c.spawned()) continue;
             BlockPos desired = CitySimulation.location(city,c);
             var targetHome=CityLivingHomes.all().stream().filter(h->h.contains(desired)).findFirst().orElse(null);
-            BlockPos spawn = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.entrance().south():desired;
+            BlockPos spawn = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.entrance().south():CityJourneys.spawn(city,desired);
             if (!NapoliResidentHomes.walkable(city, spawn)
                     || !HousingCapacity.canEnter(city,spawn,c.id())
                     || city.players().stream().noneMatch(p -> spawn.distToCenterSqr(p.position()) < 64 * 64)) continue;
             if (city.getEntity(c.id()) == null) {
+                if(CityJourneys.known(city,c.id()))continue;
                 var npc = NapoliResident.create(city, c.profession()==Job.CARABINIERE ? NapoliResident.Role.CARABINIERE : c.woman() ? NapoliResident.Role.CIVIC_WOMAN : NapoliResident.Role.CIVIC_MAN, spawn, 0);
                 npc.setUUID(c.id());
                 npc.setCustomName(Component.literal(c.name()));

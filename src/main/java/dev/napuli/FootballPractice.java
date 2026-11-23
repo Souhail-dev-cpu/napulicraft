@@ -89,6 +89,18 @@ public final class FootballPractice {
 
     public static int fitness(ServerPlayer player) { return career(player).fitness(); }
 
+    static boolean isPlaying(ServerPlayer p) { var game=GAMES.get(p.level());return game!=null&&game.controls(p); }
+    static void awardLeague(ServerPlayer p,int goals) {var c=career(p);p.setAttached(CAREER,new Career(c.matches()+1,c.goals()+goals,c.fitness(),c.trainingDay()));}
+    static int startLeague(ServerPlayer p,CityLeague.Fixture fixture) {
+        if(!arrive(p))return 0;var city=p.level();var game=GAMES.get(city);
+        if(game!=null&&!game.leagueId.equals(fixture.id())){p.sendOverlayMessage(Component.literal("Il campo è occupato da un'altra partita."));return 0;}
+        fixture=CityLeague.begin(city,fixture);
+        if(game==null){game=new Game(city);game.leagueId=fixture.id();game.home=fixture.homeGoals();game.away=fixture.awayGoals();game.ticks=fixture.elapsed();
+            for(int i=0;i<10;i++){int color=i%5==0?0xe1a538:CityLeague.color(i<5?fixture.home():fixture.away());var shirt=game.team[i].getItemBySlot(EquipmentSlot.CHEST);shirt.set(DataComponents.DYED_COLOR,new DyedItemColor(color));}GAMES.put(city,game);}
+        if(!game.controls(p)&&!game.substitute(p,CityLeague.side(p,fixture)))return 0;
+        return 1;
+    }
+
     private record Career(int matches, int goals, int fitness, long trainingDay) {
         static final Career BEGINNER = new Career(0, 0, 0, Long.MIN_VALUE);
         static final Codec<Career> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -126,6 +138,7 @@ public final class FootballPractice {
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> GAMES.entrySet().removeIf(entry -> {
             if (entry.getKey().getServer() != server) return false;
+            entry.getValue().saveLeague(entry.getKey());
             entry.getValue().removeActors();
             return true;
         }));
@@ -172,7 +185,7 @@ public final class FootballPractice {
         var actions = new java.util.ArrayList<>(List.of(
                 option("watch_option", "guarda"), option("play_option", "gioca napoli"),
                 option("away_option", "gioca ospiti"),
-                option("training_option", "palestra"), option("profile_option", "")));
+                option("training_option", "palestra"), option("profile_option", ""), option("league_option", "campionato")));
         if (player.getAttached(RETURN_POINT) != null) actions.add(option("return_option", "torna"));
         player.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(
                 Component.translatable("napuli.football.menu"), Optional.empty(), true, false, DialogAction.CLOSE,
@@ -253,6 +266,7 @@ public final class FootballPractice {
         ServerLevel city = player.level();
         Game game = GAMES.computeIfAbsent(city, Game::new);
         if (play) {
+            if(!game.leagueId.isEmpty()){var fixture=CityLeague.fixture(city,game.leagueId);side=fixture==null?-1:CityLeague.side(player,fixture);if(side<0)return 0;}
             if (!game.controls(player) && !game.substitute(player, side)) {
                 say(player, "team_full");
                 return 0;
@@ -397,7 +411,7 @@ public final class FootballPractice {
     private static final class Seat {
         final ServerPlayer player;
         double stamina;
-        int requestUntil, nextInterception, protectedUntil, nextFoul, goals;
+        int requestUntil, nextInterception, protectedUntil, nextFoul, goals, leagueTicks;
         Vec3 previous, movement = Vec3.ZERO;
 
         Seat(ServerPlayer player) {
@@ -420,6 +434,7 @@ public final class FootballPractice {
         final Display.ItemDisplay marker;
         final Vec3[] motion = new Vec3[team.length];
         final Seat[] players = new Seat[team.length];
+        String leagueId="";
         Vec3 ball = spot(KICKOFF_SLOT).add(.55, 0, 0), velocity = Vec3.ZERO;
         int ticks, unattended, home, away, owner = -1, kicker = -1, pickupDelay, held;
         int passes, shots, interceptions;
@@ -486,6 +501,7 @@ public final class FootballPractice {
             if (slot < 0) return false;
             Vec3 at = position(slot);
             players[slot] = new Seat(p);
+            if(!leagueId.isEmpty()){var fixture=CityLeague.fixture(p.level(),leagueId);var saved=fixture==null?null:fixture.players().get(p.getUUID().toString());if(saved!=null){players[slot].goals=saved.goals();players[slot].leagueTicks=saved.ticks();}}
             if (team[slot] != null) team[slot].discard();
             team[slot] = null;
             teleport(p, BlockPos.containing(at), slot < 5 ? -90 : 90);
@@ -496,6 +512,7 @@ public final class FootballPractice {
         void restoreNpc(ServerLevel city, ServerPlayer player) {
             int slot = slotOf(player);
             if (slot < 0) return;
+            saveLeague(city);
             if (owner == slot) setOwner(-1);
             if (kicker == slot) kicker = -1;
             players[slot] = null;
@@ -604,17 +621,20 @@ public final class FootballPractice {
                 if (city.getServer().getPlayerList().getPlayer(p.getUUID()) != p || p.level() != city || !p.isAlive()
                         || !ARENA.contains(p.position()) || Carabinieri.isJailed(p) || p.isSpectator()) {
                     restoreNpc(city, p);
-                } else seat.tick();
+                } else {seat.tick();seat.leagueTicks++;}
             }
             boolean audience = false;
             for (ServerPlayer p : city.players()) if (ARENA.contains(p.position())) { audience = true; break; }
             unattended = audience ? 0 : unattended + 1;
-            if (unattended > 100 || ticks++ >= MATCH_TICKS) {
-                if (audience) finish(city);
+            if (unattended > 100 || ticks >= MATCH_TICKS) {
+                saveLeague(city);
+                if (ticks >= MATCH_TICKS) finish(city);
                 removeActors();
                 return false;
             }
             if (!audience) return true;
+            ticks++;
+            if(ticks%200==0)saveLeague(city);
             driveTeams();
             playBall();
             if (pickupDelay > 0) pickupDelay--;
@@ -639,6 +659,12 @@ public final class FootballPractice {
         private void removeActors() {
             for (var npc : team) if (npc != null) npc.discard();
             marker.discard();
+        }
+
+        private void saveLeague(ServerLevel city) {
+            if(leagueId.isEmpty())return;var roster=new java.util.HashMap<String,CityLeague.Participant>();
+            for(int i=0;i<players.length;i++)if(players[i]!=null){var s=players[i];roster.put(s.player.getUUID().toString(),new CityLeague.Participant(i<5?0:5,s.leagueTicks,s.goals));}
+            CityLeague.progress(city,leagueId,home,away,ticks,roster);
         }
 
         private void driveTeams() {
@@ -896,6 +922,7 @@ public final class FootballPractice {
             int seconds = (MATCH_TICKS - ticks + 19) / 20;
             String clock = seconds / 60 + ":" + (seconds % 60 < 10 ? "0" : "") + seconds % 60;
             Component score = Component.translatable("napuli.football.score", home, away, clock);
+            if(!leagueId.isEmpty()){var f=CityLeague.fixture(city,leagueId);if(f!=null)score=Component.literal(CityLeague.name(f.home())+" "+home+" – "+away+" "+CityLeague.name(f.away())+" · "+clock);}
             for (ServerPlayer p : city.players()) {
                 if (!ARENA.contains(p.position())) continue;
                 p.sendOverlayMessage(owner >= 0 && players[owner] != null && players[owner].player == p ? score.copy().append("  ·  ")
@@ -904,11 +931,12 @@ public final class FootballPractice {
         }
 
         private void finish(ServerLevel city) {
+            if(!leagueId.isEmpty()){saveLeague(city);CityLeague.complete(city,leagueId);for(var p:city.players())CityLeague.claim(p);}
             for (Seat seat : players) {
                 if (seat == null) continue;
                 ServerPlayer p = seat.player;
                 Career c = career(p);
-                p.setAttached(CAREER, new Career(c.matches() + 1, c.goals() + seat.goals, c.fitness(), c.trainingDay()));
+                if(leagueId.isEmpty())p.setAttached(CAREER, new Career(c.matches() + 1, c.goals() + seat.goals, c.fitness(), c.trainingDay()));
                 teleport(p, FootballGround.STAND, 0);
             }
             for (ServerPlayer p : city.players()) if (ARENA.contains(p.position())) say(p, "final", home, away);

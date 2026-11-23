@@ -34,11 +34,11 @@ final class CityNeighborhood {
         if(time<2200||time>4000||Math.floorMod(day,7)>=5)return null;
         var school=CityProfessions.Category.PUBLIC.site().offset(8,0,7);
         if(c.age(day)<12&&!c.parents().isEmpty()){
-            var parent=city.getEntity(UUID.fromString(c.parents()));
+            var parent=city.getEntity(CityRelationships.carer(city,c));
             if(parent instanceof NapoliResident)return parent.distanceToSqr(npc)>16?parent.blockPosition():school;
         }else if(c.age(day)>=18){
             var census=NapoliCivicLife.census(city);if(census==null)return null;
-            for(var child:census.people())if(child.parents().equals(c.id().toString())&&child.age(day)>=3&&child.age(day)<12){
+            for(var child:census.people())if(!child.parents().isEmpty()&&CityRelationships.carer(city,child).equals(c.id())&&child.age(day)>=3&&child.age(day)<12){
                 var entity=city.getEntity(child.id());if(entity==null||school.distToCenterSqr(entity.position())<36)continue;
                 npc.setActivity(NapoliHouseholds.Activity.SCHOOL);
                 if(entity.distanceToSqr(npc)>16){npc.getNavigation().stop();return npc.blockPosition();}

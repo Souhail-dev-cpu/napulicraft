@@ -130,6 +130,7 @@ public final class NapoliKitchen {
                         .create(KitchenOvenEntity::new, hotBlocks).build());
         KitchenProgress.register();
         MunacielloFriendship.register();
+        KitchenEffects.initialize();
         ServerTickEvents.END_SERVER_TICK.register(KitchenEffects::tick);
         CommandRegistrationCallback.EVENT.register((dispatcher, context, selection) -> KitchenStationBlock.commands(dispatcher));
     }

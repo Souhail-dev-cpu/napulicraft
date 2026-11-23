@@ -17,12 +17,23 @@ import net.minecraft.world.phys.Vec3;
 public final class CityVehicle extends PathfinderMob {
     private static final EntityDataAccessor<Integer> KIND=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.INT);
     private int stop,waypoint;
+    private String lastStop="";
+    private long lastStopAt;
+    int remainingStop(){return stop;}
+    boolean atStop(){return stop>0;}
+    double distanceToStop(BlockPos target){
+        var points=route();Vec3 at=position();double distance=0;int index=Math.floorMod(waypoint,points.size());
+        for(int leg=0;leg<=points.size();leg++){var end=points.get(index);boolean vertical=Math.abs(end.x-at.x)<1;double lane=target.getX()<-339?-341:-337;
+            if(vertical&&Math.abs(at.x-lane)<2&&target.getZ()>=Math.min(at.z,end.z)&&target.getZ()<=Math.max(at.z,end.z))return distance+Math.abs(target.getZ()-at.z);
+            distance+=at.distanceTo(end);at=end;index=(index+1)%points.size();
+        }return distance;
+    }
     public CityVehicle(EntityType<? extends CityVehicle> type,Level level){super(type,level);setNoAi(true);setPersistenceRequired();}
     public int kind(){return entityData.get(KIND);}
     public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16);}
     @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);}
-    @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);}
-    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);}
+    @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
+    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
     private List<Vec3> route(){
         if(kind()==2)return List.of(new Vec3(-345,64,-185),new Vec3(-345,64,190));
         return List.of(new Vec3(-341,64,-184),new Vec3(-341,64,199),new Vec3(-337,64,199),new Vec3(-337,64,-184));
@@ -31,6 +42,7 @@ public final class CityVehicle extends PathfinderMob {
         super.tick();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
         if(city.players().stream().noneMatch(p->p.distanceToSqr(this)<112*112)){setDeltaMovement(Vec3.ZERO);return;}
         if(stop>0){stop--;setDeltaMovement(Vec3.ZERO);return;}
+        if(kind()>0)for(int z:CityTransit.STOPS)if(Math.abs(getZ()-z)<.14){String key=getBlockX()+"/"+z;if(!key.equals(lastStop)||city.getGameTime()-lastStopAt>1200){lastStop=key;lastStopAt=city.getGameTime();stop=80;setDeltaMovement(Vec3.ZERO);return;}}
         if(kind()>0&&CityEvents.active(city)&&CityEvents.event(NapoliBroadcast.day(city))==CityEvents.Event.STRIKE)return;
         var target=route().get(Math.floorMod(waypoint,route().size()));
         var difference=target.subtract(position()).multiply(1,0,1);

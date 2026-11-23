@@ -22,6 +22,7 @@ public final class KitchenEffects {
             COOLING = counter("watermelon_cooling"), HEAT = counter("body_heat"), FRIED_STREAK = counter("fried_streak");
     private static final AttachmentType<Long> LAST_EATEN = AttachmentRegistry.<Long>builder().persistent(Codec.LONG).buildAndRegister(Napuli.id("kitchen_last_eaten"));
     private KitchenEffects() {}
+    static void initialize() {} // Register persistent timers before player data is decoded on login.
     private static AttachmentType<Integer> counter(String id) { return AttachmentRegistry.<Integer>builder().persistent(Codec.intRange(0, 24000)).buildAndRegister(Napuli.id(id)); }
     public static int heat(ServerPlayer player) { return player.getAttachedOrElse(HEAT, 0); }
     static void effect(ServerPlayer player, Holder<MobEffect> effect, int seconds, int amplifier) {

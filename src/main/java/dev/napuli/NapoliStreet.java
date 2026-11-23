@@ -300,7 +300,7 @@ public final class NapoliStreet {
         var actions = options.stream().map(action -> {
             Offer offer = offer(action);
             Component label = offer == null ? Component.translatable(key(action))
-                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), NeighbourMemory.price(player, npc, offer.cost()));
+                    : Component.translatable("napuli.street.price", offer.stack().getHoverName(), NeighbourMemory.price(player, npc, action==Action.BREAD?2*offer.stack().getCount():offer.cost()));
             return new ActionButton(new CommonButtonData(label, 220),
                 Optional.of(new StaticAction(new ClickEvent.RunCommand("/napulistrada " + token + " " + action.name()))));
         }).toList();
@@ -363,7 +363,8 @@ public final class NapoliStreet {
                 || player.distanceToSqr(session.npc()) > 36 || now > session.expires()) return 0;
         Offer offer = offer(action);
         if (offer != null) {
-            int price = NeighbourMemory.price(player, session.npc(), offer.cost());
+            if(CitySocial.bond(player.level(),session.npc().getUUID(),player.getUUID()).trust()<15)return 0;
+            int price = NeighbourMemory.price(player, session.npc(), action==Action.BREAD?2*offer.stack().getCount():offer.cost());
             if (cash(player) < price) { message(player, "poor"); return 0; }
             if (action == Action.BREAD && !BakeryStock.reserveBread(player.level(), offer.stack().getCount())) {
                 message(player, BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");

@@ -55,6 +55,10 @@ public final class NapoliResident extends PathfinderMob {
     private static final EntityDataAccessor<Integer> VARIANT =
             SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> ACTIVITY = SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> GESTURE = SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> MOOD = SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> VITALITY = SynchedEntityData.defineId(NapoliResident.class, EntityDataSerializers.INT);
+    private long gestureUntil;
     private int spiritLife = 160;
 
     void setCivicAge(int age) {
@@ -64,10 +68,18 @@ public final class NapoliResident extends PathfinderMob {
 
     public NapoliHouseholds.Activity activity() { return NapoliHouseholds.Activity.values()[entityData.get(ACTIVITY)]; }
     void setActivity(NapoliHouseholds.Activity activity) { entityData.set(ACTIVITY, activity.ordinal()); }
+    public CityGestures.Gesture gesture() { return CityGestures.Gesture.values()[entityData.get(GESTURE)]; }
+    public int mood() { return entityData.get(MOOD); }
+    public int vitality() { return entityData.get(VITALITY); }
+    long gestureUntil() { return gestureUntil; }
+    void setGesture(CityGestures.Gesture gesture) { entityData.set(GESTURE,gesture.ordinal()); }
+    void animate(CityGestures.Gesture gesture,int duration) { setGesture(gesture);gestureUntil=level().getGameTime()+duration; }
+    void setExpression(int mood,int vitality) { entityData.set(MOOD,Math.clamp(mood,0,100));entityData.set(VITALITY,Math.clamp(vitality,0,100)); }
     private BlockPos dayPost;
     private BlockPos nightPost;
     private boolean returningHome;
     private int commuteTicks;
+    private long commuteDue;
 
     public int variant() { return entityData.get(VARIANT); }
     void setEmploymentAppearance(Role role, int look) {
@@ -79,6 +91,8 @@ public final class NapoliResident extends PathfinderMob {
     public NapoliResident(EntityType<? extends NapoliResident> type, Level level) {
         super(type, level);
         moveControl = new ResidentNavigation.LadderMoveControl(this);
+        setPathfindingMalus(net.minecraft.world.level.pathfinder.PathType.UNPASSABLE_RAIL,2);
+        setPathfindingMalus(net.minecraft.world.level.pathfinder.PathType.RAIL,2);
         setPersistenceRequired();
     }
 
@@ -105,9 +119,12 @@ public final class NapoliResident extends PathfinderMob {
         builder.define(ROLE, Role.GENNARO.ordinal());
         builder.define(VARIANT, 0);
         builder.define(ACTIVITY, 0);
+        builder.define(GESTURE, 0);builder.define(MOOD,70);builder.define(VITALITY,80);
     }
 
     public Role role() { return Role.values()[entityData.get(ROLE)]; }
+    @Override public boolean shouldBeSaved() { return !CityJourneys.managed(this)&&super.shouldBeSaved(); }
+    @Override public boolean saveAsPassenger(ValueOutput out) { return !CityJourneys.managed(this)&&super.saveAsPassenger(out); }
 
     @Override
     protected void addAdditionalSaveData(ValueOutput out) {
@@ -118,6 +135,7 @@ public final class NapoliResident extends PathfinderMob {
         out.putBoolean("napuli_passers_v2", true);
         if (dayPost != null) out.store("napuli_day_post", BlockPos.CODEC, dayPost);
         out.putBoolean("napuli_return_home", returningHome);
+        out.putLong("napuli_commute_due",commuteDue);
     }
 
     @Override
@@ -127,6 +145,7 @@ public final class NapoliResident extends PathfinderMob {
         spiritLife = in.getIntOr("napuli_spirit_life", 160);
         dayPost = in.read("napuli_day_post", BlockPos.CODEC).orElse(null);
         returningHome = in.getBooleanOr("napuli_return_home", false);
+        commuteDue=in.getLongOr("napuli_commute_due",0);
         // old saves had no variant: give passers-by a random look instead of all the same one
         int v = in.getIntOr("napuli_variant", -1);
         if (role() == Role.PASSERBY && !in.getBooleanOr("napuli_passers_v2", false))
@@ -171,9 +190,10 @@ public final class NapoliResident extends PathfinderMob {
     public void aiStep() {
         super.aiStep();
         if (level().isClientSide()) return;
+        CityGestures.tick(this,(ServerLevel)level());
         if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
         if (role().spirit() && --spiritLife <= 0) discard();
-        if (getVehicle() instanceof CityVehicle && level() instanceof ServerLevel city && role().civic()) {
+        if ((getVehicle() instanceof CityVehicle||CityMovement.isSeat(getVehicle())) && level() instanceof ServerLevel city && role().civic()) {
             CitySimulation.tickEntity(this, city);
             return;
         }
@@ -206,12 +226,14 @@ public final class NapoliResident extends PathfinderMob {
             returningHome = night;
             nightPost = null;
             commuteTicks = 160;
+            commuteDue=0;
             getNavigation().stop();
         }
-        if (!night && commuteTicks == 0) return false;
+        if (!night && commuteTicks == 0&&dayPost.distToCenterSqr(position())<=1.6) return false;
         if ((tickCount + getId()) % 20 == 0) {
             if (night && nightPost == null) nightPost = NapoliResidentHomes.destination(city, dayPost, offset);
             BlockPos destination = night ? nightPost : dayPost;
+            if(destination!=null&&commuteDue==0)commuteDue=city.getGameTime()+(long)Math.ceil(Math.sqrt(destination.distToCenterSqr(position()))/.13);
             if(destination!=null&&!HousingCapacity.canEnter(city,destination,getUUID())) {getNavigation().stop();return true;}
             if (destination != null && destination.distToCenterSqr(position()) > 1.6) {
                 if (commuteTicks > 0) {
@@ -219,17 +241,19 @@ public final class NapoliResident extends PathfinderMob {
                     commuteTicks = Math.max(0, commuteTicks - 20);
                 } else {
                     getNavigation().stop();
-                    if (NapoliResidentHomes.walkable(city, destination))
+                    if (NapoliResidentHomes.walkable(city, destination)&&city.getGameTime()>=commuteDue&&city.players().stream().noneMatch(p->p.distanceToSqr(this)<96*96))
                         snapTo(destination.getX() + .5, destination.getY(), destination.getZ() + .5, getYRot(), 0);
+                    else CityDomestic.move(this,CityRoutines.localGoal(city,this,destination));
                 }
             } else {
                 getNavigation().stop();
                 commuteTicks = 0;
+                commuteDue=0;
             }
         }
         // On the tick after the final path attempt, finish the dawn journey if needed.
         if (!night && commuteTicks == 0 && dayPost.distToCenterSqr(position()) > 1.6
-                && NapoliResidentHomes.walkable(city, dayPost)) {
+                && NapoliResidentHomes.walkable(city, dayPost)&&city.getGameTime()>=commuteDue&&city.players().stream().noneMatch(p->p.distanceToSqr(this)<96*96)) {
             getNavigation().stop();
             snapTo(dayPost.getX() + .5, dayPost.getY(), dayPost.getZ() + .5, getYRot(), 0);
         }

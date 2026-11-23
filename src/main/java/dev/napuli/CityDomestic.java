@@ -24,17 +24,12 @@ final class CityDomestic {
     }
     static final AttachmentType<Map<String,Dinner>> DINNERS=AttachmentRegistry.<Map<String,Dinner>>builder()
             .persistent(Codec.unboundedMap(Codec.STRING,Dinner.CODEC)).buildAndRegister(Napuli.id("domestic_meals"));
-    private record Lease(UUID citizen,long expires){}
-    private static final Map<ServerLevel,Map<BlockPos,Lease>> STATIONS=new WeakHashMap<>();
     static Dinner dinner(ServerLevel city,UUID id){return city.getAttachedOrElse(DINNERS,Map.of()).getOrDefault(id.toString(),Dinner.idle());}
     static void put(ServerLevel city,UUID id,Dinner dinner){var all=new HashMap<>(city.getAttachedOrElse(DINNERS,Map.of()));all.put(id.toString(),dinner);city.setAttached(DINNERS,Map.copyOf(all));}
     static boolean claim(ServerLevel city,BlockPos stand,UUID id){
-        var stations=STATIONS.computeIfAbsent(city,k->new HashMap<>());long now=city.getGameTime();
-        stations.values().removeIf(l->l.expires()<now||city.getEntity(l.citizen())==null);
-        var lease=stations.get(stand);if(lease!=null&&!lease.citizen().equals(id))return false;
-        stations.put(stand,new Lease(id,now+240));return true;
+        return CityMovement.acquire(city,stand,id,240);
     }
-    static void release(ServerLevel city,UUID id){var leases=STATIONS.get(city);if(leases!=null)leases.values().removeIf(l->l.citizen().equals(id));}
+    static void release(ServerLevel city,UUID id){CityMovement.release(city,id);}
     static CityLivingHomes.UsePoint point(NapoliMergellina.House h,int stage){
         return switch(stage){
             case 0->CityLivingHomes.use(h,CityLivingHomes.Furniture.FRIDGE);
@@ -49,14 +44,16 @@ final class CityDomestic {
     }
     static void move(NapoliResident npc,BlockPos target){
         var city=(ServerLevel)npc.level();if(!city.hasChunkAt(target))return;
+        if(!CityMovement.beforeMove(npc,target))return;
         if(target.distToCenterSqr(npc.position())<=2){npc.getNavigation().stop();return;}
         var path=npc.getNavigation().createPath(target,0);
-        if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,.85);else npc.getNavigation().stop();
+        if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,CityGestures.pace(npc));else npc.getNavigation().stop();
     }
     private static void barrel(ServerLevel city,BlockPos pos,boolean open){
         var state=city.getBlockState(pos);if(state.hasProperty(BarrelBlock.OPEN)&&state.getValue(BarrelBlock.OPEN)!=open)city.setBlock(pos,state.setValue(BarrelBlock.OPEN,open),2);
     }
     private static void unpack(ServerLevel city,NapoliCivicLife.Citizen c,BlockPos fridge){
+        if(CityGatherings.attending(city,c.id())!=null)return;
         if(!(city.getBlockEntity(fridge) instanceof Container container))return;
         int empty=-1;
         for(int slot=0;slot<container.getContainerSize();slot++){
@@ -68,6 +65,8 @@ final class CityDomestic {
         CitySimulation.put(city,c.id(),l.withNeeds(l.needs(),l.food()-1,l.last(),l.water(),l.energy()));
     }
     static boolean ingredient(ServerLevel city,NapoliCivicLife.Citizen c,NapoliMergellina.House h){
+        CityTraces.flush(city,h);
+        if(CityGatherings.attending(city,c.id())!=null)return CityGatherings.eat(city,c.id());
         var fridge=CityLivingHomes.use(h,CityLivingHomes.Furniture.FRIDGE).block();
         if(city.getBlockEntity(fridge) instanceof Container container){
             for(int slot=0;slot<container.getContainerSize();slot++){
@@ -84,7 +83,7 @@ final class CityDomestic {
     static boolean tick(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,NapoliMergellina.House h,NapoliHouseholds.Activity wanted){
         var d=dinner(city,c.id());long now=city.getGameTime();
         boolean hungry=wanted==NapoliHouseholds.Activity.EAT||wanted==NapoliHouseholds.Activity.COOK;
-        if(d.stage()<0){if(!hungry||now-d.served()<1200)return false;d=new Dinner(h.id(),0,0,d.served());}
+        if(d.stage()<0){if(!hungry||now-d.served()<1200&&!CityGatherings.hasMeal(city,c.id()))return false;d=new Dinner(h.id(),0,0,d.served());}
         // A meal already being carried is finished at its original home, even if its invitation ends.
         var original=CityLivingHomes.find(d.home());if(original!=null)h=original;
         if(!d.home().equals(c.property())&&!HouseGuests.invited(city,d.home(),c.id())){put(city,c.id(),new Dinner("",-1,0,now));release(city,c.id());return false;}
@@ -101,7 +100,7 @@ final class CityDomestic {
         npc.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(item));move(npc,point.stand());
         if(point.stand().distToCenterSqr(npc.position())>2){put(city,c.id(),new Dinner(h.id(),d.stage(),0,d.served()));return true;}
         npc.getLookControl().setLookAt(point.block().getX()+.5,point.block().getY()+.5,point.block().getZ()+.5);
-        npc.swingForAttack(InteractionHand.MAIN_HAND);
+        npc.animate(CityGestures.action(activity),45);
         if(d.stage()==0){if(d.progress()==0)unpack(city,c,point.block());barrel(city,point.block(),true);}
         if(d.progress()==0){
             if(d.stage()==3)DomesticMeals.setTable(city,point.block(),true);
@@ -115,10 +114,13 @@ final class CityDomestic {
             if(!ingredient(city,c,h)){put(city,c.id(),new Dinner(h.id(),-1,0,now-600));release(city,c.id());npc.setActivity(NapoliHouseholds.Activity.SHOP);return false;}
         }
         if(d.stage()==4){
+            CityTraces.meal(city,h.id());
             var l=CitySimulation.life(city,c.id());CitySimulation.put(city,c.id(),l.withNeeds(l.needs().change(35,0,0,4,5,0),l.food(),l.last(),l.water(),l.energy()));
             city.sendParticles(ParticleTypes.HAPPY_VILLAGER,npc.getX(),npc.getY()+1,npc.getZ(),3,.2,.2,.2,0);
         }
         if(d.stage()==5){
+            CityTraces.clean(city,h.id());
+            CityHabits.practice(city,c.id());
             DomesticMeals.setTable(city,point(h,3).block(),false);
             var l=CitySimulation.life(city,c.id());CitySimulation.put(city,c.id(),l.withNeeds(l.needs().change(0,0,4,0,0,0),l.food(),l.last(),l.water()+1,l.energy()+1));
             put(city,c.id(),new Dinner(h.id(),-1,0,now));npc.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);

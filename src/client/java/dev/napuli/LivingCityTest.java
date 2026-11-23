@@ -22,6 +22,8 @@ public final class LivingCityTest {
     private static int photographed=-2;
     private static long dinnerStarted;
     private static volatile boolean mealFinished,testsDone;
+    private static final java.util.Set<CityGestures.Gesture> observedGestures=java.util.EnumSet.noneOf(CityGestures.Gesture.class);
+    private static int extraScreens;
     public static void register(){
         if(!Boolean.getBoolean("napuli.livingcitytest"))return;
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
@@ -82,7 +84,11 @@ public final class LivingCityTest {
                     if(d.stage()==-1&&d.served()>=dinnerStarted){check(CitySimulation.life(p.level(),diner).needs().hunger()>10,"The observed meal restores hunger");mealFinished=true;}
                 });
                 if(step>610&&dinnerStage!=photographed&&dinnerStage>=0){photographed=dinnerStage;shot(mc,"living-city-meal-"+dinnerStage);}
-                if(step>1400&&mealFinished)server(mc,p->{var npc=p.level().getEntity(diner);if(npc!=null)npc.discard();Napuli.LOGGER.info("[LIVINGCITYTEST] ALL PASSED");testsDone=true;});
+                if(diner!=null&&mc.player.level().getEntity(diner) instanceof NapoliResident npc)observedGestures.add(npc.gesture());
+                if(step>1400&&mealFinished&&extraScreens==0){check(observedGestures.containsAll(java.util.Set.of(CityGestures.Gesture.CHOP,CityGestures.Gesture.STIR,CityGestures.Gesture.CARRY,CityGestures.Gesture.EAT,CityGestures.Gesture.WASH)),"The real client receives all five distinct meal gestures");extraScreens=step;server(mc,p->{p.setGameMode(GameType.SURVIVAL);var npc=p.level().getEntity(diner);p.teleportTo(p.level(),npc.getX()+2,npc.getY(),npc.getZ(),Set.of(),90,0,true);check(CityDialogue.ask(p,diner,"stai",diner)==1,"A nearby resident answers a contextual question");});}
+                if(extraScreens>0&&step==extraScreens+35){check(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,"Contextual conversation opens on the client");shot(mc,"living-city-conversation");mc.gui.setScreen(null);server(mc,CityServices::menu);}
+                if(extraScreens>0&&step==extraScreens+70){check(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,"Civic service information opens on the client");shot(mc,"living-city-services");mc.gui.setScreen(null);server(mc,CityTransit::menu);}
+                if(extraScreens>0&&step==extraScreens+105){check(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,"Live transport estimates open on the client");shot(mc,"living-city-transport");server(mc,p->{var npc=p.level().getEntity(diner);if(npc!=null)npc.discard();Napuli.LOGGER.info("[LIVINGCITYTEST] ALL PASSED");testsDone=true;});}
                 if(step==2100)throw new IllegalStateException("The resident did not complete a natural meal: stage="+dinnerStage);
             }catch(Throwable error){Napuli.LOGGER.error("[LIVINGCITYTEST] FAILED",error);failed=true;}
         });

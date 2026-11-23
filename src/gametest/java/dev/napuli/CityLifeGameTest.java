@@ -10,6 +10,22 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffects;
 
 public final class CityLifeGameTest {
+    @GameTest public void footballRatingsScaleToNinetyNine(GameTestHelper helper) {
+        helper.assertTrue(FootballRatings.trained(38, 100, 10, false) == 99, "Any attribute can reach 99");
+        helper.assertTrue(FootballRatings.trained(54, 3, 0, true) > FootballRatings.trained(54, 3, 0, false),
+                "Role-specific training improves priority attributes faster");
+        helper.assertTrue(FootballRatings.paceBonus(99) > FootballRatings.paceBonus(90),
+                "At equal effort, the faster player moves faster");
+        helper.assertTrue(FootballRatings.aimAssist(99) == 1 && FootballRatings.shotBoost(99) > FootballRatings.shotBoost(70),
+                "Elite shooting gives full in-range aim assistance and a harder shot");
+        helper.assertTrue(FootballRatings.interceptionRange(99) > FootballRatings.interceptionRange(50)
+                        && FootballRatings.tackleDistance(99, 60) > FootballRatings.tackleDistance(60, 60),
+                "Defense improves control of the duel");
+        helper.assertTrue(FootballRatings.staminaDrain(80, 99) < FootballRatings.staminaDrain(80, 50),
+                "Endurance reduces sprint drain");
+        helper.succeed();
+    }
+
     @GameTest public void footballLineupFillsBothTeamsAndReusesVacancies(GameTestHelper helper) {
         var occupied = new HashSet<Integer>();
         for (int i = 0; i < 5; i++) {

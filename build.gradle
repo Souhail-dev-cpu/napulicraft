@@ -2,6 +2,14 @@ plugins {
 	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
+// Loom adds Maven Central itself, including repositories created later for LWJGL.
+// Redirect those repositories too so mod dependencies avoid CI rate limits.
+repositories.withType(org.gradle.api.artifacts.repositories.MavenArtifactRepository).configureEach { repository ->
+	if (repository.url.toString() == org.gradle.api.artifacts.ArtifactRepositoryContainer.MAVEN_CENTRAL_URL) {
+		repository.url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+	}
+}
+
 loom {
 	splitEnvironmentSourceSets()
 

@@ -430,9 +430,11 @@ final class CityTest {
                 view(p, -118.5, 64, 35.5, 180, 0);
                 AutoTest.run(p.level().getServer(), "gamerule advance_time false", "time set noon");
             });
-            case 83 -> mc.player.connection.sendCommand("lavoro segui");
+
             case 95 -> assertTrue(HudClient.state() != null && HudClient.state().tx() == -118
-                    && HudClient.state().objective().equals("napuli.work.visit"), "HUD points newcomers to the employment office");
+                    && HudClient.state().objective().equals("napuli.work.visit")
+                    && dev.napuli.Hud.clock(HudClient.state().cityTime()).equals("12:00"),
+                    "HUD shows the employment office without a command and synchronizes the noon clock");
             case 100 -> {
                 assertTrue(!(mc.player.level().getBlockEntity(new net.minecraft.core.BlockPos(-119,65,33))
                         instanceof net.minecraft.world.level.block.entity.SignBlockEntity), "office has no interaction sign");

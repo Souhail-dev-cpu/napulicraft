@@ -34,7 +34,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
-final class NapoliEmployment {
+public final class NapoliEmployment {
     private static final BlockPos OLD_DESK = new BlockPos(-119, 65, 33);
     static final BlockPos CLERK_POST = new BlockPos(-118, 64, 31);
     private static final String CLERK = "napuli_employment_clerk";
@@ -74,7 +74,8 @@ final class NapoliEmployment {
     private static final AttachmentType<Work> WORK = AttachmentRegistry.<Work>builder().persistent(Work.CODEC)
             .copyOnDeath().buildAndRegister(Napuli.id("player_employment"));
 
-    private static final int HOUR = 1000, OPEN = 2500, CLOSE = 10500;
+    private static final int HOUR = 1000;
+    public static final int OPEN = 2500, CLOSE = 10500;
     private static final int PATCHES = 4, SWEEPS = 3;
     private static final String SUPERVISOR = "napuli_supervisor_";
     private static final String ASSISTANT = "napuli_workmate_";

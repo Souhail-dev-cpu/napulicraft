@@ -668,6 +668,8 @@
   "napuli.civic.job.fisher": "Fisher",
   "napuli.civic.job.courier": "Courier",
   "napuli.civic.job.carpenter": "Carpenter",
+  "napuli.hud.clock": "Time %s",
+  "napuli.hud.shift": "Shift %s–%s",
   "napuli.hud.work": "WORK",
   "napuli.hud.route": "ROUTE",
   "napuli.hygiene.label": "Hygiene",

@@ -668,6 +668,8 @@
   "napuli.civic.job.fisher": "Pescatore",
   "napuli.civic.job.courier": "Corriere",
   "napuli.civic.job.carpenter": "Falegname",
+  "napuli.hud.clock": "Ore %s",
+  "napuli.hud.shift": "Turno %s–%s",
   "napuli.hud.work": "LAVORO",
   "napuli.hud.route": "PERCORSO",
   "napuli.hygiene.label": "Igiene",

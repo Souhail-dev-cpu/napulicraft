@@ -19,19 +19,24 @@ public final class Hud {
 	public static final int NO_TARGET = Integer.MIN_VALUE;
 
 	public record State(boolean inCity, int cash, int lanterns, int tides, int ally, String objective, int tx, int tz,
-			int stars, int wantedLeft, int jail, int cooldown, int pizzas, int fullness, int heat, int hygiene) implements CustomPacketPayload {
-		public static final Type<State> TYPE = new Type<>(Napuli.id("hud_v2"));
+			int stars, int wantedLeft, int jail, int cooldown, int pizzas, int fullness, int heat, int hygiene, int cityTime) implements CustomPacketPayload {
+		public static final Type<State> TYPE = new Type<>(Napuli.id("hud_v3"));
 		public static final StreamCodec<FriendlyByteBuf, State> CODEC = StreamCodec.of((buf, s) -> {
 			buf.writeBoolean(s.inCity);
 			buf.writeVarInt(s.cash); buf.writeVarInt(s.lanterns); buf.writeVarInt(s.tides); buf.writeVarInt(s.ally);
 			buf.writeUtf(s.objective); buf.writeInt(s.tx); buf.writeInt(s.tz);
 			buf.writeVarInt(s.stars); buf.writeVarInt(s.wantedLeft); buf.writeVarInt(s.jail); buf.writeVarInt(s.cooldown);
-			buf.writeVarInt(s.pizzas); buf.writeVarInt(s.fullness); buf.writeVarInt(s.heat); buf.writeVarInt(s.hygiene);
+			buf.writeVarInt(s.pizzas); buf.writeVarInt(s.fullness); buf.writeVarInt(s.heat); buf.writeVarInt(s.hygiene); buf.writeVarInt(s.cityTime);
 		}, buf -> new State(buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
 				buf.readUtf(), buf.readInt(), buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
-				buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
+				buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
 		@Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 	}
+
+    public static String clock(int ticks) {
+        int minutes = Math.floorMod(ticks * 60 / 1000 + 360, 1440);
+        return String.format(java.util.Locale.ROOT, "%02d:%02d", minutes / 60, minutes % 60);
+    }
 
 	static void register() {
 		PayloadTypeRegistry.clientboundPlay().register(State.TYPE, State.CODEC);
@@ -64,7 +69,7 @@ public final class Hud {
 					ally == null ? -1 : ally.ordinal(), obj.key(),
 					obj.target() == null ? NO_TARGET : obj.target().getX(), obj.target() == null ? NO_TARGET : obj.target().getZ(),
 					Carabinieri.wantedStars(p), Carabinieri.wantedSecondsLeft(p), Carabinieri.jailSecondsLeft(p), NapoliFactions.cooldownSeconds(p),
-					KitchenProgress.pizzas(p), NapoliStreet.fullness(p), KitchenEffects.heat(p), NapoliHygiene.value(p)));
+					KitchenProgress.pizzas(p), NapoliStreet.fullness(p), KitchenEffects.heat(p), NapoliHygiene.value(p), (int) NapoliBroadcast.time(p.level())));
 		}
 	}
 }

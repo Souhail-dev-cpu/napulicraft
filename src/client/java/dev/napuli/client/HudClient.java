@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import dev.napuli.Hud;
+import dev.napuli.NapoliEmployment;
 import dev.napuli.Napuli;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -74,7 +75,7 @@ final class HudClient {
 		// ---------------- the panel
 		int accent = 0xff58c4ed;
 		boolean reputation = s.lanterns() != 0 || s.tides() != 0 || s.ally() >= 0;
-		int lines = (reputation ? 7 + (s.ally() >= 0 ? 1 : 0) : 2) + (s.stars() > 0 ? 1 : 0);
+		int lines = 1 + (reputation ? 7 + (s.ally() >= 0 ? 1 : 0) : 2) + (s.stars() > 0 ? 1 : 0);
 		card(g, x - 5, y - 5, x + w, y + lines * lh + 2, accent);
 		g.text(f, mc.player.getName().getString(), x, y, 0xFFFFFFFF, true);
 		y += lh + 2;
@@ -83,6 +84,8 @@ final class HudClient {
 			String d = (cashDelta > 0 ? "+" : "") + cashDelta;
 			g.text(f, d, x + f.width("€ " + s.cash()) + 6, y, (cashDelta > 0 ? 0x66BB6A : 0xEF5350) | (Math.min(255, cashFlash * 8) << 24), true);
 		}
+		y += lh;
+		g.text(f, Component.translatable("napuli.hud.clock", Hud.clock(s.cityTime())), x, y, 0xffb5dfed, false);
 		y += lh;
 		if (s.stars() > 0) {
 			StringBuilder st = new StringBuilder();
@@ -129,7 +132,8 @@ final class HudClient {
 			line = Component.translatable(key, s.cooldown()).getString();
 		}
 		var wrapped = f.split(Component.literal(line), w - 6);
-		int th = 14 + wrapped.size() * 10 + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
+		boolean shift = employment && !jailed;
+		int th = 14 + wrapped.size() * 10 + (shift ? 11 : 0) + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
 				if (employment && !jailed) {
 			g.fill(x - 3, y - 3, x + w + 2, y + th + 2, 0x6605070c);
 			g.fill(x - 5, y - 5, x + w, y + th, 0xee122927);
@@ -141,6 +145,12 @@ final class HudClient {
 		g.text(f, title, x, y, jailed ? 0xFFEF5350 : employment ? 0xffffe1a9 : 0xFFFFD54F, true);
 		y += 12;
 		for (var l : wrapped) { g.text(f, l, x, y, 0xFFFFFFFF, true); y += 10; }
+        if (shift) {
+            boolean open = s.cityTime() >= NapoliEmployment.OPEN && s.cityTime() < NapoliEmployment.CLOSE;
+            g.text(f, Component.translatable("napuli.hud.shift", Hud.clock(NapoliEmployment.OPEN),
+                    Hud.clock(NapoliEmployment.CLOSE)), x, y, open ? 0xff8add91 : 0xffffad81, false);
+            y += 11;
+        }
 		if (s.tx() != Hud.NO_TARGET && !jailed) {
 			double dx = s.tx() + 0.5 - mc.player.getX(), dz = s.tz() + 0.5 - mc.player.getZ();
 			int dist = (int) Math.round(Math.hypot(dx, dz));

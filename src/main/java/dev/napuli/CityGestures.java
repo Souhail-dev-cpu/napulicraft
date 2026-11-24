@@ -26,6 +26,9 @@ public final class CityGestures {
         int mood=life==null?70:life.needs().mood(),energy=life==null?80:life.needs().sleep();
         npc.setExpression(mood,energy);
         if(npc.gestureUntil()>city.getGameTime())return;
+        if (citizen != null && citizen.profession() == NapoliCivicLife.Job.CARPENTER
+                && npc.getMainHandItem().is(net.minecraft.world.item.Items.IRON_AXE))
+            npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, net.minecraft.world.item.ItemStack.EMPTY);
         Gesture gesture=npc.isSleeping()?Gesture.NONE:action(npc.activity());
         if(gesture==Gesture.NONE&&!npc.getOffhandItem().isEmpty())gesture=Gesture.CARRY;
         if(gesture==Gesture.NONE&&!npc.getNavigation().isInProgress()&&!npc.isPassenger()) {

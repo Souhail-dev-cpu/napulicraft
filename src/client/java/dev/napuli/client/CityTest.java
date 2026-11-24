@@ -444,7 +444,7 @@ final class CityTest {
             }
             case 508 -> server(mc, p -> {
                 assertTrue(p.blockPosition().getZ() >= 34, "player can run through the training lane");
-                assertTrue(dev.napuli.FootballPractice.pace(p) == 66 && dev.napuli.FootballPractice.fitness(p) == 0, "Sprint improves only its persistent rating");
+                assertTrue(dev.napuli.FootballPractice.pace(p) == 65 && dev.napuli.FootballGym.progressXp(p, "pace") == 25, "Sprint earns XP without giving a full rating point");
             });
             case 512 -> {
                 if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
@@ -454,7 +454,7 @@ final class CityTest {
             case 523 -> {
                 assertTrue(ridersSpoke&&!ridersInChat, "scooter dialogue appears above its riders instead of chat");
                 assertTrue(!footballNoticeInChat, "football notices stay out of chat");
-                var profile = Component.translatable("napuli.football.profile", 0, 0, 1);
+                var profile = Component.translatable("napuli.football.profile", Component.translatable("napuli.football.position.attaccante"), 55, 0, 0);
                 assertTrue(mc.gui.toastManager().getToast(NapoliNoticeToast.class, profile) != null,
                         "football profile appears as a screen notification");
                 AutoTest.shot(mc, "fuorigrotta-avviso-schermo");
@@ -539,7 +539,7 @@ final class CityTest {
             case 865 -> server(mc, p -> {
                 assertTrue(dev.napuli.PublicGym.sessions(p) == 1 && !p.isPassenger(),
                         "Pedalling with the real client completes and records the public workout");
-                assertTrue(dev.napuli.FootballPractice.pace(p) == 66,
+                assertTrue(dev.napuli.FootballPractice.pace(p) == 65 && dev.napuli.FootballGym.progressXp(p, "pace") == 25,
                         "Public exercise leaves football ratings alone");
             });
             case 880 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }

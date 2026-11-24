@@ -43,13 +43,13 @@ final class NapoliHygiene {
 
     static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % 200 != 0) return;
+            if (server.getTickCount() % 400 != 0) return;
             var city = server.getLevel(NapoliMap.LEVEL);
             if (city == null) return;
             for (ServerPlayer p : city.players()) {
                 if (!p.isAlive() || p.isSpectator() || p.isCreative()) continue;
                 int before = value(p);
-                int current = Math.max(0, before - (p.isSprinting() || p.isSwimming() ? 4 : 2));
+                int current = Math.max(0, before - (p.isSprinting() || p.isSwimming() ? 2 : 1));
                 p.setAttached(CLEAN, current);
                 if (before > 25 && current <= 25)
                     NapoliNotice.show(p, Component.translatable("napuli.hygiene.dirty"));

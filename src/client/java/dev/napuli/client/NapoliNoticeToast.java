@@ -12,6 +12,13 @@ import net.minecraft.util.FormattedCharSequence;
 
 final class NapoliNoticeToast implements Toast {
     private static final int WIDTH = 208;
+    private static NapoliNoticeToast current;
+    private long lastUpdateNanos;
+
+    static int occupiedHeight() {
+        return current != null && System.nanoTime() - current.lastUpdateNanos < 350_000_000L
+                ? current.height() : 0;
+    }
     private final Component message;
     private final List<FormattedCharSequence> lines;
     private Visibility visibility = Visibility.SHOW;
@@ -37,10 +44,13 @@ final class NapoliNoticeToast implements Toast {
 
     @Override public Object getToken() { return message; }
     @Override public int width() { return WIDTH; }
+    @Override public int occcupiedSlotCount() { return 5; }
     @Override public int height() { return 26 + lines.size() * 10; }
     @Override public Visibility getWantedVisibility() { return visibility; }
 
     @Override public void update(ToastManager manager, long elapsed) {
+        current = this;
+        lastUpdateNanos = System.nanoTime();
         lastElapsed=elapsed;
         if (!CompanionOptions.current.notices) { visibility=Visibility.HIDE; return; }
         if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof CompanionScreen || net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof FootballMovesScreen) {

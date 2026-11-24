@@ -206,17 +206,21 @@ public final class NapoliEmployment {
         }
         if (sign.equals(contract.clock) && stage == 2) {
             Timecard card = p.getAttached(HOURS);
-            int hours = card == null ? 1 : timecard(p, state.day()).ticks() / HOUR;
-            if (hours == 0 && state.day() == day) {
+            int ticks = card == null ? HOUR : timecard(p, state.day()).ticks();
+            int hours = ticks / HOUR;
+            boolean beforeClose = state.day() == day && hour < CLOSE;
+            if (hours == 0 && beforeClose) {
                 NapoliNotice.show(p, Component.translatable("napuli.work.hour_progress", timecard(p, state.day()).ticks() * 60 / HOUR));
                 return 0;
             }
-            int pay = WorkCareer.hourly(p,contract) * hours;
+            int pay = shiftPay(ticks, WorkCareer.hourly(p,contract), !beforeClose);
             if(pay>0&&!WorkEconomy.wage(p,pay)){p.sendSystemMessage(Component.literal("Il fondo lavori è temporaneamente insufficiente. Il compenso resta da riscuotere."));return 0;}
             p.setAttached(WORK, new Work(state.contract(), day, 0, state.day()));
             p.removeAttached(HOURS);
-            if(hours>0)WorkCareer.completed(p,contract,hours,pay);
-            NapoliNotice.show(p, Component.translatable("napuli.work.hour_pay", hours, pay));
+            if(pay>0)WorkCareer.completed(p,contract,hours,pay);
+            if (!beforeClose && ticks % HOUR != 0)
+                NapoliNotice.show(p, Component.translatable("napuli.work.partial_pay", ticks * 60 / HOUR, pay));
+            else NapoliNotice.show(p, Component.translatable("napuli.work.hour_pay", hours, pay));
             return 1;
         }
         return status(p);
@@ -424,7 +428,9 @@ public final class NapoliEmployment {
         Contract contract = find(work.contract());
         if (contract == null) return;
         var resource=WorkResources.target(p,contract);
-        if(contract.task.distToCenterSqr(p.position())>16*16&&(resource==null||resource.distToCenterSqr(p.position())>16*16))return;
+        boolean atTask = contract.task.distToCenterSqr(p.position()) <= 16 * 16;
+        boolean atClock = work.stage() == 2 && contract.clock.distToCenterSqr(p.position()) <= 16 * 16;
+        if (!atTask && !atClock && (resource == null || resource.distToCenterSqr(p.position()) > 16 * 16)) return;
         Timecard card = timecard(p, day);
         long now = city.getGameTime();
         if (contract == Contract.CLEANER && work.stage() == 1) {
@@ -432,11 +438,17 @@ public final class NapoliEmployment {
             CityEffects.particles(city,p, ParticleTypes.DUST_PLUME, false, false,
                     dirt.getX() + .5, dirt.getY() + 1.02, dirt.getZ() + .5, 3, .21, .01, .21, .004);
         }
-        if (card.action() < 0 || now - card.action() > 2L * HOUR || card.ticks() >= CLOSE - OPEN) return;
+        if (card.ticks() >= CLOSE - OPEN || work.stage() == 1
+                && (card.action() < 0 || now - card.action() > 2L * HOUR)) return;
         int ticks = card.ticks() + 10;
         p.setAttached(HOURS, new Timecard(day, ticks, card.sweeps(), card.action(), card.lastSweep()));
         if (ticks % HOUR == 0)
             NapoliNotice.show(p, Component.translatable("napuli.work.hour_logged", ticks / HOUR, ticks / HOUR * contract.job.wage));
+    }
+
+    static int shiftPay(int ticks, int wage, boolean includePartialHour) {
+        if (ticks <= 0) return 0;
+        return includePartialHour ? Math.max(1, ticks * wage / HOUR) : ticks / HOUR * wage;
     }
 
     static Contract find(String id) {

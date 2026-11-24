@@ -82,7 +82,8 @@ final class HudClient {
 		if (!s.inCity()) return;
 		Font f = mc.font;
 		int canvasWidth = (int)(g.guiWidth() / scale);
-		int w = Math.clamp(canvasWidth / 3, 116, 170), x = canvasWidth - w - 4, y = 54;
+		int w = Math.clamp(canvasWidth / 3, 116, 170), x = canvasWidth - w - 4;
+        int y = Math.max(54, (int)Math.ceil(NapoliNoticeToast.occupiedHeight() / scale) + 10);
 		int lh = 11;
 
 		// ---------------- the panel

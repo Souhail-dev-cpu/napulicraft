@@ -123,4 +123,12 @@ public final class WorkEcosystemGameTest {
     private static void select(ServerPlayer p,NapoliEmployment.Contract c){p.setAttached(NapoliEmployment.WORK,new NapoliEmployment.Work(c.id(),NapoliBroadcast.day(p.level()),1,-1));}
     private static void move(ServerPlayer p,BlockPos at){p.teleportTo(p.level(),at.getX()+.5,at.getY(),at.getZ()+.5,Set.of(),0,0,true);}
     private static void inCity(GameTestHelper h,Consumer<List<ServerPlayer>> body){HousingCapacityGameTest.withPlayers(h,2,players->{for(var p:players)p.getInventory().clearContent();body.accept(players);});}
+    @GameTest public void partialShiftPayUsesMinutesWhenTheShiftCloses(GameTestHelper h) {
+        h.assertTrue(NapoliEmployment.shiftPay(300, 9, false) == 0, "18 minutes do not unlock early payment");
+        h.assertTrue(NapoliEmployment.shiftPay(300, 9, true) == 2, "18 minutes are paid proportionally at closing");
+        h.assertTrue(NapoliEmployment.shiftPay(1290, 9, true) == 11, "The last fraction of an hour is also paid");
+        h.assertTrue(NapoliEmployment.shiftPay(0, 9, true) == 0, "Waiting without recorded work cannot generate pay");
+        h.succeed();
+    }
+
 }

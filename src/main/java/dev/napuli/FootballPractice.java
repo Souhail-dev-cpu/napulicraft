@@ -325,15 +325,31 @@ public final class FootballPractice {
             ServerPlayer p = ctx.getSource().getPlayerOrException();
             Game game = GAMES.get(p.level());
             if (game != null && game.controls(p)) return 0;
-            p.setAttached(POSITION, position.name());
+            if (!selectRole(p, position.name())) {
+                say(p, "role_locked", roleLabel(p));
+                return 0;
+            }
             return attributes(p);
         });
     }
 
+    static boolean selectRole(ServerPlayer p, String role) {
+        String existing = p.getAttached(POSITION);
+        if (existing != null) return existing.equals(role);
+        p.setAttached(POSITION, Position.valueOf(role).name());
+        return true;
+    }
+
+    private static Component roleLabel(ServerPlayer p) {
+        return Component.translatable("napuli.football.position." + position(p).name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    public static int overall(ServerPlayer p) {
+        return (shooting(p) + pace(p) + defending(p) + strength(p) + staminaRating(p) + 2) / 5;
+    }
+
     private static int attributes(ServerPlayer p) {
-        Position role = position(p);
-        say(p, "attributes", Component.translatable("napuli.football.position." + role.name().toLowerCase(java.util.Locale.ROOT)),
-                shooting(p), pace(p), defending(p), strength(p), staminaRating(p));
+        say(p, "attributes", roleLabel(p), shooting(p), pace(p), defending(p), strength(p), staminaRating(p), overall(p));
         return 1;
     }
 
@@ -403,7 +419,7 @@ public final class FootballPractice {
 
     private static int profile(ServerPlayer p) {
         Career c = career(p);
-        say(p, "profile", c.matches(), c.goals(), FootballGym.preparation(p, c.fitness()));
+        say(p, "profile", roleLabel(p), overall(p), c.matches(), c.goals());
         return 1;
     }
 

@@ -70,7 +70,6 @@ public final class Hud {
             if (p.level().dimension()==NapoliMap.LEVEL && obj.target()!=null && !p.isPassenger()) {
                 var instruction=PlayerNavigator.guide(p,obj.target());
                 label=CityText.t("nav.combined",label,instruction.text());
-                obj=new NapoliFactions.Objective(obj.key(),instruction.target());
             }
             if (ServerPlayNetworking.canSend(p,CompanionHud.TYPE)) ServerPlayNetworking.send(p,new CompanionHud(obj.key(),label));
 			NapoliFactions.Side ally = NapoliFactions.ally(p);

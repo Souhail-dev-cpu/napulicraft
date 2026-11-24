@@ -54,7 +54,7 @@ public final class NapoliAtlasGameTest {
         helper.assertTrue(glass.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST)
                         && glass.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST),
                 "The pane reaches both sides of the masonry");
-        helper.assertTrue(level.getBlockState(jamb).is(Blocks.CUT_SANDSTONE)
+        helper.assertTrue(level.getBlockState(jamb).is(level.getBlockState(jamb.west()).getBlock())
                         && level.getBlockState(door).is(Blocks.OAK_DOOR), "The existing door gains a jamb");
         helper.assertTrue(level.getBlockState(threshold.below()).is(Blocks.POLISHED_ANDESITE)
                         && level.isEmptyBlock(threshold) && level.isEmptyBlock(threshold.above()),

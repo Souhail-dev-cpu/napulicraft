@@ -65,5 +65,5 @@ public final class EntranceGameTest {
     }
     private static void restore(LevelChunk chunk,Boolean marker){if(marker==null)((AttachmentTarget)chunk).removeAttached(NapoliExpansion.ENTRANCES_FIXED);else ((AttachmentTarget)chunk).setAttached(NapoliExpansion.ENTRANCES_FIXED,marker);}
     private static void generate(ServerLevel city,NapoliMergellina.House home){for(int x=home.x()>>4;x<=(home.x()+21)>>4;x++)for(int z=home.z()>>4;z<=(home.z()+23)>>4;z++)NapoliExpansion.generate(city,city.getChunk(x,z));}
-    private static void assertFrame(GameTestHelper h,BlockPos door,Block wall){for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2)h.assertTrue(h.getLevel().getBlockState(door.offset(dx,dy,0)).is(wall),"Doorframe has matching solid masonry at "+door.offset(dx,dy,0));}
+    private static void assertFrame(GameTestHelper h,BlockPos door,Block wall){for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2)h.assertTrue(h.getLevel().getBlockState(door.offset(dx,dy,0)).is(wall),"Doorframe at "+door.offset(dx,dy,0)+" expected="+wall+" actual="+h.getLevel().getBlockState(door.offset(dx,dy,0)));}
 }

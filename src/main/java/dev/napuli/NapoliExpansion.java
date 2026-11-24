@@ -27,7 +27,7 @@ public final class NapoliExpansion {
     static final AttachmentType<Boolean> INTERIORS = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_interiors_v1"));
     static final AttachmentType<Boolean> FRONTAGES = AttachmentRegistry.<Boolean>builder()
-            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_frontages_v3"));
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_frontages_v4"));
     private static final Map<ServerLevel,Map<Long,LevelChunk>> PENDING=new WeakHashMap<>();
     private static final AttachmentType<Set<String>> WALKERS=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("atlas_walkers"));
     private static final int[][] COAST={{-2048,35},{-1920,65},{-1800,215},{-1700,455},{-1550,475},{-1400,450},{-1200,300},{-970,205},{-650,185},{-544,256},{480,135},{900,180},{1400,285},{1750,390},{2048,475}};
@@ -157,6 +157,7 @@ public final class NapoliExpansion {
         for (var place : NapoliAtlas.PLACES) {
             if (!place.original() && writer.overlaps(place.x() - place.radius(), place.z() - place.radius(),
                     place.x() + place.radius(), place.z() + place.radius())) writer.landmarkSupports(place);
+            if (!place.original() && place.kind() != NapoliAtlas.Kind.PIER) writer.walkableArrival(place.arrival());
         }
         chunk.setAttached(FRONTAGES, true);
         return true;
@@ -425,11 +426,12 @@ public final class NapoliExpansion {
         void frontage(int x, int y, int z, int floors) {
             roofParapet(x, y + floors * 5, z);
             int door = x + 11, front = z + 23;
+            var masonry = facade(Math.floorDiv(x, BLOCK_SIZE) + Math.floorDiv(z, BLOCK_SIZE)).defaultBlockState();
             for (int dx = -1; dx <= 1; dx++) {
-                frontageBlock(door + dx, y + 2, front, Blocks.SMOOTH_SANDSTONE.defaultBlockState());
+                frontageBlock(door + dx, y + 2, front, masonry);
                 frontageBlock(door + dx, y - 1, front, Blocks.POLISHED_ANDESITE.defaultBlockState());
                 if (dx != 0) for (int dy = 0; dy < 2; dy++)
-                    frontageBlock(door + dx, y + dy, front, Blocks.CUT_SANDSTONE.defaultBlockState());
+                    frontageBlock(door + dx, y + dy, front, masonry);
             }
             detail(door, y + 2, front + 1, Blocks.SMOOTH_SANDSTONE);
             detail(door, y + 3, front + 1, Blocks.LANTERN);
@@ -586,6 +588,21 @@ public final class NapoliExpansion {
             put(x, y, z, state.setValue(BlockStateProperties.EAST, eastWest)
                     .setValue(BlockStateProperties.WEST, eastWest).setValue(BlockStateProperties.NORTH, !eastWest)
                     .setValue(BlockStateProperties.SOUTH, !eastWest));
+        }
+
+        private void walkableArrival(BlockPos at) {
+            if (!includes(at.getX(), at.getZ())) return;
+            var floor = at.below();
+            for (var pos : List.of(floor, at, at.above())) {
+                var state = chunk.getBlockState(pos);
+                if (CityProperty.playerPlaced(city, pos) || (!state.isAir() && !state.is(Blocks.GRASS_BLOCK)
+                        && !state.is(Blocks.TUFF) && !state.is(Blocks.DIRT) && !state.is(Blocks.SAND)
+                        && !state.is(Blocks.SANDSTONE) && !state.is(Blocks.SMOOTH_STONE)
+                        && !state.is(Blocks.POLISHED_ANDESITE) && !state.is(Blocks.POLISHED_DEEPSLATE))) return;
+            }
+            put(floor.getX(), floor.getY(), floor.getZ(), Blocks.POLISHED_ANDESITE);
+            put(at.getX(), at.getY(), at.getZ(), Blocks.AIR);
+            put(at.getX(), at.getY() + 1, at.getZ(), Blocks.AIR);
         }
 
         private void frontageBlock(int x, int y, int z, BlockState state) {

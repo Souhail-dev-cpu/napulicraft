@@ -94,6 +94,7 @@ final class CitySocial {
                         new PlainMessage(Component.literal("Fiducia: "+b.trust()+" · incontri in giorni diversi: "+b.meetings()+
                                 (doing.isEmpty()?"":"\n"+doing)+(goal==null?"":"\n"+CityPersonalGoals.description(goal))+(heard.isEmpty()?"":"\n"+heard)),270)),List.of()),buttons,Optional.empty(),1)));
     }
+    static ActionButton button(Component label,String command){return new ActionButton(new CommonButtonData(label,250),Optional.of(new net.minecraft.server.dialog.action.StaticAction(new ClickEvent.RunCommand(command))));}
     static ActionButton button(String text,String command) { return new ActionButton(new CommonButtonData(Component.literal(text),250),Optional.of(new StaticAction(new ClickEvent.RunCommand(command)))); }
     static int act(ServerPlayer p,UUID id,String action) {
         var c=nearby(p,id);if(c==null)return 0;

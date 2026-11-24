@@ -222,7 +222,7 @@ public final class Carabinieri {
 		for (NapoliResident cc : carabinieri(city, p.blockPosition(), 36)) cc.getNavigation().stop();
 		NapoliNotice.show(p, Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));
 		if (w.gravity <= 1 && NapoliStreet.cash(p) >= FINE) {
-			NapoliStreet.credit(p, -FINE);
+			NapoliStreet.credit(p, -FINE,"fine");
 			title(p, "napuli.cc.fine.title", "napuli.cc.fine");
 			NapoliNotice.show(p, Component.translatable("napuli.cc.fine.reason", Component.translatable("napuli.cc.crime." + w.crime.id()), FINE));
 			return;

@@ -67,7 +67,7 @@ final class CityResidentShop {
         boolean water=c.profession()==NapoliCivicLife.Job.INFLUENCER;int cost=shopPrice(p,id,water?12:4);
         if(NapoliStreet.cash(p)<cost)return 0;
         var stack=new ItemStack(water?WATER:AIR);if(!p.getInventory().add(stack))return 0;
-        NapoliStreet.credit(p,-cost);
+        NapoliStreet.credit(p,-cost,"purchase");
         CitySocial.purchased(p.level(),id,p.getUUID());
         var census=NapoliCivicLife.census(p.level());
         p.level().setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream()

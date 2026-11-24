@@ -213,6 +213,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 				leftArm.xRot = -0.50f; rightArm.xRot = -0.50f;
 			}
 		}
+		if(CompanionOptions.current.reducedMotion)return;
 		float t=state.ageInTicks+state.animationOffset,s=(float)Math.sin(t*.22),c=(float)Math.cos(t*.22);
 		if(state.vitality<30&&!state.sleeping){body.xRot+=.10f;head.xRot+=.12f;}
 		switch(state.gesture){

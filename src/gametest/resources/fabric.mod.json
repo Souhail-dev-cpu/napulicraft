@@ -27,7 +27,10 @@
       "dev.napuli.EntranceGameTest",
       "dev.napuli.StreetGameTest",
       "dev.napuli.WorkEcosystemGameTest",
-      "dev.napuli.FootballRatingsGameTest"
+      "dev.napuli.FootballRatingsGameTest",
+      "dev.napuli.CompanionGameTest",
+      "dev.napuli.CityConvenienceGameTest",
+      "dev.napuli.PlayerImprovementsGameTest"
     ]
   },
   "depends": {

@@ -67,7 +67,7 @@ final class CityPersonalGoals {
         if(!g.helper().isEmpty()){
             var helper=city.getServer().getPlayerList().getPlayer(UUID.fromString(g.helper()));
             if(pay||g.contributions()>0)CitySocial.helped(city,c.id(),UUID.fromString(g.helper()),NapoliBroadcast.day(city));
-            if(helper!=null&&pay){int reward=g.kind().equals("oven")?16:8;NapoliStreet.credit(helper,reward);if(!NpcSpeech.say(helper,c.id(),Component.literal("Grazie! Obiettivo completato, +"+reward+" €.")))helper.sendSystemMessage(Component.literal("Obiettivo completato: +"+reward+" €."));}
+            if(helper!=null&&pay){int reward=g.kind().equals("oven")?16:8;NapoliStreet.credit(helper,reward,"help_reward",c.name());if(!NpcSpeech.say(helper,c.id(),Component.literal("Grazie! Obiettivo completato, +"+reward+" €.")))helper.sendSystemMessage(Component.literal("Obiettivo completato: +"+reward+" €."));}
         }
     }
     static int act(ServerPlayer p,UUID id,String action){
@@ -76,7 +76,7 @@ final class CityPersonalGoals {
         var accepted=new Goal(g.kind(),g.home(),g.opened(),p.getUUID().toString(),false,g.contributions(),g.promised()<0?NapoliBroadcast.day(p.level()):g.promised());
         if(action.equals("accetta")){put(p.level(),id,accepted);NpcSpeech.say(p,c.id(),Component.literal(description(g)+(g.kind().equals("home")?"":" Ti aspetto entro tre giorni.")));return 1;}
         if(g.kind().equals("home")&&action.equals("contribuisci")){
-            if(NapoliStreet.cash(p)<5)return 0;NapoliStreet.credit(p,-5);money(p.level(),c,5,c.job());
+            if(NapoliStreet.cash(p)<5)return 0;NapoliStreet.credit(p,-5,"donation",c.name());money(p.level(),c,5,c.job());
             put(p.level(),id,new Goal(g.kind(),g.home(),g.opened(),p.getUUID().toString(),false,g.contributions()+5,g.promised()));return 1;
         }
         if(!action.equals("completa")||!g.helper().equals(p.getUUID().toString()))return 0;

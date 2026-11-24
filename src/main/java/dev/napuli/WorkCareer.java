@@ -3,6 +3,7 @@ package dev.napuli;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.*;
+import static dev.napuli.CityText.t;
 import net.fabricmc.fabric.api.attachment.v1.*;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -45,8 +46,8 @@ final class WorkCareer {
     private static ItemStack equipment(ServerPlayer p,NapoliEmployment.Contract c,Career career){
         var stack=new ItemStack(tool(c,career.tier()));var tag=new CompoundTag();tag.putString("career_owner",p.getUUID().toString());tag.putString("career_job",c.id());tag.putInt("career_serial",career.serial());
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
-        stack.set(DataComponents.CUSTOM_NAME,Component.literal(c.nameLabel().getString()+" · "+(career.tier()==0?"Professionale":career.tier()==1?"Specialista":"Maestro")));
-        stack.set(DataComponents.LORE,new ItemLore(List.of(Component.literal("Assegnato a "+p.getName().getString()),Component.literal("Carriera e potenziamenti presso il luogo di lavoro"))));
+        stack.set(DataComponents.CUSTOM_NAME,t("career.tool_name",c.nameLabel(),t("work.rank."+(career.tier()+1))));
+        stack.set(DataComponents.LORE,new ItemLore(List.of(t("career.assigned",p.getName()),t("work.station_help"))));
         if((c==NapoliEmployment.Contract.FISHER||c==NapoliEmployment.Contract.CLEANER)&&career.tier()>0)
             stack.set(DataComponents.MAX_DAMAGE,stack.getMaxDamage()*(career.tier()+1));
         return stack;
@@ -54,9 +55,9 @@ final class WorkCareer {
     static boolean owned(ServerPlayer p,NapoliEmployment.Contract c,ItemStack stack){var data=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();return data.getStringOr("career_owner","").equals(p.getUUID().toString())&&data.getStringOr("career_job","").equals(c.id())&&data.getIntOr("career_serial",-1)==get(p,c).serial();}
     static int toolSlot(ServerPlayer p,NapoliEmployment.Contract c){for(int i=0;i<p.getInventory().getContainerSize();i++)if(owned(p,c,p.getInventory().getItem(i)))return i;return -1;}
     static boolean begin(ServerPlayer p,NapoliEmployment.Contract c){var career=get(p,c);if(career.issued())return true;
-        var stack=equipment(p,c,career);if(!p.getInventory().add(stack)){tell(p,"Libera uno slot per ricevere l'attrezzo di lavoro.");return false;}
+        var stack=equipment(p,c,career);if(!p.getInventory().add(stack)){tell(p,t("career.free_slot"));return false;}
         put(p,c,new Career(career.xp(),career.rank(),career.tier(),career.shifts(),career.earned(),career.serial(),true));
-        tell(p,"Attrezzatura iniziale assegnata. La freccia segue raccolta, preparazione e consegna; /lavoro risorse usa il deposito o il banco sul posto.");return true;
+        tell(p,t("career.issued"));return true;
     }
     static void completed(ServerPlayer p,NapoliEmployment.Contract c,int hours,int pay){var a=get(p,c);put(p,c,new Career(Math.min(1000000,a.xp()+20+hours*5),a.rank(),a.tier(),a.shifts()+1,Math.min(100000000,a.earned()+pay),a.serial(),a.issued()));}
     static BlockPos station(ServerLevel city,NapoliEmployment.Contract c){return city.getAttachedOrElse(STATIONS,Map.of()).getOrDefault(c.id(),c.clock.east(5));}
@@ -80,36 +81,29 @@ final class WorkCareer {
     static boolean near(ServerPlayer p,NapoliEmployment.Contract c){return p.level().dimension()==NapoliMap.LEVEL&&p.isAlive()&&!p.isSpectator()&&!Carabinieri.isJailed(p)&&p.level().getAttachedOrElse(STATIONS,Map.of()).containsKey(c.id())&&p.level().getBlockState(station(p.level(),c)).is(Blocks.SMITHING_TABLE)&&station(p.level(),c).distToCenterSqr(p.position())<=36;}
     static int promote(ServerPlayer p){var c=selected(p);return c==null||!near(p,c)?0:promoteAt(p,c);}
     static int promoteAt(ServerPlayer p,NapoliEmployment.Contract c){var a=get(p,c);if(a.rank()>=3)return 0;int next=a.rank()+1,cost=next*20;
-        if(a.xp()<threshold(next)||a.shifts()<next*2||NapoliStreet.cash(p)<cost){tell(p,"Per il rango "+rank(next)+" servono "+threshold(next)+" XP, "+next*2+" turni completati e "+cost+" €.");return 0;}
-        NapoliStreet.credit(p,-cost);WorkEconomy.revenue(p.level(),cost);put(p,c,new Career(a.xp(),next,a.tier(),a.shifts(),a.earned(),a.serial(),a.issued()));tell(p,"Promozione ottenuta: "+rank(next)+". Paga: "+hourly(p,c)+" €/ora di gioco.");return 1;
+        if(a.xp()<threshold(next)||a.shifts()<next*2||NapoliStreet.cash(p)<cost){tell(p,t("career.requirements",t("work.rank."+next),threshold(next),next*2,cost));return 0;}
+        NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);put(p,c,new Career(a.xp(),next,a.tier(),a.shifts(),a.earned(),a.serial(),a.issued()));tell(p,t("career.promoted",t("work.rank."+next),hourly(p,c)));return 1;
     }
     static int upgrade(ServerPlayer p){var c=selected(p);return c==null||!near(p,c)?0:upgradeAt(p,c);}
     static int upgradeAt(ServerPlayer p,NapoliEmployment.Contract c){var a=get(p,c);int slot=toolSlot(p,c);if(a.tier()>=2||slot<0)return 0;
         int cost=toolCost(a);var material=material(a);
-        if(a.rank()<a.tier()+1||NapoliStreet.cash(p)<cost||WorkResources.count(p,material)<1){tell(p,"Servono rango "+rank(a.tier()+1)+", "+cost+" € e 1 "+material.getDefaultInstance().getHoverName().getString()+". Porta con te l'attrezzo assegnato.");return 0;}
+        if(a.rank()<a.tier()+1||NapoliStreet.cash(p)<cost||WorkResources.count(p,material)<1){tell(p,t("work.upgrade_cost",cost,material.getDefaultInstance().getHoverName(),t("work.rank."+(a.tier()+1))));return 0;}
         var previous=p.getInventory().getItem(slot);var nextCareer=new Career(a.xp(),a.rank(),a.tier()+1,a.shifts(),a.earned(),a.serial(),true);var upgraded=equipment(p,c,nextCareer);
         if(previous.has(DataComponents.ENCHANTMENTS))upgraded.set(DataComponents.ENCHANTMENTS,previous.get(DataComponents.ENCHANTMENTS));
         if(previous.isDamageableItem()&&upgraded.isDamageableItem())upgraded.setDamageValue((int)((double)previous.getDamageValue()/previous.getMaxDamage()*upgraded.getMaxDamage()));
-        if(!CityEconomy.take(p,material,1))return 0;NapoliStreet.credit(p,-cost);WorkEconomy.revenue(p.level(),cost);p.getInventory().setItem(slot,upgraded);put(p,c,nextCareer);tell(p,"Attrezzo potenziato al livello "+(nextCareer.tier()+1)+".");return 1;
+        if(!CityEconomy.take(p,material,1))return 0;NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);p.getInventory().setItem(slot,upgraded);put(p,c,nextCareer);tell(p,t("career.upgraded",nextCareer.tier()+1));return 1;
     }
-    static int recover(ServerPlayer p){var c=selected(p);if(c==null||!near(p,c))return 0;var a=get(p,c);if(!a.issued())return begin(p,c)?1:0;if(toolSlot(p,c)>=0){tell(p,"Hai già il tuo attrezzo. Puoi ripararlo al banco.");return 0;}
+    static int recover(ServerPlayer p){var c=selected(p);if(c==null||!near(p,c))return 0;var a=get(p,c);if(!a.issued())return begin(p,c)?1:0;if(toolSlot(p,c)>=0){tell(p,t("career.have_tool"));return 0;}
         int cost=6+a.tier()*8;if(NapoliStreet.cash(p)<cost)return 0;var next=new Career(a.xp(),a.rank(),a.tier(),a.shifts(),a.earned(),a.serial()+1,true);var tool=equipment(p,c,next);
-        if(!p.getInventory().add(tool))return 0;NapoliStreet.credit(p,-cost);WorkEconomy.revenue(p.level(),cost);put(p,c,next);tell(p,"Attrezzatura sostituita per "+cost+" €. La vecchia assegnazione non è più valida per i potenziamenti.");return 1;
+        if(!p.getInventory().add(tool))return 0;NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);put(p,c,next);tell(p,t("career.replaced",cost));return 1;
     }
     static int timber(ServerPlayer p){var c=selected(p);if(c!=NapoliEmployment.Contract.CARPENTER||!near(p,c)||WorkResources.count(p,Items.OAK_LOG)<1||CityOccupations.supply(p.level(),"timber")>=256||WorkEconomy.fund(p.level())<2)return 0;
-        if(!CityEconomy.take(p,Items.OAK_LOG,1))return 0;WorkEconomy.wage(p,2);CityOccupations.supply(p.level(),"timber",CityOccupations.supply(p.level(),"timber")+1);tell(p,"Tronco consegnato agli artigiani: 2 €.");return 1;}
+        if(!CityEconomy.take(p,Items.OAK_LOG,1))return 0;WorkEconomy.wage(p,2);CityOccupations.supply(p.level(),"timber",CityOccupations.supply(p.level(),"timber")+1);tell(p,t("career.timber"));return 1;}
     static int repair(ServerPlayer p){var c=selected(p);if(c==null||!near(p,c))return 0;int slot=toolSlot(p,c);if(slot<0)return 0;var stack=p.getInventory().getItem(slot);if(!stack.isDamaged())return 0;int cost=3+get(p,c).tier()*3;
-        if(NapoliStreet.cash(p)<cost)return 0;NapoliStreet.credit(p,-cost);WorkEconomy.revenue(p.level(),cost);stack.setDamageValue(0);tell(p,"Attrezzo riparato: "+cost+" €.");return 1;
+        if(NapoliStreet.cash(p)<cost)return 0;NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);stack.setDamageValue(0);tell(p,t("career.repaired",cost));return 1;
     }
-    static int menu(ServerPlayer p){var c=selected(p);if(c==null)return 0;if(!near(p,c)){tell(p,"Raggiungi il banco carriera presso il tuo luogo di lavoro: "+station(p.level(),c).toShortString());return 0;}
-        var a=get(p,c);var body=new ArrayList<net.minecraft.server.dialog.body.DialogBody>();
-        body.add(new PlainMessage(Component.literal(c.nameLabel().getString()+" · "+rank(a.rank())+"\nXP: "+a.xp()+" · Turni: "+a.shifts()+" · Guadagnato: "+a.earned()+" €\nPaga: "+hourly(p,c)+" €/ora · Attrezzo: livello "+(a.tier()+1)+"/3"),290));
-        body.add(new PlainMessage(Component.literal("Raccolta → preparazione → mansione → ore lavorate → paga e XP. Il primo kit è incluso; le sostituzioni sono a pagamento. Il legno dell'area di lavoro ricresce durante la notte."),290));
-        if(a.rank()<3)body.add(new PlainMessage(Component.literal("Prossimo rango: "+rank(a.rank()+1)+" · "+threshold(a.rank()+1)+" XP, "+(a.rank()+1)*2+" turni, "+(a.rank()+1)*20+" €."),290));
-        if(a.tier()<2)body.add(new PlainMessage(Component.literal("Prossimo attrezzo: "+toolCost(a)+" € + 1 "+material(a).getDefaultInstance().getHoverName().getString()+"; richiede rango "+rank(a.tier()+1)+"."),290));
-        var buttons=List.of(CitySocial.button("Richiedi promozione","/lavoro rango"),CitySocial.button("Potenzia attrezzo","/lavoro potenzia"),CitySocial.button("Sostituisci attrezzo perso","/lavoro attrezzi"),CitySocial.button("Ripara attrezzo","/lavoro ripara"),CitySocial.button("Consegna tronco al magazzino · 2 €","/lavoro rifornisci"),CitySocial.button("Chiudi","/lavoro chiudi"));
-        p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal("Carriera · "+c.nameLabel().getString()),Optional.empty(),true,false,DialogAction.CLOSE,body,List.of()),buttons,Optional.empty(),1)));return 1;
-    }
+    static int menu(ServerPlayer p){return CompanionWork.menu(p);}
+    private static void tell(ServerPlayer p,Component text){p.sendSystemMessage(text);}
     private static void tell(ServerPlayer p,String text){p.sendSystemMessage(Component.literal(text));}
     static void register(){
         CommandRegistrationCallback.EVENT.register((d,a,e)->{var root=Commands.literal("lavoro");

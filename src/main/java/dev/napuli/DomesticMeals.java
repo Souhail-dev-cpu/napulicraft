@@ -154,7 +154,7 @@ final class DomesticMeals {
             case EAT -> SoundEvents.GENERIC_EAT.value();
             case DISHES -> SoundEvents.GENERIC_SPLASH;
         };
-        city.playSound(null, pos, sound, SoundSource.BLOCKS, .38f, 1);
+        CityEffects.sound(city,null, pos, sound, SoundSource.BLOCKS, .38f, 1);
         if (step == Step.FRIDGE && city.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.BarrelBlock)
             city.setBlock(pos, city.getBlockState(pos).setValue(BlockStateProperties.OPEN, true), Block.UPDATE_CLIENTS);
         var setting = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
@@ -164,7 +164,7 @@ final class DomesticMeals {
         if (step == Step.COOK || step == Step.DISHES || step == Step.EAT) {
             var particle = step == Step.COOK ? ParticleTypes.CAMPFIRE_COSY_SMOKE
                     : step == Step.DISHES ? ParticleTypes.SPLASH : ParticleTypes.HAPPY_VILLAGER;
-            city.sendParticles(particle, pos.getX() + .5, pos.getY() + .7, pos.getZ() + .5, 5, .12, .10, .12, .01);
+            CityEffects.particles(city,particle, pos.getX() + .5, pos.getY() + .7, pos.getZ() + .5, 5, .12, .10, .12, .01);
         }
     }
 

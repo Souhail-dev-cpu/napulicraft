@@ -359,8 +359,10 @@ final class NapoliCivicLife {
     static Citizen profile(ServerLevel city, UUID id) {
         Census data = census(city);
         if (data == null) return null;
-        return data.people().stream().filter(c -> c.id().equals(id)).findFirst().orElse(null);
+        var index=PROFILE_INDEX.get(city);if(index==null||index.census()!=data){var people=new java.util.HashMap<UUID,Citizen>();for(var c:data.people())people.putIfAbsent(c.id(),c);index=new ProfileIndex(data,Map.copyOf(people));PROFILE_INDEX.put(city,index);}return index.people().get(id);
     }
+    private record ProfileIndex(Census census,Map<UUID,Citizen> people){}
+    private static final Map<ServerLevel,ProfileIndex> PROFILE_INDEX=new java.util.WeakHashMap<>();
 
     static BlockPos home(Citizen citizen) {
         var registered=CityLivingHomes.find(citizen.property());

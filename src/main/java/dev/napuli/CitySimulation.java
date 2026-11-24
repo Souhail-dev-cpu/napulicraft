@@ -45,7 +45,7 @@ final class CitySimulation {
             .persistent(Codec.unboundedMap(Codec.STRING,Life.CODEC)).buildAndRegister(Napuli.id("city_life"));
     static Life fresh(UUID id) { return new Life(new Needs(85,85,85,75,75,85),100,50,0,0,0,8,0,
             new String[]{"socievole","tranquillo","ambizioso","creativo","sportivo"}[Math.floorMod(id.hashCode(),5)],Map.of(),List.of(),0,0,-100); }
-    static Life life(ServerLevel city,UUID id) { return city.getAttachedOrElse(LIFE,Map.of()).getOrDefault(id.toString(),fresh(id)); }
+    static Life life(ServerLevel city,UUID id) { var saved=city.getAttachedOrElse(LIFE,Map.of()).get(id.toString());return saved==null?fresh(id):saved; }
     static void put(ServerLevel city,UUID id,Life state) {
         var copy=new HashMap<>(city.getAttachedOrElse(LIFE,Map.of()));copy.put(id.toString(),state);city.setAttached(LIFE,Map.copyOf(copy));
     }

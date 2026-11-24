@@ -1,0 +1,527 @@
+yes|sì|yes|sì
+no|no|no|no
+close|Chiudi|Close|Chiure
+done|Fatto|Done|Fatto
+error.city|Entra a Napoli con /napoli per usare questo servizio.|Enter Napoli with /napoli to use this service.|Trase a Napule cu /napoli pe usà stu servizio.
+menu.title|Napoli · il tuo quartiere|Napoli · your neighborhood|Napule · ’o quartiere tuo
+menu.atlas|Atlante e preferiti|Atlas and favorites|Atlante e preferite
+menu.atlas_help|Cerca luoghi, casa, lavoro, botteghe e fermate|Find places, home, work, shops and stops|Trova luoche, casa, fatica, putieche e fermate
+menu.tracker|Obiettivo da seguire|Tracked activity|Chello ca hê ’a fà
+menu.tracker_help|Scegli cosa mostrare nella freccia|Choose what the navigation arrow follows|Sceglie addò t’ha purtà ’a freccia
+menu.work|Lavoro e carriera|Work and career|Fatica e carriera
+menu.work_help|Ore lavorate, paga maturata, attrezzi e promozioni|Worked hours, earned pay, tools and promotions|Ore faticate, paga, attrezze e avanzamiente
+menu.housing|Casa e ospiti|Home and guests|Casa e ospite
+menu.housing_help|Contratti, scadenze, preventivi, chiavi e inviti|Contracts, deadlines, quotes, keys and invitations|Contratte, scadenze, cunte, chiave e ’nvite
+menu.wallet|Portafoglio|Wallet|Portafoglio
+menu.wallet_help|Consulta il denaro disponibile|Check your available money|Guarda quante solde tiene
+menu.travel|Trasporti|Transport|Trasporte
+menu.travel_help|Fermate, banchine, direzioni e prossime corse|Stops, platforms, directions and departures|Fermate, banchine, direzzione e prossime corse
+menu.recipes|Ricettario|Recipe book|Ricettario
+menu.recipes_help|Ingredienti, postazioni e lista della spesa|Ingredients, workstations and shopping list|Ingredienti, postazzione e lista d’ ’a spesa
+menu.shop|Bottega vicina|Nearby shop|Puteca vicina
+menu.shop_help|Apertura, scorte e acquisti sul posto|Opening status, stock and purchases on site|Apertura, scorte e accatte ’ncopp’ ’o posto
+menu.group|Incontriamoci|Meet up|Vedimmoce
+menu.group_help|Gruppi, inviti, mete condivise e arrivi|Groups, invitations, shared destinations and arrivals|Gruppe, ’nvite, mete ’nzieme e arrivate
+menu.journal|Diario delle attività|Activity journal|Diario d’ ’e cose ’a fà
+menu.journal_help|Incarichi, consegne, persone e premi da ritirare|Tasks, deliveries, people and unclaimed rewards|Incariche, cunsegne, perzone e premie ’a piglià
+menu.ledger|Riepilogo delle spese|Transaction history|Cunto d’ ’e spese
+menu.ledger_help|Acquisti, stipendi, multe e pagamenti della casa|Purchases, wages, fines and housing payments|Accatte, paghe, multe e pagamiente d’ ’a casa
+menu.help|Primi passi e suggerimenti|Getting started and tips|Primi passe e cunziglie
+menu.help_help|Riprendi la guida o rileggi un consiglio|Resume the introduction or review a tip|Ripiglia ’a guida o rilegge nu cunziglio
+screen.menu|Menu|Menu|Menu
+screen.atlas|Atlante|Atlas|Atlante
+screen.favorites|Preferiti|Favorites|Preferite
+screen.options|Opzioni|Options|Opzziune
+screen.empty|Nessun risultato: prova un altro nome|No matches: try another name|Nun aggio truvato niente: prova n’ato nomme
+screen.page|%s / %s · %s voci|%s / %s · %s entries|%s / %s · %s voce
+settings.city|Pannello città: %s|City panel: %s|Pannello d’ ’a città: %s
+settings.kitchen|Cucina e bisogni: %s|Cooking and needs: %s|Cucina e necessità: %s
+settings.tracker|Obiettivo e freccia: %s|Objective and arrow: %s|Chello ’a fà e freccia: %s
+settings.compact|Modalità compatta: %s|Compact mode: %s|Modalità stretta: %s
+settings.size|Testo HUD: %s|HUD text: %s|Scritte HUD: %s
+settings.small|piccolo|small|piccerillo
+settings.normal|normale|normal|normale
+settings.large|grande|large|gruosso
+settings.notices|Notifiche: %s|Notifications: %s|Avvise: %s
+atlas.place|Luogo · %s|Place · %s|Luoco · %s
+atlas.stop|Fermata · %s|Stop · %s|Fermata · %s
+atlas.platform|Banchina %s · %s|Platform %s · %s|Banchina %s · %s
+atlas.platform_help|Segui gli accessi e le scale fino alla banchina corretta|Follow entrances and stairs to the correct platform|Sègue ’e trasute e ’e scale ’nfino â banchina giusta
+atlas.status_city|entra a Napoli per conoscere lo stato|enter Napoli to check availability|trase a Napule pe sapé comm’è
+atlas.closed|negoziante assente o fuori turno|shopkeeper absent or off duty|putecaro assente o fora turno
+atlas.open|aperto|open|apierto
+atlas.shop|Bottega · %s|Shop · %s|Puteca · %s
+atlas.shop_help|Alimenti e attrezzi · %s|Food and tools · %s|Magnà e attrezze · %s
+atlas.home|La tua casa · ingresso|Your home · entrance|’A casa toja · trasuta
+atlas.office|Centro per l’impiego|Employment office|Centro p’ ’a fatica
+atlas.work|Lavoro · collocamento e timbratura|Work · employment office and clock-in|Fatica · collocamento e timbratura
+atlas.distance|%s · %s m|%s · %s m|%s · %s m
+atlas.favorites|I tuoi preferiti|Your favorites|’E preferite tuoje
+atlas.title|Atlante · cerca un nome o un servizio|Atlas · search for a place or service|Atlante · cerca nu nomme o nu servizio
+atlas.unavailable|Destinazione non disponibile: scegli un’altra meta nell’atlante.|Destination unavailable: choose another place in the atlas.|Sta meta nun è disponibile: sceglienne n’ata ’int’all’atlante.
+atlas.full|Hai già 32 preferiti: rimuovine uno con ★.|You already have 32 favorites: remove one with ★.|Tiene già 32 preferite: lievane uno cu ★.
+atlas.walk|Segui a piedi · %s|Walk to · %s|Va a ppede · %s
+atlas.address|%s · %s|%s · %s|%s · %s
+atlas.near_stop|Fermata vicina · %s|Nearby stop · %s|Fermata vicina · %s
+atlas.stop_help|Indicazioni fino all’ingresso della fermata|Directions to the stop entrance|Indicazzione ’nfino â trasuta d’ ’a fermata
+atlas.same_stop|Stessa fermata: prosegui a piedi|Same stop: continue on foot|Stessa fermata: va annanze a ppede
+atlas.no_route|Nessun collegamento attivo: controlla i disservizi|No active connection: check disruptions|Nun ce sta nu collegamento attivo: guarda ’e guaste
+atlas.transit|Percorso con i mezzi|Route by public transport|Percorso cu ’e mezze
+atlas.from|Da %s · %s|From %s · %s|Da %s · %s
+atlas.favorite_hint|Aggiungi o rimuovi dai preferiti|Add or remove favorite|Miette o lieva d’ ’e preferite
+tracker.option|%s %s|%s %s|%s %s
+tracker.saved|La scelta rimane salvata; puoi cambiarla quando vuoi|Your choice is saved; change it whenever you like|’A scelta resta salvata; ’a puo’ cagnà quanno vuo’
+tracker.title|Scegli l’obiettivo da seguire|Choose your tracked activity|Sceglie chello ca vuo’ seguì
+tracker.invalid|Obiettivo sconosciuto: apri il menu Obiettivi.|Unknown activity: open the tracker menu.|Nun cunosco chist’obiettivo: arape ’o menu.
+tracker.updated|Obiettivo aggiornato.|Tracked activity updated.|Obiettivo aggiornato.
+tracker.auto|Automatico|Automatic|Automatico
+tracker.lavoro|Lavoro e materiali|Work and materials|Fatica e materiale
+tracker.missione|Missione di quartiere|Neighborhood mission|Missione d’ ’o quartiere
+tracker.guida|Primi passi|Getting started|Primi passe
+tracker.meta|Meta fissata|Pinned destination|Meta fissata
+tracker.ricetta|Lista della spesa|Shopping list|Lista d’ ’a spesa
+tracker.diario|Attività del diario|Journal activity|Attività d’ ’o diario
+tracker.nessuno|Nascondi obiettivo|Hide objective|Annascunne l’obiettivo
+nav.follow|Segui il navigatore: %s|Follow the navigator: %s|Sègue ’o navigatore: %s
+nav.finished|Destinazione raggiunta|Destination reached|Si’ arrivato
+nav.stop|Interrompi indicazioni|Stop directions|Ferma ’e indicazzione
+nav.stopped|Indicazioni interrotte.|Directions stopped.|Indicazzione fermate.
+atlas.native_title|Napoli · luoghi %s/%s|Napoli · places %s/%s|Napule · luoche %s/%s
+atlas.native_help|Scegli una meta per le indicazioni a piedi. Puoi cercare luoghi e servizi dal menu cittadino, tasto O predefinito.|Choose a destination for walking directions. Search places and services in the city menu, default key O.|Sceglie na meta pe ’e indicazzione a ppede. Cerca luoche e servizie ’int’ ô menu, tasto O ’e base.
+nav.arrived|Sei arrivato: %s|You have arrived: %s|Si’ arrivato: %s
+nav.blocked|Passaggio non disponibile: avvicinati alla strada o all’ingresso e riprova|No accessible passage: approach the street or entrance and retry|Nun ce sta passaggio: avvicinate â via o â trasuta e riprova
+nav.straight|Prosegui per %s m|Continue for %s m|Va annanze pe %s m
+nav.right|Tra %s m gira a destra|Turn right in %s m|Fra %s m vota a deritta
+nav.left|Tra %s m gira a sinistra|Turn left in %s m|Fra %s m vota a mancina
+nav.up|Sali seguendo scale o scala a pioli|Go up using stairs or a ladder|Saglie cu ’e scale o cu ’a scaletta
+nav.down|Scendi seguendo scale o scala a pioli|Go down using stairs or a ladder|Scinne cu ’e scale o cu ’a scaletta
+nav.combined|%s · %s|%s · %s|%s · %s
+work.choose|Consulta le offerte al collocamento|Check offers at the employment office|Guarda ’e offerte ô collocamento
+work.finished|Turno concluso: torna domani|Shift complete: return tomorrow|Turno fernuto: torna dimane
+work.summary|%s · %s h %s min · maturati %s €|%s · %s h %s min · earned %s €|%s · %s h %s min · guadagnate %s €
+work.shift|Il tuo turno|Your shift|’O turno tuo
+work.offers|Consulta le offerte|Browse job offers|Guarda ’e offerte
+work.career|%s · %s|%s · %s|%s · %s
+work.career_name|Lavoro · %s|Work · %s|Fatica · %s
+work.career_stats|XP %s · turni %s · guadagnato %s € · %s €/ora · attrezzo %s/3|XP %s · shifts %s · earned %s € · %s €/hour · tool %s/3|XP %s · turne %s · guadagnato %s € · %s €/ora · attrezzo %s/3
+work.next|Prossimo rango: %s|Next rank: %s|Prossimo rango: %s
+work.requirements|XP %s/%s · turni %s/%s · costo promozione %s €|XP %s/%s · shifts %s/%s · promotion cost %s €|XP %s/%s · turne %s/%s · ’a promozzione costa %s €
+work.station|Raggiungi il banco carriera|Find your career workstation|Va ô banco d’ ’a carriera
+work.station_help|Promozioni e attrezzi richiedono la presenza al banco|Promotions and tool services require being at the workstation|P’ ’e promozziune e attrezze hê ’a stà ô banco
+work.upgrade|Potenzia attrezzo|Upgrade tool|Migliora l’attrezzo
+work.upgrade_cost|Costo %s € + 1 %s · richiede rango %s|Cost %s € + 1 %s · requires rank %s|Costa %s € + 1 %s · serve ’o rango %s
+work.max|Livello massimo raggiunto|Maximum level reached|Si’ arrivato ô massimo
+work.repair|Ripara attrezzo|Repair tool|Acconcia l’attrezzo
+work.repair_cost|Costo %s € · porta l’attrezzo assegnato|Cost %s € · bring your assigned tool|Costa %s € · porta l’attrezzo tuo
+work.replace|Sostituisci attrezzo perso|Replace lost tool|Cagna l’attrezzo perzo
+work.replace_cost|Costo %s € · la vecchia assegnazione sarà invalidata|Cost %s € · the old assignment will become invalid|Costa %s € · ’a vecchia assegnazzione nun varrà cchiù
+work.title|Turni e carriera|Shifts and career|Turne e carriera
+work.rank.0|Apprendista|Apprentice|Apprendista
+work.rank.1|Qualificato|Qualified|Qualificato
+work.rank.2|Specialista|Specialist|Specialista
+work.rank.3|Maestro|Master|Masto
+house.title|Casa · contratti e ospiti|Home · contracts and guests|Casa · contratte e ospite
+house.mine|La tua casa · %s|Your home · %s|’A casa toja · %s
+house.available|Disponibile · %s|Available · %s|Disponibile · %s
+house.list|Prezzo %s € · distanza %s m|Price %s € · distance %s m|Prezzo %s € · distanza %s m
+house.invalid|Casa non disponibile.|Home unavailable.|Sta casa nun è disponibile.
+house.navigate|Raggiungi l’ingresso e il cartello|Find the entrance and property sign|Va â trasuta e ô cartiello
+house.address|Cartello: %s|Property sign: %s|Cartiello: %s
+house.rental|Contratto di affitto|Rental agreement|Contratto d’affitto
+house.owned|Proprietà e mutuo|Ownership and mortgage|Pruprietà e mutuo
+house.account|Debito %s € · arretrati %s € · rata %s € + 2 € bollette · scadenza fra %s giorni · insoluti %s|Debt %s € · arrears %s € · installment %s € + 2 € utilities · due in %s days · missed periods %s|Debbito %s € · arretrate %s € · rata %s € + 2 € bullette · scade fra %s juorne · nun pagate %s
+house.pay|Paga arretrati · %s €|Pay arrears · %s €|Paga l’arretrate · %s €
+house.bill_help|Controlla il totale prima di confermare il pagamento|Review the total before confirming payment|Guarda ’o totale primma ’e pavà
+house.leave|Concludi l’affitto|End rental agreement|Fernesce l’affitto
+house.leave_cost|Da saldare prima della chiusura: %s €|Outstanding amount before ending the rental: %s €|Primma ’e fernì hê ’a pavà %s €
+house.no_debt|Nessun mutuo residuo; bollette secondo il contratto|No remaining mortgage; utilities follow the contract|Nun resta mutuo; ’e bullette se pàvano comme ’o contratto
+house.keys|Ritira una chiave autorizzata|Collect an authorized key|Piglia na chiave autorizzata
+house.keys_help|Una chiave non concede permessi aggiuntivi|A key does not grant additional permissions|’A chiave nun dà ate permisse
+house.guests|Gestisci ospiti e inviti|Manage guests and invitations|Guverna ospite e ’nvite
+house.guests_help|Invita, revoca o termina un’ospitalità|Invite, revoke or end a visit|’Nvita, lieva ’o permesso o fernesce ’a visita
+house.dinner|Organizza una cena|Arrange a dinner|Prepara na cena
+house.dinner_help|Apri la gestione delle cene di questa casa|Open dinner management for this home|Arape ’a gestione d’ ’e cene ’e sta casa
+house.sell|Vendi la casa|Sell the home|Vinne ’a casa
+house.sell_help|Rivendita all’80%, detratto debito e arretrati|Sell for 80%, less debt and arrears|Vinne all’80%, levanno debbito e arretrate
+house.detail|Casa · %s|Home · %s|Casa · %s
+house.buy|Acquista senza mutuo|Buy outright|Accatta senza mutuo
+house.buy_cost|Prezzo totale %s €; bollette periodiche escluse|Total price %s €; recurring utilities excluded|Totale %s €; ’e bullette periodiche so’ a parte
+house.rent|Affitta|Rent|Affitta
+house.mortgage|Acquista con mutuo|Buy with a mortgage|Accatta cu ’o mutuo
+house.offer|Acconto %s € · rata %s € ogni 7 giorni + 2 € bollette · periodi %s · totale iniziale e capitale %s €|Deposit %s € · installment %s € every 7 days + 2 € utilities · periods %s · deposit plus principal %s €|Acconto %s € · rata %s € ogne 7 juorne + 2 € bullette · periode %s · acconto e capitale %s €
+house.unlimited|senza limite|unlimited|senza limite
+house.unavailable|Casa occupata o non gestibile da te.|Home occupied or not under your control.|Sta casa è occupata o nun ’a puo’ guvernà.
+house.quote_action|Operazione: %s|Action: %s|Operazzione: %s
+house.quote_total|Da pagare ora: %s € · saldo disponibile: %s €|Pay now: %s € · available balance: %s €|Da pavà mo: %s € · solde dispunibbele: %s €
+house.quote_credit|Riceverai: %s € · saldo attuale: %s €|You will receive: %s € · current balance: %s €|Ricevarraje: %s € · solde ’e mo: %s €
+house.contract_terms|Condizioni del contratto|Contract terms|Cundizziune d’ ’o contratto
+house.recurring|Scadenze e costo periodico|Deadlines and recurring cost|Scadenze e costo periodico
+house.recurring_help|Ogni 7 giorni di gioco. Mutuo: 10% complessivo sul capitale finanziato. Affitto senza durata fissa. Tre scadenze insolute chiudono il contratto.|Every 7 in-game days. Mortgage: 10% total on financed principal. Rental has no fixed term. Three missed periods end the contract.|Ogne 7 juorne ’e juoco. Mutuo: 10% ’ncopp’ ô capitale. Affitto senza fine fissa. Tre scadenze nun pavate e ’o contratto se chiude.
+house.confirm|Conferma questa operazione|Confirm this action|Cunferma st’operazzione
+house.confirm_help|Conferma il costo indicato. Il preventivo scade dopo 60 secondi.|Confirm the displayed cost. This quote expires after 60 seconds.|Cunferma ’o costo scritto. ’O cunto scade doppo 60 seconde.
+house.back|Torna alla casa|Back to home details|Torna â casa
+house.cancel_help|Torna indietro senza effettuare pagamenti|Go back without making a payment|Torna arreto senza pavà
+house.quote|Preventivo · %s|Quote · %s|Cunto · %s
+house.quote_expired|Preventivo scaduto o condizioni cambiate: richiedine uno nuovo.|Quote expired or conditions changed: request a new one.|’O cunto è scaduto o so’ cagnate ’e cundizziune: addimmannane n’ato.
+house.at_sign|Raggiungi il cartello della casa per concludere questa operazione.|Reach the property sign to complete this action.|Va ô cartiello d’ ’a casa pe fernì st’operazzione.
+house.need_money|Ti mancano %s € per questa operazione.|You need %s € more for this action.|Te mancano %s € pe st’operazzione.
+house.action_failed|Operazione non eseguita: ricontrolla contratto, scadenze e posizione.|Action not performed: check contract, deadlines and location.|Operazzione nun fatta: ricuntrolla contratto, scadenze e addò staje.
+house.action.compra|acquisto|purchase|accatto
+house.action.affitta|affitto|rental|affitto
+house.action.mutuo|mutuo|mortgage|mutuo
+house.action.paga|pagamento|payment|pagamiento
+house.action.lascia|chiusura affitto|end rental|chiusura affitto
+house.action.vendi|rivendita|sale|vennita
+group.title|Incontriamoci · gruppi e inviti|Meet up · groups and invitations|Vedimmoce · gruppe e ’nvite
+group.invite_from|Invito da %s|Invitation from %s|’Nvito ’e %s
+group.invite_to|Invito inviato a %s · annulla|Invitation sent to %s · cancel|’Nvito mannato a %s · lieva
+group.invite_detail|%s · scade fra %s secondi|%s · expires in %s seconds|%s · scade fra %s seconde
+group.decline|Rifiuta|Decline|Rifiuta
+group.destination|Meta del gruppo: %s|Group destination: %s|Meta d’ ’o gruppo: %s
+group.saved|Gruppo e meta sono salvati; premi per riprendere il percorso|Group and destination are saved; select to resume directions|Gruppo e meta restano salvate; preme pe ripiglià ’a via
+group.member|%s · %s|%s · %s|%s · %s
+group.leader|capogruppo|leader|capogruppo
+group.player|membro|member|cumpagno
+group.arrived|Arrivato|Arrived|Arrivato
+group.offline|Disconnesso|Offline|Scunnesso
+group.traveling|In viaggio|Traveling|Sta venenno
+group.redirect|Condividi la tua nuova meta col gruppo|Share your new destination with the group|Sparte ’a nova meta cu ’o gruppo
+group.redirect_help|Il capogruppo sceglie prima una meta nell’atlante; gli altri riceveranno le nuove indicazioni|The leader first pins an atlas destination; members then receive updated directions|’O capogruppo sceglie primma na meta; ll’ate ricevono ’e nove indicazzione
+group.leave|Esci dal gruppo|Leave group|Jesce d’ ’o gruppo
+group.leave_help|Il percorso personale resta disponibile; il capogruppo viene sostituito se necessario|Your personal route remains; leadership transfers if needed|’A via toja resta; si serve se cagna ’o capogruppo
+group.choose_goal|Scegli una meta da condividere|Choose a shared destination|Sceglie na meta ’a spartere
+group.choose_help|Fissa prima una destinazione nell’atlante.|Pin an atlas destination first.|Fissa primma na meta ’int’all’atlante.
+group.invite_player|Invita %s|Invite %s|’Nvita %s
+group.share|Condividi %s|Share %s|Sparte %s
+group.empty|Nessun altro giocatore a Napoli|No other players in Napoli|Nun ce stanno ate jucature a Napule
+group.empty_help|Gli inviti saranno disponibili quando entrerà un amico|Invitations become available when a friend joins|’E ’nvite saranno dispunibbele quanno trase n’amico
+group.error_online|Il destinatario deve essere online a Napoli.|The recipient must be online in Napoli.|’O destinatario adda stà cunnesso a Napule.
+group.error_leader|Solo il capogruppo può invitare o cambiare meta; massimo 32 membri.|Only the leader may invite or change destinations; maximum 32 members.|Sulo ’o capogruppo po’ ’nvitare o cagnà meta; massimo 32 cumpagne.
+group.redirect_first|Condividi prima la nuova meta con il gruppo.|Share the new destination with the group first.|Sparte primma ’a nova meta cu ’o gruppo.
+group.cooldown|Attendi 5 secondi prima di un altro invito.|Wait 5 seconds before sending another invitation.|Aspetta 5 seconde primma ’e n’ato ’nvito.
+group.inbox_full|Il destinatario ha già troppi inviti in sospeso.|The recipient has too many pending invitations.|’O destinatario tene troppi ’nvite ’n sospeso.
+group.invitation|%s ti invita a %s. Apri il menu cittadino → Incontriamoci per rispondere.|%s invites you to %s. Open City menu → Meet up to reply.|%s te ’nvita a %s. Arape ’o menu → Vedimmoce pe risponnere.
+group.sent|Invito inviato a %s|Invitation sent to %s|’Nvito mannato a %s
+group.invalid|Invito scaduto, annullato o non destinato a te.|Invitation expired, canceled or addressed to someone else.|’Nvito scaduto, levato o nun è pe tte.
+group.changed|Il gruppo o la meta sono cambiati: richiedi un nuovo invito.|The group or destination changed: request a new invitation.|’O gruppo o ’a meta so’ cagnate: addimanna n’ato ’nvito.
+group.accepted|%s ha accettato la meta %s|%s accepted the destination %s|%s ha accettato ’a meta %s
+group.follow|Meta condivisa: %s. Segui il navigatore.|Shared destination: %s. Follow the navigator.|Meta ’nzieme: %s. Sègue ’o navigatore.
+group.left|Sei uscito dal gruppo.|You left the group.|Si’ asciuto d’ ’o gruppo.
+group.none|Non appartieni a un gruppo.|You are not in a group.|Nun staje ’int’a nu gruppo.
+group.arrival|%s è arrivato a %s|%s arrived at %s|%s è arrivato a %s
+journal.title|Diario delle attività|Activity journal|Diario d’ ’e cose ’a fà
+journal.action|Apri|Open|Arape
+journal.faction|Missione del quartiere|Neighborhood mission|Missione d’ ’o quartiere
+journal.local|Incarico locale|Local task|Incarico d’ ’o vicolo
+journal.delivery|Consegna · %s|Delivery · %s|Cunsegna · %s
+journal.delivery_info|Grano %s/8 · compenso attuale %s €|Wheat %s/8 · current reward %s €|Grano %s/8 · paga ’e mo %s €
+journal.person|Incontra %s|Meet %s|’Ncontra %s
+journal.help.oven|Porta 4 lingotti di ferro al cittadino per riparare il forno|Bring 4 iron ingots to the citizen to repair the oven|Porta 4 lingotte ’e fierro ô cittadino pe acconcià ’o furno
+journal.help.work|Incontra il cittadino e accompagnalo al municipio per un impiego|Meet the citizen and escort them to city hall for a job|’Ncontra ’o cittadino e accumpagnalo ô municipio pe na fatica
+journal.help.home|Aiuta la famiglia a risparmiare per una casa|Help the family save for a home|Ajuta ’a famiglia a sparagnà pe na casa
+journal.bills|Pagamenti della casa in sospeso: %s €|Outstanding housing payments: %s €|Pagamiente d’ ’a casa ’n sospeso: %s €
+journal.prizes|Premi del campionato da ritirare|Unclaimed league rewards|Premie d’ ’o campionato ’a piglià
+journal.prize_amount|Puoi riscuotere %s €|You can claim %s €|Puo’ piglià %s €
+journal.empty|Nessuna attività in sospeso|No pending activities|Nun ce stanno attività ’n sospeso
+journal.empty_help|Parla con gli abitanti o consulta le offerte di lavoro|Talk to residents or browse job offers|Parla cu ll’abbitante o guarda ’e offerte ’e fatica
+journal.completed|Attività conclusa o non più disponibile: riapri il diario.|Activity completed or unavailable: reopen the journal.|Attività fernuta o nun disponibile: riarape ’o diario.
+journal.unlocated|La persona non è attualmente localizzabile: avvicinati al suo quartiere.|This person cannot currently be located: approach their neighborhood.|Sta perzona mo nun se trova: avvicinate ô quartiere sujo.
+journal.tracking|%s · %s|%s · %s|%s · %s
+ledger.title|Portafoglio · movimenti recenti|Wallet · recent transactions|Portafoglio · movimiente recente
+ledger.balance|Saldo disponibile: %s €|Available balance: %s €|Solde dispunibbele: %s €
+ledger.explained|I movimenti riportano le variazioni reali del portafoglio; non sono retroattivi|Transactions reflect actual wallet changes; earlier activity is not reconstructed|’E movimiente mostrano ’e cagne vere d’ ’o portafoglio; chille vecchie nun se ricostruiscono
+ledger.totals|Entrate %s € · uscite %s €|Income %s € · expenses %s €|Trasute %s € · asciute %s €
+ledger.limit|Totali degli ultimi %s movimenti, fino a un massimo di 100|Totals for the last %s transactions, up to 100 entries|Totale d’ ll’ultime %s movimiente, massimo 100
+ledger.amount|%s · %s €|%s · %s €|%s · %s €
+ledger.line|Giorno %s · %s · saldo %s € · %s|Day %s · %s · balance %s € · %s|Juorno %s · %s · solde %s € · %s
+money.income|Entrata|Income|Trasuta
+money.expense|Uscita|Expense|Asciuta
+money.fine|Multa|Fine|Multa
+money.tax|Tassa|Tax|Tassa
+money.rent_deposit|Acconto affitto|Rental deposit|Acconto affitto
+money.mortgage_deposit|Acconto mutuo|Mortgage deposit|Acconto mutuo
+money.housing|Rate e bollette|Housing and utilities|Rate e bullette
+money.house_sale|Vendita casa|Home sale|Vennita casa
+money.house_purchase|Acquisto casa|Home purchase|Accatto casa
+money.transport|Biglietto trasporti|Transport ticket|Biglietto trasporte
+money.wage|Stipendio|Wage|Paga
+money.career|Carriera e attrezzi|Career and tools|Carriera e attrezze
+money.parcel|Sostituzione pacco|Parcel replacement|Ricambio pacco
+money.purchase|Acquisto|Purchase|Accatto
+money.delivery|Consegna|Delivery|Cunsegna
+money.league|Premio campionato|League reward|Premio campionato
+money.heist|Bottino|Heist proceeds|Bottino
+money.help_reward|Ricompensa aiuto|Helping reward|Premio p’ ’aiuto
+money.donation|Contributo famiglia|Family contribution|Ajuto â famiglia
+money.job_reward|Compenso incarico|Task reward|Paga incarico
+money.mission|Ricompensa missione|Mission reward|Premio missione
+money.parking|Parcheggio|Parking|Parcheggio
+money.service|Servizio|Service|Servizio
+money.game|Gioco di strada|Street game|Juoco ’e strada
+recipe.station.table|Banco per pizza|Pizza workbench|Banco p’ ’a pizza
+recipe.station.oven|Forno a legna|Wood-fired oven|Furno a llegna
+recipe.station.fry|Friggitrice|Fryer|Friggitrice
+recipe.station.coffee|Banco del caffè|Coffee counter|Banco d’ ’o cafè
+recipe.station.puzzle|Enigma del Sartù|Sartù puzzle|’Nduvinello d’ ’o Sartù
+recipe.output|%s × %s|%s × %s|%s × %s
+recipe.count|%s %s/%s|%s %s/%s|%s %s/%s
+recipe.summary|%s · %s|%s · %s|%s · %s
+recipe.title|Ricettario · cerca un piatto o una postazione|Recipe book · search dishes or workstations|Ricettario · cerca nu piatto o na postazzione
+recipe.invalid|Ricetta non disponibile: riapri il ricettario.|Recipe unavailable: reopen the recipe book.|Ricetta nun disponibile: riarape ’o ricettario.
+recipe.pin|Fissa questa ricetta|Pin this recipe|Fissa sta ricetta
+recipe.pin_help|La lista della spesa si aggiorna mentre raccogli gli ingredienti|The shopping list updates as you gather ingredients|’A lista d’ ’a spesa se aggiorna mentre raccuoglie ll’ingredienti
+recipe.result|Risultato: %s × %s · %s|Result: %s × %s · %s|Risultato: %s × %s · %s
+recipe.oil|Serve olio come combustibile|Requires oil as fuel|Serve uoglio comme combustibile
+recipe.logs|Servono tronchi come combustibile|Requires logs as fuel|Servono truonche comme combustibile
+recipe.no_fuel|Nessun combustibile richiesto|No fuel required|Nun serve combustibile
+recipe.inventory|Inventario %s / necessari %s · %s|Inventory %s / required %s · %s|Inventario %s / ce ne vonno %s · %s
+recipe.ready|Ingredienti pronti|Ingredients ready|Ingredienti pronte
+recipe.missing|Mancano %s|Missing %s|Mancano %s
+recipe.pinned|Ricetta fissata: %s|Recipe pinned: %s|Ricetta fissata: %s
+recipe.choose|Apri il ricettario e fissa una ricetta|Open the recipe book and pin a recipe|Arape ’o ricettario e fissa na ricetta
+recipe.more| · altri %s nel ricettario| · %s more in the recipe book| · ate %s ’int’ ô ricettario
+recipe.shopping|%s · %s → %s|%s · %s → %s|%s · %s → %s
+travel.maintenance|Fermo per manutenzione · consulta /problemi|Stopped for maintenance · check /problemi|Fermo pe manutenzione · guarda /problemi
+travel.strike|Servizio sospeso per sciopero|Service suspended due to strike|Servizio fermo p’ ’o sciopero
+travel.closed|Fuori orario · servizio diurno 06:30–01:00; N7 disponibile di notte|Outside service hours · daytime service 06:30–01:00; N7 available at night|Fora orario · servizio ’e juorno 06:30–01:00; N7 pure ’e notte
+travel.unknown|Fermata sconosciuta: cercala nell’atlante.|Unknown stop: find it in the atlas.|Fermata scunusciuta: cercala ’int’all’atlante.
+travel.reach|Raggiungi la fermata|Find the stop|Va â fermata
+travel.entrance|Ingresso: %s|Entrance: %s|Trasuta: %s
+travel.book|Prenota un viaggio|Book a journey|Prenota nu viaggio
+travel.book_help|Scegli la destinazione alla fermata; costo 2 € alla salita|Choose your destination at the stop; fare 2 € on boarding|Sceglie ’a meta â fermata; 2 € quanno saglie
+travel.capacity|Capienza %s; posti verificati alla salita|Capacity %s; seats checked on boarding|Capienza %s; ’e poste se verificano quanno saglie
+travel.seats|Posti liberi %s/%s|Free seats %s/%s|Poste libbere %s/%s
+travel.direction|%s → %s|%s → %s|%s → %s
+travel.departure|%s · %s|%s · %s|%s · %s
+travel.here|In fermata|At the stop|Sta â fermata
+travel.eta|%s s stimati|%s s estimated|%s s ’e stima
+travel.title|%s · partenze|%s · departures|%s · partènze
+travel.changes|%s cambi|%s transfers|%s cagne
+travel.riding|%s · prossima: %s · scendi a %s fra ~%s s · %s|%s · next: %s · alight at %s in ~%s s · %s|%s · prossima: %s · scinne a %s fra ~%s s · %s
+travel.waiting|%s → %s · %s · %s|%s → %s · %s · %s|%s → %s · %s · %s
+travel.wait|attendi alla fermata|wait at the stop|aspetta â fermata
+travel.platform|raggiungi la banchina|reach the platform|va â banchina
+travel.transfer|cambia linea|transfer to the next line|cagna linea
+travel.destination|destinazione del viaggio|journey destination|meta d’ ’o viaggio
+travel.alight|Preparati a scendere: %s · %s|Prepare to alight: %s · %s|Preparat’ a scennere: %s · %s
+help.title|Primi passi e consigli|Getting started and tips|Primi passe e cunziglie
+help.intro|Riprendi i primi passi|Resume getting started|Ripiglia ’e primi passe
+help.intro_detail|Quattro attività: vicino, lavoro, trasporti e pranzo|Four activities: a neighbor, work, transport and lunch|Quatto attività: vicino, fatica, trasporte e pranzo
+help.citizens|Parla con gli abitanti|Talk to residents|Parla cu ll’abbitante
+help.citizens_detail|Tasto destro su un cittadino per dialoghi, informazioni e servizi|Right-click a citizen for conversations, information and services|Tasto destro ’ncopp’ a nu cittadino pe parlà, sapé e avé servizie
+help.shops|Acquista in bottega|Shop locally|Accatta â puteca
+help.shops_detail|Raggiungi il negoziante e controlla apertura, scorte e saldo|Reach the shopkeeper and check opening status, stock and balance|Va ô putecaro e guarda apertura, scorte e solde
+help.transport|Prendi un mezzo|Take public transport|Piglia nu mezzo
+help.transport_detail|Prenota alla fermata; paghi alla salita. Controlla direzione e cambi|Book at the stop; pay on boarding. Check direction and transfers|Prenota â fermata; pave quanno saglie. Guarda direzzione e cagne
+help.cooking|Prepara una ricetta|Prepare a recipe|Prepara na ricetta
+help.cooking_detail|Fissa una ricetta per seguire ingredienti e postazione|Pin a recipe to track ingredients and workstation|Fissa na ricetta pe seguì ingredienti e postazzione
+help.panels|Personalizza i pannelli|Customize panels|Cagna ’e pannielle
+help.panels_detail|Opzioni del menu cittadino; H mostra o nasconde i pannelli|City menu options; H shows or hides panels|Opzziune d’ ’o menu; H mostra o annasconne ’e pannielle
+help.hints|Suggerimenti al primo incontro: %s|First-encounter tips: %s|Cunziglie ô primmo incontro: %s
+help.hints_detail|Premi per attivarli o disattivarli; i consigli restano consultabili qui|Toggle tips; you can always review them here|Preme pe attivà o fermà ’e cunziglie; ccà ’e puo’ sempe leggere
+previous|← Precedenti|← Previous|← ’E primma
+next|Altri →|Next →|Ll’ate →
+hints.message|%s · Rileggi i consigli nel menu cittadino → Primi passi.|%s · Review tips in City menu → Getting started.|%s · Rilegge ’e cunziglie ’int’ ô menu → Primi passe.
+hints.cooking|Fissa una ricetta dal ricettario per seguirne ingredienti e postazione.|Pin a recipe to track its ingredients and workstation.|Fissa na ricetta pe seguì ingredienti e postazzione.
+hints.shop|Controlla apertura, scorte e saldo; raggiungi il negoziante per acquistare.|Check opening status, stock and balance; approach the shopkeeper to buy.|Guarda apertura, scorte e solde; va ô putecaro pe accattà.
+hints.travel|Apri Trasporti alla fermata per controllare direzione e prossimo passaggio.|Open Transport at a stop to check direction and next departure.|Arape Trasporte â fermata pe vedé direzzione e prossima corsa.
+career.free_slot|Libera uno spazio per ricevere l’attrezzo di lavoro.|Free an inventory slot to receive your work tool.|Libbera nu posto pe avé l’attrezzo ’e fatica.
+career.issued|Attrezzatura iniziale assegnata. Il navigatore segue raccolta, preparazione e consegna; usa /lavoro risorse sul posto.|Starter equipment issued. Navigation follows gathering, preparation and delivery; use /lavoro risorse on site.|Attrezze assegnate. ’O navigatore te porta a raccogliere, preparà e cunsegnà; usa /lavoro risorse ’ncopp’ ô posto.
+career.requirements|Per %s servono %s XP, %s turni completati e %s €.|%s requires %s XP, %s completed shifts and %s €.|Pe %s servono %s XP, %s turne fernute e %s €.
+career.promoted|Promozione ottenuta: %s. Paga: %s €/ora di gioco.|Promoted to %s. Wage: %s €/in-game hour.|Si’ avanzato a %s. Paga: %s €/ora ’e juoco.
+career.upgraded|Attrezzo potenziato al livello %s.|Tool upgraded to level %s.|Attrezzo migliorato ô livello %s.
+career.have_tool|Hai già il tuo attrezzo: puoi ripararlo al banco.|You already have your tool: repair it at the workstation.|Tiene già l’attrezzo tuo: ’o puo’ acconcià ô banco.
+career.replaced|Attrezzo sostituito per %s €. La vecchia assegnazione non è più valida.|Tool replaced for %s €. The old assignment is now invalid.|Attrezzo cagnato pe %s €. ’A vecchia assegnazzione nun vale cchiù.
+career.timber|Tronco consegnato agli artigiani: 2 €.|Log delivered to craftspeople: 2 €.|Tronco cunsegnato all’artiggiane: 2 €.
+career.repaired|Attrezzo riparato: %s €.|Tool repaired: %s €.|Attrezzo acconciato: %s €.
+career.tool_name|%s · %s|%s · %s|%s · %s
+career.assigned|Assegnato a %s|Assigned to %s|Assegnato a %s
+house.closed_contract|Contratto di %s chiuso dopo tre scadenze non pagate.|Contract for %s ended after three missed payment periods.|’O contratto ’e %s s’è chiuso doppo tre scadenze nun pavate.
+house.due_notice|Casa %s: %s € da pagare. /casa paga %s|Home %s: %s € due. /casa paga %s|Casa %s: %s € ’a pavà. /casa paga %s
+house.deposit_needed|Servono %s € di acconto.|A deposit of %s € is required.|Servono %s € d’acconto.
+house.acquired|%s: %s · acconto %s € · rata %s € + 2 € bollette ogni 7 giorni. Tre insoluti chiudono il contratto.|%s: %s · deposit %s € · installment %s € + 2 € utilities every 7 days. Three missed periods end the contract.|%s: %s · acconto %s € · rata %s € + 2 € bullette ogne 7 juorne. Tre insolute e ’o contratto se chiude.
+house.rental_ended|Affitto concluso; arretrati saldati. La casa è nuovamente disponibile.|Rental ended; arrears settled. The home is available again.|Affitto fernuto; arretrate pavate. ’A casa è n’ata vota disponibile.
+house.payment_done|Pagamento casa: %s € · debito residuo %s €.|Housing payment: %s € · remaining debt %s €.|Pagamento casa: %s € · debbito ca resta %s €.
+house.sold|Casa venduta. Accredito netto: %s €.|Home sold. Net proceeds: %s €.|Casa vennuta. Trasuta netta: %s €.
+intro.progress|Primi passi: %s/4 attività completate. /inizio mostra il percorso.|Getting started: %s/4 activities completed. /inizio shows your progress.|Primi passe: %s/4 attività fernute. /inizio mostra ’a via.
+intro.complete|Benvenuto nel quartiere! Hai conosciuto un vicino, trovato lavoro, usato i trasporti e comprato il pranzo.|Welcome to the neighborhood! You met a neighbor, found work, used transport and bought lunch.|Benvenuto ’int’ ô quartiere! Hê canusciuto nu vicino, truvato fatica, pigliato ’e mezze e accattato ’o pranzo.
+intro.step|%s %s|%s %s|%s %s
+intro.task.0|Conosci un vicino: tasto destro su un cittadino|Meet a neighbor: right-click a citizen|Canusce nu vicino: tasto destro ’ncopp’ a nu cittadino
+intro.task.1|Trova lavoro: visita il collocamento|Find work: visit the employment office|Trova fatica: va ô collocamento
+intro.task.2|Prendi un mezzo: prenota alla fermata|Take transport: book at a stop|Piglia nu mezzo: prenota â fermata
+intro.task.3|Compra il pranzo: acquista cibo in bottega|Buy lunch: purchase food at a shop|Accatta ’o pranzo: piglia ’o magnà â puteca
+intro.help|Le attività restano registrate dopo il riavvio. Puoi seguire o sospendere la guida quando vuoi.|Progress survives server restarts. Follow or pause the introduction whenever you like.|’E attività restano doppo ’o riavvio. Puo’ seguì o fermà ’a guida quanno vuo’.
+intro.title|Benvenuto a Napoli|Welcome to Napoli|Benvenuto a Napule
+intro.follow|Segui i primi passi|Follow getting started|Sègue ’e primi passe
+intro.pause|Sospendi la guida|Pause introduction|Ferma ’a guida
+intro.welcome|Benvenuto a Napoli! Apri il menu cittadino con O (tasto predefinito) o /compagno. /inizio ti guida tra vicini, lavoro, trasporti e botteghe.|Welcome to Napoli! Open the city menu with O (default key) or /compagno. /inizio introduces neighbors, work, transport and shops.|Benvenuto a Napule! Arape ’o menu cu O (tasto ’e base) o /compagno. /inizio te porta ’mmiez’ a vicine, fatica, trasporte e putieche.
+shop.state|Non puoi fare acquisti in questo stato.|You cannot shop in your current state.|Nun puo’ accattà comme staje mo.
+shop.approach|Raggiungi l’ingresso della bottega per acquistare; puoi seguirlo dall’atlante.|Reach the shop entrance to buy; find directions in the atlas.|Va â trasuta d’ ’a puteca pe accattà; sègue l’atlante.
+shop.closed|Bottega chiusa: negoziante assente o fuori turno. Cerca un’alternativa nell’atlante.|Shop closed: shopkeeper absent or off duty. Find an alternative in the atlas.|Puteca chiusa: ’o putecaro nun ce sta o è fora turno. Cerca n’ata ’int’all’atlante.
+shop.unknown|Articolo non disponibile: riapri il menu della bottega.|Item unavailable: reopen the shop menu.|Articolo nun disponibile: riarape ’o menu d’ ’a puteca.
+shop.sight|Avvicinati al negoziante e mantieni il banco in vista.|Approach the shopkeeper and keep the counter in sight.|Avvicinate ô putecaro e tiene ’o banco a vista.
+shop.trust|Il negoziante non si fida: parla con lui e ricostruisci il rapporto.|The shopkeeper does not trust you: talk and rebuild the relationship.|’O putecaro nun se fida: parlace e ricustruisce ’o rapporto.
+shop.empty|Articolo esaurito: cerca un’altra bottega o aiuta con un rifornimento.|Out of stock: find another shop or help with a delivery.|Articolo fernuto: cerca n’ata puteca o ajuta cu nu rifornimento.
+shop.inventory|Inventario pieno: libera uno spazio e riprova. Nessun addebito.|Inventory full: free a slot and retry. No money charged.|Inventario chino: libbera nu posto e riprova. Nun hê pavato niente.
+shop.poor|Ti mancano %s € per acquistare %s.|You need %s € more to buy %s.|Te mancano %s € pe accattà %s.
+shop.bought|%s acquistato: %s € · rimasti %s|Bought %s: %s € · %s remaining|%s accattato: %s € · ne restano %s
+shop.product|%s · %s € · %s disponibili|%s · %s € · %s in stock|%s · %s € · %s dispunibbele
+shop.info|Stato: %s. Indirizzo: %s. Scorte locali e prezzi finali; raggiungi il negoziante per acquistare.|Status: %s. Address: %s. Local stock and final prices; approach the shopkeeper to buy.|Stato: %s. Indirizzo: %s. Scorte d’ ’a puteca e prezze finale; va ô putecaro pe accattà.
+travel.line|%s · %s – %s|%s · %s – %s|%s · %s – %s
+travel.network_info|Bus, tram e metro per giocatori e abitanti. Biglietto 2 € alla salita, cambi inclusi. Se il mezzo è pieno attendi il successivo.|Bus, tram and metro for players and residents. Fare 2 € on boarding, transfers included. If full, wait for the next vehicle.|Bus, tram e metro pe jucature e abbitante. 2 € quanno saglie, cagne cumpresi. Si ’o mezzo è chino, aspetta ’o prossimo.
+travel.metro_info|Raggiungi la banchina con scale o ascensore. Controlla la direzione prima di salire.|Reach the platform by stairs or lift. Check direction before boarding.|Va â banchina cu ’e scale o l’ascensore. Guarda ’a direzzione primma ’e saglì.
+travel.surface_info|Percorso urbano con corse in entrambe le direzioni.|Urban route with services in both directions.|Percorso d’ ’a città cu corse ’int’ a tutt’ ’e ddoje direzzione.
+travel.live|Partenze e posti disponibili|Departures and available seats|Partènze e poste libbere
+travel.native_eta|%s · %s|%s · %s|%s · %s
+travel.lift|Ascensore: strada / banchina|Lift: street / platform|Ascensore: via / banchina
+travel.go|Viaggia a %s|Travel to %s|Va a %s
+travel.not_allowed|Prenota da una fermata a Napoli quando sei libero di viaggiare.|Book at a stop in Napoli when you are free to travel.|Prenota â fermata a Napule quanno puo’ viaggià.
+travel.at_stop|Raggiungi una fermata prima di prenotare: menu cittadino → Trasporti.|Reach a stop before booking: City menu → Transport.|Va â fermata primma ’e prenotà: menu → Trasporte.
+travel.already|Hai già un viaggio prenotato. Usa /trasporti annulla per cambiarlo.|You already have a journey booked. Use /trasporti annulla to change it.|Tiene già nu viaggio prenotato. Usa /trasporti annulla pe ’o cagnà.
+travel.booked|Viaggio prenotato. Attendi a %s; pagherai il biglietto alla salita.|Journey booked. Wait at %s; the fare is charged on boarding.|Viaggio prenotato. Aspetta a %s; ’o biglietto se pava quanno saglie.
+travel.fare_needed|Servono 2 € per salire sul mezzo.|You need 2 € to board.|Servono 2 € pe saglì ’ncopp’ ô mezzo.
+hud.reputation|Reputazione|Reputation|Reputazzione
+hud.unaligned|Senza clan|No clan|Senza clan
+hud.rank|Rango: %s|Rank: %s|Rango: %s
+hud.jailed|IN GALERA|IN JAIL|’NCARCERATO
+hud.release|Esci tra %s s|Released in %s s|Jesce fra %s s
+hud.arrived|Sei arrivato|You have arrived|Si’ arrivato
+menu.coop|Lavori cooperativi|Cooperative jobs|Fatiche ’nzieme
+menu.coop_help|Incarichi di gruppo, contributi e compensi individuali.|Group projects, contributions and individual rewards.|Incariche d’ ’o gruppo, cuntribute e pavamente pe ognuno.
+menu.trade|Scambi tra giocatori|Player trading|Scagne fra jucature
+menu.trade_help|Offerte visibili a entrambi, con doppia conferma.|Both players see the offers and confirm the same revision.|Tutte e dduje vedono ll’offerte e cunfermano ’a stessa versione.
+menu.scooter|I tuoi motorini|Your scooters|’E motorine tuoje
+menu.scooter_help|Ultimo mezzo, parcheggi e recupero al deposito.|Last vehicle, parking and depot recovery.|Ultimo mezzo, parchegge e recupero ô deposito.
+menu.economy|Bilancio e prezzi|Budget and prices|Cunte e prezze
+menu.economy_help|Primo stipendio, affitto, attrezzi e prezzi finali.|First pay, rent, tools and final prices.|Primma pava, affitto, attrezze e prezze finale.
+trade.title|Scambio sicuro|Safe trade|Scagno sicuro
+trade.invite_help|Restate entro 6 blocchi e chiudete gli altri contenitori.|Stay within 6 blocks and close other containers.|Restate dint’ a 6 blocche e chiudite ll’ate cunteniture.
+trade.nearby|Avvicinati a un giocatore|Approach another player|Avvicinate a n’ato jucatore
+trade.nearby_help|Sono disponibili solo giocatori liberi nelle vicinanze.|Only available nearby players are listed.|Se vedono sulo ’e jucature libere vicino.
+trade.offer|Offerta di %s · %s €|%s offers · %s €|Offerta ’e %s · %s €
+trade.confirmed|Confermato · versione %s|Confirmed · revision %s|Cunfermato · versione %s
+trade.waiting|In attesa di conferma · versione %s|Awaiting confirmation · revision %s|Aspetta ’a cunferma · versione %s
+trade.quantity|Quantità: %s|Quantity: %s|Quantità: %s
+trade.accept|Accetta l’invito allo scambio|Accept trade invitation|Accetta ll’invito ô scagno
+trade.edit|Modifica gli oggetti offerti|Edit offered items|Cagna ll’oggette offerte
+trade.reset|Qualsiasi modifica annulla entrambe le conferme.|Any edit clears both confirmations.|Ogne cagnamento leva tutte e ddoje ’e cunferme.
+trade.money|Denaro offerto: %s €|Money offered: %s €|Denaro offerto: %s €
+trade.confirm|Conferma la versione %s|Confirm revision %s|Cunferma ’a versione %s
+trade.confirm_help|Controlla entrambe le offerte. Il trasferimento avviene dopo la seconda conferma.|Check both offers. Transfer happens after the second confirmation.|Cuntrolla tutte e ddoje ll’offerte. ’O trasferimento succede doppo ’a seconda cunferma.
+trade.refresh|Aggiorna la schermata|Refresh|Aggiorna ’a schermata
+trade.cancel|Annulla lo scambio|Cancel trade|Annulla ’o scagno
+trade.no_escrow|Gli oggetti e il denaro restano tuoi fino alla conclusione.|Items and money remain yours until completion.|Ll’oggette e ’e sorde restano tuoje fino â fine.
+trade.distance|Scambio interrotto: restate vicini, vivi e con l’inventario libero.|Trade stopped: stay nearby, alive and outside other inventory menus.|Scagno fermato: restate vicino, vive e cu ll’inventario libero.
+trade.ended|Scambio terminato. Nessun oggetto o denaro in attesa è stato trattenuto.|Trade ended. No pending items or money were held.|Scagno fernuto. Nisciu oggetto o denaro ’n attesa è stato trattenuto.
+trade.busy|Uno dei giocatori è già impegnato in uno scambio.|One player is already trading.|Uno d’ ’e jucature sta già facenno nu scagno.
+trade.expired|Questo scambio non è più attivo.|This trade is no longer active.|Stu scagno nun è cchiù attivo.
+trade.empty_slot|Spazio vuoto|Empty slot|Posto vacante
+trade.slot|Spazio %s · disponibili %s · offerti %s|Slot %s · available %s · offered %s|Posto %s · dispunibbele %s · offerte %s
+trade.back|Torna alle offerte|Back to offers|Torna all’offerte
+trade.changed|L’offerta è cambiata: controllala e conferma la nuova versione.|The offer changed: review and confirm the new revision.|Ll’offerta è cagnata: cuntrollala e cunferma ’a versione nova.
+trade.cannot_complete|Trasferimento sospeso: controllate oggetti, saldi, proprietà del mezzo e spazio libero.|Transfer paused: check items, balances, scooter ownership and inventory space.|Trasferimento fermo: cuntrollate oggette, sorde, padrone d’ ’o motorino e spazio libero.
+trade.done|Scambio completato.|Trade completed.|Scagno fernuto.
+scooter.title|Gestione motorini|Scooter management|Gestione d’ ’e motorine
+scooter.invalid|Mezzo o ricevuta non più validi: aggiorna la schermata.|Vehicle or token is no longer valid: refresh the screen.|Mezzo o ricevuta nun songo cchiù valide: aggiorna ’a schermata.
+scooter.owner_only|Solo il proprietario può ritirare o recuperare questo motorino.|Only the owner may pack up or recover this scooter.|Sulo ’o padrone pò piglià o recuperà stu motorino.
+scooter.full|Libera uno spazio nell’inventario per il motorino.|Free an inventory slot for the scooter.|Libera nu posto dint’ a ll’inventario p’ ’o motorino.
+scooter.last|Ultimo motorino utilizzato|Last scooter used|Ultimo motorino ausato
+scooter.bike|Motorino di proprietà|Owned scooter|Motorino ’e proprietà
+scooter.status|%s · %s · %s|%s · %s · %s|%s · %s · %s
+scooter.stored|Ritirato nell’inventario|Packed into inventory|Ritirato dint’ a ll’inventario
+scooter.occupied|Con passeggeri|Occupied|Cu ’e passagge
+scooter.parked|Parcheggiato|Parked|Parcheggiato
+scooter.recovery|Recupero al deposito · %s €|Depot recovery · %s €|Recupero ô deposito · %s €
+scooter.recovery_help|Conferma al garage comunale. Il vecchio mezzo verrà ritirato; non è consentito recuperare mezzi con passeggeri.|Confirm at the municipal garage. The old vehicle is retired; occupied vehicles cannot be recovered.|Cunferma ô garage comunale. ’O mezzo viecchio vene ritirato; cu ’e passagge nun se pò recuperà.
+scooter.depot|Raggiungi il deposito|Directions to the depot|Va ô deposito
+scooter.depot_help|Garage comunale · recupero %s €, addebitato solo alla consegna.|Municipal garage · recovery %s €, charged only on delivery.|Garage comunale · recupero %s €, pavate sulo â cunsegna.
+scooter.parking|Parcheggi segnalati|Marked parking|Parchegge signate
+scooter.parking_help|Segui le indicazioni fino al cartello P · MOTORINI.|Follow directions to a P · MOTORINI sign.|Segue ll’indicazzione fino ô cartello P · MOTORINI.
+scooter.parking_number|Parcheggio motorini %s|Scooter parking %s|Parcheggio motorine %s
+scooter.confirm|Conferma il recupero · %s €|Confirm recovery · %s €|Cunferma ’o recupero · %s €
+scooter.other_world|Questo mezzo è ritirato o si trova in un’altra dimensione.|This scooter is stored or in another dimension.|Stu motorino è ritirato o sta dint’ a n’ata dimenzione.
+scooter.at_depot|Raggiungi il garage comunale per confermare il recupero.|Reach the municipal garage to confirm recovery.|Va ô garage comunale pe cunfermà ’o recupero.
+scooter.busy|Recupero non disponibile: il mezzo risulta occupato. Attendi che scendano i passeggeri.|Recovery unavailable: the vehicle is occupied. Wait for passengers to leave.|Recupero nun dispunibbele: ’o mezzo tene passagge. Aspetta ca scenneno.
+scooter.poor|Servono 10 € per il recupero.|You need 10 € for recovery.|Servono 10 € p’ ’o recupero.
+permission.title|Ruoli e permessi della casa|House roles and permissions|Ruole e permesse d’ ’a casa
+permission.owner_only|Solo il proprietario o l’affittuario può gestire i permessi.|Only the owner or tenant may manage permissions.|Sulo ’o padrone o ll’affittuario pò gestì ’e permesse.
+permission.invite|Invita o rimuovi ospiti|Invite or remove guests|Invita o leva ll’ospite
+permission.defaults|Nuovi ospiti: porte consentite, elettrodomestici e contenitori esclusi.|New guests: doors allowed, appliances and storage denied.|Ospite nuove: porte permesse, elettrodomestice e cunteniture vietate.
+permission.member|%s · %s|%s · %s|%s · %s
+permission.guest|Ospite|Guest|Ospite
+permission.roommate|Coinquilino|Roommate|Cumpagno ’e casa
+permission.role_help|Seleziona per passare da ospite a coinquilino. Il coinquilino può usare la casa, senza gestire proprietà o permessi.|Select to switch guest and roommate roles. Roommates may use the home, without ownership or permission management.|Premme pe cagnà fra ospite e cumpagno ’e casa. ’O cumpagno pò ausà ’a casa, senza gestì proprietà o permesse.
+permission.doors|Porte e accesso|Doors and entry|Porte e trasuta
+permission.appliances|Elettrodomestici|Appliances|Elettrodomestice
+permission.storage|Contenitori|Storage|Cunteniture
+permission.switch|%s: %s|%s: %s|%s: %s
+permission.independent|Seleziona per cambiare solo questo permesso. Le chiavi non superano i divieti.|Select to change only this permission. Keys do not bypass restrictions.|Premme pe cagnà sulo stu permesso. ’E chiave nun passano ’e diviete.
+permission.revoke|Revoca l’accesso di %s|Revoke access for %s|Leva ll’accesso a %s
+permission.revoke_help|I permessi sono revocabili anche dopo aver consegnato una chiave.|Permissions can be revoked even after a key was given.|’E permesse se ponno levà pure doppo avé dato na chiave.
+permission.denied|Permesso negato: %s.|Permission denied: %s.|Permesso negato: %s.
+coop.title|Lavori cooperativi|Cooperative jobs|Fatiche ’nzieme
+coop.kind.supply|Rifornimento del forno|Bakery supply|Rifornimento d’ ’o furno
+coop.kind.maintenance|Manutenzione dei trasporti|Transport maintenance|Manutenzione d’ ’e trasporte
+coop.kind.courier|Consegna ricambi al garage|Deliver parts to the garage|Cunsegna ricambe ô garage
+coop.state.active|In corso|Active|Sta jenno
+coop.state.completed|Completato|Completed|Fernuto
+coop.state.cancelled|Annullato|Cancelled|Annullato
+coop.summary|Contributi %s/%s · fondo %s € · %s|Contributions %s/%s · reward pool %s € · %s|Cuntribute %s/%s · fondo %s € · %s
+coop.need_group|Serve un gruppo di almeno due giocatori|A group of at least two is required|Serve nu gruppo ’e almeno dduje jucature
+coop.need_group_help|Il capogruppo accetta l’incarico; tutti vedono contributi e compensi.|The leader accepts the job; everyone sees contributions and rewards.|’O capogruppo accetta ’a fatica; tutte vedono cuntribute e pavamente.
+coop.supply_help|Portate 16 grano al forno. Fondo riservato: %s €, diviso per unità consegnate.|Bring 16 wheat to the bakery. Reserved pool: %s €, split by delivered units.|Purtate 16 grano ô furno. Fondo riservato: %s €, spartuto pe unità cunsegnate.
+coop.courier_help|Ogni membro ritira un pacco al deposito e lo consegna al garage. Fondo: %s €.|Each member collects a parcel at the depot and delivers it to the garage. Pool: %s €.|Ogne cumpagno piglia nu pacco ô deposito e ’o porta ô garage. Fondo: %s €.
+coop.maintenance_help|Linea %s: portate 2 ferro sul luogo del guasto. Fondo riservato: %s €.|Line %s: bring 2 iron to the fault. Reserved pool: %s €.|Linea %s: purtate 2 fierro addó sta ’o guasto. Fondo riservato: %s €.
+coop.active|Il gruppo ha già un incarico attivo oppure la bacheca è piena.|The group already has a job or the board is full.|’O gruppo tene già na fatica o ’a bacheca è chiena.
+coop.unavailable|Incarico non più disponibile. Aggiorna la schermata.|Job no longer available. Refresh the screen.|Fatica nun cchiù dispunibbele. Aggiorna ’a schermata.
+coop.fund|Fondo comunale insufficiente: nessun materiale è stato prelevato.|Insufficient municipal funds: no materials were taken.|Fondo comunale insufficiente: nisciu materiale è stato pigliato.
+coop.member|Unità %s · quota finale %s € · %s|Units %s · final share %s € · %s|Unità %s · parte finale %s € · %s
+coop.claimed|Ritirato|Claimed|Ritirato
+coop.pending|Da ritirare alla chiusura|Claim after completion|Da ritirà â chiusura
+coop.collect|Ritira il pacco al deposito|Collect a parcel at the depot|Piglia ’o pacco ô deposito
+coop.collect_help|Un pacco personale per membro; il ritiro e la consegna sono salvati.|One personal parcel per member; collection and delivery are saved.|Nu pacco pe ogne cumpagno; ritiro e cunsegna songo sarvate.
+coop.navigate|Indicazioni per il lavoro|Directions to the job|Indicazzione p’ ’a fatica
+coop.address|Destinazione: %s|Destination: %s|Destinazione: %s
+coop.contribute|Consegna un’unità di lavoro|Deliver one unit of work|Cunsegna n’unità ’e fatica
+coop.contribute_help|%s · sul posto, un’unità per selezione. Il contributo viene registrato a tuo nome.|%s · at the destination, one unit per selection. Your contribution is recorded.|%s · ô posto, n’unità pe vota. ’O cuntributo vene signato a nomme tuojo.
+coop.cancel|Annulla l’incarico di gruppo|Cancel the group job|Annulla ’a fatica d’ ’o gruppo
+coop.cancel_help|Il fondo torna al comune. Ogni membro può ritirare i propri materiali, anche dopo un riavvio.|The pool returns to the municipality. Members can reclaim their materials, even after restart.|’O fondo torna ô comune. Ogne cumpagno pò ritirà ’e materiale suoje, pure doppo nu riavvio.
+coop.claim|Ritira la tua quota|Claim your share|Ritira ’a parte toja
+coop.refund|Ritira i tuoi materiali|Reclaim your materials|Ritira ’e materiale tuoje
+coop.share_help|Quota proporzionale ai contributi, riscuotibile una sola volta anche se il gruppo cambia.|Share proportional to contributions, claimable once even if the group changes.|Parte secunno ’e cuntribute, da ritirà na vota sola pure si ’o gruppo cagna.
+coop.refund_help|Libera spazio nell’inventario. I materiali originali vengono restituiti insieme.|Make inventory room. Your original materials are returned together.|Libera spazio dint’ a ll’inventario. ’E materiale originale tornano tutte ’nzieme.
+coop.membership|Per contribuire devi essere ancora nel gruppo dell’incarico.|You must still belong to the job’s group to contribute.|Pe cuntribuì hê da stà ancora dint’ ô gruppo d’ ’a fatica.
+coop.at_target|Raggiungi la destinazione prima di consegnare.|Reach the destination before delivering.|Va â destinazione primma ’e cunsegnà.
+coop.collect_first|Ritira prima il tuo pacco al deposito; ogni membro consegna una volta.|Collect your parcel at the depot first; each member delivers once.|Piglia primma ’o pacco tuojo ô deposito; ogne cumpagno cunsegna na vota.
+coop.material|Serve un’unità di %s nel tuo inventario.|You need one %s in your inventory.|Serve n’unità ’e %s dint’ a ll’inventario.
+coop.cannot_claim|Riscossione non disponibile: controlla spazio, saldo e ricevuta.|Cannot claim: check inventory space, balance and receipt.|Nun se pò ritirà: cuntrolla spazio, sorde e ricevuta.
+coop.at_depot|Raggiungi il deposito per ritirare il pacco. Indicazioni attivate.|Reach the depot to collect your parcel. Directions enabled.|Va ô deposito pe piglià ’o pacco. Indicazzione attivate.
+coop.saved|Contributi, pacchi e riscossioni rimangono salvati dopo il riavvio.|Contributions, parcels and claims survive server restarts.|Cuntribute, pacche e pavamente restano sarvate doppo ’o riavvio.
+coop.reserved|Guasto assegnato a un gruppo: contribuisci dal menu Lavori cooperativi.|This fault is assigned to a group: contribute from Cooperative jobs.|Stu guasto è assegnato a nu gruppo: cuntribuisce d’ ’o menu Fatiche ’nzieme.
+economy.title|Bilancio iniziale e prezzi|Starting budget and prices|Cunte iniziale e prezze
+economy.wallet|Saldo attuale: %s €|Current balance: %s €|Sorde ’e mo: %s €
+economy.starter|Nuovi portafogli: %s €. Budget minimo indicativo: %s € per deposito, prima settimana, pane e un biglietto.|New wallets: %s €. Example minimum: %s € for deposit, first week, bread and one fare.|Portafoglie nuove: %s €. Minimo indicativo: %s € pe deposito, primma settimana, pane e nu biglietto.
+economy.first_pay|Un’ora lavorata: %s €|One work hour: %s €|N’ora ’e fatica: %s €
+economy.time|Prima riscossione dopo almeno %s secondi effettivi in servizio e il compito completato. Viaggio e attesa dell’apertura si aggiungono.|First payment requires at least %s real seconds on duty and the completed task. Travel and waiting for opening take extra time.|Primma pava doppo almeno %s seconde vere ’e servizio e ’o compito fernuto. Viaggio e attesa d’apertura se aggiungono.
+economy.rent|Deposito %s € · ogni 7 giorni %s € con bollette · ore lavorate necessarie: %s per il deposito, %s per settimana.|Deposit %s € · %s € every 7 days including bills · work hours needed: %s for deposit, %s per week.|Deposito %s € · ogne 7 juorne %s € cu ’e bullette · ore ’e fatica: %s p’ ’o deposito, %s pe settimana.
+economy.tools|Costo degli attrezzi|Tool costs|Costo d’ ’e attrezze
+economy.tools_help|Primo attrezzo incluso. Ricambio base %s €, primo potenziamento %s € e relativo materiale: %s ore di lavoro alla paga attuale.|First tool included. Basic replacement %s €, first upgrade %s € plus its material: %s work hours at the current wage.|Primmo attrezzo cumpreso. Ricambio base %s €, primmo potenziamento %s € e ’o materiale: %s ore â pava ’e mo.
+economy.prices|Prezzi delle botteghe|Shop prices|Prezze d’ ’e putéche
+economy.prices_help|Prima dell’acquisto vedi prezzo base, prezzo cittadino, variazione per reputazione e totale finale.|Before buying, see base price, city price, reputation adjustment and final total.|Primma ’e accattà vide prezzo base, prezzo cittadino, cagnamento pe reputazzione e totale finale.
+economy.price|%s · base %s € → città %s € → reputazione %s € → totale %s €|%s · base %s € → city %s € → reputation %s € → total %s €|%s · base %s € → città %s € → reputazzione %s € → totale %s €
+settings.light|Preset cittadino leggero: %s|Light city preset: %s|Preset cittadino liggiero: %s
+settings.particles|Riduci particelle cittadine: %s|Reduce city particles: %s|Riduce ’e particelle cittadine: %s
+settings.flashes|Riduci lampeggi: %s|Reduce flashing: %s|Riduce ’e lampe: %s
+settings.motion|Riduci movimento e scuotimenti: %s|Reduce motion and shaking: %s|Riduce movimento e scosse: %s
+settings.quiet|Riduci rumori cittadini ripetitivi: %s|Reduce repetitive city sounds: %s|Riduce ’e rumure cittadine ripetute: %s
+settings.text|Avvisi testuali degli effetti: %s|Effect text alerts: %s|Avvise scritte d’ ’e effette: %s
+settings.effects_help|Preferenze personali salvate. Gli avvisi testuali sostituiscono gli effetti ridotti. Le impostazioni precedenti della telecamera vengono ripristinate alla disattivazione.|Saved personal preferences. Text alerts replace reduced effects. Previous camera settings are restored when disabled.|Preferenze personale sarvate. Ll’avvise scritte pigliano ’o posto d’ ’e effette ridotte. ’A telecamera torna comme primma quanno ’e stute.
+effects.cue.flash|Avviso: effetto luminoso nelle vicinanze.|Notice: bright effect nearby.|Avviso: effetto ’e luce vicino.
+effects.cue.smoke|Fumo nelle vicinanze.|Smoke nearby.|Fummo vicino.
+effects.cue.activity|Un’attività cittadina produce effetti nelle vicinanze.|A nearby city activity is producing effects.|N’attività cittadina fa effette vicino.
+effects.cue.warning|Avviso: colpo o scoppio nelle vicinanze.|Warning: a shot or bang nearby.|Avviso: nu cuorpo o nu botto vicino.
+effects.cue.appliance|Un elettrodomestico è stato azionato nelle vicinanze.|An appliance was activated nearby.|N’elettrodomestico è stato azionato vicino.
+effects.cue.ambience|Attività o suoni cittadini nelle vicinanze.|City activity or sounds nearby.|Attività o suone cittadine vicino.
+money.trade|Scambio tra giocatori|Player trade|Scagno fra jucature
+money.scooter|Recupero motorino|Scooter recovery|Recupero motorino
+money.cooperative|Compenso cooperativo|Cooperative reward|Pava d’ ’a fatica ’nzieme

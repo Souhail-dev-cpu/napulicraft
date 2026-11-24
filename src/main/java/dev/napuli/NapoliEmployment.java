@@ -387,7 +387,7 @@ public final class NapoliEmployment {
         return -1;
     }
 
-    private static Timecard timecard(ServerPlayer p, long day) {
+    static Timecard timecard(ServerPlayer p, long day) {
         Timecard card = p.getAttached(HOURS);
         return card != null && card.day() == day ? card : new Timecard(day, 0, 0, -HOUR, -HOUR);
     }

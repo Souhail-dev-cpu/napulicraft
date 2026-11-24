@@ -79,7 +79,7 @@ final class CityEconomy {
         var shop=business(c);var s=stock(p.level(),shop);int cost=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),2));
         if(s.bread()==0){p.sendSystemMessage(Component.literal("Pane esaurito. Una consegna di grano permetterà al forno di ripartire."));return 0;}
         if(NapoliStreet.cash(p)<cost||!p.getInventory().add(new ItemStack(Items.BREAD)))return 0;
-        NapoliStreet.credit(p,-cost);put(p.level(),shop,new Stock(s.grain(),s.flour(),s.bread()-1,s.processed(),s.delivered()));
+        NapoliStreet.credit(p,-cost,"purchase",shop);put(p.level(),shop,new Stock(s.grain(),s.flour(),s.bread()-1,s.processed(),s.delivered()));
         CitySocial.purchased(p.level(),id,p.getUUID());return 1;
     }
     static void offer(ServerPlayer p,UUID id){
@@ -87,7 +87,7 @@ final class CityEconomy {
         var c=CitySocial.nearby(p,id);if(c==null||!merchant(c))return;var shop=business(c);var s=stock(p.level(),shop);
         int price=CitySocial.price(p.level(),id,p.getUUID(),CityEvents.price(p.level(),2));
         p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal(c.name()+" · Bottega"),Optional.empty(),true,false,DialogAction.CLOSE,
-                List.of(new PlainMessage(Component.literal("Disponibili: "+s.bread()+" pani · grano: "+s.grain()+" · farina: "+s.flour()+
+                List.of(new PlainMessage(PlayerEconomyGuide.price(p,id,2,Items.BREAD.getDefaultInstance().getHoverName()),270),new PlainMessage(Component.literal("Disponibili: "+s.bread()+" pani · grano: "+s.grain()+" · farina: "+s.flour()+
                         "\nIl forno produce solo se riceve materie prime. Le consegne in ritardo ritardano anche la produzione."),270)),List.of()),
                 List.of(CitySocial.button("Pane · "+price+" €","/quartiere compra "+id),CitySocial.button("Lavoro: rifornisci "+shop+" · 12 €","/quartiere incarico "+shop)),Optional.empty(),1)));
     }
@@ -101,7 +101,7 @@ final class CityEconomy {
             p.setAttached(DELIVERY,new Delivery(shop,now,now+6000));p.sendSystemMessage(Component.literal("Incarico accettato: porta 8 grano a "+shop+" ("+site(shop).getX()+", "+site(shop).getZ()+"). Compenso 12 €, oppure 6 € dopo 5 minuti."));return 1;
         }
         if(active==null||!active.shop().equals(shop)||p.blockPosition().distSqr(site(shop))>64||!take(p,Items.WHEAT,8))return 0;
-        supply(p.level(),shop,8);p.removeAttached(DELIVERY);int reward=now<=active.deadline()?12:6;NapoliStreet.credit(p,reward);
+        supply(p.level(),shop,8);p.removeAttached(DELIVERY);int reward=now<=active.deadline()?12:6;NapoliStreet.credit(p,reward,"delivery",shop);
         p.sendSystemMessage(Component.literal("Consegna completata: +"+reward+" €. Il grano è nelle scorte della bottega."));return 1;
     }
     static void tick(ServerLevel city){

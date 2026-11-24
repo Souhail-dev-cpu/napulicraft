@@ -51,7 +51,7 @@ final class WorkResources {
             if(DEPOT.distToCenterSqr(p.position())>36||hasParcel(p,c))return 0;String key=p.getUUID()+"/"+c.id();var receipts=new HashMap<>(p.level().getAttachedOrElse(PARCELS,Map.of()));long day=work.day();
             boolean replacement=receipts.getOrDefault(key,-1L)>=day;if(replacement&&NapoliStreet.cash(p)<3){p.sendSystemMessage(Component.literal("Per sostituire il pacco perso servono 3 €."));return 0;}
             var stack=new ItemStack(Items.PAPER);var tag=new CompoundTag();tag.putString("work_owner",p.getUUID().toString());tag.putString("work_contract",c.id());tag.putLong("work_day",day);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));stack.set(DataComponents.CUSTOM_NAME,Component.literal("Pacco di lavoro · "+p.getName().getString()));
-            if(!p.getInventory().add(stack))return 0;if(replacement){NapoliStreet.credit(p,-3);WorkEconomy.revenue(p.level(),3);}receipts.put(key,day);p.level().setAttached(PARCELS,Map.copyOf(receipts));return 1;
+            if(!p.getInventory().add(stack))return 0;if(replacement){NapoliStreet.credit(p,-3,"parcel");WorkEconomy.revenue(p.level(),3);}receipts.put(key,day);p.level().setAttached(PARCELS,Map.copyOf(receipts));return 1;
         }
         if(bench().distToCenterSqr(p.position())>36)return 0;
         Item input,output;int quantity,produced;

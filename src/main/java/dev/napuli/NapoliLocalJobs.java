@@ -124,6 +124,24 @@ final class NapoliLocalJobs {
         say(player, "return");
     }
 
+    static List<Job> active(ServerPlayer player) { return java.util.Arrays.stream(Job.values()).filter(j -> has(player, ACCEPTED, j) && !has(player, COMPLETED, j)).toList(); }
+
+    static BlockPos journalTarget(ServerPlayer player, Job job) {
+        if(job==Job.BUCATO)return has(player,VISITED,job)?NapoliLocalMap.ROOF:NapoliLocalMap.ROOF_MARK;
+        if(job==Job.TUNNEL)return has(player,VISITED,job)?NapoliLocalMap.TUNNEL_START:NapoliLocalMap.CISTERN;
+        for(var entity:player.level().getAllEntities())if(entity instanceof NapoliResident npc&&npc.role()==job.role)return npc.blockPosition();
+        return switch(job) {
+            case PIZZA -> new BlockPos(-12,64,-131);
+            case TOURIST -> new BlockPos(118,64,-19);
+            case FISH -> new BlockPos(9,64,52);
+            case CARDS -> new BlockPos(-37,64,-125);
+            case MARKET -> new BlockPos(72,64,-125);
+            case MUSIC -> new BlockPos(123,64,-10);
+            case NATIVITY -> new BlockPos(30,64,-142);
+            default -> null;
+        };
+    }
+
     static NapoliFactions.Objective objective(ServerPlayer player) {
         for (Job job : Job.values()) {
             if (!has(player, ACCEPTED, job) || has(player, COMPLETED, job)) continue;
@@ -243,7 +261,7 @@ final class NapoliLocalJobs {
                 Offer offer = offer(action);
                 if (offer == null) return 0;
                 if (NapoliStreet.cash(player) < offer.price()) { reply(player,s.npc(), "poor"); return 0; }
-                NapoliStreet.credit(player, -offer.price());
+                NapoliStreet.credit(player, -offer.price(),"purchase");
                 give(player, offer.stack());
                 reply(player,s.npc(), "bought");
             }
@@ -320,7 +338,7 @@ final class NapoliLocalJobs {
     private static void complete(ServerPlayer player, Job job) {
         if (has(player, COMPLETED, job)) return;
         mark(player, COMPLETED, job);
-        NapoliStreet.credit(player, job.reward);
+        NapoliStreet.credit(player, job.reward,"job_reward");
         NapoliNotice.show(player, Component.translatable("napuli.local.done", job.reward));
     }
 

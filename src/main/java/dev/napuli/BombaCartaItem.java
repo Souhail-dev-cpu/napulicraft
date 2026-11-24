@@ -22,8 +22,8 @@ final class BombaCartaItem extends Item {
         if (level instanceof ServerLevel city && player instanceof ServerPlayer server) {
             if (Carabinieri.isJailed(server)) return InteractionResult.FAIL;
             var point = player.position().add(player.getLookAngle().scale(1.5)).add(0, .65, 0);
-            city.sendParticles(ParticleTypes.SMOKE, point.x, point.y, point.z, 18, .38, .23, .38, .07);
-            city.playSound(null, player.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 1f, .84f);
+            CityEffects.particles(city,ParticleTypes.SMOKE, point.x, point.y, point.z, 18, .38, .23, .38, .07);
+            CityEffects.sound(city,null, player.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 1f, .84f);
             Carabinieri.crime(server, Carabinieri.Crime.VANDALISM);
             player.getCooldowns().addCooldown(stack, 60);
             stack.consume(1, player);

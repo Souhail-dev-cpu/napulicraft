@@ -33,6 +33,7 @@ final class CityWorkIncidents {
         city.players().stream().filter(p->p.blockPosition().distSqr(issue.position())<128*128).forEach(p->p.sendSystemMessage(Component.literal("La linea "+issue.line()+" è tornata in servizio.")));return true;
     }
     static int repair(ServerPlayer player,String id){var city=player.level();var issue=get(city,id);if(city.dimension()!=NapoliMap.LEVEL||!player.isAlive()||issue==null||player.isSpectator()||Carabinieri.isJailed(player)||issue.position().distToCenterSqr(player.position())>64)return 0;
+        if(CooperativeJobs.reserved(city,id))return CityCompanion.fail(player,CityText.t("coop.reserved"));
         if(WorkEconomy.fund(city)<20){player.sendSystemMessage(Component.literal("La riparazione attende i fondi per il compenso."));return 0;}
         if(!CityEconomy.take(player,Items.IRON_INGOT,2)){player.sendSystemMessage(Component.literal("Servono due lingotti di ferro per il ricambio."));return 0;}
         if(resolve(city,id)){WorkEconomy.wage(player,20);player.sendSystemMessage(Component.literal("Riparazione completata: 20 €."));return 1;}return 0;

@@ -195,7 +195,7 @@ public final class NapoliFactions {
         int lanterns = Math.clamp(p.lanterns() + (side == Side.LANTERNE ? reputation : -2), -100, 100);
         int tides = Math.clamp(p.tides() + (side == Side.MAREE ? reputation : -2), -100, 100);
         player.setAttached(DATA, new Progress(lanterns, tides, -1, 0, player.level().getGameTime() + 20 * 35));
-        NapoliStreet.credit(player, payout);
+        NapoliStreet.credit(player, payout,"mission");
         say(player, "payout", payout, reputation, side.label());
         return 1;
     }

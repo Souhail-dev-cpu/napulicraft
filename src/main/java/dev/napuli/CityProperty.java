@@ -50,8 +50,8 @@ public final class CityProperty {
         return NapoliMergellina.PROPERTIES.stream().noneMatch(h -> h.contains(pos) && !NapoliProperties.owns(player, h));
     }
     static boolean storageAllowed(ServerPlayer player,BlockPos pos){
-        if(DistrictLife.homes().stream().anyMatch(h->h.contains(pos)&&NapoliProperties.hasAccess(player,h)))return true;
-        return NapoliMergellina.PROPERTIES.stream().anyMatch(h->h.contains(pos)&&NapoliProperties.hasAccess(player,h));
+        if(DistrictLife.homes().stream().anyMatch(h->h.contains(pos)&&HomePermissions.allows(player,h,HomePermissions.Capability.STORAGE)))return true;
+        return NapoliMergellina.PROPERTIES.stream().anyMatch(h->h.contains(pos)&&HomePermissions.allows(player,h,HomePermissions.Capability.STORAGE));
     }
     static void forget(ServerLevel level, BlockPos pos) {
         var positions = level.getAttachedOrElse(PLACED, Set.of());

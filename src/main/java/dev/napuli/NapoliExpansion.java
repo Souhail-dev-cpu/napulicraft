@@ -217,8 +217,13 @@ public final class NapoliExpansion {
         // would wait on that same future; defer until the next server tick and cap the work per tick.
         ServerChunkEvents.CHUNK_LOAD.register((city,chunk,newlyGenerated)->{if(city.dimension()==NapoliMap.LEVEL&&NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(),chunk.getPos().getMinBlockZ()))PENDING.computeIfAbsent(city,k->new HashMap<>()).put(chunk.getPos().pack(),chunk);});
         ServerTickEvents.START_SERVER_TICK.register(server->{var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;var pending=PENDING.get(city);if(pending==null||pending.isEmpty())return;
-            var batch=pending.values().stream().sorted(Comparator.comparingDouble(c->city.players().stream().mapToDouble(p->p.blockPosition().distSqr(c.getPos().getMiddleBlockPosition(64))).min().orElse(0))).limit(4).toList();
+            record Nearby(LevelChunk chunk,double distance){}
+            var players=city.players().stream().map(p->p.blockPosition()).toList();
+            var closest=new PriorityQueue<Nearby>(Comparator.comparingDouble(Nearby::distance).reversed());
+            for(var chunk:pending.values()){var at=chunk.getPos().getMiddleBlockPosition(64);double distance=Double.MAX_VALUE;for(var player:players)distance=Math.min(distance,player.distSqr(at));closest.add(new Nearby(chunk,distance));if(closest.size()>4)closest.poll();}
+            var batch=closest.stream().sorted(Comparator.comparingDouble(Nearby::distance)).map(Nearby::chunk).toList();long began=System.nanoTime();int processed=0;
             for(var chunk:batch){
+                if(processed>0&&System.nanoTime()-began>6_000_000)break;processed++;
                 pending.remove(chunk.getPos().pack());
                 if(city.getChunkSource().getChunkNow(chunk.getPos().x(),chunk.getPos().z())!=chunk)continue;
                 generate(city,chunk);
@@ -231,6 +236,7 @@ public final class NapoliExpansion {
                 DistrictLife.fit(city,chunk);
                 CityRailway.fit(city,chunk);
                 WorkResources.fit(city,chunk);
+                CityPlayerImprovements.parking(city,chunk);
                 DistrictCharacter.fit(city,chunk);
                 NapoliFootballLink.fit(city,chunk);
             }

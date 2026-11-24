@@ -38,7 +38,7 @@ final class NapoliPeople {
 				boolean bike = !p.level().getEntitiesOfClass(Motorino.class, p.getBoundingBox().inflate(8)).isEmpty();
 				if (bike) {
 					if (NapoliStreet.cash(p) >= PARKING) {
-						NapoliStreet.credit(p, -PARKING);
+						NapoliStreet.credit(p, -PARKING,"parking");
 						say(p, npc, "napuli.people.parcheggiatore.paid");
 					} else say(p, npc, "napuli.people.parcheggiatore.broke");
 					return;
@@ -49,7 +49,7 @@ final class NapoliPeople {
 				int price = NeighbourMemory.price(p, npc, pizza ? PIZZA_PRICE : CORNO_PRICE);
 				if (p.isShiftKeyDown()) {                       // sneak + click = buy
 					if (NapoliStreet.cash(p) < price) { say(p, npc, "napuli.people.broke"); return; }
-					NapoliStreet.credit(p, -price);
+					NapoliStreet.credit(p, -price,"purchase");
 					NeighbourMemory.remember(p, npc, 2);
 					give(p, new ItemStack(pizza ? Napuli.PIZZA : Napuli.CORNICELLO));
 					say(p, npc, "napuli.people." + id + ".sold");
@@ -59,7 +59,7 @@ final class NapoliPeople {
 			}
 			case SCUGNIZZO -> {
 				if (p.getRandom().nextFloat() < 0.25f && NapoliStreet.cash(p) > 0 && !p.isCreative()) {
-					NapoliStreet.credit(p, -1);
+					NapoliStreet.credit(p, -1,"service");
 					say(p, npc, "napuli.people.scugnizzo.pinch");
 					return;
 				}

@@ -211,13 +211,13 @@ final class NapoliBroadcast {
         if(time%400<20)for(var player:level.players()) {
             var fans=level.getEntitiesOfClass(NapoliResident.class,player.getBoundingBox().inflate(32));
             if(!fans.isEmpty()) {
-                level.playSound(null,fans.getFirst().blockPosition(),SoundEvents.VILLAGER_CELEBRATE,SoundSource.NEUTRAL,.7f,1.1f);
+                CityEffects.sound(level,null,fans.getFirst().blockPosition(),SoundEvents.VILLAGER_CELEBRATE,SoundSource.NEUTRAL,.7f,1.1f);
                 NpcSpeech.say(player,fans.getFirst(),Component.literal("FORZA NAPOLI!"));
             }
         }
         for (ServerPlayer player : level.players()) {
             if (player.blockPosition().distSqr(PIAZZA) < 56 * 56)
-                level.sendParticles(ParticleTypes.FIREWORK, PIAZZA.getX() + .5, PIAZZA.getY() + 8,
+                CityEffects.particles(level,ParticleTypes.FIREWORK, PIAZZA.getX() + .5, PIAZZA.getY() + 8,
                         PIAZZA.getZ() + .5, 12, 1.2, .7, 1.2, .08);
         }
         var heard = new java.util.HashSet<Integer>();
@@ -225,7 +225,7 @@ final class NapoliBroadcast {
             AABB near = player.getBoundingBox().inflate(40);
             for (Motorino bike : level.getEntitiesOfClass(Motorino.class, near)) {
                 if (bike.isAlive() && heard.add(bike.getId()))
-                    level.playSound(null, bike.blockPosition(), SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, .75f, .65f);
+                    CityEffects.sound(level,null, bike.blockPosition(), SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, .75f, .65f);
             }
         }
     }

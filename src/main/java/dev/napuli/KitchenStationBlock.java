@@ -83,6 +83,7 @@ public final class KitchenStationBlock extends net.minecraft.world.level.block.B
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (player instanceof ServerPlayer serverPlayer) {
+            CompanionHints.encounter(serverPlayer,"cucina",CityText.t("hints.cooking"));
             if (kind == NapoliKitchen.Kind.PUZZLE) open(serverPlayer, pos, 0);
             else openMenu(serverPlayer, pos, state);
         }

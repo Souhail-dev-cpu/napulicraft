@@ -11,7 +11,7 @@ final class WorkEconomy {
     static final AttachmentType<Integer> FUND=AttachmentRegistry.<Integer>builder().persistent(Codec.INT).buildAndRegister(Napuli.id("employment_fund"));
     static int fund(ServerLevel city){return city.getAttachedOrElse(FUND,50000);}
     static void revenue(ServerLevel city,int euros){if(euros>0)city.setAttached(FUND,Math.min(1000000,fund(city)+euros));}
-    static boolean wage(ServerPlayer player,int euros){if(euros<=0||fund(player.level())<euros)return false;player.level().setAttached(FUND,fund(player.level())-euros);NapoliStreet.credit(player,euros);return true;}
+    static boolean wage(ServerPlayer player,int euros){if(euros<=0||fund(player.level())<euros)return false;player.level().setAttached(FUND,fund(player.level())-euros);NapoliStreet.credit(player,euros,"wage");return true;}
     static void sale(ServerLevel city,DistrictLife.District shop,int price){int levy=price/4;DistrictShops.credit(city,shop,price-levy);revenue(city,levy);}
     static void delivery(ServerLevel city,NapoliEmployment.Contract job,int units){
         switch(job){

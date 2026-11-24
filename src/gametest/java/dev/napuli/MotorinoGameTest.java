@@ -83,13 +83,15 @@ public class MotorinoGameTest {
             bike.mobInteract(bystander, InteractionHand.MAIN_HAND);
             check(helper, !bike.isRemoved() && driver.getVehicle() == bike, "Occupied bike cannot be picked up");
             driver.stopRiding();
-            bystander.getAbilities().instabuild = false;
-            for (int i = 0; i < 36; i++) bystander.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
             bike.mobInteract(bystander, InteractionHand.MAIN_HAND);
+            check(helper, !bike.isRemoved(), "A bystander cannot pack up an owned bike");
+            driver.setShiftKeyDown(true); driver.getAbilities().instabuild = false;
+            for (int i = 0; i < 36; i++) driver.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
+            bike.mobInteract(driver, InteractionHand.MAIN_HAND);
             check(helper, !bike.isRemoved(), "Full inventory does not delete the bike");
-            bystander.getInventory().setItem(0, ItemStack.EMPTY);
-            bike.mobInteract(bystander, InteractionHand.MAIN_HAND);
-            check(helper, bike.isRemoved() && bystander.getInventory().getItem(0).is(Napuli.MOTORINO_ITEM), "Empty bike is returned exactly once");
+            driver.getInventory().setItem(0, ItemStack.EMPTY);
+            bike.mobInteract(driver, InteractionHand.MAIN_HAND);
+            check(helper, bike.isRemoved() && driver.getInventory().getItem(0).is(Napuli.MOTORINO_ITEM), "Empty bike is returned to its owner exactly once");
         });
         helper.succeed();
     }

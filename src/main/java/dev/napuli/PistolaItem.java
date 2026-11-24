@@ -35,17 +35,17 @@ final class PistolaItem extends Item {
             if (hit != null && (hit.getEntity() instanceof Monster
                     || hit.getEntity() instanceof NapoliResident npc && npc.role().fighter())) {
                 if (hit.getEntity().hurtServer(world, world.damageSources().playerAttack(shooter), 6f)) {
-                    world.sendParticles(ParticleTypes.CRIT, hit.getLocation().x, hit.getLocation().y,
+                    CityEffects.particles(world,ParticleTypes.CRIT, hit.getLocation().x, hit.getLocation().y,
                             hit.getLocation().z, 8, 0.15, 0.15, 0.15, 0.05);
                 }
             }
-            world.playSound(null, shooter.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 0.6f, 1.6f);
+            CityEffects.sound(world,null, shooter.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 0.6f, 1.6f);
             Vec3 tip = start.add(shooter.getLookAngle().scale(0.7));
-            world.sendParticles(ParticleTypes.FLAME, tip.x, tip.y, tip.z, 1, 0, 0, 0, 0);
+            CityEffects.particles(world,ParticleTypes.FLAME, tip.x, tip.y, tip.z, 1, 0, 0, 0, 0);
             Vec3 impact = hit == null ? end : hit.getLocation();
             for (int i = 1; i <= 5; i++) {
                 Vec3 dust = tip.lerp(impact, i / 6.0);
-                world.sendParticles(ParticleTypes.SMOKE, dust.x, dust.y, dust.z, 1, 0, 0, 0, 0);
+                CityEffects.particles(world,ParticleTypes.SMOKE, dust.x, dust.y, dust.z, 1, 0, 0, 0, 0);
             }
             Carabinieri.crime(shooter, Carabinieri.Crime.SHOOTING);
             shooter.getCooldowns().addCooldown(stack, 24);

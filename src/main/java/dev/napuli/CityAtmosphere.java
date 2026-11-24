@@ -29,7 +29,7 @@ final class CityAtmosphere {
             if(time>=500&&time<1500)ambient=SoundEvents.BARREL_OPEN;
             else if(time>=10500&&time<11600)ambient=SoundEvents.ITEM_FRAME_ADD_ITEM;
             else if(time>=12000&&time<16000&&NapoliBroadcast.channel(city,CityLivingHomes.use(h,CityLivingHomes.Furniture.TV).block())!=NapoliBroadcast.Channel.OFF)ambient=SoundEvents.NOTE_BLOCK_HARP.value();
-            if(ambient!=null)city.playSound(null,h.entrance(),ambient,SoundSource.AMBIENT,.18f,.8f+Math.floorMod(h.id().hashCode(),4)*.1f);
+            if(ambient!=null)CityEffects.sound(city,null,h.entrance(),ambient,SoundSource.AMBIENT,.18f,.8f+Math.floorMod(h.id().hashCode(),4)*.1f);
         }
     }
     static void register(){ServerTickEvents.END_SERVER_TICK.register(s->{if(s.getTickCount()%100==0){var city=s.getLevel(NapoliMap.LEVEL);if(city!=null&&!city.players().isEmpty())tick(city);}});}

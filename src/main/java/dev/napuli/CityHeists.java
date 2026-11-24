@@ -99,7 +99,7 @@ final class CityHeists {
                 if (p != null) notice(p, "aborted");
             } else if (city.getGameTime() >= a.ends()) {
                 iterator.remove();
-                NapoliStreet.credit(p, a.target().payout());
+                NapoliStreet.credit(p, a.target().payout(),"heist");
                 if (a.target().bank()) Carabinieri.report(p, Carabinieri.Crime.ROBBERY);
                 notice(p, "finished", a.target().payout());
             } else {

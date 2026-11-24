@@ -83,7 +83,7 @@ final class HomeFixtureBlock extends Block {
 
         if (action.duration != 0) city.setBlock(pos, state.setValue(BlockStateProperties.LIT, !active), UPDATE_ALL);
         if (action.duration > 0) city.scheduleTick(pos, this, action.duration);
-        city.playSound(null, pos, action.sound, SoundSource.BLOCKS, .65f, 1);
+        CityEffects.sound(city,null, pos, action.sound, SoundSource.BLOCKS, .65f, 1);
         user.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true);
         if (action == Action.WASH) {
             NapoliHygiene.wash(user, pos, Math.min(100, NapoliHygiene.value(user) + 45));
@@ -146,7 +146,7 @@ final class HomeFixtureBlock extends Block {
                     user.sendOverlayMessage(Component.translatable("napuli.home.hair_already_dry"));
                     return false;
                 }
-                level.sendParticles(ParticleTypes.CLOUD, user.getX(), user.getEyeY(), user.getZ(), 8, .18, .14, .18, .025);
+                CityEffects.particles(level,ParticleTypes.CLOUD, user.getX(), user.getEyeY(), user.getZ(), 8, .18, .14, .18, .025);
                 user.sendOverlayMessage(Component.translatable("napuli.home.hair_dried"));
             }
             case VACUUM -> {
@@ -160,7 +160,7 @@ final class HomeFixtureBlock extends Block {
                 }
                 CityOccupations.litter(level, litter.position(), -1);
                 var dirt = litter.position();
-                level.sendParticles(ParticleTypes.CLOUD, dirt.getX()+.5, dirt.getY()+.25, dirt.getZ()+.5, 9, .25, .08, .25, .02);
+                CityEffects.particles(level,ParticleTypes.CLOUD, dirt.getX()+.5, dirt.getY()+.25, dirt.getZ()+.5, 9, .25, .08, .25, .02);
                 user.sendOverlayMessage(Component.translatable("napuli.home.vacuumed"));
             }
             case SCALE -> {
@@ -184,7 +184,7 @@ final class HomeFixtureBlock extends Block {
 
     private static boolean accessWithoutNotice(ServerPlayer player, BlockPos pos) {
         for (var house : CityLivingHomes.all()) {
-            if (house.contains(pos) && house.price() > 0 && !NapoliProperties.hasAccess(player, house)) return false;
+            if (house.contains(pos) && house.price() > 0 && !HomePermissions.allows(player, house, HomePermissions.Capability.APPLIANCES)) return false;
         }
         return true;
     }
@@ -192,7 +192,7 @@ final class HomeFixtureBlock extends Block {
     static boolean access(ServerPlayer player, BlockPos pos) {
         if (player.level().dimension() != NapoliMap.LEVEL) return true;
         for (var house : CityLivingHomes.all()) {
-            if (!house.contains(pos) || house.price() <= 0 || NapoliProperties.hasAccess(player, house)) continue;
+            if (!house.contains(pos) || house.price() <= 0 || HomePermissions.allows(player, house, HomePermissions.Capability.APPLIANCES)) continue;
             player.sendOverlayMessage(Component.translatable("napuli.property.private"));
             return false;
         }
@@ -203,8 +203,8 @@ final class HomeFixtureBlock extends Block {
     protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (!state.getValue(BlockStateProperties.LIT)) return;
         level.setBlock(pos, state.setValue(BlockStateProperties.LIT, false), UPDATE_ALL);
-        level.playSound(null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.BLOCKS, .35f, 1.2f);
+        CityEffects.sound(level,null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.BLOCKS, .35f, 1.2f);
         if (action == Action.HEAT || action == Action.APPLIANCE || action == Action.DRYER || action == Action.VACUUM)
-            level.sendParticles(ParticleTypes.CLOUD, pos.getX()+.5, pos.getY()+.95, pos.getZ()+.5, 5, .14, .12, .14, .01);
+            CityEffects.particles(level,ParticleTypes.CLOUD, pos.getX()+.5, pos.getY()+.95, pos.getZ()+.5, 5, .14, .12, .14, .01);
     }
 }

@@ -209,7 +209,7 @@ public final class GiorgiaMeloni {
                 open(player, npc);
                 return 0;
             }
-            NapoliStreet.credit(player, -tax);
+            NapoliStreet.credit(player, -tax,"tax");
             WorkEconomy.revenue(player.level(),tax);
             NapoliNotice.show(player, Component.translatable(tax == 0 ? "napuli.tax.exempt" : "napuli.tax.cash_paid",
                     tax, NapoliStreet.cash(player)));

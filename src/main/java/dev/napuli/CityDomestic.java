@@ -106,9 +106,9 @@ final class CityDomestic {
         if(d.progress()==0){
             if(d.stage()==3)DomesticMeals.setTable(city,point.block(),true);
             SoundEvent sound=switch(d.stage()){case 0->SoundEvents.BARREL_OPEN;case 1,3->SoundEvents.ITEM_FRAME_ADD_ITEM;case 2->SoundEvents.FURNACE_FIRE_CRACKLE;case 4->SoundEvents.GENERIC_EAT.value();default->SoundEvents.BUCKET_EMPTY;};
-            city.playSound(null,point.block(),sound,SoundSource.NEUTRAL,.35f,1);
+            CityEffects.sound(city,null,point.block(),sound,SoundSource.NEUTRAL,.35f,1);
         }
-        if(d.stage()==2||d.stage()==5)city.sendParticles(d.stage()==2?ParticleTypes.SMOKE:ParticleTypes.SPLASH,point.block().getX()+.5,point.block().getY()+1,point.block().getZ()+.5,4,.2,.15,.2,.01);
+        if(d.stage()==2||d.stage()==5)CityEffects.particles(city,d.stage()==2?ParticleTypes.SMOKE:ParticleTypes.SPLASH,point.block().getX()+.5,point.block().getY()+1,point.block().getZ()+.5,4,.2,.15,.2,.01);
         if(d.progress()+40<120){put(city,c.id(),new Dinner(h.id(),d.stage(),d.progress()+40,d.served()));return true;}
         if(d.stage()==0){
             barrel(city,point.block(),false);
@@ -117,7 +117,7 @@ final class CityDomestic {
         if(d.stage()==4){
             CityTraces.meal(city,h.id());
             var l=CitySimulation.life(city,c.id());CitySimulation.put(city,c.id(),l.withNeeds(l.needs().change(35,0,0,4,5,0),l.food(),l.last(),l.water(),l.energy()));
-            city.sendParticles(ParticleTypes.HAPPY_VILLAGER,npc.getX(),npc.getY()+1,npc.getZ(),3,.2,.2,.2,0);
+            CityEffects.particles(city,ParticleTypes.HAPPY_VILLAGER,npc.getX(),npc.getY()+1,npc.getZ(),3,.2,.2,.2,0);
         }
         if(d.stage()==5){
             CityTraces.clean(city,h.id());

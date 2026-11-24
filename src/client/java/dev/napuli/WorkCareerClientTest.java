@@ -80,7 +80,7 @@ public final class WorkCareerClientTest {
                 }});
             }else if(phase==6){
                 if(age%30==0)mc.player.connection.sendCommand("lavoro carriera");
-                if(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>){shot(mc,"lavoro-carriera");mc.gui.setScreen(null);mc.player.connection.sendCommand("lavoro rango");phase=7;}
+                if(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?> || mc.gui.screen()!=null && mc.gui.screen().getClass().getSimpleName().equals("CompanionScreen")){shot(mc,"lavoro-carriera");mc.gui.setScreen(null);mc.player.connection.sendCommand("lavoro rango");phase=7;}
             }else if(phase==7){
                 if(age%10==0)server(mc,p->{if(WorkCareer.get(p,NapoliEmployment.Contract.CARPENTER).rank()==1)phase=8;});
             }else if(phase==8){

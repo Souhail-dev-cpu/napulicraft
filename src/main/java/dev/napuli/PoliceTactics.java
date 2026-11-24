@@ -141,7 +141,7 @@ final class PoliceTactics {
         level.destroyBlockProgress(officer.getId(), chase.obstacle, Math.min(9, (int) (chase.progress * 10)));
         if (now % 6 == 0) {
             officer.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT);
-            level.playSound(null, chase.obstacle, chase.originalBlock.getSoundType().getHitSound(), SoundSource.BLOCKS, .6f, 1);
+            CityEffects.sound(level,null, chase.obstacle, chase.originalBlock.getSoundType().getHitSound(), SoundSource.BLOCKS, .6f, 1);
         }
         if (chase.progress >= 1) {
             BlockPos pos = chase.obstacle;

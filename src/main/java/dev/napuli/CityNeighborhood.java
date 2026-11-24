@@ -27,7 +27,7 @@ final class CityNeighborhood {
         for(var p:city.players())if(!p.isSpectator()&&p.distanceToSqr(npc)<range*range&&now>=heard.getOrDefault(p.getUUID(),0L)){
             NpcSpeech.say(p,npc,Component.literal(text));heard.put(p.getUUID(),now+200);
         }
-        city.playSound(null,npc.blockPosition(),SoundEvents.VILLAGER_AMBIENT,SoundSource.NEUTRAL,.25f,1);
+        CityEffects.sound(city,null,npc.blockPosition(),SoundEvents.VILLAGER_AMBIENT,SoundSource.NEUTRAL,.25f,1);
     }
     static BlockPos schoolEscort(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c){
         long time=NapoliBroadcast.time(city),day=NapoliBroadcast.day(city);
@@ -61,7 +61,7 @@ final class CityNeighborhood {
                 npc.setActivity(NapoliHouseholds.Activity.SHOP);CityDomestic.move(npc,scene.target());
                 if(scene.target().distToCenterSqr(npc.position())<3&&scene.basket()!=null){
                     var basket=city.getEntity(scene.basket());if(basket!=null){double progress=Math.clamp((scene.until()-now)/160.0,0,1);double drop=4*(1-Math.abs(2*progress-1));basket.snapTo(scene.target().getX()+.5,scene.target().getY()-.2-drop,scene.target().getZ()+1.5,0,0);}
-                    city.sendParticles(ParticleTypes.WHITE_ASH,scene.target().getX()+.5,scene.target().getY()-1,scene.target().getZ()+1.5,3,0,.6,0,0);
+                    CityEffects.particles(city,ParticleTypes.WHITE_ASH,scene.target().getX()+.5,scene.target().getY()-1,scene.target().getZ()+1.5,3,0,.6,0,0);
                 }
             }return true;
         }

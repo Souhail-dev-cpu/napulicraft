@@ -2,6 +2,7 @@ package dev.napuli;
 
 import com.mojang.serialization.Codec;
 import java.util.*;
+import static dev.napuli.CityText.t;
 import net.fabricmc.fabric.api.attachment.v1.*;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -21,8 +22,8 @@ final class CityOnboarding {
     static final AttachmentType<Boolean> PAID=AttachmentRegistry.<Boolean>builder().persistent(Codec.BOOL).copyOnDeath().buildAndRegister(Napuli.id("welcome_paid"));
     static void event(ServerPlayer player,int step){if(player.level().dimension()==NapoliMap.LEVEL)record(player,step);}
     static void record(ServerPlayer player,int step){int previous=player.getAttachedOrElse(STEPS,0);if((previous&step)!=0)return;int next=previous|step;player.setAttached(STEPS,next);
-        if(player.getAttachedOrElse(ACTIVE,false))player.sendSystemMessage(Component.literal("Primi passi: "+Integer.bitCount(next)+"/4 attività completate. /inizio mostra il percorso."));
-        if(next==15){player.setAttached(ACTIVE,false);player.sendSystemMessage(Component.literal("Benvenuto nel quartiere! Hai conosciuto un vicino, trovato lavoro, usato i trasporti e comprato il pranzo."));}
+        if(player.getAttachedOrElse(ACTIVE,false))player.sendSystemMessage(t("intro.progress",Integer.bitCount(next)));
+        if(next==15){player.setAttached(ACTIVE,false);player.sendSystemMessage(t("intro.complete"));}
     }
     static NapoliFactions.Objective objective(ServerPlayer p){if(p.level().dimension()!=NapoliMap.LEVEL||!p.getAttachedOrElse(ACTIVE,false))return null;int steps=p.getAttachedOrElse(STEPS,0);
         if((steps&TALK)==0){var census=NapoliCivicLife.census(p.level());if(census==null)return null;var near=census.people().stream().filter(c->p.level().getEntity(c.id())!=null).min(Comparator.comparingDouble(c->p.level().getEntity(c.id()).distanceToSqr(p))).orElse(null);return new NapoliFactions.Objective("napuli.guide.talk",near==null?NapoliMap.CAFE:p.level().getEntity(near.id()).blockPosition());}
@@ -31,17 +32,17 @@ final class CityOnboarding {
         if((steps&MEAL)==0){var d=DistrictLife.districts().stream().min(Comparator.comparingDouble(q->q.business().entrance().distToCenterSqr(p.position()))).orElseThrow();return new NapoliFactions.Objective("napuli.guide.meal",d.business().entrance());}
         return null;
     }
-    static int menu(ServerPlayer p){int steps=p.getAttachedOrElse(STEPS,0);String[] names={"Conosci un vicino: tasto destro su un cittadino","Trova lavoro: visita il collocamento","Prendi un mezzo pubblico: prenota da una fermata","Compra il pranzo: acquista cibo in bottega"};
-        var body=new ArrayList<net.minecraft.server.dialog.body.DialogBody>();for(int i=0;i<4;i++)body.add(new PlainMessage(Component.literal(((steps&(1<<i))!=0?"✓ ":"○ ")+names[i]),290));
-        body.add(new PlainMessage(Component.literal("Le attività sono normali azioni di gioco e rimangono registrate dopo il riavvio. Attiva la guida per seguire la freccia; puoi sospenderla quando vuoi."),290));
-        p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal("Benvenuto a Napoli"),Optional.empty(),true,false,DialogAction.CLOSE,body,List.of()),List.of(CitySocial.button("Segui i primi passi","/inizio segui"),CitySocial.button("Sospendi la guida","/inizio pausa"),CitySocial.button("Chiudi","/inizio chiudi")),Optional.empty(),1)));return 1;
+    static int menu(ServerPlayer p){int steps=p.getAttachedOrElse(STEPS,0);var body=new ArrayList<net.minecraft.server.dialog.body.DialogBody>();
+        for(int i=0;i<4;i++)body.add(new PlainMessage(t("intro.step",(steps&(1<<i))!=0?"✓":"○",t("intro.task."+i)),290));
+        body.add(new PlainMessage(t("intro.help"),290));
+        p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(t("intro.title"),Optional.empty(),true,false,DialogAction.CLOSE,body,List.of()),List.of(CitySocial.button(t("intro.follow"),"/inizio segui"),CitySocial.button(t("intro.pause"),"/inizio pausa"),CitySocial.button(t("close"),"/inizio chiudi")),Optional.empty(),1)));return 1;
     }
     static void register(){CommandRegistrationCallback.EVENT.register((d,a,e)->d.register(Commands.literal("inizio").executes(c->menu(c.getSource().getPlayerOrException()))
-            .then(Commands.literal("segui").executes(c->{var p=c.getSource().getPlayerOrException();p.setAttached(ACTIVE,true);return 1;}))
-            .then(Commands.literal("pausa").executes(c->{c.getSource().getPlayerOrException().setAttached(ACTIVE,false);return 1;}))
+            .then(Commands.literal("segui").executes(c->{var p=c.getSource().getPlayerOrException();p.setAttached(ACTIVE,true);p.setAttached(CityCompanion.TRACK,"guida");return 1;}))
+            .then(Commands.literal("pausa").executes(c->{var p=c.getSource().getPlayerOrException();p.setAttached(ACTIVE,false);if(p.getAttachedOrElse(CityCompanion.TRACK,"auto").equals("guida"))p.setAttached(CityCompanion.TRACK,"auto");return 1;}))
             .then(Commands.literal("chiudi").executes(c->1))));
         ServerTickEvents.END_SERVER_TICK.register(s->{if(s.getTickCount()%40!=0)return;var city=s.getLevel(NapoliMap.LEVEL);if(city==null)return;
-            for(var p:city.players())if(!p.getAttachedOrElse(SHOWN,false)){p.setAttached(SHOWN,true);p.sendSystemMessage(Component.literal("Benvenuto a Napoli! Usa /inizio per conoscere un vicino, trovare lavoro e scoprire trasporti e botteghe."));}
+            for(var p:city.players())if(!p.getAttachedOrElse(SHOWN,false)){p.setAttached(SHOWN,true);p.sendSystemMessage(t("intro.welcome"));}
         });
     }
     private CityOnboarding(){}

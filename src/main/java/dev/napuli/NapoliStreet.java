@@ -323,10 +323,17 @@ public final class NapoliStreet {
         };
     }
 
-    public static int cash(ServerPlayer player) { return player.getAttachedOrElse(CASH, 8); }
+    public static int cash(ServerPlayer player) { return player.getAttachedOrSet(CASH, CityLifeConfig.settings.startingCash); }
 
     public static void credit(ServerPlayer player, int amount) {
-        player.setAttached(CASH, Math.clamp(cash(player) + amount, 0, 99999));
+        credit(player, amount, amount >= 0 ? "income" : "expense");
+    }
+
+    public static void credit(ServerPlayer player, int amount, String reason) { credit(player,amount,reason,""); }
+    public static void credit(ServerPlayer player, int amount, String reason, String detail) {
+        int before=cash(player), after=(int)Math.clamp((long)before+amount,0L,99999L);
+        player.setAttached(CASH,after);
+        PlayerLedger.record(player,after-before,after,reason,detail);
     }
 
     private static String key(Action action) {
@@ -370,7 +377,7 @@ public final class NapoliStreet {
                 reply(player,session.npc(), BakeryStock.needsDelivery(player.level()) ? "bread_delivery" : "bread_wait");
                 return 0;
             }
-            credit(player, -price);
+            credit(player, -price,"purchase");
             WorkEconomy.revenue(player.level(),Math.max(1,price/4));
             if(offer.stack().has(net.minecraft.core.component.DataComponents.FOOD))CityOnboarding.event(player,CityOnboarding.MEAL);
             NeighbourMemory.remember(player, session.npc(), 2);
@@ -413,7 +420,7 @@ public final class NapoliStreet {
                     return 0;
                 }
                 player.removeAttached(DELIVERY);
-                credit(player, 12);
+                credit(player, 12,"delivery");
                 NeighbourMemory.remember(player, session.npc(), 4);
                 message(player, "reward", 12);
                 scheduleThief(player, now);
@@ -423,7 +430,7 @@ public final class NapoliStreet {
                 if (now < player.getAttachedOrElse(GAME, 0L)) { reply(player,session.npc(), "wait"); return 0; }
                 player.setAttached(GAME, now + 20 * 30);
                 boolean win = player.getRandom().nextInt(5) == 0;
-                credit(player, win ? 4 : -2);
+                credit(player, win ? 4 : -2,"game");
                 reply(player,session.npc(), win ? "cups_win" : "cups_lose");
             }
         }

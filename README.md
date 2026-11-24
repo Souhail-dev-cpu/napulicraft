@@ -12,6 +12,7 @@ Il progetto conserva il proprio carattere parodistico: Munaciello, motorini con 
 
 - [Requisiti e installazione](#requisiti-e-installazione)
 - [Primi passi](#primi-passi)
+- [Menu cittadino e comodità](#menu-cittadino-e-comodità)
 - [Funzionalità principali](#funzionalità-principali)
 - [La città e i suoi quartieri](#la-città-e-i-suoi-quartieri)
 - [Come funzionano gli NPC](#come-funzionano-gli-npc)
@@ -58,6 +59,25 @@ Al primo ingresso il giocatore viene accompagnato automaticamente nella dimensio
 6. Premi **J** per aggiungere la tua musica e configurare la radio.
 
 Per un'introduzione giocabile usa **`/inizio`**: conosci un vicino, scegli un lavoro, prendi un mezzo pubblico e compra il pranzo. La guida è facoltativa, si sospende con `/inizio pausa` e conserva le attività completate.
+
+## Menu cittadino e comodità
+
+Premi **O** per aprire il menu cittadino; il tasto è modificabile nei controlli di Minecraft. Sono disponibili anche **`/compagno`** e **`/citta menu`**. Dal menu raggiungi casa, lavoro, portafoglio, botteghe, trasporti, ricettario, guida e inviti.
+
+- **Atlante:** cerca per nome, quartiere o servizio, anche senza accenti. Le destinazioni comprendono luoghi, fermate, botteghe, il lavoro e le case di cui sei proprietario o inquilino. **☆ / ★** aggiunge o rimuove fino a 32 preferiti, conservati dopo morte e riavvio. La scheda di un luogo propone indicazioni a piedi, la fermata vicina e un itinerario con le linee attualmente disponibili.
+- **Navigatore:** il tracker indica le svolte lungo le strade, gli ingressi, le scale e le banchine della metro. Cerca passaggi effettivamente percorribili nei chunk caricati, controllando sostegno e spazio per la testa; ricalcola se ti allontani dal percorso o trova un ostacolo. Le zone lontane vengono esplorate normalmente durante il cammino. Se non trova un passaggio lo segnala. Le vecchie mete salvate rimangono compatibili.
+- **Obiettivi e carriera:** scegli fra automatico, lavoro, missioni, primi passi, meta fissata, lista della spesa, attività del diario o nessun obiettivo. La scelta è persistente. Il lavoro mostra ore, minuti, paga maturata e materiali; un turno già pagato indica **«Turno concluso: torna domani»**. La schermata Carriera mostra XP, turni completati, requisiti e costo della prossima promozione, paga oraria, potenziamenti e riparazioni. Le operazioni continuano a richiedere il banco fisico.
+- **Casa:** una schermata raccoglie proprietà, affitto, mutuo, debito, bollette, scadenze, chiavi, ospiti e cene. Acquisto, affitto, mutuo, pagamento, vendita e chiusura dell’affitto propongono un preventivo prima della conferma, con costo immediato e condizioni periodiche. Il preventivo scade dopo 60 secondi ed è utilizzabile una sola volta; se cambiano proprietà o conti occorre richiederne uno nuovo. Acquisto, affitto, mutuo e vendita conservano il requisito di presenza al cartello.
+- **Ricettario:** cerca piatti e postazioni, consulta quantità richieste, ingredienti nell’inventario e combustibile. Fissa una ricetta per aggiornare la lista della spesa nell’HUD durante la raccolta. Gli ingredienti ripetuti vengono conteggiati separatamente.
+- **Trasporti:** consulta direzione, attesa stimata, disservizi e posti del mezzo quando è presente. Il pannello aggiorna le partenze ogni cinque secondi e usa l’orologio effettivo delle corse, compresi i ritardi. In modalità obiettivo automatico, il viaggio mostra prossima fermata, destinazione di discesa e cambi.
+- **Incontriamoci:** fissa una meta e invita un giocatore online a Napoli. Il destinatario può accettare o rifiutare entro due minuti di gioco; il mittente può annullare l’invito. Gruppi, membri, mete e arrivi sono conservati nel salvataggio del mondo. Puoi uscire dal gruppo; se esce il capogruppo, il ruolo passa a un membro rimasto. Il capogruppo può fissare una nuova meta e condividerla con tutti: chi è disconnesso la riceve al rientro. Massimo 32 membri; gli inviti scaduti non tornano validi dopo un riavvio.
+- **Diario:** raccoglie mansioni lavorative, missioni di quartiere, incarichi locali, consegne, cittadini che stai aiutando, pagamenti della casa e premi del campionato da ritirare. Seleziona una voce per seguirne le indicazioni; il diario legge i progressi effettivi e rimuove le attività concluse. I punti degli incarichi locali restano rintracciabili anche quando il personaggio non è caricato.
+- **Spese:** consulta gli ultimi 100 movimenti del portafoglio, con causale, giorno, ora, importo effettivo e saldo successivo. Acquisti, stipendi, trasporti, multe, tasse, casa e premi sono distinti. La cronologia persiste dopo morte e riavvio e inizia dall’aggiornamento: i movimenti precedenti non vengono ricostruiti.
+- **Lingue:** menu cittadino, diario, carriera, casa, gruppi, cronologia, ricettario, trasporti e istruzioni del navigatore usano componenti tradotti dal client in italiano, inglese e napoletano. Anche su server dedicato ogni giocatore conserva la propria lingua. Le traduzioni sono mantenute in `tools/city-ui-translations.txt` e sincronizzate con `node tools/update_city_translations.mjs`.
+- **Opzioni:** attiva separatamente pannello cittadino, cucina e tracker, scegli modalità compatta e dimensione del testo, oppure disattiva le notifiche. Le preferenze locali sono salvate in `config/napulicraft-interface.json`. **H** continua a mostrare o nascondere tutti i pannelli.
+- **Aiuto:** i primi incontri con botteghe, fermate e postazioni di cucina mostrano un consiglio una sola volta. Dal menu puoi rileggerli, disattivarli e riprendere `/inizio`. Le notifiche uguali vengono raggruppate con un contatore.
+
+Acquisti e prenotazioni spiegano il motivo di un rifiuto, per esempio denaro mancante, inventario pieno, bottega chiusa, fermata lontana o viaggio già prenotato.
 
 ## Funzionalità principali
 
@@ -395,6 +415,7 @@ I tasti aggiuntivi sono modificabili nelle impostazioni dei comandi di Minecraft
 | --- | --- |
 | Tasto destro su NPC, cartello o postazione | Interazione e menu disponibili |
 | J | Gestione delle canzoni |
+| O | Menu cittadino, ricerca, preferiti e impostazioni HUD |
 | R sul motorino | Tocco: stazione successiva; pressione prolungata: ruota della radio, per il conducente |
 | H | Mostra o nasconde i pannelli della città e della cucina |
 | W / S e mouse sul motorino | Avanzamento, retromarcia e direzione |
@@ -478,7 +499,9 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 ### Test automatici e client
 
-`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **124 test**, comprendendo ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile e accessi costieri alla metro. Le prove grafiche e prolungate si avviano separatamente.
+`./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, preferenze e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
+
+`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **142 test**, comprendendo ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile e accessi costieri alla metro. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 

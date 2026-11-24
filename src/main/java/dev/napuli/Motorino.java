@@ -47,6 +47,7 @@ public class Motorino extends Mob {
 
 	public boolean inParade() { return entityData.get(PARADE); }
 	public int station() { return this.entityData.get(STATION); }
+	int savedStation() { return lastStation; }
 	public void setStation(int s) {
 		if (s >= 0 && s != Radio.PARADE) lastStation = s;
 		this.entityData.set(STATION, s);
@@ -87,6 +88,7 @@ public class Motorino extends Mob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
+		if (!level().isClientSide() && !inParade() && tickCount % 20 == 0 && !ScooterGarage.observe(this, getFirstPassenger() instanceof ServerPlayer p ? p : null)) return;
 		if (level().isClientSide() || paradeTicks <= 0) return;
 		ServerLevel sl = (ServerLevel) level();
 		// three on a scooter and no helmet, right in front of a carabiniere: they get stopped
@@ -136,17 +138,14 @@ public class Motorino extends Mob {
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
 		if (inParade()) return InteractionResult.PASS;
+		if (player instanceof ServerPlayer p && !ScooterGarage.observe(this,p)) return InteractionResult.FAIL;
 		if (player.isSecondaryUseActive()) {
 			if (isVehicle()) {
 				if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable("napuli.motorino.occupied"));
 				return InteractionResult.FAIL;
 			}
 			if (!this.level().isClientSide()) {
-				if (!player.getAbilities().instabuild && !player.getInventory().add(new ItemStack(Napuli.MOTORINO_ITEM))) {
-					if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.translatable("napuli.motorino.inventory_full"));
-					return InteractionResult.FAIL;
-				}
-				this.discard();
+				if (!(player instanceof ServerPlayer p) || !ScooterGarage.pickup(p,this)) return InteractionResult.FAIL;
 			}
 			return InteractionResult.SUCCESS;
 		}
@@ -174,6 +173,7 @@ public class Motorino extends Mob {
 		super.addPassenger(passenger);
 		if (level().isClientSide() || inParade()) return;
 		if (getPassengers().size() == 1 && getControllingPassenger() instanceof ServerPlayer) setStation(lastStation);
+		ScooterGarage.observe(this,getFirstPassenger() instanceof ServerPlayer p?p:null);
 		announceSeats();
 	}
 
@@ -223,6 +223,7 @@ public class Motorino extends Mob {
 	@Override
 	protected void removePassenger(Entity passenger) {
 		super.removePassenger(passenger);
+		if (!level().isClientSide() && !inParade()) ScooterGarage.observe(this,null);
 		if (level().isClientSide() || inParade()) return;
 		if (getControllingPassenger() == null) setStation(Radio.OFF);
 		announceSeats();

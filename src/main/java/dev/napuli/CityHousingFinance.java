@@ -3,6 +3,7 @@ package dev.napuli;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.*;
+import static dev.napuli.CityText.t;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -50,8 +51,8 @@ final class CityHousingFinance {
             if(a==null||!a.tenant().equals(player.getUUID())||a.arrears()==0)continue;
             if(NapoliStreet.cash(player)>=a.arrears())pay(player,h);
             else if(a.missed()>=3&&(a.rental()||a.debt()>0)) {
-                remove(city,h.id(),true);player.sendSystemMessage(Component.literal("Contratto della casa "+h.name()+" chiuso dopo tre scadenze non pagate."));
-            } else player.sendSystemMessage(Component.literal("Casa "+h.name()+": "+a.arrears()+" € da pagare. /casa paga "+h.id()));
+                remove(city,h.id(),true);player.sendSystemMessage(t("house.closed_contract",h.name()));
+            } else player.sendSystemMessage(t("house.due_notice",h.name(),a.arrears(),h.id()));
         }
     }
     static void mortgageForResident(ServerLevel city,NapoliMergellina.House h,UUID resident,long day,int deposit) {
@@ -84,35 +85,36 @@ final class CityHousingFinance {
         var h=CityLivingHomes.find(id);if(h==null||p.level().dimension()!=NapoliMap.LEVEL||p.isSpectator()||!p.isAlive()
                 ||Carabinieri.isJailed(p)||h.sign().distToCenterSqr(p.position())>36)return 0;
         if(NapoliProperties.owner(p.level(),h)!=null)return 0;
-        int deposit=rental?Math.max(5,h.price()/12):Math.max(1,(h.price()+4)/5);
-        if(NapoliStreet.cash(p)<deposit) {p.sendSystemMessage(Component.literal("Servono "+deposit+" € di acconto."));return 0;}
-        int principal=rental?0:((h.price()-deposit)*110+99)/100;
-        int installment=rental?Math.max(4,h.price()/18):(principal+11)/12;
-        NapoliStreet.credit(p,-deposit);
+        var terms=CompanionHousing.terms(h,rental);
+        int deposit=terms.deposit();
+        if(NapoliStreet.cash(p)<deposit) {p.sendSystemMessage(t("house.deposit_needed",deposit));return 0;}
+        int principal=terms.principal();
+        int installment=terms.installment();
+        NapoliStreet.credit(p,-deposit,rental?"rent_deposit":"mortgage_deposit",h.name());
         HouseGuests.clear(p.level(),id);
         var owners=new HashMap<>(p.level().getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));
         owners.put(id,rental?LANDLORD:p.getUUID());p.level().setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));
         var accounts=new HashMap<>(p.level().getAttachedOrElse(ACCOUNTS,Map.of()));
         accounts.put(id,new Account(p.getUUID(),principal,installment,rental?-1:12,0,0,NapoliBroadcast.day(p.level()),rental));
         p.level().setAttached(ACCOUNTS,Map.copyOf(accounts));
-        p.sendSystemMessage(Component.literal((rental?"Affitto":"Mutuo al 10% totale")+": "+h.name()+" · acconto "+deposit+" € · "+installment+" € + 2 € di bollette ogni 7 giorni. Tre scadenze insolute chiudono il contratto."));return 1;
+        p.sendSystemMessage(t("house.acquired",t(rental?"house.rental":"house.mortgage"),h.name(),deposit,installment));return 1;
     }
     static int leave(ServerPlayer p,String id) {
         if(p.level().dimension()!=NapoliMap.LEVEL)return 0;
         var a=p.level().getAttachedOrElse(ACCOUNTS,Map.of()).get(id);
         if(a==null||!a.rental()||!a.tenant().equals(p.getUUID()))return 0;
         if(a.arrears()>NapoliStreet.cash(p))return 0;
-        NapoliStreet.credit(p,-a.arrears());remove(p.level(),id,true);p.sendSystemMessage(Component.literal("Affitto concluso; arretrati saldati. La casa è nuovamente disponibile."));return 1;
+        NapoliStreet.credit(p,-a.arrears(),"housing",id);remove(p.level(),id,true);p.sendSystemMessage(t("house.rental_ended"));return 1;
     }
     static int pay(ServerPlayer p,NapoliMergellina.House h) {
         var accounts=new HashMap<>(p.level().getAttachedOrElse(ACCOUNTS,Map.of()));var a=accounts.get(h.id());
         if(a==null||!a.tenant().equals(p.getUUID())||a.arrears()==0||NapoliStreet.cash(p)<a.arrears())return 0;
-        NapoliStreet.credit(p,-a.arrears());
+        NapoliStreet.credit(p,-a.arrears(),"housing",h.name());
         int periodsPaid=Math.min(a.missed(),Math.max(0,a.periods()));
         int debt=Math.max(0,a.debt()-periodsPaid*a.installment());
         if(!a.rental()&&debt==0)accounts.put(h.id(),new Account(a.tenant(),0,0,0,0,0,a.billed(),false));
         else accounts.put(h.id(),new Account(a.tenant(),debt,a.installment(),a.rental()?-1:Math.max(0,a.periods()-periodsPaid),0,0,a.billed(),a.rental()));
-        p.level().setAttached(ACCOUNTS,Map.copyOf(accounts));p.sendSystemMessage(Component.literal("Pagamento casa: "+a.arrears()+" € · debito residuo "+debt+" €."));return 1;
+        p.level().setAttached(ACCOUNTS,Map.copyOf(accounts));p.sendSystemMessage(t("house.payment_done",a.arrears(),debt));return 1;
     }
     static void inherit(ServerLevel city,UUID from,UUID to) {
         var accounts=new HashMap<>(city.getAttachedOrElse(ACCOUNTS,Map.of()));
@@ -131,7 +133,7 @@ final class CityHousingFinance {
         var a=p.level().getAttachedOrElse(ACCOUNTS,Map.of()).get(id);
         int proceeds=h.price()*80/100-(a==null?0:a.debt()+a.arrears());
         if(proceeds<0&&NapoliStreet.cash(p)<-proceeds)return 0;
-        remove(p.level(),id,true);NapoliStreet.credit(p,proceeds);p.sendSystemMessage(Component.literal("Casa venduta. Saldo: "+proceeds+" €."));return 1;
+        remove(p.level(),id,true);NapoliStreet.credit(p,proceeds,"house_sale",h.name());p.sendSystemMessage(t("house.sold",proceeds));return 1;
     }
     private static void remove(ServerLevel city,String id,boolean ownership) {
         HouseGuests.clear(city,id);

@@ -33,7 +33,7 @@ final class NeighbourAmbience {
                     : time >= 5400 && time < 7000 || time >= 9900 && time < 11600 ? SoundEvents.WOOD_PLACE
                     : time >= 13000 && time < 15000 && NapoliBroadcast.live(city) ? SoundEvents.NOTE_BLOCK_BIT.value()
                     : null;
-            if (sound != null) city.playSound(null, NapoliMap.CAFE, sound, SoundSource.AMBIENT, .22f, .95f);
+            if (sound != null) CityEffects.sound(city,null, NapoliMap.CAFE, sound, SoundSource.AMBIENT, .22f, .95f);
         });
     }
 

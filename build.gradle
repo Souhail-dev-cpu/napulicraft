@@ -14,6 +14,13 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+        qolTest {
+            client()
+            name "Napoli player quality of life test"
+            vmArg '-Dnapuli.qoltest=true'
+            runDir '.gradle/qol-client'
+            programArgs '--width', '1100', '--height', '720'
+        }
 		livingCityTest {
 			client()
 			name "Napoli living city integration test"
@@ -274,6 +281,31 @@ java {
 }
 
 def taxTestLog = layout.projectDirectory.file('run-autotest/logs/latest.log')
+
+tasks.register('prepareQolTest') {
+    def directory = layout.projectDirectory.dir('.gradle/qol-client').asFile
+    doLast {
+        directory.mkdirs()
+        def options = new File(directory, 'options.txt')
+        def text = options.exists() ? options.getText('UTF-8') : ''
+        [onboardAccessibility:'false', tutorialStep:'none', renderDistance:'4', simulationDistance:'5', guiScale:'2', maxFps:'60', pauseOnLostFocus:'false', lang:'it_it'].each { key, value ->
+            def pattern = java.util.regex.Pattern.compile('(?m)^' + key + ':.*$')
+            if (pattern.matcher(text).find()) text = pattern.matcher(text).replaceAll(key + ':' + value)
+            else text += "\n${key}:${value}\n"
+        }
+        options.setText(text, 'UTF-8')
+    }
+}
+
+tasks.named('runQolTest') {
+    dependsOn 'prepareQolTest'
+    mustRunAfter 'runGameTest'
+    def log = layout.projectDirectory.file('.gradle/qol-client/logs/latest.log')
+    doLast {
+        if (!log.asFile.exists() || !log.asFile.text.contains('[QOLTEST] ALL PASSED'))
+            throw new GradleException('Player quality of life client test failed; see .gradle/qol-client/logs/latest.log')
+    }
+}
 tasks.named('runLivingCityTest') {
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[LIVINGCITYTEST] ALL PASSED')) {

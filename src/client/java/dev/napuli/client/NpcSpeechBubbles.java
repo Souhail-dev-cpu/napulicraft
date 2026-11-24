@@ -72,7 +72,7 @@ public final class NpcSpeechBubbles {
     static Bubble extract(NapoliResident npc, float partialTick) {
         var client = Minecraft.getInstance();var queue = LINES.get(npc.getUUID());
         if (queue == null || queue.isEmpty() || !npc.isAlive() || client.player == null
-                || npc.isInvisibleTo(client.player) || client.player.distanceToSqr(npc) > NpcSpeech.RANGE * NpcSpeech.RANGE) return null;
+                || npc.isInvisibleTo(client.player) || client.player.distanceToSqr(npc) > (CompanionOptions.current.lightPreset?12*12:NpcSpeech.RANGE*NpcSpeech.RANGE)) return null;
         var line = queue.peekFirst();double now = clock + partialTick;
         float opacity = (float)Math.clamp(Math.min((now - line.starts()) / 5, (line.ends() - now) / 16), 0, 1);
         return opacity < .04f ? null : new Bubble(line.lines(), line.width(), opacity);

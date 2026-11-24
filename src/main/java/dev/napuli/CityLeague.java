@@ -71,7 +71,7 @@ final class CityLeague {
         int money=0;for(var f:fixtures.values()){
             var participant=f.players().get(p.getUUID().toString());if(!f.state().equals("played")||participant==null||participant.ticks()<600||!receipts.add(f.id()))continue;
             boolean home=participant.side()==0;int a=home?f.homeGoals():f.awayGoals(),b=home?f.awayGoals():f.homeGoals();int reward=a>b?12:a==b?6:3;
-            p.setAttached(RECEIPTS,Set.copyOf(receipts));NapoliStreet.credit(p,reward);FootballPractice.awardLeague(p,participant.goals());money+=reward;
+            p.setAttached(RECEIPTS,Set.copyOf(receipts));NapoliStreet.credit(p,reward,"league",f.id());FootballPractice.awardLeague(p,participant.goals());money+=reward;
         }
         // The receipt and wallet live in the same player save, so replaying a result cannot pay twice.
         if(money>0)p.sendSystemMessage(Component.literal("Premi del campionato: +"+money+" €."));return money;

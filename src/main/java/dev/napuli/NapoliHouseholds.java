@@ -107,7 +107,7 @@ public final class NapoliHouseholds {
             npc.getLookControl().setLookAt(focus.getX() + .5, focus.getY() + .5, focus.getZ() + .5, 35, 35);
             if (activity == Activity.COOK || activity == Activity.WASH) {
                 npc.animate(CityGestures.action(activity),30);
-                level.sendParticles(activity == Activity.COOK ? ParticleTypes.CAMPFIRE_COSY_SMOKE : ParticleTypes.SPLASH,
+                CityEffects.particles(level,activity == Activity.COOK ? ParticleTypes.CAMPFIRE_COSY_SMOKE : ParticleTypes.SPLASH,
                         focus.getX() + .5, focus.getY() + .5, focus.getZ() + .5, 2, .15, .12, .15, .015);
             }
             if (activity == Activity.PLAY && npc.getRandom().nextInt(3) == 0) npc.getJumpControl().jump();

@@ -66,8 +66,8 @@ public final class NapoliScenes {
                     visits.cryptWarning = now + 20;
                     player.sendOverlayMessage(Component.translatable("napuli.horror.crypt_warning"));
                     var point = NapoliMap.CRYPT;
-                    level.playSound(null, point, SoundEvents.AMETHYST_CLUSTER_HIT, SoundSource.AMBIENT, 0.65f, 0.6f);
-                    level.sendParticles(ParticleTypes.SOUL, point.getX() + 0.5, point.getY() + 0.4, point.getZ() + 0.5,
+                    CityEffects.sound(level,null, point, SoundEvents.AMETHYST_CLUSTER_HIT, SoundSource.AMBIENT, 0.65f, 0.6f);
+                    CityEffects.particles(level,ParticleTypes.SOUL, point.getX() + 0.5, point.getY() + 0.4, point.getZ() + 0.5,
                             12, 0.2, 0.2, 0.2, 0.025);
                 } else if (now >= visits.cryptWarning) {
                     visits.cryptWarning = 0;
@@ -86,7 +86,7 @@ public final class NapoliScenes {
             if (pos.distSqr(NapoliMap.CAFE) < 20 && now >= visits.cafe && level.isBrightOutside()) {
                 visits.cafe = now + 20 * 110;
                 player.sendSystemMessage(Component.translatable("napuli.meme.cafe"));
-                level.playSound(null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.AMBIENT, 0.55f, 1.2f);
+                CityEffects.sound(level,null, pos, SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.AMBIENT, 0.55f, 1.2f);
             }
             if (now >= visits.greetings) {
                 for (NapoliResident npc : level.getEntitiesOfClass(NapoliResident.class, player.getBoundingBox().inflate(4))) {
@@ -141,7 +141,7 @@ public final class NapoliScenes {
             for (var passenger : bike.getPassengers()) if (passenger instanceof NapoliResident rider && (rider.role()==NapoliResident.Role.ENZO || rider.role()==NapoliResident.Role.GENNARO))
                 NpcSpeech.say(player,rider,Component.translatable("napuli.meme.motorino."+rider.role().id()));
         }
-        level.playSound(null, start, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 0.95f, 0.75f);
+        CityEffects.sound(level,null, start, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.NEUTRAL, 0.95f, 0.75f);
         Napuli.LOGGER.info("Napoli motorino started: {} riders, {} listeners", bike.getPassengers().size(), listeners.size());
         return 1;
     }
@@ -164,20 +164,20 @@ public final class NapoliScenes {
         };
         var spirit = NapoliResident.spawn(level, role, point, yaw);
         player.sendSystemMessage(Component.translatable("napuli.folklore." + role.id()));
-        level.sendParticles(ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(), 18, 0.45, 0.7, 0.45, 0.035);
+        CityEffects.particles(level,ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(), 18, 0.45, 0.7, 0.45, 0.035);
         switch (role) {
             case MBRIANA -> {
-                level.playSound(null, point, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 1, 0.75f);
+                CityEffects.sound(level,null, point, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 1, 0.75f);
                 player.removeEffect(MobEffects.DARKNESS);
                 player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
             }
             case PARTENOPE -> {
-                level.playSound(null, point, SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.AMBIENT, 1.1f, 0.55f);
+                CityEffects.sound(level,null, point, SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.AMBIENT, 1.1f, 0.55f);
                 Music.play(player, Music.Situation.NOTTE);
                 if (!charm) player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 0));
             }
             case ANIMA -> {
-                level.playSound(null, point, SoundEvents.SOUL_ESCAPE.value(), SoundSource.AMBIENT, 1.2f, 0.75f);
+                CityEffects.sound(level,null, point, SoundEvents.SOUL_ESCAPE.value(), SoundSource.AMBIENT, 1.2f, 0.75f);
                 if (!charm) {
                     player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 100, 0));
                     player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 80, 0));
@@ -213,9 +213,9 @@ public final class NapoliScenes {
             }
             default -> { return; }
         }
-        level.sendParticles(ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(),
+        CityEffects.particles(level,ParticleTypes.SOUL, spirit.getX(), spirit.getY() + 1, spirit.getZ(),
                 24, 0.32, 0.5, 0.32, 0.03);
-        level.playSound(null, spirit.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 0.8f, 1.1f);
+        CityEffects.sound(level,null, spirit.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.AMBIENT, 0.8f, 1.1f);
         NapoliNotice.show(player, Component.translatable("napuli.horror.answer_" + spirit.role().id()));
         spirit.discard();
     }

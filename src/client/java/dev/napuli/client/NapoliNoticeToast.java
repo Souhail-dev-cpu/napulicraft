@@ -15,6 +15,8 @@ final class NapoliNoticeToast implements Toast {
     private final Component message;
     private final List<FormattedCharSequence> lines;
     private Visibility visibility = Visibility.SHOW;
+    private int repeats = 1;
+    private long lastElapsed, changedAt;
 
     private NapoliNoticeToast(Font font, Component message) {
         this.message = message;
@@ -24,9 +26,12 @@ final class NapoliNoticeToast implements Toast {
     static void register() {
         ClientPlayNetworking.registerGlobalReceiver(NapoliNotice.TYPE, (packet, ctx) -> {
             var client = ctx.client();
+            if (!CompanionOptions.current.notices) return;
             var manager = client.gui.toastManager();
-            if (manager.getToast(NapoliNoticeToast.class, packet.message()) == null)
+            var existing = manager.getToast(NapoliNoticeToast.class, packet.message());
+            if (existing == null)
                 manager.addToast(new NapoliNoticeToast(client.font, packet.message()));
+            else { existing.repeats++; existing.changedAt=existing.lastElapsed; existing.visibility=Visibility.SHOW; }
         });
     }
 
@@ -36,14 +41,21 @@ final class NapoliNoticeToast implements Toast {
     @Override public Visibility getWantedVisibility() { return visibility; }
 
     @Override public void update(ToastManager manager, long elapsed) {
+        lastElapsed=elapsed;
+        if (!CompanionOptions.current.notices) { visibility=Visibility.HIDE; return; }
+        if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof CompanionScreen) {
+            changedAt=elapsed;
+            return;
+        }
         long duration = Math.max(3800, 2250 + lines.size() * 1150L);
-        if (elapsed >= duration * manager.getNotificationDisplayTimeMultiplier()) visibility = Visibility.HIDE;
+        if (elapsed-changedAt >= duration * manager.getNotificationDisplayTimeMultiplier()) visibility = Visibility.HIDE;
     }
 
     @Override public void extractRenderState(GuiGraphicsExtractor g, Font font, long elapsed) {
+        if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof CompanionScreen) return;
         g.fill(0, 1, WIDTH - 3, height() - 2, 0xf414222d);
         g.fill(0, 1, 2, height() - 2, 0xff77d1ef);
-        g.text(font, "Napulicraft", 10, 7, 0xff9cdef4, false);
+        g.text(font, "Napulicraft" + (repeats > 1 ? " × " + repeats : ""), 10, 7, 0xff9cdef4, false);
         for (int i = 0; i < lines.size(); i++)
             g.text(font, lines.get(i), 10, 20 + i * 10, 0xfff5f2e9, false);
     }

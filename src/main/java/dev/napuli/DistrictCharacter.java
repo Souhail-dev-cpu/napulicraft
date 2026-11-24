@@ -50,7 +50,7 @@ final class DistrictCharacter {
     }
     static void register(){ServerTickEvents.END_SERVER_TICK.register(s->{if(s.getTickCount()%1200!=0)return;var city=s.getLevel(NapoliMap.LEVEL);if(city==null)return;
         for(var d:DistrictLife.districts()){var at=d.business().entrance();if(city.players().stream().noneMatch(p->at.distToCenterSqr(p.position())<32*32))continue;
-            city.playSound(null,at,style(d).sound(),SoundSource.AMBIENT,.08f,.85f+Math.floorMod(d.id().hashCode(),4)*.1f);
+            CityEffects.sound(city,null,at,style(d).sound(),SoundSource.AMBIENT,.08f,.85f+Math.floorMod(d.id().hashCode(),4)*.1f);
         }
     });}
     private static Block block(String id){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace(id));}

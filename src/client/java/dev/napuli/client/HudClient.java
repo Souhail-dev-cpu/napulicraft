@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import dev.napuli.Hud;
+import static dev.napuli.CityText.t;
 import dev.napuli.NapoliEmployment;
 import dev.napuli.Napuli;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -27,6 +28,7 @@ final class HudClient {
 	static final KeyMapping TOGGLE = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.napuli.hud",
 			InputConstants.KEY_H, KeyMapping.Category.register(Napuli.id("hud"))));
 	private static Hud.State state;
+    private static dev.napuli.CompanionHud companion;
 	private static boolean hidden;
 	private static int shownCash = -1;
 	private static int cashFlash, cashDelta;
@@ -47,6 +49,7 @@ final class HudClient {
 	}
 
 	static void register() {
+        ClientPlayNetworking.registerGlobalReceiver(dev.napuli.CompanionHud.TYPE,(s,ctx)->companion=s);
 		ClientPlayNetworking.registerGlobalReceiver(Hud.State.TYPE, (s, ctx) -> {
 			if (shownCash >= 0 && s.cash() != shownCash) { cashDelta = s.cash() - shownCash; cashFlash = 60; }
 			shownCash = s.cash();
@@ -55,26 +58,37 @@ final class HudClient {
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (TOGGLE.consumeClick()) hidden = !hidden;
 			if (cashFlash > 0) cashFlash--;
-			if (mc.level == null) { state = null; shownCash = -1; }
+			if (mc.level == null) { state = null; companion=null; shownCash = -1; }
 		});
 		HudElementRegistry.addLast(Napuli.id("napoli_panel"), HudClient::draw);
 	}
 
 	static Hud.State state() { return state; }
+    static Component companionText() { return companion==null?Component.empty():companion.text(); }
 
 	private static void draw(GuiGraphicsExtractor g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		Hud.State s = state;
-		if (hidden || s == null || mc.player == null) return;
-		drawKitchen(g, mc.font, s);
+		if (hidden || s == null || mc.player == null || mc.gui.screen() instanceof CompanionScreen) return;
+        float scale = CompanionOptions.current.scale() * Math.min(1f, Math.max(.75f, g.guiHeight() / 240f));
+        g.pose().pushMatrix();
+        g.pose().scale(scale);
+        try { drawScaled(g, s, mc, scale); } finally { g.pose().popMatrix(); }
+    }
+
+    private static void drawScaled(GuiGraphicsExtractor g, Hud.State s, Minecraft mc, float scale) {
+        var preferences = CompanionOptions.current;
+        if (preferences.kitchen) drawKitchen(g, mc.font, s, scale);
 		if (!s.inCity()) return;
 		Font f = mc.font;
-		int w = Math.clamp(g.guiWidth() / 3, 116, 146), x = g.guiWidth() - w - 4, y = 54;   // under the status effect icons
+		int canvasWidth = (int)(g.guiWidth() / scale);
+		int w = Math.clamp(canvasWidth / 3, 116, 170), x = canvasWidth - w - 4, y = 54;
 		int lh = 11;
 
 		// ---------------- the panel
+        if (preferences.city) {
 		int accent = 0xff58c4ed;
-		boolean reputation = s.lanterns() != 0 || s.tides() != 0 || s.ally() >= 0;
+		boolean reputation = !preferences.compact && (s.lanterns() != 0 || s.tides() != 0 || s.ally() >= 0);
 		int lines = 1 + (reputation ? 7 + (s.ally() >= 0 ? 1 : 0) : 2) + (s.stars() > 0 ? 1 : 0);
 		card(g, x - 5, y - 5, x + w, y + lines * lh + 2, accent);
 		g.text(f, mc.player.getName().getString(), x, y, 0xFFFFFFFF, true);
@@ -90,13 +104,13 @@ final class HudClient {
 		if (s.stars() > 0) {
 			StringBuilder st = new StringBuilder();
 			for (int i = 0; i < 3; i++) st.append(i < s.stars() ? '★' : '☆');
-			boolean blink = (mc.player.tickCount / 8) % 2 == 0;
+			boolean blink = CompanionOptions.current.reducedFlashes || (mc.player.tickCount / 8) % 2 == 0;
 			g.text(f, st + " " + s.wantedLeft() + "s", x, y, blink ? 0xFFFF5252 : 0xFF448AFF, true);
 			y += lh;
 		}
 		if (reputation) {
 		y += 3;
-		g.text(f, "Reputazione", x, y, 0xFFBDBDBD, false);
+		g.text(f, t("hud.reputation"), x, y, 0xFFBDBDBD, false);
 		y += lh;
 		bar(g, f, x, y, w - 4, "Lanterne", s.lanterns(), 0xFFFFB300);
 		y += lh;
@@ -109,29 +123,34 @@ final class HudClient {
 			y += lh;
 			int next = nextRankAt(rep);
 			String r = rank(rep) + (next > 0 ? "  (" + rep + "/" + next + ")" : "");
-			g.text(f, "Rango: " + r, x, y, 0xFFFFFFFF, true);
+			g.text(f, t("hud.rank",r), x, y, 0xFFFFFFFF, true);
 		} else {
-			g.text(f, "Senza clan", x, y, 0xFF9E9E9E, true);
+			g.text(f, t("hud.unaligned"), x, y, 0xFF9E9E9E, true);
 		}
 		y += lh;
 		}
+        }
 		y += 8;
+        if (!preferences.tracker && s.jail() <= 0) return;
 		if (s.jail() <= 0 && s.tx() == Hud.NO_TARGET && s.objective().equals("none")) return;
 
 		// ---------------- the mission tracker
 		String title, line;
-		boolean employment = s.objective().startsWith("napuli.work.");
+		boolean employment = s.objective().startsWith("napuli.work.") || s.objective().startsWith("qol.work:");
 		boolean jailed = s.jail() > 0;
 		if (jailed) {
-			title = "IN GALERA";
-			line = "Esci tra " + s.jail() + " s";
+			title = t("hud.jailed").getString();
+			line = t("hud.release",s.jail()).getString();
 		} else {
 			title = Component.translatable(employment ? "napuli.hud.work" : "napuli.hud.route").getString();
 			String objective = s.objective();
 			String key = objective.startsWith("napuli.local.") || objective.startsWith("napuli.work.") || objective.startsWith("napuli.guide.") ? objective : "napuli.hud.obj." + objective;
-			line = Component.translatable(key, s.cooldown()).getString();
+			line = objective.startsWith("qol:") || objective.startsWith("qol.work:") ? objective.substring(objective.indexOf(':') + 1) : Component.translatable(key, s.cooldown()).getString();
+            if(companion!=null&&companion.objective().equals(objective))line=companion.text().getString();
 		}
-		var wrapped = f.split(Component.literal(line), w - 6);
+		var allLines = f.split(Component.literal(line), w - 6);
+        int availableLines = Math.max(1, ((int)(g.guiHeight() / scale) - y - 52) / 10);
+        var wrapped = allLines.subList(0, Math.min(allLines.size(), availableLines));
 		boolean shift = employment && !jailed;
 		int th = 14 + wrapped.size() * 10 + (shift ? 11 : 0) + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
 				if (employment && !jailed) {
@@ -158,12 +177,12 @@ final class HudClient {
 			double targetYaw = Math.toDegrees(Math.atan2(-dx, dz));
 			double rel = net.minecraft.util.Mth.wrapDegrees(targetYaw - mc.player.getYRot());
 			String arrow = dist < 4 ? "●" : ARROWS[(int) Math.floorMod(Math.round(rel / 45.0), 8)];
-			g.text(f, arrow + " " + (dist < 4 ? "Sì arrivato" : dist + " m"), x, y + 1, dist < 4 ? 0xFF66BB6A : 0xFFFFD54F, true);
+			g.text(f, arrow + " " + (dist < 4 ? t("hud.arrived").getString() : dist + " m"), x, y + 1, dist < 4 ? 0xFF66BB6A : 0xFFFFD54F, true);
 		}
 	}
 
-	private static void drawKitchen(GuiGraphicsExtractor g, Font font, Hud.State state) {
-		int x = 6, y = 8, width = Math.clamp(g.guiWidth() / 4, 85, 108);
+	private static void drawKitchen(GuiGraphicsExtractor g, Font font, Hud.State state, float scale) {
+		int x = 6, y = 8, width = Math.clamp((int)(g.guiWidth() / scale) / 4, 85, 108);
 		boolean pizzas = state.pizzas() > 0, hot = state.heat() > 0;
 		int bottom = y + 20 + (pizzas ? 11 : 0) + (hot ? 13 : 0) + (state.inCity() ? 13 : 0);
 		card(g, x - 4, y - 4, x + width + 5, bottom, 0xffe6b65c);

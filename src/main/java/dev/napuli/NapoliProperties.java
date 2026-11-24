@@ -130,6 +130,7 @@ final class NapoliProperties {
 
     private static void open(ServerPlayer player, NapoliMergellina.House house) {
         if (player.isSpectator()) return;
+        if(owns(player,house)||owner(player.level(),house)==null){CompanionHousing.detail(player,house.id());return;}
         if (!owns(player, house) && HouseGuests.invited(player.level(), house.id(), player.getUUID())) {
             show(player, Component.literal(house.address()), Component.translatable("napuli.guest.welcome"),
                     List.of(button(Component.translatable("napuli.property.go"), "/casa vai " + house.id()),CitySocial.button("Ritira la chiave","/casa chiave "+house.id())));
@@ -155,13 +156,13 @@ final class NapoliProperties {
         show(player, Component.literal(house.address()), body, actions);
     }
 
-    private static int buy(ServerPlayer player, String id) {
+    static int buy(ServerPlayer player, String id) {
         if (player.level().dimension() != NapoliMap.LEVEL || !player.isAlive() || player.isSpectator()) return 0;
         var house = find(id);
         if (house == null || house.sign().distToCenterSqr(player.position()) > 36) { say(player, "sign"); return 0; }
         if (owner(player.level(), house) != null) { say(player, "sold"); return 0; }
         if (NapoliStreet.cash(player) < house.price()) { say(player, "poor"); return 0; }
-        NapoliStreet.credit(player, -house.price());
+        NapoliStreet.credit(player, -house.price(),"house_purchase",house.name());
         var owners = new HashMap<>(player.level().getAttachedOrElse(OWNERS, Map.of()));
         owners.put(id, player.getUUID());
         player.level().setAttached(OWNERS, Map.copyOf(owners));
@@ -195,7 +196,7 @@ final class NapoliProperties {
         return player.getUUID().equals(owner(player.level(), house)) || CityHousingFinance.tenant(player.level(),house.id(),player.getUUID());
     }
     static boolean hasAccess(ServerPlayer player, NapoliMergellina.House house) {
-        return owns(player, house) || HouseGuests.invited(player.level(), house.id(), player.getUUID());
+        return HomePermissions.allows(player, house, HomePermissions.Capability.DOORS);
     }
 
     static boolean claimForResident(ServerLevel city, NapoliMergellina.House house, UUID resident) {

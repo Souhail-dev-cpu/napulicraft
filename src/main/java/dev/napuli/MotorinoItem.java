@@ -17,12 +17,14 @@ public class MotorinoItem extends Item {
 			BlockPos pos = ctx.getClickedPos().relative(ctx.getClickedFace());
 			Motorino m = Napuli.MOTORINO.create(level, EntitySpawnReason.SPAWN_ITEM_USE);
 			if (m == null) return InteractionResult.FAIL;
+			if (!(ctx.getPlayer() instanceof net.minecraft.server.level.ServerPlayer p) || !ScooterGarage.prepare(p,ctx.getItemInHand(),m)) return InteractionResult.FAIL;
 			float yaw = ctx.getPlayer() != null ? ctx.getPlayer().getYRot() : 0;
 			m.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
 			m.setYBodyRot(yaw);
 			m.setYHeadRot(yaw);
 			if (!level.noCollision(m) || !level.addFreshEntity(m)) return InteractionResult.FAIL;
-			if (ctx.getPlayer() == null || !ctx.getPlayer().getAbilities().instabuild) ctx.getItemInHand().shrink(1);
+			ScooterGarage.placed(p,m);
+			if (!p.getAbilities().instabuild || ScooterGarage.marked(ctx.getItemInHand())) ctx.getItemInHand().shrink(1);
 		}
 		return InteractionResult.SUCCESS;
 	}

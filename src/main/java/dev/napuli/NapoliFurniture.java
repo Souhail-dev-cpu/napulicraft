@@ -163,7 +163,7 @@ final class NapoliFurniture {
             if (player instanceof ServerPlayer serverPlayer) {
                 if (level.dimension() == NapoliMap.LEVEL) {
                     for (var house : CityLivingHomes.all()) {
-                        if (!house.contains(pos) || house.price() <= 0 || NapoliProperties.hasAccess(serverPlayer, house)) continue;
+                        if (!house.contains(pos) || house.price() <= 0 || HomePermissions.allows(serverPlayer, house, HomePermissions.Capability.APPLIANCES)) continue;
                         serverPlayer.sendOverlayMessage(net.minecraft.network.chat.Component.translatable("napuli.property.private"));
                         return InteractionResult.SUCCESS;
                     }

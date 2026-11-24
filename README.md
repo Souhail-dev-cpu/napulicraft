@@ -288,7 +288,7 @@ La [guida alla cucina](docs/CUCINA.md) e il [ricettario completo](docs/CUCINA_RI
 
 ## Calcio, televisione ed eventi
 
-Il centro sportivo permette di **giocare o assistere alle partite**, scegliere un ruolo, allenarsi in palestra e sviluppare la carriera calcistica. Passaggi, tiri, effetto, pallonetti, richieste di palla, intercetti e roulette hanno comandi dedicati e un'interfaccia con stamina e azioni disponibili.
+Il centro sportivo permette di **giocare o assistere alle partite**, scegliere un ruolo, allenarsi in palestra e sviluppare la carriera calcistica. L'HUD mostra la stamina e i comandi pertinenti al possesso. Con **U** apri il selettore compatto per tiro teso, tiro a giro, pallonetto, roulette, finta di corpo e tocco laterale.
 
 Il **torneo dei quartieri** coinvolge Partenope, Mergellina, Centro storico e Fuorigrotta, con sei partite in tre giornate, classifica e premi. I giocatori possono occupare entrambi gli schieramenti. Risultati, partecipazione e premi sono persistenti; una partita rimasta senza partecipanti può essere ripresa dopo il riavvio. `/calcio campionato` apre il torneo.
 
@@ -424,7 +424,7 @@ I tasti aggiuntivi sono modificabili nelle impostazioni dei comandi di Minecraft
 | Tasto destro / Shift + tasto destro sulla TV | Accende o spegne / cambia canale |
 | G / V durante il calcio | Passaggio / tiro |
 | K / M durante il calcio | Tiro a effetto / pallonetto |
-| B / N / U durante il calcio | Richiesta di palla / intercetto / roulette |
+| B / N / U durante il calcio | Richiesta di palla / intercetto / selettore tiri e mosse |
 
 ## Configurazione del server
 

@@ -19,7 +19,7 @@ final class FootballControlsClient {
     private static final KeyMapping CHIP = bind("chip", InputConstants.KEY_M);
     private static final KeyMapping REQUEST = bind("request", InputConstants.KEY_B);
     private static final KeyMapping INTERCEPT = bind("intercept", InputConstants.KEY_N);
-    private static final KeyMapping ROULETTE = bind("roulette", InputConstants.KEY_U);
+    private static final KeyMapping MOVES = bind("moves", InputConstants.KEY_U);
     private static int situation, stamina, remaining;
     private static boolean away;
 
@@ -43,16 +43,21 @@ final class FootballControlsClient {
             handle(mc, SHOOT, "tira", canShoot());
             handle(mc, CURL, "effetto", canShoot());
             handle(mc, CHIP, "pallonetto", canShoot());
-            handle(mc, ROULETTE, "roulette", canShoot());
+            while (MOVES.consumeClick()) openMoves(mc);
+            if (mc.gui.screen() instanceof FootballMovesScreen screen && !canShoot()) screen.onClose();
             handle(mc, REQUEST, "chiedi", situation == FootballControls.TEAM);
             handle(mc, INTERCEPT, "intercetta", situation == FootballControls.OPPONENT || situation == FootballControls.FREE);
         });
         HudElementRegistry.addLast(Napuli.id("football_controls"), (graphics, delta) -> {
-            if (!visible()) return;
+            if (!visible() || Minecraft.getInstance().gui.screen() instanceof FootballMovesScreen) return;
             var font = Minecraft.getInstance().font;
             var title = Component.translatable(away ? "napuli.football.side_away" : "napuli.football.side_home");
-            var labels = new Component[]{label(PASS, "pass"), label(SHOOT, "shoot"),
-                    label(CURL, "curl"), label(CHIP, "chip"), label(ROULETTE, "roulette"), label(REQUEST, "request"), label(INTERCEPT, "intercept")};
+            var labels = switch (situation) {
+                case FootballControls.YOURS -> new Component[]{label(PASS, "pass"), label(SHOOT, "shoot"), label(MOVES, "moves")};
+                case FootballControls.TEAM -> new Component[]{label(REQUEST, "request")};
+                case FootballControls.TEAM_PASS -> new Component[0];
+                default -> new Component[]{label(INTERCEPT, "intercept")};
+            };
             int width = font.width(title);
             for (var label : labels) width = Math.max(width, font.width(label));
             int x = 6, y = 56;
@@ -65,10 +70,7 @@ final class FootballControlsClient {
             graphics.fill(x, y + 23, x + width, y + 27, 0xff3e4a51);
             graphics.fill(x, y + 23, x + width * stamina / 100, y + 27, stamina > 25 ? 0xff62c680 : 0xffff8861);
             for (int i = 0; i < labels.length; i++) {
-                boolean ready = i < 5 ? situation == FootballControls.YOURS
-                        : i == 5 ? situation == FootballControls.TEAM
-                        : situation == FootballControls.OPPONENT || situation == FootballControls.FREE;
-                graphics.text(font, labels[i], x, y + 31 + 11 * i, ready ? 0xffe5ffc9 : 0xffa0a9af, true);
+                graphics.text(font, labels[i], x, y + 31 + 11 * i, 0xffe5ffc9, true);
             }
         });
     }
@@ -83,8 +85,12 @@ final class FootballControlsClient {
 
     private static void handle(Minecraft mc, KeyMapping mapping, String command, boolean enabled) {
         while (mapping.consumeClick()) {
-            if (enabled) sendAction(mc, command);
+            if (enabled && mc.gui.screen() == null) sendAction(mc, command);
         }
+    }
+
+    static void openMoves(Minecraft mc) {
+        if (canShoot() && mc.gui.screen() == null) mc.gui.setScreen(new FootballMovesScreen());
     }
 
     static void sendAction(Minecraft mc, String command) {

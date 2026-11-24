@@ -341,22 +341,44 @@ final class CityTest {
 
     private static java.util.Map<String, net.minecraft.world.phys.Vec3> firstRunners;
     private static net.minecraft.core.BlockPos footballEntry;
+    private static boolean footballPoseSeen, footballPickerUsed;
+    private static int footballPickerOpened;
 
     private static void football(Minecraft mc, int step) {
+        if (step >= 66 && step < 127 && !footballPickerUsed) {
+            if (mc.gui.screen() == null && FootballControlsClient.canShoot()) {
+                FootballControlsClient.openMoves(mc);
+                footballPickerOpened = step;
+            } else if (mc.gui.screen() instanceof FootballMovesScreen screen && step > footballPickerOpened + 2) {
+                AutoTest.shot(mc, "fuorigrotta-tiri-e-mosse");
+                var buttons = descendants(screen).filter(AbstractButton.class::isInstance)
+                        .map(AbstractButton.class::cast).toList();
+                assertTrue(buttons.size() == 6, "The selector shows three shots and three skills");
+                var chip = Component.translatable("napuli.football.move.pallonetto").getString();
+                footballPickerUsed = buttons.stream().filter(button -> button.getMessage().getString().equals(chip))
+                        .findFirst().map(button -> {
+                            button.onPress(new KeyEvent(257, 0, 0));
+                            return true;
+                        }).orElse(false);
+                assertTrue(mc.gui.screen() == null, "Choosing the chip closes the selector");
+            }
+        }
+        if (footballPickerUsed && step < 135 && FootballActionClient.active(mc.player.getId())) footballPoseSeen = true;
         switch (step) {
             case 65 -> server(mc, p -> {
                 var commands = p.level().getServer().getCommands();
                 footballEntry = p.blockPosition();
                 commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio gioca");
                 assertTrue(p.blockPosition().getX() > 365 && p.blockPosition().getZ() == 33, "player enters the pitch");
+                p.setYRot(-40);
+                p.setXRot(0);
+            });
+            case 135 -> server(mc, p -> {
                 var field = p.getBoundingBox().inflate(75);
                 var actors = p.level().getEntitiesOfClass(NapoliResident.class, field, n -> n.entityTags().contains("napuli_practice_actor"));
                 assertTrue(actors.size() == 9, "player replaces one of ten footballers");
-                p.setYRot(-40);
-                p.setXRot(0);
-                commands.performPrefixedCommand(p.createCommandSourceStack(), "calcio pallonetto");
-            });
-            case 135 -> server(mc, p -> {
+                assertTrue(footballPickerUsed, "A compact selector opens while in possession and sends the selected shot");
+                assertTrue(footballPoseSeen, "The shot pose reached the real client");
                 var stats = dev.napuli.FootballPractice.statistics(p.level());
                 assertTrue(stats.shots() >= 1 && stats.playerKickDistance() > 1 && stats.playerKickHeight() > .6,
                         "chip shot lifts the ball off the pitch");
@@ -366,6 +388,14 @@ final class CityTest {
             case 145 -> {
                 assertTrue(FootballControlsClient.visible(), "control card is visible on the pitch");
                 AutoTest.shot(mc, "fuorigrotta-in-campo");
+                var east = NapoliRadar.Frame.fromYaw(-90);
+                var forward = east.project(20, 0);
+                var restored = east.unproject(forward.x(), forward.y());
+                assertTrue(NapoliRadar.inNapoli(mc) && forward.y() < -19.9 && Math.abs(restored.x()-20) < .01
+                        && Math.abs(restored.y()) < .01, "Radar rotates terrain and markers together");
+                assertTrue(NapoliRadar.districtAt(mc.player.getBlockX(), mc.player.getBlockZ()).equals("Fuorigrotta"),
+                        "The older sports ground keeps its district label");
+                AutoTest.shot(mc, "fuorigrotta-minimappa");
             }
             case 152 -> mc.player.connection.sendCommand("calcio guarda");
             case 173 -> server(mc, p -> {
@@ -397,11 +427,24 @@ final class CityTest {
             case 415 -> server(mc, p -> view(p, 354.5, 64, 17.5, 180, 0));
             case 423 -> AutoTest.shot(mc, "fuorigrotta-palestra");
             case 425 -> clickStaff(mc, NapoliResident.Role.FOOTBALL_COACH);
-            case 430 -> mc.options.keyUp.setDown(true);
-            case 502 -> mc.options.keyUp.setDown(false);
+            case 432 -> {
+                assertTrue(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,
+                        "The coach opens the training selection");
+                AutoTest.shot(mc, "fuorigrotta-scelta-allenamento");
+                mc.gui.setScreen(null);
+                mc.player.connection.sendCommand("calcio esercizio sprint");
+            }
+            case 440 -> {
+                mc.options.keyUp.setDown(true);
+                mc.options.keySprint.setDown(true);
+            }
+            case 502 -> {
+                mc.options.keyUp.setDown(false);
+                mc.options.keySprint.setDown(false);
+            }
             case 508 -> server(mc, p -> {
-                assertTrue(p.blockPosition().getZ() >= 35, "player can run through the training lane");
-                assertTrue(dev.napuli.FootballPractice.fitness(p) == 1, "training improves persistent fitness");
+                assertTrue(p.blockPosition().getZ() >= 34, "player can run through the training lane");
+                assertTrue(dev.napuli.FootballPractice.pace(p) == 66 && dev.napuli.FootballPractice.fitness(p) == 0, "Sprint improves only its persistent rating");
             });
             case 512 -> {
                 if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
@@ -474,7 +517,32 @@ final class CityTest {
                 p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "colpo");
                 assertTrue(dev.napuli.NapoliStreet.cash(p) == 98, "bank cooldown blocks immediate repeat payout");
             });
-            case 740 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
+            case 742 -> server(mc, p -> {
+                view(p, 354.5, 64, 9.5, -90, 0);
+                var bike = new net.minecraft.core.BlockPos(355, 64, 8);
+                var blockRegistry = net.minecraft.core.registries.BuiltInRegistries.BLOCK;
+                for (var machine : java.util.Map.of(bike, "cyclette",
+                        new net.minecraft.core.BlockPos(355,64,11), "vogatore",
+                        new net.minecraft.core.BlockPos(351,64,11), "panca_pesi",
+                        new net.minecraft.core.BlockPos(350,64,7), "stepper").entrySet()) {
+                    assertTrue(p.level().getBlockState(machine.getKey()).is(blockRegistry.getValue(Napuli.id(machine.getValue()))),
+                            "Public gym installs " + machine.getValue());
+                }
+                var hit = new net.minecraft.world.phys.BlockHitResult(
+                        net.minecraft.world.phys.Vec3.atCenterOf(bike), net.minecraft.core.Direction.WEST, bike, false);
+                p.level().getBlockState(bike).useWithoutItem(p.level(), p, hit);
+                assertTrue(p.isPassenger(), "A player outside a match mounts the exercise bike");
+            });
+            case 750 -> mc.options.keyUp.setDown(true);
+            case 785 -> AutoTest.shot(mc, "fuorigrotta-cyclette");
+            case 860 -> mc.options.keyUp.setDown(false);
+            case 865 -> server(mc, p -> {
+                assertTrue(dev.napuli.PublicGym.sessions(p) == 1 && !p.isPassenger(),
+                        "Pedalling with the real client completes and records the public workout");
+                assertTrue(dev.napuli.FootballPractice.pace(p) == 66,
+                        "Public exercise leaves football ratings alone");
+            });
+            case 880 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
             default -> {}
         }
     }

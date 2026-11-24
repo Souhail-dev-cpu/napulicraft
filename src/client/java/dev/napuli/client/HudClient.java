@@ -69,7 +69,7 @@ final class HudClient {
 	private static void draw(GuiGraphicsExtractor g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		Hud.State s = state;
-		if (hidden || s == null || mc.player == null || mc.gui.screen() instanceof CompanionScreen) return;
+		if (hidden || s == null || mc.player == null || mc.gui.screen() instanceof CompanionScreen || mc.gui.screen() instanceof FootballMovesScreen) return;
         float scale = CompanionOptions.current.scale() * Math.min(1f, Math.max(.75f, g.guiHeight() / 240f));
         g.pose().pushMatrix();
         g.pose().scale(scale);

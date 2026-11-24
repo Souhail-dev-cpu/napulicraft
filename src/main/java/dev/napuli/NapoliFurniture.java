@@ -141,7 +141,7 @@ final class NapoliFurniture {
         });
     }
 
-    private static Block register(String name, java.util.function.Function<BlockBehaviour.Properties, Block> factory) {
+    static Block register(String name, java.util.function.Function<BlockBehaviour.Properties, Block> factory) {
         var id = Napuli.id(name);
         var blockKey = ResourceKey.create(Registries.BLOCK, id);
         var itemKey = ResourceKey.create(Registries.ITEM, id);

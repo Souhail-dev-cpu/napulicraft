@@ -216,6 +216,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 		if(CompanionOptions.current.reducedMotion)return;
 		float t=state.ageInTicks+state.animationOffset,s=(float)Math.sin(t*.22),c=(float)Math.cos(t*.22);
 		if(state.vitality<30&&!state.sleeping){body.xRot+=.10f;head.xRot+=.12f;}
+		if (FootballActionClient.pose(this, state.footballActor, state.ageInTicks)) return;
 		switch(state.gesture){
 			case CHOP->{rightArm.xRot=-1.15f+(float)Math.sin(t*.65)*.38f;leftArm.xRot=-1.0f;head.xRot+=.3f;}
 			case STIR->{rightArm.xRot=-1.1f+s*.13f;rightArm.yRot=c*.20f;leftArm.xRot=-.9f;leftArm.yRot=.15f;}
@@ -237,7 +238,7 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 	static final class State extends HumanoidRenderState {
 		NpcSpeechBubbles.Bubble speech;
 		Role role = Role.GENNARO;
-		int variant;
+		int variant, footballActor;
 		dev.napuli.CityGestures.Gesture gesture=dev.napuli.CityGestures.Gesture.NONE;
 		int mood=70,vitality=80,animationOffset;
 		boolean sleeping;

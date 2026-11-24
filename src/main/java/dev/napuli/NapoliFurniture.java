@@ -135,7 +135,7 @@ final class NapoliFurniture {
             @Override
             protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
                 if (player.isSpectator()) return InteractionResult.PASS;
-                if (player instanceof ServerPlayer user && !HomeFixtureBlock.access(user, pos)) return InteractionResult.SUCCESS;
+                if (player instanceof ServerPlayer user && !HomePermissions.access(user, pos, HomePermissions.Capability.STORAGE)) return InteractionResult.SUCCESS;
                 return super.useWithoutItem(state, level, pos, player, hit);
             }
         });

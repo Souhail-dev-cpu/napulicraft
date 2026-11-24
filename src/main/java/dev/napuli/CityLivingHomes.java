@@ -152,7 +152,7 @@ final class CityLivingHomes {
             for(var h:NapoliMergellina.PROPERTIES) for(var p:points(h)) {
                 if(!hit.getBlockPos().equals(p.block())) continue;
                 if((level.getBlockState(p.block()).is(NapoliFurniture.SINK) || level.getBlockState(p.block()).getBlock() instanceof HomeFixtureBlock)) continue; if(p.furniture()!=Furniture.TOILET&&p.furniture()!=Furniture.SINK&&p.furniture()!=Furniture.WASHER&&p.furniture()!=Furniture.SOFA) continue;
-                if(player instanceof ServerPlayer sp && NapoliProperties.hasAccess(sp,h)) {
+                if(player instanceof ServerPlayer sp && (p.furniture()==Furniture.SOFA?NapoliProperties.hasAccess(sp,h):HomePermissions.allows(sp,h,HomePermissions.Capability.APPLIANCES))) {
                     boolean sofa=p.furniture()==Furniture.SOFA;
                     if(!sofa) NapoliHygiene.wash(sp,p.block(),Math.min(100,NapoliHygiene.value(sp)+35));
                     else sp.sendOverlayMessage(Component.literal("Ti rilassi sul divano. Shift + clic sulla TV cambia canale."));

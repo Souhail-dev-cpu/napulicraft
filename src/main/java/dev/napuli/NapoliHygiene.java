@@ -68,7 +68,7 @@ final class NapoliHygiene {
                     var tray = CityLivingHomes.use(house, CityLivingHomes.Furniture.SHOWER).block();
                     if (!pos.equals(tray) && !pos.equals(tray.above())) continue;
                     if (player instanceof ServerPlayer p) {
-                        if (NapoliProperties.hasAccess(p, house)) { wash(p, pos, 100); soakHair(p); }
+                        if (HomePermissions.allows(p, house, HomePermissions.Capability.APPLIANCES)) { wash(p, pos, 100); soakHair(p); }
                         else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
                     }
                     return InteractionResult.SUCCESS;
@@ -76,7 +76,7 @@ final class NapoliHygiene {
             }
             for (var house : NapoliMergellina.PROPERTIES) if (pos.equals(shower(house)) || (pos.equals(shower(house).above()) && NapoliShower.isColumn(level, pos))) {
                 if (player instanceof ServerPlayer p) {
-                    if (NapoliProperties.hasAccess(p, house)) { wash(p, pos, 100); soakHair(p); }
+                    if (HomePermissions.allows(p, house, HomePermissions.Capability.APPLIANCES)) { wash(p, pos, 100); soakHair(p); }
                     else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
                 }
                 return InteractionResult.SUCCESS;

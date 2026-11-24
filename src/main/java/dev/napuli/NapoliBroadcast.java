@@ -85,6 +85,7 @@ final class NapoliBroadcast {
             BlockPos television = NapoliHouseholds.findTelevision(hit.getBlockPos());
             if (television == null) return InteractionResult.PASS;
             if (player instanceof ServerPlayer viewer) {
+                if(!HomePermissions.access(viewer,television,HomePermissions.Capability.APPLIANCES))return InteractionResult.FAIL;
                 var city = viewer.level();
                 Channel current = channel(city, television);
                 Channel chosen = player.isShiftKeyDown() ? current.next()

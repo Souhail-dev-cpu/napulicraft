@@ -29,6 +29,7 @@ final class HomePermissions {
         return grant==null||HouseGuests.host(city,house.id(),grant.host())&&grant.allows(capability);
     }
     static boolean allows(ServerPlayer p,NapoliMergellina.House house,Capability capability){return allows(p.level(),house,p.getUUID(),capability);}
+    static boolean access(ServerPlayer p,net.minecraft.core.BlockPos position,Capability capability){if(!CityCompanion.inCity(p))return true;for(var home:CityLivingHomes.all())if(home.price()>0&&home.contains(position)&&!allows(p,home,capability)){p.sendOverlayMessage(t("permission.denied",t("permission."+capability.name().toLowerCase(Locale.ROOT))));return false;}return true;}
     static void forget(ServerLevel city,String house,UUID guest){var all=new HashMap<>(city.getAttachedOrElse(GRANTS,Map.of()));if(guest==null)all.keySet().removeIf(k->k.startsWith(house+"/"));else all.remove(key(house,guest));city.setAttached(GRANTS,Map.copyOf(all));}
     static boolean edit(ServerPlayer p,String house,UUID guest,String action){
         if(!CityCompanion.inCity(p)||!PlayerTrade.available(p)||!HouseGuests.host(p.level(),house,p.getUUID())||HouseGuests.host(p.level(),house,guest)||!HouseGuests.invited(p.level(),house,guest))return false;

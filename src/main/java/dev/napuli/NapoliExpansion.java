@@ -91,6 +91,8 @@ public final class NapoliExpansion {
         upgradeArchitecture(city, chunk);
         upgradeInteriors(city, chunk);
         repairFrontages(city, chunk);
+        WorkResources.fit(city, chunk);
+        DistrictCharacter.fit(city, chunk);
         return true;
     }
     static boolean upgradeArchitecture(ServerLevel city, LevelChunk chunk) {
@@ -228,6 +230,8 @@ public final class NapoliExpansion {
                 repairFrontages(city,chunk);
                 DistrictLife.fit(city,chunk);
                 CityRailway.fit(city,chunk);
+                WorkResources.fit(city,chunk);
+                DistrictCharacter.fit(city,chunk);
                 NapoliFootballLink.fit(city,chunk);
             }
         });

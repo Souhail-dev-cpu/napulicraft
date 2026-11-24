@@ -63,6 +63,8 @@ public final class Hud {
 					}
 				}
 			}
+            var intro = CityOnboarding.objective(p);
+            if(intro!=null&&underground==null&&!NapoliEmployment.trackingOffice(p)&&(NapoliFactions.objective(p).key().equals("none")||NapoliFactions.objective(p).key().equals("cooldown")))obj=intro;
 			NapoliFactions.Side ally = NapoliFactions.ally(p);
 			ServerPlayNetworking.send(p, new State(p.level().dimension() == NapoliMap.LEVEL, NapoliStreet.cash(p),
 					NapoliFactions.reputation(p, NapoliFactions.Side.LANTERNE), NapoliFactions.reputation(p, NapoliFactions.Side.MAREE),

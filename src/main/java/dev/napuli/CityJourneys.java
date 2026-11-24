@@ -64,12 +64,16 @@ final class CityJourneys {
     static void unmaterialized(ServerLevel city,UUID id){var census=NapoliCivicLife.census(city);if(census==null)return;city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(c->c.id().equals(id)?new NapoliCivicLife.Citizen(c.id(),c.name(),c.woman(),c.birth(),c.balance(),c.job(),c.partner(),c.property(),c.parents(),false,c.childhoodDays()):c).toList()));}
     static void withdraw(ServerLevel city,NapoliResident npc){var c=NapoliCivicLife.profile(city,npc.getUUID());if(c==null||npc.isNoAi())return;CityMovement.stand(npc);observe(city,npc,c,CitySimulation.destination(city,c));CityMovement.release(city,c.id());unmaterialized(city,c.id());npc.discard();}
     static boolean managed(NapoliResident npc){return !npc.isNoAi()&&npc.level() instanceof ServerLevel city&&NapoliCivicLife.profile(city,npc.getUUID())!=null;}
-    static BlockPos spawn(ServerLevel city,BlockPos projected){
-        if(NapoliResidentHomes.walkable(city,projected))return projected;
+    static BlockPos spawn(ServerLevel city,BlockPos projected){return spawn(city,projected,Set.of());}
+    static BlockPos spawn(ServerLevel city,BlockPos projected,Set<BlockPos> reserved){
+        if(freeArrival(city,projected,reserved))return projected;
         // Only repair a collision within the same small neighborhood; never request distant chunks.
-        for(int radius=1;radius<=3;radius++)for(var p:BlockPos.betweenClosed(projected.offset(-radius,-1,-radius),projected.offset(radius,1,radius)))if(NapoliResidentHomes.walkable(city,p)&&p.distSqr(projected)<=radius*radius)return p.immutable();
-        return projected;
+        for(int radius=1;radius<=4;radius++)for(var p:BlockPos.betweenClosed(projected.offset(-radius,-1,-radius),projected.offset(radius,1,radius)))if(p.distSqr(projected)<=radius*radius&&freeArrival(city,p,reserved))return p.immutable();
+        return null;
     }
+    private static boolean freeArrival(ServerLevel city,BlockPos at,Set<BlockPos> reserved){if(reserved.contains(at)||!city.hasChunkAt(at)||!NapoliResidentHomes.walkable(city,at))return false;
+        var box=new net.minecraft.world.phys.AABB(at.getX()+.2,at.getY(),at.getZ()+.2,at.getX()+.8,at.getY()+1.9,at.getZ()+.8);
+        return city.players().stream().noneMatch(p->p.getBoundingBox().intersects(box))&&city.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class,box,e->e.isAlive()).isEmpty();}
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%20!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;var census=NapoliCivicLife.census(city);if(census==null)return;
             for(var c:census.people()){var e=city.getEntity(c.id());if(e instanceof NapoliResident npc&&!npc.isNoAi()){

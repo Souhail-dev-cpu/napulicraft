@@ -128,7 +128,7 @@ final class HudClient {
 		} else {
 			title = Component.translatable(employment ? "napuli.hud.work" : "napuli.hud.route").getString();
 			String objective = s.objective();
-			String key = objective.startsWith("napuli.local.") || objective.startsWith("napuli.work.") ? objective : "napuli.hud.obj." + objective;
+			String key = objective.startsWith("napuli.local.") || objective.startsWith("napuli.work.") || objective.startsWith("napuli.guide.") ? objective : "napuli.hud.obj." + objective;
 			line = Component.translatable(key, s.cooldown()).getString();
 		}
 		var wrapped = f.split(Component.literal(line), w - 6);

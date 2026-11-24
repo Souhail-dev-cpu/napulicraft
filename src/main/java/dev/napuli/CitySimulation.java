@@ -224,7 +224,7 @@ final class CitySimulation {
         if(CityNeighborhood.tick(npc,city,c,action))return;
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=CityOccupations.workplace(c);
         else if(action==NapoliHouseholds.Activity.CARE)target=CityProfessions.Category.HEALTH.site().offset(8,0,7);
-        else if(action==NapoliHouseholds.Activity.SCHOOL)target=CityProfessions.Category.PUBLIC.site().offset(8,0,7);
+        else if(action==NapoliHouseholds.Activity.SCHOOL)target=CityServices.waiting(c,"school");
         else if(action==NapoliHouseholds.Activity.SHOP)target=CityProfessions.Category.TRADE.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.CELEBRATE)target=house==null?home.south(5):house.entrance().south(2);
         else if(house!=null) {
@@ -250,7 +250,7 @@ final class CitySimulation {
         if(escort!=null)target=escort;
         else if((action==NapoliHouseholds.Activity.WORK||action==NapoliHouseholds.Activity.SCHOOL)&&CityRoutines.commute(npc,city,target))return;
         if(action==NapoliHouseholds.Activity.SHOP&&target.distToCenterSqr(npc.position())<36)CityEconomy.shopResident(city,c);
-        if(action==NapoliHouseholds.Activity.SOCIAL&&c.age(NapoliBroadcast.day(city))>=60)target=CityNeighborhood.cafe(npc.blockPosition());
+        if(action==NapoliHouseholds.Activity.SOCIAL&&visit==null)target=CityCharacter.leisure(city,c);
         if((action==NapoliHouseholds.Activity.WORK||action==NapoliHouseholds.Activity.SCHOOL)&&target.distToCenterSqr(npc.position())>64)npc.setActivity(NapoliHouseholds.Activity.COMMUTE);
         target=CityRoutines.sheltered(city,npc,CityRoutines.localGoal(city,npc,target));
         if(!city.hasChunkAt(target))return;
@@ -287,9 +287,10 @@ final class CitySimulation {
         var visit=visitingHouse(city,c);if(visit!=null)return visit.inside();
         var action=activity(city,c,life(city,c.id()),NapoliBroadcast.time(city));
         if(DistrictLife.resident(c))return DistrictLife.destination(city,c,action);
+        if(action==NapoliHouseholds.Activity.SOCIAL)return CityCharacter.leisure(city,c);
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null)return CityOccupations.kind(c).isEmpty()?CityOccupations.workplace(c):CityOccupations.target(city,c);
         if(action==NapoliHouseholds.Activity.CARE)return CityProfessions.Category.HEALTH.site().offset(8,0,7);
-        if(action==NapoliHouseholds.Activity.SCHOOL)return CityProfessions.Category.PUBLIC.site().offset(8,0,7);
+        if(action==NapoliHouseholds.Activity.SCHOOL)return CityServices.waiting(c,"school");
         if(action==NapoliHouseholds.Activity.SHOP)return CityProfessions.Category.TRADE.site().offset(8,0,7);
         return NapoliCivicLife.home(c);
     }

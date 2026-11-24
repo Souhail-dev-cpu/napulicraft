@@ -57,6 +57,8 @@ Al primo ingresso il giocatore viene accompagnato automaticamente nella dimensio
 5. Apri `/negozio` per una bottega di quartiere e `/trasporti` per la rete cittadina.
 6. Premi **J** per aggiungere la tua musica e configurare la radio.
 
+Per un'introduzione giocabile usa **`/inizio`**: conosci un vicino, scegli un lavoro, prendi un mezzo pubblico e compra il pranzo. La guida è facoltativa, si sospende con `/inizio pausa` e conserva le attività completate.
+
 ## Funzionalità principali
 
 | Sistema | Contenuti |
@@ -66,7 +68,7 @@ Al primo ingresso il giocatore viene accompagnato automaticamente nella dimensio
 | Quartieri abitati | 19 quartieri dell'espansione con 38 case per le famiglie e 19 botteghe |
 | NPC | Identità persistenti, età, famiglie, bisogni, personalità, memoria, relazioni, gesti e routine |
 | Abitare | 35 immobili acquistabili o affittabili, mutui, bollette, chiavi, campanelli, ospiti e cene |
-| Lavoro | Catalogo di 85 professioni NPC e otto contratti cittadini giocabili |
+| Lavoro | 85 professioni NPC, otto contratti giocabili, kit iniziali, raccolta guidata, risorse rinnovabili, quattro ranghi e tre livelli di attrezzatura |
 | Trasporti | Dieci linee di bus, tram e metro con fermate, passeggeri, capienza, biglietti e cambi |
 | Cucina | 71 ricette, quattro postazioni, ingredienti rinnovabili, effetti alimentari e progressione da pizzaiolo |
 | Attività | Calcio giocabile, torneo dei quartieri, TV, eventi, missioni e obiettivi personali degli abitanti |
@@ -100,6 +102,10 @@ I nuovi settori vengono generati nei chunk esplorati, con un massimo di quattro 
 
 L'[atlante della città](docs/MAPPA_NAPOLI.md) raccoglie dimensioni, luoghi e fonti geografiche.
 
+Le botteghe e le case dei quartieri ricevono palette, tende, piante e dettagli diversi secondo costa, colline, centro storico e zona orientale. Il paesaggio sonoro locale segue orari e presenza dei giocatori. I percorsi distinguono il livello del terreno dal piano del pontile e del lungomare; gli accessi alla metro hanno aperture verso tutte le banchine servite.
+
+Gli operatori possono avviare **`/citta verifica`**: controlla nei chunk reali gli accessi di case, botteghe, incroci, luoghi dell'atlante e metro. Il rapporto `napulicraft/reports/accessibilita.csv` distingue passaggi validi, blocchi e personalizzazioni. L'audit completo carica molte zone: eseguilo durante una finestra di manutenzione.
+
 ## Come funzionano gli NPC
 
 ### Identità e simulazione persistente
@@ -126,11 +132,15 @@ Gesti, oggetti impugnati, suoni, particelle ed espressioni rendono riconoscibili
 
 Anche alcuni lavori hanno fasi materiali: il fornaio trasforma ingredienti in pane, il barista serve clienti consumando caffè, il corriere consegna pacchi, il netturbino porta i rifiuti al bidone, il manutentore usa ricambi e il medico consuma medicine. Materiali prenotati e fasi completate vengono salvati per evitare prodotti o compensi duplicati.
 
+Il falegname lavora legname del magazzino per produrre assi; il cameriere raggiunge il cliente con una porzione prenotata; il giardiniere pianta nelle aiuole consumando semi. Le riparazioni domestiche usano anche le assi prodotte. I manutentori possono rimettere in servizio mezzi guasti della rete pubblica.
+
 ### Memoria, dialoghi e reputazione
 
 I cittadini ricordano incontri in giorni diversi, acquisti, favori, aggressioni e promesse. Un cliente abituale può essere riconosciuto; la fiducia modifica saluti, disponibilità commerciale e prezzi. Ripetere clic nello stesso giorno non costruisce da solo un'amicizia.
 
 Le conversazioni contestuali tengono conto di bisogni, turno, scorte e obiettivi. Un testimone può riferire dove ha visto una persona, indicando quando: la sua conoscenza deriva da avvistamenti effettivi. Le notizie passano fra persone vicine, con una fonte e una credibilità che diminuisce nei passaggi. `/quartiere voci` mostra ciò che è stato raccontato al giocatore.
+
+Le preferenze personali restano legate all'identità: pietanza preferita, saluto, bottega abituale, ricerca di tranquillità e amici fidati influenzano dialoghi e tempo libero. Quando un acquisto è possibile, lo spuntino preferito consuma denaro e scorte reali; gli incontri con gli amici richiedono relazioni già costruite.
 
 Le battute compaiono in **nuvolette sopra la testa di chi parla**. Seguono il personaggio, si orientano verso la camera, vanno a capo e scompaiono automaticamente; i testi lunghi sono suddivisi in pagine. Le conversazioni raggiungono i destinatari vicini. Avvisi di sistema e menu mantengono le proprie interfacce.
 
@@ -192,6 +202,12 @@ Il catalogo degli NPC comprende **85 professioni** in ristorazione, commercio, s
 
 Il giocatore dispone di **otto contratti cittadini**: fornaio, facchino, mercante, netturbino, giardiniere, pescatore, corriere e falegname. `/lavoro` mostra stato e offerte; il collocamento e i punti di lavoro guidano attraverso mansioni e pagamento.
 
+Il primo turno assegna l'attrezzatura del mestiere. La freccia segue **raccolta → preparazione → consegna → timbratura**: per il falegname indica gli alberi, poi il banco per trasformare i tronchi in assi e infine il destinatario. Sei querce dell'area artigiana ricrescono durante la notte; il campo viene ripristinato usando semi. La ricrescita rispetta costruzioni e contenitori dei giocatori.
+
+Presso ciascun contratto trovi un **banco CARRIERA**: esperienza e turni pagati consentono di passare da Apprendista a Qualificato, Specialista e Maestro. Sono disponibili potenziamenti, riparazioni e sostituzioni dell'attrezzo. I progressi sono separati per mestiere e persistono nei salvataggi. Stipendi e interventi pubblici usano un fondo finanziato anche da tariffe, vendite e tasse; le consegne riforniscono le scorte pertinenti.
+
+Consulta la [guida ai lavori e alle carriere](docs/LAVORI_E_CARRIERE.md) per materiali, requisiti, costi e comandi.
+
 ## Bus, tram, metropolitana e motorini
 
 ### Rete pubblica
@@ -216,6 +232,8 @@ Bus, tram e metro hanno rispettivamente **8, 12 e 16 posti**. Le fermate disting
 Il biglietto costa **2 € di gioco**, si paga alla salita e vale 6.000 tick, includendo i cambi del viaggio. Se il mezzo è pieno non viene addebitato. Destinazione, pagamento e cambi restanti vengono salvati per riprendere dopo una riconnessione senza pagare nuovamente la stessa corsa.
 
 Usa `/trasporti`, il cartello della fermata o `/trasporti viaggia DESTINAZIONE` da una fermata vicina. Anche gli NPC usano la rete per i tragitti lunghi e percorrono a piedi l'ultimo tratto.
+
+`/problemi` mostra gli interventi pubblici. Un guasto ferma realmente la linea interessata; ripararlo richiede di raggiungere il punto e consegnare due lingotti di ferro. Il fondo lavori paga 20 € e il servizio riparte. Un intervento già concluso non può essere riscosso nuovamente.
 
 Le linee sono un adattamento per Napulicraft: M1 seleziona alcune fermate principali e M6 riprende gli otto nomi della linea reale. Percorsi di superficie, frequenze, capienze e tariffe appartengono alla simulazione. La [guida ai trasporti](docs/QUARTIERI_E_TRASPORTI.md) riporta dettagli e riferimenti.
 
@@ -460,11 +478,17 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 ### Test automatici e client
 
-`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **102 test**, comprendendo anche ingressi, strade, capienza, ospiti e persistenza. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **124 test**, comprendendo ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile e accessi costieri alla metro. Le prove grafiche e prolungate si avviano separatamente.
+
+Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 
 | Task Gradle | Ambito |
 | --- | --- |
 | `runGameTest` | Suite automatica del server |
+| `runWorkCareerTest` | Client grafico: raccolta nativa, preparazione, paga a tempo, otto banchi, promozione, potenziamento e ricrescita |
+| `runCityAudit` | Controllo fisico di tutti gli accessi censiti, con rapporto CSV |
+| `runRealMultiplayerServer` | Server isolato per due client grafici, acquisti simultanei, ospiti, metro e riconnessione |
+| `runRealMultiplayerA` / `runRealMultiplayerB` | Due processi grafici distinti, sincronizzazione degli NPC e registrazione FPS |
 | `runLivingCityTest` | Case, pasti, gesti, inviti, chiavi, campanelli, servizi, TV e interazioni sul client |
 | `runAtlasTest` | Destinazioni dell'espansione, atlante e ricaricamento dei chunk |
 | `runDistrictTest` | Botteghe, menu dei trasporti e viaggio in metro |
@@ -480,6 +504,8 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 I task client creano mondi temporanei e salvano schermate in `run-autotest/screenshots`. Su Windows usa, per esempio, `.\gradlew.bat runStreetTest`. I task di verifica con un marcatore finale controllano che il log ne confermi il completamento.
 
 ### Prove multiplayer prolungate
+
+Sono disponibili anche prove con **due client grafici indipendenti** dietro un proxy locale con latenza e jitter, oltre alle quattro connessioni simulate descritte sotto. Le istruzioni, i rapporti e le condizioni di misura sono in [Verifiche della città](docs/VERIFICHE_CITTA.md). Le misure di server, memoria e FPS sono facoltative e si attivano con `-Dnapuli.performance=true`; le esecuzioni di verifica le abilitano automaticamente.
 
 Sono disponibili prove con **server dedicato e quattro connessioni locali simulate**, protocollo e salvataggi reali. Per ciascuna coppia di esecuzioni usa lo stesso identificativo; per ripetere da zero scegline uno nuovo.
 

@@ -5,8 +5,32 @@
   "name": "Napulicraft server tests",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.napuli.CitySoakTest", "dev.napuli.DistrictSoakTest"],
-    "fabric-gametest": ["dev.napuli.MotorinoGameTest", "dev.napuli.KitchenGameTest", "dev.napuli.PoliceNavigationGameTest", "dev.napuli.CityLifeGameTest", "dev.napuli.HousingCapacityGameTest", "dev.napuli.HouseGuestsGameTest", "dev.napuli.CityBehaviorGameTest", "dev.napuli.CityContinuityGameTest", "dev.napuli.CityVividGameTest", "dev.napuli.NapoliAtlasGameTest", "dev.napuli.DistrictGameTest", "dev.napuli.SpeechGameTest", "dev.napuli.EntranceGameTest", "dev.napuli.StreetGameTest", "dev.napuli.FootballRatingsGameTest"]
+    "main": [
+      "dev.napuli.CitySoakTest",
+      "dev.napuli.DistrictSoakTest",
+      "dev.napuli.RealMultiplayerTest",
+      "dev.napuli.CityAuditRun"
+    ],
+    "fabric-gametest": [
+      "dev.napuli.MotorinoGameTest",
+      "dev.napuli.KitchenGameTest",
+      "dev.napuli.PoliceNavigationGameTest",
+      "dev.napuli.CityLifeGameTest",
+      "dev.napuli.HousingCapacityGameTest",
+      "dev.napuli.HouseGuestsGameTest",
+      "dev.napuli.CityBehaviorGameTest",
+      "dev.napuli.CityContinuityGameTest",
+      "dev.napuli.CityVividGameTest",
+      "dev.napuli.NapoliAtlasGameTest",
+      "dev.napuli.DistrictGameTest",
+      "dev.napuli.SpeechGameTest",
+      "dev.napuli.EntranceGameTest",
+      "dev.napuli.StreetGameTest",
+      "dev.napuli.WorkEcosystemGameTest",
+      "dev.napuli.FootballRatingsGameTest"
+    ]
   },
-  "depends": { "napuli": "*" }
+  "depends": {
+    "napuli": "*"
+  }
 }

@@ -22,24 +22,24 @@ final class CityOccupations {
     static final AttachmentType<Map<String,Integer>> OUTPUTS=AttachmentRegistry.<Map<String,Integer>>builder().persistent(Codec.unboundedMap(Codec.STRING,Codec.INT)).buildAndRegister(Napuli.id("occupation_outputs"));
     static final AttachmentType<Map<String,Long>> RESTOCKED=AttachmentRegistry.<Map<String,Long>>builder().persistent(Codec.unboundedMap(Codec.STRING,Codec.LONG)).buildAndRegister(Napuli.id("service_restock_days"));
     static int outputs(ServerLevel city,UUID id){return city.getAttachedOrElse(OUTPUTS,Map.of()).getOrDefault(id.toString(),0);}
-    private static void output(ServerLevel city,UUID id){var all=new HashMap<>(city.getAttachedOrElse(OUTPUTS,Map.of()));all.put(id.toString(),Math.min(1000000,all.getOrDefault(id.toString(),0)+1));city.setAttached(OUTPUTS,Map.copyOf(all));}
+    static void output(ServerLevel city,UUID id){var all=new HashMap<>(city.getAttachedOrElse(OUTPUTS,Map.of()));all.put(id.toString(),Math.min(1000000,all.getOrDefault(id.toString(),0)+1));city.setAttached(OUTPUTS,Map.copyOf(all));}
     static final AttachmentType<Map<String,Integer>> SUPPLIES=AttachmentRegistry.<Map<String,Integer>>builder().persistent(Codec.unboundedMap(Codec.STRING,Codec.INT)).buildAndRegister(Napuli.id("service_supplies"));
     static final AttachmentType<Map<String,Litter>> LITTER=AttachmentRegistry.<Map<String,Litter>>builder().persistent(Codec.unboundedMap(Codec.STRING,Litter.CODEC)).buildAndRegister(Napuli.id("street_litter"));
     static final AttachmentType<Map<String,Parcel>> PARCELS=AttachmentRegistry.<Map<String,Parcel>>builder().persistent(Codec.unboundedMap(Codec.STRING,Parcel.CODEC)).buildAndRegister(Napuli.id("doorstep_parcels"));
     static Task task(ServerLevel city,UUID id){return city.getAttachedOrElse(TASKS,Map.of()).get(id.toString());}
     static void put(ServerLevel city,UUID id,Task task){var all=new HashMap<>(city.getAttachedOrElse(TASKS,Map.of()));all.put(id.toString(),task);city.setAttached(TASKS,Map.copyOf(all));}
-    static int supply(ServerLevel city,String key){return city.getAttachedOrElse(SUPPLIES,Map.of()).getOrDefault(key,key.equals("medicine")||key.equals("parts")?24:key.equals("coffee")?48:0);}
+    static int supply(ServerLevel city,String key){return city.getAttachedOrElse(SUPPLIES,Map.of()).getOrDefault(key,Set.of("medicine","parts","timber","seeds","saplings").contains(key)?24:key.equals("coffee")?48:0);}
     static void supply(ServerLevel city,String key,int value){var all=new HashMap<>(city.getAttachedOrElse(SUPPLIES,Map.of()));all.put(key,Math.clamp(value,0,key.equals("returns")?4096:256));city.setAttached(SUPPLIES,Map.copyOf(all));}
     static String kind(NapoliCivicLife.Citizen c){if(c.profession()==null)return "";return switch(c.profession()){
-        case BAKER,PASTRY_CHEF,PIZZA_MAKER,COOK,PASTA_MAKER -> "baker";case BARISTA,WAITER -> "barista";case CLEANER -> "cleaner";case COURIER,POSTMAN -> "courier";case DOCTOR,NURSE,NIGHT_DOCTOR,NIGHT_NURSE -> "doctor";case MECHANIC,PLUMBER,CARETAKER -> "repair";default -> "";};}
-    static BlockPos workplace(NapoliCivicLife.Citizen c){if(DistrictLife.resident(c))return DistrictLife.work(c);return kind(c).isEmpty()?c.profession().site:c.profession().category.site().offset(8,0,7);}
+        case BAKER,PASTRY_CHEF,PIZZA_MAKER,COOK,PASTA_MAKER -> "baker";case BARISTA -> "barista";case WAITER -> "waiter";case GARDENER -> "gardener";case CARPENTER -> "carpenter";case CLEANER -> "cleaner";case COURIER,POSTMAN -> "courier";case DOCTOR,NURSE,NIGHT_DOCTOR,NIGHT_NURSE -> "doctor";case MECHANIC,PLUMBER,CARETAKER -> "repair";default -> "";};}
+    static BlockPos workplace(NapoliCivicLife.Citizen c){if(kind(c).equals("carpenter"))return NapoliEmployment.Contract.CARPENTER.task;if(kind(c).equals("gardener"))return new BlockPos(-225,64,56);if(kind(c).equals("waiter"))return CityProfessions.Category.FOOD.site().offset(10,0,7);if(DistrictLife.resident(c))return DistrictLife.work(c);return kind(c).isEmpty()?c.profession().site:c.profession().category.site().offset(8,0,7);}
     static BlockPos station(String kind){return switch(kind){case "baker"->CityProfessions.Category.FOOD.site().offset(3,0,4);case "barista"->CityProfessions.Category.FOOD.site().offset(10,0,4);case "cleaner"->CityProfessions.Category.SERVICES.site().offset(3,0,4);case "courier"->CityEconomy.DEPOT.south();default->CityProfessions.Category.HEALTH.site().offset(8,0,7);};}
     static void fixtures(ServerLevel city){
         for(var category:List.of(CityProfessions.Category.FOOD,CityProfessions.Category.SERVICES,CityProfessions.Category.HEALTH)){
             var pos=category.site().offset(3,0,3);if(!CityProperty.playerPlaced(city,pos)&&city.getBlockState(pos).is(Blocks.CRAFTING_TABLE))city.setBlock(pos,(category==CityProfessions.Category.FOOD?Blocks.SMOKER:Blocks.BARREL).defaultBlockState(),2);
         }
     }
-    static String description(ServerLevel city,UUID id){var t=task(city,id);if(t==null)return "";return switch(t.kind()){case "baker"->t.cargo()>0?"Sto lavorando un impasto già prelevato dalle scorte.":"Aspetto farina e un forno libero.";case "barista"->"Servo i clienti al bancone e riordino le tazze.";case "cleaner"->t.cargo()>0?"Porto i rifiuti raccolti al contenitore.":"Sto pulendo le strade del quartiere.";case "courier"->t.cargo()>0?"Ho una consegna da portare a un vicino.":"Ritiro i pacchi al deposito.";case "doctor"->"Visito i pazienti presenti in ambulatorio.";default->"";};}
+    static String description(ServerLevel city,UUID id){var t=task(city,id);if(t==null)return "";return switch(t.kind()){case "baker"->t.cargo()>0?"Sto lavorando un impasto già prelevato dalle scorte.":"Aspetto farina e un forno libero.";case "barista"->"Servo i clienti al bancone e riordino le tazze.";case "cleaner"->t.cargo()>0?"Porto i rifiuti raccolti al contenitore.":"Sto pulendo le strade del quartiere.";case "courier"->t.cargo()>0?"Ho una consegna da portare a un vicino.":"Ritiro i pacchi al deposito.";case "doctor"->"Visito i pazienti presenti in ambulatorio.";case "carpenter"->"Trasformo il legno del magazzino in assi per gli artigiani e le riparazioni.";case "gardener"->"Curo le aiuole usando le sementi disponibili.";case "waiter"->"Porto le ordinazioni ai clienti seduti e riordino i tavoli.";case "repair"->"Raggiungo il guasto con i ricambi e completo la riparazione.";default->"";};}
     static String bakery(ServerLevel city,UUID id){var c=NapoliCivicLife.profile(city,id);return DistrictLife.resident(c)?DistrictShops.key(c):"forno";}
     static void returnFlour(ServerLevel city,UUID id,int amount){var shop=bakery(city,id);var s=CityEconomy.stock(city,shop);CityEconomy.put(city,shop,new CityEconomy.Stock(s.grain(),s.flour()+amount,s.bread(),s.processed(),s.delivered()));}
     static boolean reserveDough(ServerLevel city,UUID id){
@@ -51,14 +51,20 @@ final class CityOccupations {
     static boolean collectParcel(ServerLevel city,String id){var all=new HashMap<>(city.getAttachedOrElse(PARCELS,Map.of()));var p=all.get(id);if(p==null||p.collected())return false;var c=NapoliCivicLife.profile(city,p.recipient());if(c==null||!CityJourneys.at(city,c,p.position(),12))return false;
         var life=CitySimulation.life(city,c.id());CitySimulation.put(city,c.id(),life.withNeeds(life.needs(),Math.min(24,life.food()+p.food()),life.last(),life.water(),life.energy()));all.put(id,new Parcel(p.recipient(),p.position(),p.food(),p.delivered(),true));city.setAttached(PARCELS,Map.copyOf(all));return true;}
     static BlockPos target(ServerLevel city,NapoliCivicLife.Citizen c){var t=task(city,c.id());String kind=kind(c);
+        if(Set.of("waiter","gardener","carpenter").contains(kind))return CityTradeWork.target(city,c,kind);
+        if(kind.equals("repair")&&t!=null&&t.kind().equals(kind)&&t.cargo()>0){
+            if(t.recipient().startsWith("incident:")){var incident=CityWorkIncidents.get(city,t.recipient().substring(9));return incident==null?workplace(c):incident.position();}
+            var issue=city.getAttachedOrElse(CityTraces.ISSUES,Map.of()).get(t.recipient());var home=issue==null||issue.fixed()?null:CityLivingHomes.find(issue.home());return home==null?workplace(c):home.approach(1);
+        }
+        if(kind.equals("repair")){var incident=CityWorkIncidents.near(city,workplace(c));if(incident!=null)return incident.position();}
         if(DistrictLife.resident(c)&&!kind.equals("courier")&&!kind.equals("cleaner")&&!kind.equals("repair"))return DistrictLife.work(c);
-        if(kind.equals("repair")){if(t!=null&&t.kind().equals(kind)&&t.cargo()>0&&!t.recipient().isEmpty()){var issue=city.getAttachedOrElse(CityTraces.ISSUES,Map.of()).get(t.recipient());if(issue!=null){var h=CityLivingHomes.find(issue.home());if(h!=null)return h.entrance().south();}}return CityTraces.repairTarget(city);}
+        if(kind.equals("repair"))return CityTraces.repairTarget(city);
         if(t!=null&&t.kind().equals(kind)&&t.cargo()>0&&kind.equals("courier")&&!t.recipient().isEmpty()){var recipient=NapoliCivicLife.profile(city,UUID.fromString(t.recipient()));var home=recipient==null?null:CityLivingHomes.find(recipient.property());return home==null?station(kind):home.entrance().south();}
         if(kind.equals("cleaner")&&(t==null||t.cargo()==0))return city.getAttachedOrElse(LITTER,Map.of()).values().stream().filter(l->l.units()>0).min(Comparator.comparingDouble(l->l.position().distSqr(workplace(c)))).map(Litter::position).orElse(station(kind));
         return DistrictLife.resident(c)?workplace(c):station(kind);
     }
     static boolean tick(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c){
-        String kind=kind(c);if(kind.isEmpty())return false;var t=normalize(city,c,kind);long now=city.getGameTime();
+        String kind=kind(c);if(kind.isEmpty())return false;if(CityTradeWork.act(npc,city,c,kind))return true;var t=normalize(city,c,kind);long now=city.getGameTime();
         var goal=target(city,c);npc.setActivity(NapoliHouseholds.Activity.WORK);CityMovement.stand(npc);
         if(goal.distToCenterSqr(npc.position())>3){npc.setActivity(NapoliHouseholds.Activity.COMMUTE);CityDomestic.move(npc,CityRoutines.localGoal(city,npc,goal));return true;}
         if(!CityMovement.acquire(city,goal,npc.getUUID(),240)){npc.setActivity(NapoliHouseholds.Activity.WAIT);CityDomestic.move(npc,CityMovement.waitingSpot(city,goal,npc.getUUID()));return true;}
@@ -93,24 +99,36 @@ final class CityOccupations {
         var patient=CityServices.patient(city,worker.id());if(patient==null)return false;boolean completed=CityServices.examine(city,worker,patient);if(completed)put(city,worker.id(),new Task("doctor",0,0,0,"",now));return completed;
     }
     static void money(ServerLevel city,UUID id,int amount){var census=NapoliCivicLife.census(city);city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(c->c.id().equals(id)?c.withMoney(Math.clamp(c.balance()+amount,0,99999),c.job()):c).toList()));}
-    static void repair(ServerLevel city,NapoliCivicLife.Citizen c,Task t,long now){var issue=CityTraces.issueNear(city,target(city,c));if(issue==null)return;
-        if(t.cargo()==0){if(supply(city,"parts")==0)return;supply(city,"parts",supply(city,"parts")-1);put(city,c.id(),new Task("repair",1,0,1,issue.position().asLong()+"",now));}
-        else if(t.progress()<160)put(city,c.id(),new Task("repair",1,t.progress()+40,1,t.recipient(),t.last()));
+    static void repair(ServerLevel city,NapoliCivicLife.Citizen c,Task t,long now){
+        if(t.cargo()>0){boolean incident=t.recipient().startsWith("incident:");var homeIssue=city.getAttachedOrElse(CityTraces.ISSUES,Map.of()).get(t.recipient());
+            boolean active=incident?CityWorkIncidents.get(city,t.recipient().substring(9))!=null:homeIssue!=null&&!homeIssue.fixed();
+            if(!active){supply(city,"parts",supply(city,"parts")+1);if(!incident&&t.cargo()>1)supply(city,"planks",supply(city,"planks")+1);put(city,c.id(),new Task("repair",0,0,0,"",now));return;}
+        }
+        var incident=CityWorkIncidents.near(city,target(city,c));
+        if(incident!=null&&incident.position().distSqr(target(city,c))<9){
+            if(t.cargo()==0){if(supply(city,"parts")<1)return;supply(city,"parts",supply(city,"parts")-1);put(city,c.id(),new Task("repair",1,0,1,"incident:"+incident.id(),now));}
+            else if(t.recipient().startsWith("incident:")){if(t.progress()<160)put(city,c.id(),new Task("repair",1,t.progress()+40,1,t.recipient(),t.last()));else{CityWorkIncidents.resolve(city,t.recipient().substring(9));put(city,c.id(),new Task("repair",0,0,0,"",now));output(city,c.id());}}
+            return;
+        }
+        if(t.recipient().startsWith("incident:")){supply(city,"parts",supply(city,"parts")+t.cargo());put(city,c.id(),new Task("repair",0,0,0,"",now));return;}
+        var issue=CityTraces.issueNear(city,target(city,c));if(issue==null)return;
+        if(t.cargo()==0){if(supply(city,"parts")==0||supply(city,"planks")==0)return;supply(city,"parts",supply(city,"parts")-1);supply(city,"planks",supply(city,"planks")-1);put(city,c.id(),new Task("repair",1,0,2,issue.position().asLong()+"",now));}
+        else if(t.progress()<160)put(city,c.id(),new Task("repair",1,t.progress()+40,t.cargo(),t.recipient(),t.last()));
         else{CityTraces.repair(city,BlockPos.of(Long.parseLong(t.recipient())));put(city,c.id(),new Task("repair",0,0,0,"",now));}
     }
     static void virtualTick(ServerLevel city,NapoliCivicLife.Citizen c){
         if(c.profession()==null||CityJourneys.get(city,c.id())==null||!CityHabits.working(c,NapoliBroadcast.time(city),NapoliBroadcast.day(city))&&!delivering(city,c)||CitySimulation.life(city,c.id()).health()<45||CityPublicOrder.jailed(city,c.id()))return;
-        String kind=kind(c);if(!Set.of("cleaner","courier","repair","baker").contains(kind))return;if(kind.equals("baker")&&task(city,c.id())==null)return;var t=normalize(city,c,kind);long now=city.getGameTime();if(now-t.last()<200||!CityJourneys.at(city,c,target(city,c),4))return;
+        String kind=kind(c);if(kind.equals("carpenter")){CityTradeWork.virtualCarpenter(city,c);return;}if(!Set.of("cleaner","courier","repair","baker").contains(kind))return;if(kind.equals("baker")&&task(city,c.id())==null)return;var t=normalize(city,c,kind);long now=city.getGameTime();if(now-t.last()<200||!CityJourneys.at(city,c,target(city,c),4))return;
         if(kind.equals("baker")){if(t.cargo()>0){if(t.progress()<120)put(city,c.id(),new Task(kind,t.stage(),t.progress()+40,t.cargo(),t.recipient(),t.last()));else if(t.stage()==1)put(city,c.id(),new Task(kind,2,0,1,"",t.last()));else finishBread(city,c.id());}return;}
         if(kind.equals("repair")){repair(city,c,t,now);return;}
         if(kind.equals("cleaner")){if(t.cargo()>0){supply(city,"recycled",supply(city,"recycled")+t.cargo());put(city,c.id(),new Task(kind,0,0,0,"",now));}else{var goal=target(city,c);var dirt=city.getAttachedOrElse(LITTER,Map.of()).get(goal.asLong()+"");if(dirt!=null&&dirt.units()>0){litter(city,goal,-1);put(city,c.id(),new Task(kind,1,0,1,"",now));}}}
         else if(t.cargo()>0)deliver(city,c.id(),t);
         else{var recipient=NapoliCivicLife.census(city).people().stream().filter(p->!p.id().equals(c.id())&&!p.property().isEmpty()&&CitySimulation.life(city,p.id()).food()<4&&city.getAttachedOrElse(PARCELS,Map.of()).values().stream().noneMatch(pcl->pcl.recipient().equals(p.id())&&!pcl.collected())).findFirst().orElse(null);if(recipient!=null&&CityEconomy.reserveBread(city,bakery(city,c.id()),1))put(city,c.id(),new Task(kind,1,0,1,recipient.id().toString(),now));}
     }
-    static Task normalize(ServerLevel city,NapoliCivicLife.Citizen c,String kind){var old=task(city,c.id());if(old!=null&&old.kind().equals(kind))return old;if(old!=null&&old.cargo()>0){switch(old.kind()){case "baker"->returnFlour(city,c.id(),old.cargo());case "courier"->supply(city,"returns",supply(city,"returns")+old.cargo());case "repair"->supply(city,"parts",supply(city,"parts")+old.cargo());case "cleaner"->supply(city,"recycled",supply(city,"recycled")+old.cargo());default->{}}}var fresh=new Task(kind,0,0,0,"",-1000);put(city,c.id(),fresh);return fresh;}
+    static Task normalize(ServerLevel city,NapoliCivicLife.Citizen c,String kind){var old=task(city,c.id());if(old!=null&&old.kind().equals(kind))return old;if(old!=null&&old.cargo()>0){switch(old.kind()){case "baker"->returnFlour(city,c.id(),old.cargo());case "courier"->supply(city,"returns",supply(city,"returns")+old.cargo());case "waiter"->CityTradeWork.returnBread(city);case "repair"->{supply(city,"parts",supply(city,"parts")+1);if(old.cargo()>1)supply(city,"planks",supply(city,"planks")+1);}case "cleaner"->supply(city,"recycled",supply(city,"recycled")+old.cargo());default->{}}}var fresh=new Task(kind,0,0,0,"",-1000);put(city,c.id(),fresh);return fresh;}
     static boolean delivering(ServerLevel city,NapoliCivicLife.Citizen c){var t=task(city,c.id());var l=CitySimulation.life(city,c.id());return kind(c).equals("courier")&&t!=null&&t.kind().equals("courier")&&t.cargo()>0&&l.health()>=45&&l.needs().sleep()>15&&l.needs().hunger()>15;}
     static void restock(ServerLevel city){long day=NapoliBroadcast.day(city);if(NapoliBroadcast.time(city)<1500)return;var delivered=new HashMap<>(city.getAttachedOrElse(RESTOCKED,Map.of()));
-        for(String key:List.of("medicine","coffee","parts")){if(supply(city,key)>=12||delivered.getOrDefault(key,-1L)>=day)continue;String business=key.equals("medicine")?"doctor":key.equals("coffee")?"barista":"repair";var payer=NapoliCivicLife.census(city).people().stream().filter(c->kind(c).equals(business)&&c.balance()>=8).findFirst().orElse(null);if(payer!=null){money(city,payer.id(),-8);supply(city,key,supply(city,key)+16);delivered.put(key,day);}}
+        for(String key:List.of("medicine","coffee","parts","seeds","timber")){if(supply(city,key)>=12||delivered.getOrDefault(key,-1L)>=day)continue;String business=key.equals("medicine")?"doctor":key.equals("coffee")?"barista":key.equals("seeds")?"gardener":key.equals("timber")?"carpenter":"repair";var payer=NapoliCivicLife.census(city).people().stream().filter(c->kind(c).equals(business)&&c.balance()>=8).findFirst().orElse(null);if(payer!=null){money(city,payer.id(),-8);supply(city,key,supply(city,key)+16);delivered.put(key,day);}}
         city.setAttached(RESTOCKED,Map.copyOf(delivered));
     }
     static void register(){ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%200!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null||NapoliCivicLife.census(city)==null)return;restock(city);for(var id:List.copyOf(city.getAttachedOrElse(PARCELS,Map.of()).keySet()))collectParcel(city,id);int returns=supply(city,"returns");if(returns>0){var stock=CityEconomy.stock(city,"forno");int received=Math.min(returns,Math.max(0,192-stock.bread()));if(received>0){CityEconomy.put(city,"forno",new CityEconomy.Stock(stock.grain(),stock.flour(),stock.bread()+received,stock.processed(),stock.delivered()));supply(city,"returns",returns-received);}}});}

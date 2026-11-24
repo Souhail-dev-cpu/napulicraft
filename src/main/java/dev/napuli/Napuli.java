@@ -94,6 +94,7 @@ public class Napuli implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+        CityPerformance.start();
 		CORNICELLO = item("cornicello", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.RARE)
 				.attributes(ItemAttributeModifiers.builder().add(Attributes.LUCK,
 						new AttributeModifier(id("cornicello_luck"), 2, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.OFFHAND).build()));
@@ -133,6 +134,7 @@ public class Napuli implements ModInitializer {
 		Hud.register();
 		NapoliNotice.register();
 		NpcSpeech.register();
+        CityVerification.register();
 		CityRailway.register();
 		CityStreets.register();
 		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
@@ -270,6 +272,14 @@ public class Napuli implements ModInitializer {
 			NapoliStreet.commands(d);
 			GiorgiaMeloni.register(d);
 		});
-		LOGGER.info("Napulicraft: jamme ja!");
+		CityAccessibility.register();
+        CityWorkIncidents.register();
+        WorkResources.register();
+        WorkCareer.register();
+        CityOnboarding.register();
+        DistrictCharacter.register();
+        CityCharacter.register();
+        CityPerformance.register();
+        LOGGER.info("Napulicraft: jamme ja!");
 	}
 }

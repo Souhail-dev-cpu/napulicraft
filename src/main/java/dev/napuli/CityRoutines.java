@@ -56,7 +56,7 @@ final class CityRoutines {
     }
     static BlockPos localGoal(ServerLevel city,NapoliResident npc,BlockPos goal){
         if(!NapoliAtlas.ORIGINAL.contains(npc.getBlockX(),npc.getBlockZ())||!NapoliAtlas.ORIGINAL.contains(goal.getX(),goal.getZ()))return DistrictLife.localGoal(city,npc,goal);
-        for(var home:CityLivingHomes.all())if(home.contains(npc.blockPosition())&&!home.contains(goal))return home.entrance().south();
+        for(var home:CityLivingHomes.all())if(home.contains(npc.blockPosition())&&!home.contains(goal))return home.approach(1);
         for(var service:CityProfessions.Category.values())if(inside(service.site(),npc.blockPosition())&&!inside(service.site(),goal))return service.site().offset(8,0,13);
         if(city.hasChunkAt(goal)&&goal.distToCenterSqr(npc.position())<40*40){var direct=npc.getNavigation().createPath(goal,0);if(direct!=null&&direct.canReach())return goal;}
         final BlockPos requested=goal;
@@ -68,7 +68,7 @@ final class CityRoutines {
             int frontage=npc.getZ()>0?94+35*(int)Math.round((npc.getZ()-94)/35.0):-172+35*(int)Math.round((npc.getZ()+172)/35.0);
             // Doorways face south. Reach the frontage before turning east, rather than re-entering the house.
             if(Math.abs(npc.getZ()-(frontage+.5))>1.5)goal=new BlockPos(npc.getBlockX(),64,frontage);
-            else if(destination!=null&&Math.abs(frontage-(destination.z()+24))<=2)goal=destination.entrance().south();
+            else if(destination!=null&&Math.abs(frontage-(destination.z()+24))<=2)goal=destination.approach(1);
             else goal=new BlockPos(-347,64,frontage);
         }else if(npc.getX()>=-349&&npc.getX()<=-330&&Math.abs(npc.getZ()-(arrivalZ+.5))>1.5)goal=new BlockPos(-347,64,arrivalZ);
         else if(destination!=null&&Math.abs(npc.getZ()-(arrivalZ+.5))>1.5)goal=new BlockPos(-347,64,arrivalZ);

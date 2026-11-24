@@ -134,6 +134,18 @@ loom {
 			vmArg "-Dnapuli.speechtest=true"
 			runDir "run-autotest"
 		}
+		entranceTest {
+			client()
+			name "Napoli doorway and existing-save test"
+			vmArg "-Dnapuli.entrancetest=true"
+			runDir "run-autotest"
+		}
+		streetTest {
+			client()
+			name "Napoli continuous streets and saved terrain test"
+			vmArg "-Dnapuli.streettest=true"
+			runDir "run-autotest"
+		}
 		atlasTest {
 			client()
 			vmArg "-Dnapuli.atlastest=true"
@@ -285,6 +297,18 @@ tasks.named('runDistrictTest') {
 tasks.named('runSpeechTest') {
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[SPEECHTEST] ALL PASSED')) throw new GradleException('NPC speech bubble test failed; see run-autotest/logs/latest.log')
+	}
+}
+
+tasks.named('runEntranceTest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[ENTRANCETEST] ALL PASSED')) throw new GradleException('Doorway upgrade test failed; see run-autotest/logs/latest.log')
+	}
+}
+
+tasks.named('runStreetTest') {
+	doLast {
+		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[STREETTEST] ALL PASSED')) throw new GradleException('Street grading test failed; see run-autotest/logs/latest.log')
 	}
 }
 tasks.named('runFootballTest') {

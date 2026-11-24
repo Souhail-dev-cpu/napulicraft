@@ -95,3 +95,15 @@ ricaricamento del quartiere. I log sono `.gradle/expansion-build.log` e `.gradle
 Quando si modifica la geometria del generatore, usare un mondo GameTest nuovo: i chunk costruiti
 nel mondo temporaneo `build/run/gameTest/world` conservano intenzionalmente i propri blocchi fra
 esecuzioni. Il vecchio mondo di prova può essere archiviato prima di ripetere il comando.
+
+## Correzione degli ingressi
+
+Gli edifici residenziali e le botteghe hanno un vano porta da un blocco di larghezza e due di altezza,
+con muratura completa ai lati e sopra. Anche le case del Rione Partenope hanno il muro sopra la porta.
+Nei salvataggi precedenti gli ingressi del vecchio modello vengono riparati automaticamente quando
+si ricarica il quartiere. La riparazione conserva lo stato della porta e salta gli ingressi personalizzati;
+non ricostruisce gli edifici e viene applicata una sola volta a ogni settore.
+
+Il task ./gradlew runEntranceTest verifica sul client porte aperte e chiuse, un vero scaricamento e
+ricaricamento dei chunk, la riparazione del vecchio vano e la conservazione di un blocco del giocatore.
+Le schermate entrance-*.png sono nella cartella run-autotest/screenshots.

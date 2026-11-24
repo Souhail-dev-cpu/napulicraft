@@ -34,7 +34,7 @@ final class DistrictLife {
     static boolean resident(NapoliCivicLife.Citizen c){return c!=null&&c.property().startsWith("atlas_home_");}
     static District district(NapoliCivicLife.Citizen c){return resident(c)?districts().stream().filter(d->d.homes().stream().anyMatch(h->h.id().equals(c.property()))).findFirst().orElse(null):null;}
     static District byId(String id){return districts().stream().filter(d->d.id().equals(id)).findFirst().orElse(null);}
-    static int floor(NapoliMergellina.House h){return h.id().startsWith("atlas_")?NapoliExpansion.height(h.x()+11,h.z()+24)+1:64;}
+    static int floor(NapoliMergellina.House h){return h.id().startsWith("atlas_")?NapoliExpansion.legacyHeight(h.x()+11,h.z()+24)+1:64;}
     static UUID identity(District d,int slot){return UUID.nameUUIDFromBytes(("napuli:district:"+d.id()+":"+slot).getBytes(StandardCharsets.UTF_8));}
     static BlockPos work(NapoliCivicLife.Citizen c){var d=district(c);if(d==null)return null;var h=d.business();boolean service=c.profession()==NapoliCivicLife.Job.TEACHER||c.profession()==NapoliCivicLife.Job.DOCTOR;return new BlockPos(h.x()+(service?16:9),h.ground(),h.z()+(service?10:17));}
     static BlockPos shop(NapoliCivicLife.Citizen c){var d=district(c);return d==null?null:d.business().entrance().south(2);}

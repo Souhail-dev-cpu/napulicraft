@@ -6,7 +6,7 @@
   "environment": "*",
   "entrypoints": {
     "main": ["dev.napuli.CitySoakTest", "dev.napuli.DistrictSoakTest"],
-    "fabric-gametest": ["dev.napuli.MotorinoGameTest", "dev.napuli.KitchenGameTest", "dev.napuli.PoliceNavigationGameTest", "dev.napuli.CityLifeGameTest", "dev.napuli.HousingCapacityGameTest", "dev.napuli.HouseGuestsGameTest", "dev.napuli.CityBehaviorGameTest", "dev.napuli.CityContinuityGameTest", "dev.napuli.CityVividGameTest", "dev.napuli.NapoliAtlasGameTest", "dev.napuli.DistrictGameTest", "dev.napuli.SpeechGameTest"]
+    "fabric-gametest": ["dev.napuli.MotorinoGameTest", "dev.napuli.KitchenGameTest", "dev.napuli.PoliceNavigationGameTest", "dev.napuli.CityLifeGameTest", "dev.napuli.HousingCapacityGameTest", "dev.napuli.HouseGuestsGameTest", "dev.napuli.CityBehaviorGameTest", "dev.napuli.CityContinuityGameTest", "dev.napuli.CityVividGameTest", "dev.napuli.NapoliAtlasGameTest", "dev.napuli.DistrictGameTest", "dev.napuli.SpeechGameTest", "dev.napuli.EntranceGameTest", "dev.napuli.StreetGameTest"]
   },
   "depends": { "napuli": "*" }
 }

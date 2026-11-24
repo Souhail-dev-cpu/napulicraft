@@ -117,7 +117,7 @@ final class DomesticMeals {
             perform(city, focus, step);
             npc.setAttached(MEAL, new Meal(day, meal.step(), now));
         } else if (now - meal.performed() >= (step == Step.COOK ? 100 : 55)) {
-            if (step == Step.FRIDGE && city.getBlockState(focus).is(Blocks.BARREL))
+            if (step == Step.FRIDGE && city.getBlockState(focus).getBlock() instanceof net.minecraft.world.level.block.BarrelBlock)
                 city.setBlock(focus, city.getBlockState(focus).setValue(BlockStateProperties.OPEN, false), Block.UPDATE_CLIENTS);
             if (step == Step.DISHES) {
                 npc.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
@@ -155,7 +155,7 @@ final class DomesticMeals {
             case DISHES -> SoundEvents.GENERIC_SPLASH;
         };
         city.playSound(null, pos, sound, SoundSource.BLOCKS, .38f, 1);
-        if (step == Step.FRIDGE && city.getBlockState(pos).is(Blocks.BARREL))
+        if (step == Step.FRIDGE && city.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.BarrelBlock)
             city.setBlock(pos, city.getBlockState(pos).setValue(BlockStateProperties.OPEN, true), Block.UPDATE_CLIENTS);
         var setting = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
                 net.minecraft.resources.Identifier.withDefaultNamespace("blue_carpet"));

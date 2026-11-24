@@ -117,11 +117,11 @@ final class CityLivingHomes {
             Block block=switch(p.furniture()) {
                 case STOVE -> Blocks.SMOKER;
                 case FRIDGE,WARDROBE -> Blocks.BARREL;
-                case SINK -> Blocks.WATER_CAULDRON;
+                case SINK -> NapoliFurniture.SINK;
                 case TOILET -> Blocks.QUARTZ_STAIRS;
                 case SOFA -> Blocks.SPRUCE_STAIRS;
                 case TV -> block("black_concrete");
-                case DESK -> Blocks.CRAFTING_TABLE;
+                case DESK -> NapoliFurniture.WORKTOP;
                 case TABLE -> Blocks.OAK_FENCE;
                 case WASHER -> Blocks.DISPENSER;
                 case SHOWER,BED -> Blocks.AIR;
@@ -151,7 +151,7 @@ final class CityLivingHomes {
             if(level.dimension()!=NapoliMap.LEVEL||hand!=InteractionHand.MAIN_HAND||player.isSpectator()) return InteractionResult.PASS;
             for(var h:NapoliMergellina.PROPERTIES) for(var p:points(h)) {
                 if(!hit.getBlockPos().equals(p.block())) continue;
-                if(p.furniture()!=Furniture.TOILET&&p.furniture()!=Furniture.SINK&&p.furniture()!=Furniture.WASHER&&p.furniture()!=Furniture.SOFA) continue;
+                if((level.getBlockState(p.block()).is(NapoliFurniture.SINK) || level.getBlockState(p.block()).getBlock() instanceof HomeFixtureBlock)) continue; if(p.furniture()!=Furniture.TOILET&&p.furniture()!=Furniture.SINK&&p.furniture()!=Furniture.WASHER&&p.furniture()!=Furniture.SOFA) continue;
                 if(player instanceof ServerPlayer sp && NapoliProperties.hasAccess(sp,h)) {
                     boolean sofa=p.furniture()==Furniture.SOFA;
                     if(!sofa) NapoliHygiene.wash(sp,p.block(),Math.min(100,NapoliHygiene.value(sp)+35));

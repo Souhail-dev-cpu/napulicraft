@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:copper_ingot",
+    "minecraft:yellow_wool",
+    "minecraft:redstone_torch"
+  ],
+  "result": {
+    "id": "napuli:lampada_da_tavolo",
+    "count": 1
+  }
+}

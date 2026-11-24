@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:oak_slab",
+    "minecraft:stick",
+    "minecraft:stick"
+  ],
+  "result": {
+    "id": "napuli:tavolino",
+    "count": 1
+  }
+}

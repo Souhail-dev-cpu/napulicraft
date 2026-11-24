@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:quartz_block",
+    "minecraft:copper_ingot",
+    "minecraft:white_terracotta"
+  ],
+  "result": {
+    "id": "napuli:lavabo_ceramica",
+    "count": 1
+  }
+}

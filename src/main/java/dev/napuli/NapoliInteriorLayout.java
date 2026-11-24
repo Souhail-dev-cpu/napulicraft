@@ -21,6 +21,15 @@ final class NapoliInteriorLayout {
 
     NapoliInteriorLayout(Fixture fixture) { this.fixture = fixture; }
 
+    static void repairPalaceLights(ServerLevel city) {
+        var chain = block("iron_chain").defaultBlockState();
+        for (int z = 10; z <= 40; z += 5) for (var pos : java.util.List.of(
+                new BlockPos(36, 68, z), new BlockPos(36, 69, z), new BlockPos(41, 82, z))) {
+            if (city.isEmptyBlock(pos) && !CityProperty.playerPlaced(city, pos))
+                city.setBlock(pos, chain, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        }
+    }
+
     static void upgradeHistoric(ServerLevel city) {
         var repairs = new NapoliInteriorLayout((x, y, z, state) -> {
             BlockPos pos = new BlockPos(x, y, z);
@@ -232,9 +241,12 @@ final class NapoliInteriorLayout {
             }
             if (z % 5 == 0) {
                 put(36, 67, z, Blocks.SEA_LANTERN);
+                put(36, 68, z, block("iron_chain"));
+                put(36, 69, z, block("iron_chain"));
                 put(40, 74, z, Blocks.SEA_LANTERN);
                 put(40, 75, z, block("iron_chain"));
                 put(41, 81, z, Blocks.SEA_LANTERN);
+                put(41, 82, z, block("iron_chain"));
             }
         }
         staircase(42, 64, 28, 7, Direction.SOUTH, Blocks.QUARTZ_STAIRS);

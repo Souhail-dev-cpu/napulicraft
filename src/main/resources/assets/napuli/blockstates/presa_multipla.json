@@ -1,0 +1,1 @@
+{"variants":{"lit=false":{"model":"napuli:block/presa_multipla"},"lit=true":{"model":"napuli:block/presa_multipla_attivo"}}}

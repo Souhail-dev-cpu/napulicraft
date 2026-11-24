@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:bamboo",
+    "minecraft:string",
+    "minecraft:white_wool"
+  ],
+  "result": {
+    "id": "napuli:cesto_biancheria",
+    "count": 1
+  }
+}

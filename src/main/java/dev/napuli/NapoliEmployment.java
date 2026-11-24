@@ -212,6 +212,7 @@ public final class NapoliEmployment {
                 return 0;
             }
             int pay = WorkCareer.hourly(p,contract) * hours;
+            if(pay>0&&!NapoliStreet.canCredit(p,pay)){p.sendSystemMessage(CityText.t("wallet.full",NapoliStreet.MAX_CASH));return 0;}
             if(pay>0&&!WorkEconomy.wage(p,pay)){p.sendSystemMessage(Component.literal("Il fondo lavori è temporaneamente insufficiente. Il compenso resta da riscuotere."));return 0;}
             p.setAttached(WORK, new Work(state.contract(), day, 0, state.day()));
             p.removeAttached(HOURS);

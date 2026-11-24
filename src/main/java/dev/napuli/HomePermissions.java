@@ -19,7 +19,21 @@ final class HomePermissions {
     }
     static final AttachmentType<Map<String,Grant>> GRANTS=AttachmentRegistry.<Map<String,Grant>>builder().persistent(Codec.unboundedMap(Codec.STRING,Grant.CODEC)).buildAndRegister(Napuli.id("home_permissions"));
     static String key(String house,UUID guest){return house+"/"+guest;}
-    static void put(ServerLevel city,String house,UUID guest,Grant grant){var all=new HashMap<>(city.getAttachedOrElse(GRANTS,Map.of()));all.put(key(house,guest),grant);city.setAttached(GRANTS,Map.copyOf(all));}
+    static void put(ServerLevel city,String house,UUID guest,Grant grant){
+        var home=CityLivingHomes.find(house);int before=rights(city,home,guest);
+        var all=new HashMap<>(city.getAttachedOrElse(GRANTS,Map.of()));all.put(key(house,guest),grant);city.setAttached(GRANTS,Map.copyOf(all));
+        if((before&~rights(city,home,guest))!=0)closeMenu(city,guest);
+    }
+    private static int rights(ServerLevel city,NapoliMergellina.House home,UUID guest){
+        if(home==null)return 0;int result=0;
+        for(var capability:Capability.values())if(allows(city,home,guest,capability))result|=1<<capability.ordinal();
+        return result;
+    }
+    private static void closeMenu(ServerLevel city,UUID guest){
+        var player=city.getServer().getPlayerList().getPlayer(guest);
+        // Close the affected player's session immediately, before another inventory click can run.
+        if(player!=null&&player.level()==city&&player.containerMenu!=player.inventoryMenu)player.closeContainer();
+    }
     static Grant grant(ServerLevel city,String house,UUID guest){return city.getAttachedOrElse(GRANTS,Map.of()).get(key(house,guest));}
     static boolean allows(ServerLevel city,NapoliMergellina.House house,UUID guest,Capability capability){
         if(HouseGuests.host(city,house.id(),guest))return true;
@@ -30,7 +44,12 @@ final class HomePermissions {
     }
     static boolean allows(ServerPlayer p,NapoliMergellina.House house,Capability capability){return allows(p.level(),house,p.getUUID(),capability);}
     static boolean access(ServerPlayer p,net.minecraft.core.BlockPos position,Capability capability){if(!CityCompanion.inCity(p))return true;for(var home:CityLivingHomes.all())if(home.price()>0&&home.contains(position)&&!allows(p,home,capability)){p.sendOverlayMessage(t("permission.denied",t("permission."+capability.name().toLowerCase(Locale.ROOT))));return false;}return true;}
-    static void forget(ServerLevel city,String house,UUID guest){var all=new HashMap<>(city.getAttachedOrElse(GRANTS,Map.of()));if(guest==null)all.keySet().removeIf(k->k.startsWith(house+"/"));else all.remove(key(house,guest));city.setAttached(GRANTS,Map.copyOf(all));}
+    static void forget(ServerLevel city,String house,UUID guest){
+        if(guest!=null)closeMenu(city,guest);
+        else for(var player:List.copyOf(city.players()))if(HouseGuests.host(city,house,player.getUUID())
+                ||HouseGuests.invited(city,house,player.getUUID())||grant(city,house,player.getUUID())!=null)closeMenu(city,player.getUUID());
+        var all=new HashMap<>(city.getAttachedOrElse(GRANTS,Map.of()));if(guest==null)all.keySet().removeIf(k->k.startsWith(house+"/"));else all.remove(key(house,guest));city.setAttached(GRANTS,Map.copyOf(all));
+    }
     static boolean edit(ServerPlayer p,String house,UUID guest,String action){
         if(!CityCompanion.inCity(p)||!PlayerTrade.available(p)||!HouseGuests.host(p.level(),house,p.getUUID())||HouseGuests.host(p.level(),house,guest)||!HouseGuests.invited(p.level(),house,guest))return false;
         var old=grant(p.level(),house,guest);if(old==null)old=new Grant(p.getUUID(),"guest",true,true,true);

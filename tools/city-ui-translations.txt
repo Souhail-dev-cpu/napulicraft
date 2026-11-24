@@ -527,3 +527,4 @@ effects.cue.bell|Sta suonando un campanello nelle vicinanze.|A doorbell is ringi
 money.trade|Scambio tra giocatori|Player trade|Scagno fra jucature
 money.scooter|Recupero motorino|Scooter recovery|Recupero motorino
 money.cooperative|Compenso cooperativo|Cooperative reward|Pava d’ ’a fatica ’nzieme
+wallet.full|Il ricavo supera il limite del portafoglio di %s €. Libera spazio prima di riscuotere.|The payment exceeds the wallet limit of €%s. Make room before collecting it.|’A pava supera ’o limite d’ ’o portafoglio ’e %s €. Fa’ spazio primma ’e riscuotere.

@@ -59,8 +59,8 @@ final class WorkResources {
         else if(c==NapoliEmployment.Contract.BAKER){input=Items.WHEAT;output=Items.BREAD;quantity=3;produced=1;}
         else if(c==NapoliEmployment.Contract.GARDENER){if(count(p,Items.OAK_SAPLING)>0||CityOccupations.supply(p.level(),"saplings")<1)return 0;var stack=new ItemStack(Items.OAK_SAPLING);if(!p.getInventory().add(stack))return 0;CityOccupations.supply(p.level(),"saplings",CityOccupations.supply(p.level(),"saplings")-1);return 1;}
         else return 0;
-        if(count(p,input)<quantity)return 0;var result=new ItemStack(output,produced);if(!space(p,result))return 0;
-        if(!CityEconomy.take(p,input,quantity))return 0;p.getInventory().add(result);NapoliEmployment.recordActivity(p);return 1;
+        if(!transform(p,input,quantity,new ItemStack(output,produced)))return 0;
+        NapoliEmployment.recordActivity(p);return 1;
     }
     static void fit(ServerLevel city,LevelChunk chunk){
         if(chunk.getAttachedOrElse(FITTED,false)||NapoliExpansion.revision(chunk)<1)return;
@@ -109,6 +109,18 @@ final class WorkResources {
             if(hit.getBlockPos().equals(bench())||hit.getBlockPos().distSqr(DEPOT)<4){if(p instanceof ServerPlayer player&&pickup(player)==1)return InteractionResult.SUCCESS;}return InteractionResult.PASS;});
         ServerTickEvents.END_SERVER_TICK.register(s->{if(s.getTickCount()%100!=0)return;var city=s.getLevel(NapoliMap.LEVEL);if(city!=null)regrow(city);});
     }
-    private static boolean space(ServerPlayer p,ItemStack result){int room=0;for(int i=0;i<36;i++){var stack=p.getInventory().getItem(i);if(stack.isEmpty())room+=result.getMaxStackSize();else if(ItemStack.isSameItemSameComponents(stack,result))room+=Math.max(0,stack.getMaxStackSize()-stack.getCount());}return room>=result.getCount();}
+    private static boolean transform(ServerPlayer p,Item input,int quantity,ItemStack result){
+        var inventory=new ArrayList<ItemStack>();
+        for(int i=0;i<p.getInventory().getContainerSize();i++)inventory.add(p.getInventory().getItem(i).copy());
+        int remaining=quantity;
+        for(var stack:inventory)if(stack.is(input)){
+            int used=Math.min(remaining,stack.getCount());stack.shrink(used);remaining-=used;
+            if(remaining==0)break;
+        }
+        // Inputs can also come from the offhand, but outputs use normal storage slots.
+        if(remaining>0||!PlayerInventoryPlan.add(inventory.subList(0,36),result))return false;
+        for(int i=0;i<inventory.size();i++)p.getInventory().setItem(i,inventory.get(i));
+        p.getInventory().setChanged();p.inventoryMenu.broadcastChanges();return true;
+    }
     private WorkResources(){}
 }

@@ -8,7 +8,11 @@ Le verifiche usano mondi dedicati separati dai salvataggi di gioco. La suite del
 .\gradlew.bat --no-daemon build
 ```
 
-La build esegue 124 GameTest. Le prove aggiunte comprendono proprietà degli attrezzi, assegnazione unica del kit, salvataggio della carriera, requisiti di promozione e potenziamento, saldo del fondo, trasformazione del legno, pacchi nominativi, scorte, rinnovo notturno, preferenze stabili, progressi dell'introduzione e riattivazione delle linee guaste. Le prove geometriche verificano anche pontile e collegamenti fra strada e banchine della metro, conservando i blocchi personalizzati.
+La build esegue 171 GameTest. Le prove aggiunte comprendono proprietà degli attrezzi, assegnazione unica del kit, salvataggio della carriera, requisiti di promozione e potenziamento, saldo del fondo, trasformazione del legno, pacchi nominativi, scorte, rinnovo notturno, preferenze stabili, progressi dell'introduzione e riattivazione delle linee guaste. Le prove geometriche verificano anche pontile e collegamenti fra strada e banchine della metro, conservando i blocchi personalizzati.
+
+Le regressioni di economia controllano l'eredità con decessi simultanei in entrambi gli ordini, il saldo dei mutui con rate arretrate e la corrispondenza fra preventivo e ricavo, nonché le trasformazioni con inventario pieno, ingredienti nella mano secondaria e rifiuto senza perdite quando manca spazio. La prova dei download musicali usa file temporanei reali, verifica nomi duplicati con estensioni maiuscole o miste e impone un timeout per intercettare eventuali cicli infiniti.
+
+Dieci ulteriori regressioni verificano che la revoca di permessi o inviti chiuda subito il contenitore aperto, che l'aggiunta di diritti non interrompa una sessione autorizzata e che i giocatori estranei restino indisturbati. Vendite e stipendi vengono provati con portafoglio pieno, spazio insufficiente e capienza esatta, controllando proprietà, conti, fondo e cronologia. Le cooperative verificano annullamento da parte del nuovo capogruppo, rimborso unico ai partecipanti originali e rifiuto di consegne o premi non spettanti. Lo storico viene provato con 0, 511 e 1.305 progetti: tutte le pagine passano dal codec di rete, i comandi di navigazione vengono analizzati dal dispatcher e un vecchio premio resta riscuotibile una sola volta. Il codec rifiuta anche pacchetti sovradimensionati prima di scrivere dati.
 
 ## Ciclo di lavoro con client grafico
 

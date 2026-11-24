@@ -27,6 +27,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 public final class NapoliStreet {
+    static final int MAX_CASH = 99999;
     private static final AttachmentType<Integer> CASH = saved("cash", Codec.INT);
     private static final AttachmentType<Integer> FULLNESS = saved("fullness", Codec.INT);
     private static final AttachmentType<Long> DELIVERY = saved("delivery", Codec.LONG);
@@ -330,8 +331,11 @@ public final class NapoliStreet {
     }
 
     public static void credit(ServerPlayer player, int amount, String reason) { credit(player,amount,reason,""); }
+    static boolean canCredit(ServerPlayer player,int amount) {
+        return amount>=0&&(long)cash(player)+amount<=MAX_CASH;
+    }
     public static void credit(ServerPlayer player, int amount, String reason, String detail) {
-        int before=cash(player), after=(int)Math.clamp((long)before+amount,0L,99999L);
+        int before=cash(player), after=(int)Math.clamp((long)before+amount,0L,MAX_CASH);
         player.setAttached(CASH,after);
         PlayerLedger.record(player,after-before,after,reason,detail);
     }

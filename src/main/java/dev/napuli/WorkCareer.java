@@ -98,6 +98,7 @@ final class WorkCareer {
         if(!p.getInventory().add(tool))return 0;NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);put(p,c,next);tell(p,t("career.replaced",cost));return 1;
     }
     static int timber(ServerPlayer p){var c=selected(p);if(c!=NapoliEmployment.Contract.CARPENTER||!near(p,c)||WorkResources.count(p,Items.OAK_LOG)<1||CityOccupations.supply(p.level(),"timber")>=256||WorkEconomy.fund(p.level())<2)return 0;
+        if(!NapoliStreet.canCredit(p,2)){tell(p,t("wallet.full",NapoliStreet.MAX_CASH));return 0;}
         if(!CityEconomy.take(p,Items.OAK_LOG,1))return 0;WorkEconomy.wage(p,2);CityOccupations.supply(p.level(),"timber",CityOccupations.supply(p.level(),"timber")+1);tell(p,t("career.timber"));return 1;}
     static int repair(ServerPlayer p){var c=selected(p);if(c==null||!near(p,c))return 0;int slot=toolSlot(p,c);if(slot<0)return 0;var stack=p.getInventory().getItem(slot);if(!stack.isDamaged())return 0;int cost=3+get(p,c).tier()*3;
         if(NapoliStreet.cash(p)<cost)return 0;NapoliStreet.credit(p,-cost,"career",c.id());WorkEconomy.revenue(p.level(),cost);stack.setDamageValue(0);tell(p,t("career.repaired",cost));return 1;

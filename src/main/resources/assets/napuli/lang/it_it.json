@@ -1476,5 +1476,6 @@
   "napuli.public_gym.done": "%s · Serie completata · Sazietà −%s",
   "napuli.public_gym.progress": "%s · %s/%s",
   "napuli.ui.effects.cue.danger": "Avviso: allarme o pericolo nelle vicinanze.",
-  "napuli.ui.effects.cue.bell": "Sta suonando un campanello nelle vicinanze."
+  "napuli.ui.effects.cue.bell": "Sta suonando un campanello nelle vicinanze.",
+  "napuli.ui.wallet.full": "Il ricavo supera il limite del portafoglio di %s €. Libera spazio prima di riscuotere."
 }

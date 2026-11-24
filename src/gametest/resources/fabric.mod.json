@@ -30,7 +30,11 @@
       "dev.napuli.FootballRatingsGameTest",
       "dev.napuli.CompanionGameTest",
       "dev.napuli.CityConvenienceGameTest",
-      "dev.napuli.PlayerImprovementsGameTest"
+      "dev.napuli.PlayerImprovementsGameTest",
+      "dev.napuli.EconomyRegressionGameTest",
+      "dev.napuli.SongDownloadGameTest",
+      "dev.napuli.PlayerSafetyRegressionGameTest",
+      "dev.napuli.CooperativeRegressionGameTest"
     ]
   },
   "depends": {

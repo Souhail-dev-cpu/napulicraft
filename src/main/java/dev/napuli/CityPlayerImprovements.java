@@ -12,7 +12,8 @@ final class CityPlayerImprovements {
         CommandRegistrationCallback.EVENT.register((d,r,e)->{
             var root=Commands.literal("compagno");
             root.then(Commands.literal("scambi").executes(c->PlayerTrade.menu(c.getSource().getPlayerOrException())));
-            root.then(Commands.literal("cooperative").executes(c->CooperativeJobs.menu(c.getSource().getPlayerOrException())));
+            root.then(Commands.literal("cooperative").executes(c->CooperativeJobs.menu(c.getSource().getPlayerOrException()))
+                    .then(Commands.argument("pagina",com.mojang.brigadier.arguments.IntegerArgumentType.integer(0)).executes(c->CooperativeJobs.menu(c.getSource().getPlayerOrException(),com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c,"pagina")))));
             root.then(Commands.literal("motorini").executes(c->ScooterGarage.menu(c.getSource().getPlayerOrException())));
             root.then(Commands.literal("economia").executes(c->PlayerEconomyGuide.menu(c.getSource().getPlayerOrException())));
             for(var action:java.util.List.of("scambio","cooperativa","motorino","permessi"))root.then(Commands.literal(action).then(Commands.argument("azione",StringArgumentType.greedyString()).executes(c->{var p=c.getSource().getPlayerOrException();var value=StringArgumentType.getString(c,"azione");return switch(action){case "scambio"->PlayerTrade.action(p,value);case "cooperativa"->CooperativeJobs.action(p,value);case "motorino"->ScooterGarage.action(p,value);default->HomePermissions.action(p,value);};})));

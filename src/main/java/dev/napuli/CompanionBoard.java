@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /** Read-only menu snapshot. Actions still go through the normal server command checks. */
 public record CompanionBoard(String page, Component title, List<Entry> entries) implements CustomPacketPayload {
+    public static final int MAX_ENTRIES = 512;
     public record Entry(Component title, Component detail, String command, String extra, String extraCommand) {
         public Entry(Component title, Component detail, String command) { this(title, detail, command, "", ""); }
         public Entry(String title, String detail, String command) {
@@ -20,6 +21,7 @@ public record CompanionBoard(String page, Component title, List<Entry> entries) 
     }
     public static final Type<CompanionBoard> TYPE = new Type<>(Napuli.id("companion_board"));
     static final StreamCodec<RegistryFriendlyByteBuf, CompanionBoard> CODEC = StreamCodec.of((buf, board) -> {
+        if(board.entries().size()>MAX_ENTRIES)throw new IllegalArgumentException("Invalid companion board size");
         buf.writeUtf(board.page(), 64);
         ComponentSerialization.STREAM_CODEC.encode(buf, board.title());
         buf.writeVarInt(board.entries().size());
@@ -34,7 +36,7 @@ public record CompanionBoard(String page, Component title, List<Entry> entries) 
         String page = buf.readUtf(64);
         var title = ComponentSerialization.STREAM_CODEC.decode(buf);
         int size = buf.readVarInt();
-        if (size < 0 || size > 512) throw new IllegalArgumentException("Invalid companion board size");
+        if (size < 0 || size > MAX_ENTRIES) throw new IllegalArgumentException("Invalid companion board size");
         var entries = new ArrayList<Entry>(size);
         for (int i = 0; i < size; i++) entries.add(new Entry(
                 ComponentSerialization.STREAM_CODEC.decode(buf), ComponentSerialization.STREAM_CODEC.decode(buf),

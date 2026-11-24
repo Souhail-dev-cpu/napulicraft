@@ -59,8 +59,9 @@ final class HouseGuests {
         var guests = new ArrayList<>(all.getOrDefault(home, List.of()));
         guests.removeIf(g -> g.guest().equals(guest.getUUID()) || !host(city, home, g.host()));
         guests.add(new Invitation(owner, guest.getUUID(), guest.getName().getString()));
-        all.put(home, List.copyOf(guests)); city.setAttached(INVITATIONS, Map.copyOf(all));
+        all.put(home, List.copyOf(guests));
         HomePermissions.put(city,home,guest.getUUID(),new HomePermissions.Grant(owner,"guest",true,false,false));
+        city.setAttached(INVITATIONS, Map.copyOf(all));
         return true;
     }
 
@@ -77,7 +78,7 @@ final class HouseGuests {
         if(invited(city,home,guest))return true;
         if(NapoliCivicLife.profile(city,guest)==null&&city.getServer().getPlayerList().getPlayer(guest)==null)return false;
         var all=new HashMap<>(city.getAttachedOrElse(INVITATIONS,Map.of()));var list=new ArrayList<>(all.getOrDefault(home,List.of()));
-        list.removeIf(g->g.guest().equals(guest));list.add(new Invitation(owner,guest,name,occasion));all.put(home,List.copyOf(list));city.setAttached(INVITATIONS,Map.copyOf(all));HomePermissions.put(city,home,guest,new HomePermissions.Grant(owner,"guest",true,false,false));return true;
+        list.removeIf(g->g.guest().equals(guest));list.add(new Invitation(owner,guest,name,occasion));all.put(home,List.copyOf(list));HomePermissions.put(city,home,guest,new HomePermissions.Grant(owner,"guest",true,false,false));city.setAttached(INVITATIONS,Map.copyOf(all));return true;
     }
     static void revokeEvent(ServerLevel city,String home,UUID owner,UUID guest,String occasion){
         var all=new HashMap<>(city.getAttachedOrElse(INVITATIONS,Map.of()));var list=new ArrayList<>(all.getOrDefault(home,List.of()));

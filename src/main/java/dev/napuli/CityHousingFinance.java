@@ -128,11 +128,21 @@ final class CityHousingFinance {
         }
         city.setAttached(ACCOUNTS,Map.copyOf(accounts));
     }
+    static int saleProceeds(NapoliMergellina.House house,Account account) {
+        int value=house.price()*80/100;
+        if(account==null)return value;
+        // Overdue mortgage principal is already included in the outstanding debt.
+        int overduePrincipal=account.rental()?0:(int)Math.min(account.debt(),(long)account.installment()*account.missed());
+        return value-account.debt()-Math.max(0,account.arrears()-overduePrincipal);
+    }
     static int sell(ServerPlayer p,String id) {
         var h=CityLivingHomes.find(id);if(h==null||h.sign().distToCenterSqr(p.position())>36||!p.getUUID().equals(NapoliProperties.owner(p.level(),h)))return 0;
         var a=p.level().getAttachedOrElse(ACCOUNTS,Map.of()).get(id);
-        int proceeds=h.price()*80/100-(a==null?0:a.debt()+a.arrears());
+        int proceeds=saleProceeds(h,a);
         if(proceeds<0&&NapoliStreet.cash(p)<-proceeds)return 0;
+        if(proceeds>0&&!NapoliStreet.canCredit(p,proceeds)) {
+            p.sendSystemMessage(t("wallet.full",NapoliStreet.MAX_CASH));return 0;
+        }
         remove(p.level(),id,true);NapoliStreet.credit(p,proceeds,"house_sale",h.name());p.sendSystemMessage(t("house.sold",proceeds));return 1;
     }
     private static void remove(ServerLevel city,String id,boolean ownership) {

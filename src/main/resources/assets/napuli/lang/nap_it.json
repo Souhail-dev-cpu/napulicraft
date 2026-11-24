@@ -1690,5 +1690,6 @@
   "napuli.public_gym.done": "%s · Serie fernuta · Sazietà −%s",
   "napuli.public_gym.progress": "%s · %s/%s",
   "napuli.ui.effects.cue.danger": "Avviso: allarme o pericolo vicino.",
-  "napuli.ui.effects.cue.bell": "Sta sunanno nu campaniello vicino."
+  "napuli.ui.effects.cue.bell": "Sta sunanno nu campaniello vicino.",
+  "napuli.ui.wallet.full": "’A pava supera ’o limite d’ ’o portafoglio ’e %s €. Fa’ spazio primma ’e riscuotere."
 }

@@ -41,7 +41,7 @@ final class CompanionHousing {
         return CityCompanion.show(p,"casa/"+id,t("house.detail",h.address()),entries);
     }
     static String snapshot(ServerPlayer p,NapoliMergellina.House h){return h.price()+"/"+NapoliProperties.owner(p.level(),h)+"/"+p.level().getAttachedOrElse(CityHousingFinance.ACCOUNTS,Map.of()).get(h.id());}
-    static int charge(ServerPlayer p,NapoliMergellina.House h,String action){var a=p.level().getAttachedOrElse(CityHousingFinance.ACCOUNTS,Map.of()).get(h.id());return switch(action){case "compra"->h.price();case "affitta"->terms(h,true).deposit();case "mutuo"->terms(h,false).deposit();case "paga","lascia"->a==null?0:a.arrears();case "vendi"->-(h.price()*80/100-(a==null?0:a.debt()+a.arrears()));default->Integer.MAX_VALUE;};}
+    static int charge(ServerPlayer p,NapoliMergellina.House h,String action){var a=p.level().getAttachedOrElse(CityHousingFinance.ACCOUNTS,Map.of()).get(h.id());return switch(action){case "compra"->h.price();case "affitta"->terms(h,true).deposit();case "mutuo"->terms(h,false).deposit();case "paga","lascia"->a==null?0:a.arrears();case "vendi"->-CityHousingFinance.saleProceeds(h,a);default->Integer.MAX_VALUE;};}
     static int quote(ServerPlayer p,String reference){
         if(!CityCompanion.inCity(p))return CityCompanion.fail(p,t("error.city"));var parts=reference.split("/",2);if(parts.length!=2)return 0;
         var action=parts[0];var h=CityLivingHomes.find(parts[1]);if(h==null)return CityCompanion.fail(p,t("house.invalid"));
@@ -62,6 +62,7 @@ final class CompanionHousing {
         if(h==null||!valid(q,token,p.level().getGameTime(),snapshot(p,h)))return CityCompanion.fail(p,t("house.quote_expired"));
         if(Set.of("compra","affitta","mutuo","vendi").contains(q.action())&&h.sign().distToCenterSqr(p.position())>36)return CityCompanion.fail(p,t("house.at_sign"));
         if(q.charge()>NapoliStreet.cash(p))return CityCompanion.fail(p,t("house.need_money",q.charge()-NapoliStreet.cash(p)));
+        if(q.charge()<0&&!NapoliStreet.canCredit(p,-q.charge()))return CityCompanion.fail(p,t("wallet.full",NapoliStreet.MAX_CASH));
         p.removeAttached(QUOTE);
         int result=switch(q.action()){case "compra"->NapoliProperties.buy(p,h.id());case "affitta","mutuo"->CityHousingFinance.acquire(p,h.id(),q.action().equals("affitta"));case "paga"->CityHousingFinance.pay(p,h);case "lascia"->CityHousingFinance.leave(p,h.id());case "vendi"->CityHousingFinance.sell(p,h.id());default->0;};
         if(result==0)return CityCompanion.fail(p,t("house.action_failed"));return detail(p,h.id());

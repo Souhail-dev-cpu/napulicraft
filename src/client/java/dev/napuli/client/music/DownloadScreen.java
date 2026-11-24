@@ -1,5 +1,6 @@
 package dev.napuli.client.music;
 
+import dev.napuli.SongDownloadFiles;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -102,8 +103,7 @@ public final class DownloadScreen extends Screen {
 					out.write(buf, 0, n);
 				}
 			}
-			File target = new File(dir, name);
-			for (int i = 2; target.exists(); i++) target = new File(dir, name.replaceAll("(\\.[a-z0-9]+)$", " (" + i + ")$1"));
+			File target = SongDownloadFiles.available(dir, name);
 			Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
 			tmp = null;
 			// make sure it really plays

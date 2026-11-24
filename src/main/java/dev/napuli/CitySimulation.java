@@ -57,7 +57,9 @@ final class CitySimulation {
         var l=life(city,id);put(city,id,new Life(l.needs(),l.health(),l.reputation(),l.experience(),l.rank(),l.absences(),l.food()-2,l.last(),l.personality(),l.relations(),memory(l,"Nascita in famiglia, giorno "+day),l.water(),l.energy(),day));
     }
     static void inherit(ServerLevel city,Map<UUID,NapoliCivicLife.Citizen> people,long day) {
-        for(var deceased:List.copyOf(people.values())) {
+        for(var id:List.copyOf(people.keySet())) {
+            // Earlier deaths in this batch may have changed this person's estate.
+            var deceased=people.get(id);
             var l=life(city,deceased.id());
             if(l.health()>0&&deceased.age(day)<CityLifeConfig.settings.maximumAge)continue;
             var heirs=people.values().stream().filter(p->!p.id().equals(deceased.id())&&

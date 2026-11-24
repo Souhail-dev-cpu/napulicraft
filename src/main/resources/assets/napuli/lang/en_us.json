@@ -1476,5 +1476,6 @@
   "napuli.public_gym.done": "%s · Set complete · Fullness −%s",
   "napuli.public_gym.progress": "%s · %s/%s",
   "napuli.ui.effects.cue.danger": "Warning: an alarm or danger nearby.",
-  "napuli.ui.effects.cue.bell": "A doorbell is ringing nearby."
+  "napuli.ui.effects.cue.bell": "A doorbell is ringing nearby.",
+  "napuli.ui.wallet.full": "The payment exceeds the wallet limit of €%s. Make room before collecting it."
 }

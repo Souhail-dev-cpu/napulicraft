@@ -8,6 +8,24 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 
 public final class CityConvenienceGameTest {
+    @GameTest public void navigatorKeepsAnAccessibleArrivalAndRejectsASealedNearbyGoal(GameTestHelper h){
+        HousingCapacityGameTest.withPlayers(h,1,players->{
+            var p=players.getFirst();var city=h.getLevel();var floor=h.absolutePos(new BlockPos(0,190,0));
+            for(var at:BlockPos.betweenClosed(floor,floor.offset(8,0,8)))city.setBlock(at,Blocks.STONE.defaultBlockState(),18);
+            for(var at:BlockPos.betweenClosed(floor.above(),floor.offset(8,4,8)))city.setBlock(at,Blocks.AIR.defaultBlockState(),18);
+            var goal=floor.offset(4,1,4);
+            for(double offset:new double[]{0,1.8}){
+                p.snapTo(goal.getX()+.5+offset,goal.getY(),goal.getZ()+.5,0,0);
+                for(int repeat=0;repeat<3;repeat++){
+                    var instruction=PlayerNavigator.guide(p,goal);
+                    h.assertTrue(instruction.text().equals(CityText.t("nav.finished"))&&goal.equals(instruction.target()),"An accessible destination stays arrived instead of becoming a blocked passage");
+                }
+            }
+            for(var at:BlockPos.betweenClosed(goal.offset(-1,0,-1),goal.offset(1,2,1)))if(at.getX()!=goal.getX()||at.getZ()!=goal.getZ())city.setBlock(at,Blocks.STONE.defaultBlockState(),18);
+            p.snapTo(goal.getX()+2.5,goal.getY(),goal.getZ()+.5,0,0);
+            h.assertTrue(!PlayerNavigator.guide(p,goal).text().equals(CityText.t("nav.finished")),"A nearby goal enclosed by walls is not advertised as an accessible arrival");
+        });h.succeed();
+    }
     @GameTest public void navigatorRoutesAroundWallsAndNeverLoadsItsRemoteGoal(GameTestHelper h){
         var city=h.getLevel();var base=h.absolutePos(new BlockPos(0,200,0));
         for(var at:BlockPos.betweenClosed(base,base.offset(12,0,12)))city.setBlock(at,Blocks.STONE.defaultBlockState(),18);

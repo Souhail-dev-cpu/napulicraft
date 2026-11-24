@@ -9,7 +9,8 @@
       "dev.napuli.CitySoakTest",
       "dev.napuli.DistrictSoakTest",
       "dev.napuli.RealMultiplayerTest",
-      "dev.napuli.CityAuditRun"
+      "dev.napuli.CityAuditRun",
+      "dev.napuli.StartupAttachmentGameTest"
     ],
     "fabric-gametest": [
       "dev.napuli.MotorinoGameTest",
@@ -34,7 +35,9 @@
       "dev.napuli.EconomyRegressionGameTest",
       "dev.napuli.SongDownloadGameTest",
       "dev.napuli.PlayerSafetyRegressionGameTest",
-      "dev.napuli.CooperativeRegressionGameTest"
+      "dev.napuli.CooperativeRegressionGameTest",
+      "dev.napuli.StartupAttachmentGameTest",
+      "dev.napuli.WorkResourcesRegressionGameTest"
     ]
   },
   "depends": {

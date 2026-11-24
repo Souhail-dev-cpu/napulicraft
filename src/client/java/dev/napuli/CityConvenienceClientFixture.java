@@ -11,6 +11,7 @@ public final class CityConvenienceClientFixture {
     private static String token;
     public static void prepare(ServerPlayer p){
         if(!Boolean.getBoolean("napuli.qoltest"))throw new IllegalStateException("Test fixture is disabled");
+        conversations(p);
         var h=NapoliMergellina.PROPERTIES.getFirst();house=h.id();price=h.price();
         var owners=new HashMap<>(p.level().getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));owners.remove(house);p.level().setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));
         var accounts=new HashMap<>(p.level().getAttachedOrElse(CityHousingFinance.ACCOUNTS,Map.of()));accounts.remove(house);p.level().setAttached(CityHousingFinance.ACCOUNTS,Map.copyOf(accounts));HouseGuests.clear(p.level(),house);
@@ -32,6 +33,21 @@ public final class CityConvenienceClientFixture {
         var bike=Napuli.MOTORINO.create(p.level(),net.minecraft.world.entity.EntitySpawnReason.COMMAND);if(bike==null)throw new AssertionError("Scooter creation failed");bike.snapTo(p.getX()+8,p.getY(),p.getZ(),0,0);bike.setNoAi(true);p.level().addFreshEntity(bike);ScooterGarage.observe(bike,p);
     }
     public static void effects(ServerPlayer p){check(CityEffects.flags(p)==31,"Personal effect settings reached the authoritative server");effectsChecked=true;}
+    private static void conversations(ServerPlayer p){
+        var saved=p.getAttached(CityOnboarding.STEPS);
+        var npc=NapoliResident.spawn(p.level(),NapoliResident.Role.TERESA,p.blockPosition().east(10),0);npc.setNoAi(true);
+        try {
+            p.setAttached(CityOnboarding.STEPS,CityOnboarding.JOB);
+            NapoliDialogue.open(p,npc);
+            check(p.getAttachedOrElse(CityOnboarding.STEPS,0)==CityOnboarding.JOB,"An out-of-range conversation cannot complete the introduction");
+            npc.snapTo(p.getX()+2,p.getY(),p.getZ(),0,0);
+            NapoliDialogue.open(p,npc);
+            check(p.getAttachedOrElse(CityOnboarding.STEPS,0)==(CityOnboarding.JOB|CityOnboarding.TALK),"Talking to Teresa counts as meeting a neighbor and preserves the chosen job");
+            NapoliDialogue.open(p,npc);
+            check(p.getAttachedOrElse(CityOnboarding.STEPS,0)==(CityOnboarding.JOB|CityOnboarding.TALK),"Repeated conversations cannot duplicate or reset introduction progress");
+            Napuli.LOGGER.info("[QOLTEST] Legacy neighbor conversation regression passed");
+        } finally {npc.discard();if(saved==null)p.removeAttached(CityOnboarding.STEPS);else p.setAttached(CityOnboarding.STEPS,saved);}
+    }
     private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     private CityConvenienceClientFixture(){}
 }

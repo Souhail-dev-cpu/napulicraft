@@ -8,7 +8,7 @@ Le verifiche usano mondi dedicati separati dai salvataggi di gioco. La suite del
 .\gradlew.bat --no-daemon build
 ```
 
-La build esegue 171 GameTest. Le prove aggiunte comprendono proprietà degli attrezzi, assegnazione unica del kit, salvataggio della carriera, requisiti di promozione e potenziamento, saldo del fondo, trasformazione del legno, pacchi nominativi, scorte, rinnovo notturno, preferenze stabili, progressi dell'introduzione e riattivazione delle linee guaste. Le prove geometriche verificano anche pontile e collegamenti fra strada e banchine della metro, conservando i blocchi personalizzati.
+La build esegue 178 GameTest. Le prove aggiunte comprendono proprietà degli attrezzi, assegnazione unica del kit, salvataggio della carriera, requisiti di promozione e potenziamento, saldo del fondo, trasformazione del legno, pacchi nominativi, scorte, rinnovo notturno, preferenze stabili, progressi dell'introduzione e riattivazione delle linee guaste. Le prove geometriche verificano anche pontile e collegamenti fra strada e banchine della metro, conservando i blocchi personalizzati.
 
 Le regressioni di economia controllano l'eredità con decessi simultanei in entrambi gli ordini, il saldo dei mutui con rate arretrate e la corrispondenza fra preventivo e ricavo, nonché le trasformazioni con inventario pieno, ingredienti nella mano secondaria e rifiuto senza perdite quando manca spazio. La prova dei download musicali usa file temporanei reali, verifica nomi duplicati con estensioni maiuscole o miste e impone un timeout per intercettare eventuali cicli infiniti.
 
@@ -91,3 +91,51 @@ L'audit esaustivo, la generazione di nuove zone e il gioco con quartieri già ca
 Nei profili grafici il limite principale è 120 FPS e l'opzione di inattività è `afk`: Minecraft può ridurre il frame rate della finestra inattiva. Un campione a 30 FPS non dimostra, da solo, una saturazione della GPU.
 
 Le prove con quattro connessioni simulate e riavvio restano disponibili tramite `runCitySoak` e `runDistrictSoak`, come descritto nel [README](../README.md#prove-multiplayer-prolungate).
+
+## Prova da nuovo giocatore del 24 novembre 2026
+
+Client grafico in Sopravvivenza, difficoltà Normale, comandi amministrativi disabilitati, personaggio e mondo nuovi. Il movimento automatico usa i normali input del giocatore; taglio e interazioni passano dal client, lavoro e vendita dai comandi pubblici. Nessun oggetto, denaro, teletrasporto o avanzamento dell'orologio è stato aggiunto dalla prova. È stato effettuato un riavvio per correggere il controllo automatico del taglio e applicare le prime correzioni; il riavvio è escluso dal conteggio.
+
+Il contatore finale registra **900.010 ms di partita**, iniziati alle 21:30:55 e conclusi alle 21:48:10, ora italiana, con il riavvio intermedio. Sono stati provati menu iniziale, conversazione con Teresa, collocamento, assunzione come falegname, attrezzo iniziale, percorso a piedi verso gli alberi, taglio e raccolta, trasformazione in assi, vendita del legname al banco, interazione lavorativa fuori orario e cronologia degli incassi.
+
+| Stato | Inizio | Fine |
+|---|---:|---:|
+| Portafoglio | 16 € | 30 € |
+| Salute | 20/20 | 20/20 |
+| Fame vanilla | 20/20 | 20/20 |
+| Oggetti | Nessuno | Ascia di ferro e quattro assi |
+
+I sette tronchi venduti hanno prodotto **14 €**, registrati in sette movimenti da 2 €. La paga del turno non è stata riscossa in questa partita: il turno era già chiuso al rientro con il materiale. Il ciclo completo di raccolta, consegna e paga viene verificato dal client dedicato `runWorkCareerTest`.
+
+Tre problemi riprodotti sono stati corretti:
+
+- La conversazione con Teresa non completava il passo introduttivo «Conosci un vicino». Il dialogo ora registra l'incontro dopo i controlli di distanza e validità. Il test grafico controlla rifiuto fuori portata, avanzamento conservando il lavoro scelto e riapertura senza azzeramenti.
+- Il navigatore poteva mostrare «Passaggio non disponibile» mentre il giocatore era già arrivato. Ora riconosce l'arrivo vicino solo se la meta è raggiungibile. Un GameTest copre posizione esatta, vicinanza e meta vicina racchiusa da muri.
+- Al riavvio il caricatore scartava marcatori dei chunk registrati troppo tardi. Arredamento e raccordo del campo da calcio registrano i loro tipi persistenti all'inizializzazione della mod. Un GameTest cattura lo stato del registro prima di caricare qualsiasi mondo o fixture.
+
+Il salvataggio e le schermate al minuto sono in `.gradle/newplayer-15/`; i log e la telemetria conservano durata, coordinate, inventario e saldo. Il test automatico temporaneo non viene incluso nel JAR distribuito.
+
+Verifica finale: **build riuscita e 175/175 GameTest superati**; `[QOLTEST] ALL PASSED`, compresa la regressione della conversazione, e `[WORKTEST] ALL PASSED`, compresa la paga a tempo. La ricarica di una copia di questo salvataggio ha confermato la conservazione di `home_decor_v3` prima del primo tick e l'assenza di avvisi per tipi di attachment sconosciuti. I log sono `.gradle/newplayer-validation/final-build.log`, `.gradle/newplayer-validation/validation.log` e `.gradle/newplayer-reload/reload.log`.
+
+## Continuazione: turno pagato e acquisto della casa
+
+È stato ripreso lo stesso mondo `nuovo-giocatore-1795552234104`, con lo stesso personaggio, i 30 € guadagnati, l'ascia e le quattro assi. Questa ripresa ha aggiunto **15 minuti e 7,414 secondi effettivi**. La continuazione complessiva, contando anche il tratto precedente all'interruzione manuale, è durata **19 minuti e 18,857 secondi**: è stata prolungata fino all'acquisto. Caricamenti, build e riavvii sono esclusi. Nessuna risorsa, moneta o accelerazione dell'orologio è stata aggiunta dal controllo della prova.
+
+La ricrescita era bloccata perché controllava l'intero volume circostante, incluso il banco pubblico e il terreno che non vengono modificati dall'albero. Ora controlla l'ingombro di tronco e foglie, continuando a rifiutare costruzioni dei giocatori e contenitori. Il controllo impedisce inoltre di creare tronco o foglie dentro il corpo di un giocatore. Tre GameTest coprono banco e pendenza, ostacoli e protezioni, giocatore nella futura chioma e ripresa della crescita dopo il suo allontanamento.
+
+Nel salvataggio reale sono ricomparsi cinque alberi: il sesto era già programmato per la notte successiva. La raccolta ha prodotto 13 tronchi venduti al banco per **26 €**. Il nuovo turno è stato timbrato, un'asse è stata consegnata e sono stati registrati **3 ore e 17 minuti** di servizio prima della chiusura. La riscossione ha accreditato **42 €**, una sola volta; una seconda timbratura ha lasciato invariato il saldo.
+
+Le abitazioni più economiche erano ormai occupate dagli NPC. È stata acquistata con mutuo la prima libera, **Corte dei Musicisti 2 · 661** (`viva_11`, cartello `-442, 64, -141`): prezzo 275 €, anticipo 55 €, debito residuo 242 €, rata base 21 € più 2 € di bollette ogni sette giorni. L'acquisto è passato dal preventivo e dalla conferma del normale menu cittadino, sul posto.
+
+| Movimento della continuazione | Importo | Saldo |
+|---|---:|---:|
+| Saldo iniziale | — | 30 € |
+| Tredici tronchi venduti | +26 € | 56 € |
+| Stipendio riscosso | +42 € | 98 € |
+| Anticipo del mutuo | −55 € | **43 €** |
+
+Il personaggio conserva salute e fame a 20/20, ascia, tre assi e un alberello. La carriera registra un turno completato, 35 XP e 42 € di paga; la proprietà è intestata al personaggio, con zero arretrati. I dati finali sono in `.gradle/newplayer-15/state.json` e il log della ripresa è `.gradle/newplayer-15/continuation-resumed.log`.
+
+La build finale ha superato **178/178 GameTest**. La prova grafica `runWorkCareerTest` ha superato raccolta nativa, paga a tempo, promozione, attrezzo e ricrescita notturna. Il controllo dei marcatori persistenti viene ora catturato a `SERVER_STARTING`, dopo l'inizializzazione di tutte le mod e prima del caricamento dei mondi, senza dipendere dall'ordine dei loro entrypoint. I log sono `.gradle/continuation-validation/verified-build.log` e `.gradle/continuation-validation/final-validation.log`.
+
+La ricarica di una copia del salvataggio finale, caricando i dati persistenti dello stesso personaggio, ha confermato saldo di 43 €, turno già pagato, carriera con un turno e 42 € di stipendio, proprietà `viva_11` e mutuo residuo di 242 € senza arretrati. Anticipo e stipendio compaiono una sola volta e la cronologia completa riconcilia il saldo iniziale di 16 € con quello finale. Il controllo è registrato con `[CONTINUATION-RELOAD] ALL PASSED` in `.gradle/continuation-reload/reload.log`. Il JAR finale non contiene i controllori temporanei della partita o della ricarica.

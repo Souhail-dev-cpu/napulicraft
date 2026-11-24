@@ -44,6 +44,7 @@ final class PlayerNavigator {
     }
     static Instruction guide(ServerPlayer p,BlockPos goal){
         var city=p.level();var route=ROUTES.computeIfAbsent(p.getUUID(),id->new Route());var start=p.blockPosition();
+        if(goal.distToCenterSqr(p.position())<2.3*2.3&&search(city,start,goal,128).reached())return new Instruction(t("nav.finished"),goal);
         if(!goal.equals(route.goal)){route.goal=goal;route.macro=macro(start,goal);route.path=List.of();route.next=0;route.planned=-100;}
         while(route.next<route.path.size()&&route.path.get(route.next).distToCenterSqr(p.position())<2.3*2.3)route.next++;
         boolean blocked=route.next<route.path.size()&&!free(city,route.path.get(route.next));

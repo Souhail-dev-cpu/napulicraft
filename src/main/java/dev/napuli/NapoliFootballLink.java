@@ -11,8 +11,11 @@ import net.minecraft.world.level.chunk.LevelChunk;
 
 /** Joins the older football ground and its surroundings to the first streets of the atlas. */
 final class NapoliFootballLink {
-    private static final AttachmentType<Boolean> COMPLETE = AttachmentRegistry.<Boolean>builder()
+    static final AttachmentType<Boolean> COMPLETE = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("football_district_link_v1"));
+
+    /** Initialize the saved marker before Minecraft reads any chunk attachments. */
+    static void register() {}
 
     private static final int WEST = 350;
     private static final int EAST = 523;

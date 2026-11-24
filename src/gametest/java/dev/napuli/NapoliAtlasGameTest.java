@@ -144,6 +144,11 @@ public final class NapoliAtlasGameTest {
         var legacy = new BlockPos(border - 1, 63, 65);
         var expansion = legacy.east();
         var playerPlaced = legacy.south(3);
+        var markers=new HashMap<net.minecraft.world.level.chunk.LevelChunk,Boolean>();
+        for(var pos:List.of(legacy,expansion)){
+            var chunk=level.getChunkAt(pos);markers.putIfAbsent(chunk,chunk.getAttached(NapoliFootballLink.COMPLETE));
+            chunk.removeAttached(NapoliFootballLink.COMPLETE);
+        }
         for (var pos : List.of(legacy, expansion, playerPlaced)) {
             level.getChunkAt(pos);
             level.setBlock(pos, (pos.equals(expansion) ? Blocks.GRASS_BLOCK : Blocks.SAND).defaultBlockState(), 2);
@@ -159,6 +164,7 @@ public final class NapoliAtlasGameTest {
             h.assertTrue(level.getBlockState(playerPlaced).is(Blocks.SAND), "Player-placed sand is preserved");
         } finally {
             CityProperty.forget(level, playerPlaced);
+            markers.forEach((chunk,marker)->{if(marker==null)chunk.removeAttached(NapoliFootballLink.COMPLETE);else chunk.setAttached(NapoliFootballLink.COMPLETE,marker);});
         }
         h.succeed();
     }

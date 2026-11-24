@@ -66,6 +66,7 @@ final class NapoliDialogue {
 
     static void open(ServerPlayer player, NapoliResident npc) {
         if (!canTalk(player, npc)) return;
+        CityOnboarding.event(player, CityOnboarding.TALK);
         Bond bond = bond(player, npc.role());
         String key = bond.dating() ? "together" : bond.interest() >= 55 ? "flirt" : "hello";
         show(player, npc, bond, Component.translatable("napuli.dialog." + npc.role().id() + "." + key));

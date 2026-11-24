@@ -79,11 +79,15 @@ final class WorkResources {
         chunk.setAttached(FITTED,true);
     }
     static boolean grow(ServerLevel city,BlockPos base){
+        var players=city.players().stream().map(p->p.getBoundingBox()).toList();
         for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)for(int y=0;y<=5;y++){
             var p=base.offset(x,y,z);if(!city.hasChunkAt(p))return false;var state=city.getBlockState(p);
-            if(CityProperty.playerPlaced(city,p)||city.getBlockEntity(p)!=null||(!state.isAir()&&!state.is(Blocks.OAK_LOG)&&!state.is(Blocks.OAK_LEAVES)))return false;
+            if(CityProperty.playerPlaced(city,p)||city.getBlockEntity(p)!=null)return false;
+            boolean written=x==0&&z==0&&y<4||y>=3&&Math.abs(x)+Math.abs(z)<=3&&(x!=0||z!=0||y>=4);
+            if(written&&!players.isEmpty()&&players.stream().anyMatch(box->box.intersects(new net.minecraft.world.phys.AABB(p))))return false;
+            // The public bench and sloping ground below the crown are not replaced by this tree.
+            if(written&&!state.isAir()&&!state.is(Blocks.OAK_LOG)&&!state.is(Blocks.OAK_LEAVES))return false;
         }
-        if(city.players().stream().anyMatch(p->p.getBoundingBox().intersects(new net.minecraft.world.phys.AABB(base.getX(),base.getY(),base.getZ(),base.getX()+1,base.getY()+5,base.getZ()+1))))return false;
         for(int y=0;y<4;y++)city.setBlock(base.above(y),Blocks.OAK_LOG.defaultBlockState(),2);
         for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)for(int y=3;y<=5;y++)if(Math.abs(x)+Math.abs(z)<=3&&(x!=0||z!=0||y>=4))city.setBlock(base.offset(x,y,z),Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT,true),2);
         return true;

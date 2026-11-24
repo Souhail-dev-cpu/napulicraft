@@ -20,6 +20,9 @@ final class NapoliHomeDecor {
     private static final AttachmentType<Boolean> FITTED = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("home_decor_v3"));
 
+    /** Initialize the saved marker before Minecraft reads any chunk attachments. */
+    static void register() {}
+
     private final ServerLevel level;
     private final LevelChunk chunk;
     private java.util.Set<BlockPos> approaches;

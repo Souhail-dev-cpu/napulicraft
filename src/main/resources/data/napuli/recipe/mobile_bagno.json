@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:barrel",
+    "minecraft:white_wool",
+    "minecraft:cyan_wool"
+  ],
+  "result": {
+    "id": "napuli:mobile_bagno",
+    "count": 1
+  }
+}

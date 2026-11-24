@@ -26,7 +26,8 @@
       "dev.napuli.SpeechGameTest",
       "dev.napuli.EntranceGameTest",
       "dev.napuli.StreetGameTest",
-      "dev.napuli.WorkEcosystemGameTest"
+      "dev.napuli.WorkEcosystemGameTest",
+      "dev.napuli.FootballRatingsGameTest"
     ]
   },
   "depends": {

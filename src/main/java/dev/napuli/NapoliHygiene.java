@@ -20,7 +20,20 @@ final class NapoliHygiene {
     static final BlockPos PUBLIC_SINK = new BlockPos(-116, 64, 36);
     private static final AttachmentType<Integer> CLEAN = AttachmentRegistry.<Integer>builder()
             .persistent(Codec.INT).copyOnDeath().buildAndRegister(Napuli.id("hygiene"));
+    private static final AttachmentType<Long> WET_UNTIL = AttachmentRegistry.<Long>builder()
+            .persistent(Codec.LONG).buildAndRegister(Napuli.id("wet_hair_until"));
+
     private NapoliHygiene() {}
+
+    static void soakHair(ServerPlayer player) {
+        player.setAttached(WET_UNTIL, player.level().getGameTime() + 1200);
+    }
+
+    static boolean dryHair(ServerPlayer player) {
+        if (player.getAttachedOrElse(WET_UNTIL, 0L) <= player.level().getGameTime()) return false;
+        player.removeAttached(WET_UNTIL);
+        return true;
+    }
 
     static int value(ServerPlayer p) { return p.getAttachedOrElse(CLEAN, 100); }
 
@@ -55,7 +68,7 @@ final class NapoliHygiene {
                     var tray = CityLivingHomes.use(house, CityLivingHomes.Furniture.SHOWER).block();
                     if (!pos.equals(tray) && !pos.equals(tray.above())) continue;
                     if (player instanceof ServerPlayer p) {
-                        if (NapoliProperties.hasAccess(p, house)) wash(p, pos, 100);
+                        if (NapoliProperties.hasAccess(p, house)) { wash(p, pos, 100); soakHair(p); }
                         else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
                     }
                     return InteractionResult.SUCCESS;
@@ -63,7 +76,7 @@ final class NapoliHygiene {
             }
             for (var house : NapoliMergellina.PROPERTIES) if (pos.equals(shower(house)) || (pos.equals(shower(house).above()) && NapoliShower.isColumn(level, pos))) {
                 if (player instanceof ServerPlayer p) {
-                    if (NapoliProperties.hasAccess(p, house)) wash(p, pos, 100);
+                    if (NapoliProperties.hasAccess(p, house)) { wash(p, pos, 100); soakHair(p); }
                     else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
                 }
                 return InteractionResult.SUCCESS;

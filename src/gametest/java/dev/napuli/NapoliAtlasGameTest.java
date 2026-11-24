@@ -9,6 +9,59 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 
 public final class NapoliAtlasGameTest {
+    @GameTest public void oldHouseFrontageGetsConnectedWindowsAndAWalkableThreshold(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var house = DistrictLife.districts().getLast().homes().getLast();
+        int x = house.x(), y = house.ground(), z = house.z();
+        var pane = new BlockPos(x + 3, y + 1, z + 23);
+        var jamb = new BlockPos(x + 10, y, z + 23);
+        var threshold = new BlockPos(x + 11, y, z + 24);
+        var door = threshold.north();
+        var rail = new BlockPos(x + 3, y + 6, z + 25);
+        var lamp = new BlockPos(x + 19, y + 2, z + 2);
+        var roofEdge = new BlockPos(x + 3, y + house.floors() * 5 + 1, z + 23);
+        for (var pos : List.of(pane, jamb, threshold, door, rail, lamp, roofEdge)) {
+            var chunk = level.getChunkAt(pos);
+            NapoliExpansion.generate(level, chunk);
+        }
+        level.setBlock(roofEdge.below(), Blocks.BRICK_SLAB.defaultBlockState(), 2);
+        level.setBlock(roofEdge, Blocks.BRICK_WALL.defaultBlockState(), 2);
+        level.setBlock(pane, Blocks.GLASS_PANE.defaultBlockState(), 2);
+        level.setBlock(jamb, Blocks.AIR.defaultBlockState(), 2);
+        level.setBlock(threshold, Blocks.GRASS_BLOCK.defaultBlockState(), 2);
+        for (var pos : List.of(pane, jamb, threshold, door, rail, lamp, roofEdge)) level.getChunkAt(pos).removeAttached(NapoliExpansion.FRONTAGES);
+        for (var pos : List.of(pane, jamb, threshold, door, rail, lamp, roofEdge)) NapoliExpansion.repairFrontages(level, level.getChunkAt(pos));
+        var wall = level.getBlockState(roofEdge);
+        helper.assertTrue(level.getBlockState(roofEdge.below()).is(Blocks.BRICKS)
+                        && level.getBlockState(roofEdge.below()).isFaceSturdy(level, roofEdge.below(), net.minecraft.core.Direction.UP),
+                "A continuous solid course fills the gap under the roof parapet");
+        helper.assertTrue(wall.is(Blocks.BRICK_WALL)
+                        && wall.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST_WALL)
+                            == net.minecraft.world.level.block.state.properties.WallSide.LOW
+                        && wall.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST_WALL)
+                            == net.minecraft.world.level.block.state.properties.WallSide.LOW,
+                "Existing isolated roof posts become a continuous parapet");
+        var guard = level.getBlockState(rail);
+        helper.assertTrue(guard.is(Blocks.IRON_BARS) && guard.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST)
+                        && guard.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST),
+                "The balcony railing is a connected run");
+        helper.assertTrue(!level.isEmptyBlock(rail.west().below(2)), "A masonry bracket supports the balcony");
+        var lantern = level.getBlockState(lamp);
+        helper.assertTrue(lantern.is(Blocks.LANTERN)
+                        && lantern.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HANGING)
+                        && !level.isEmptyBlock(lamp.above()), "Interior lanterns connect to the ceiling");
+        var glass = level.getBlockState(pane);
+        helper.assertTrue(glass.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST)
+                        && glass.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST),
+                "The pane reaches both sides of the masonry");
+        helper.assertTrue(level.getBlockState(jamb).is(level.getBlockState(jamb.west()).getBlock())
+                        && level.getBlockState(door).is(Blocks.OAK_DOOR), "The existing door gains a jamb");
+        helper.assertTrue(level.getBlockState(threshold.below()).is(Blocks.POLISHED_ANDESITE)
+                        && level.isEmptyBlock(threshold) && level.isEmptyBlock(threshold.above()),
+                "The paved landing is level and clear beside the door");
+        helper.succeed();
+    }
+
     @GameTest public void atlasHomesHaveFinishedUpperRoomsWithAStairLanding(GameTestHelper h) {
         var fixture = new HashMap<BlockPos, net.minecraft.world.level.block.state.BlockState>();
         var floor = new NapoliInteriorLayout((x, y, z, state) -> fixture.put(new BlockPos(x, y, z), state));
@@ -85,5 +138,30 @@ public final class NapoliAtlasGameTest {
         try{for(int i=0;i<5;i++){var npc=NapoliResident.spawn(city,NapoliResident.Role.PASSERBY,pos.offset(2+i,0,2),0);npc.setNoAi(true);actors.add(npc);}h.assertTrue(!HousingCapacity.canEnter(city,pos.offset(5,0,5),UUID.randomUUID()),"New district houses count all five residents before admitting another ordinary occupant");}
         finally{for(var npc:actors)npc.discard();}h.succeed();
     }
+    @GameTest public void oldFootballGroundJoinsAtlasOnAWalkableSurface(GameTestHelper h) {
+        var level = city(h);
+        int border = NapoliAtlas.ORIGINAL.maxX();
+        var legacy = new BlockPos(border - 1, 63, 65);
+        var expansion = legacy.east();
+        var playerPlaced = legacy.south(3);
+        for (var pos : List.of(legacy, expansion, playerPlaced)) {
+            level.getChunkAt(pos);
+            level.setBlock(pos, (pos.equals(expansion) ? Blocks.GRASS_BLOCK : Blocks.SAND).defaultBlockState(), 2);
+            level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 2);
+        }
+        CityProperty.placed(level, playerPlaced);
+        try {
+            NapoliFootballLink.fit(level, level.getChunkAt(legacy));
+            NapoliFootballLink.fit(level, level.getChunkAt(expansion));
+            for (var pos : List.of(legacy, expansion))
+                h.assertTrue(level.getBlockState(pos).is(Blocks.POLISHED_ANDESITE) && level.isEmptyBlock(pos.above()),
+                        "The path crosses both sides of the development boundary at the same level");
+            h.assertTrue(level.getBlockState(playerPlaced).is(Blocks.SAND), "Player-placed sand is preserved");
+        } finally {
+            CityProperty.forget(level, playerPlaced);
+        }
+        h.succeed();
+    }
+
     private static ServerLevel city(GameTestHelper h){return h.getLevel();}
 }

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:oak_slab",
+    "minecraft:paper",
+    "minecraft:copper_ingot"
+  ],
+  "result": {
+    "id": "napuli:svuotatasche",
+    "count": 1
+  }
+}

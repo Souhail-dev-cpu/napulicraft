@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:bowl",
+    "minecraft:iron_ingot",
+    "minecraft:oak_slab"
+  ],
+  "result": {
+    "id": "napuli:utensili_cucina",
+    "count": 1
+  }
+}

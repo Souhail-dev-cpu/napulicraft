@@ -1,0 +1,139 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/dark_oak_planks",
+    "wood": "minecraft:block/dark_oak_planks",
+    "mail": "minecraft:block/white_wool",
+    "key": "minecraft:block/cut_copper"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        0,
+        3
+      ],
+      "to": [
+        14,
+        1,
+        13
+      ],
+      "faces": {
+        "up": {
+          "texture": "#wood"
+        },
+        "down": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        1,
+        4
+      ],
+      "to": [
+        8,
+        1.5,
+        10
+      ],
+      "faces": {
+        "up": {
+          "texture": "#mail"
+        },
+        "down": {
+          "texture": "#mail"
+        },
+        "north": {
+          "texture": "#mail"
+        },
+        "south": {
+          "texture": "#mail"
+        },
+        "east": {
+          "texture": "#mail"
+        },
+        "west": {
+          "texture": "#mail"
+        }
+      }
+    },
+    {
+      "from": [
+        9,
+        1,
+        5
+      ],
+      "to": [
+        12,
+        1.5,
+        6
+      ],
+      "faces": {
+        "up": {
+          "texture": "#key"
+        },
+        "down": {
+          "texture": "#key"
+        },
+        "north": {
+          "texture": "#key"
+        },
+        "south": {
+          "texture": "#key"
+        },
+        "east": {
+          "texture": "#key"
+        },
+        "west": {
+          "texture": "#key"
+        }
+      }
+    },
+    {
+      "from": [
+        11,
+        1,
+        6
+      ],
+      "to": [
+        12,
+        1.5,
+        8
+      ],
+      "faces": {
+        "up": {
+          "texture": "#key"
+        },
+        "down": {
+          "texture": "#key"
+        },
+        "north": {
+          "texture": "#key"
+        },
+        "south": {
+          "texture": "#key"
+        },
+        "east": {
+          "texture": "#key"
+        },
+        "west": {
+          "texture": "#key"
+        }
+      }
+    }
+  ]
+}

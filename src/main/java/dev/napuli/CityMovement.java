@@ -54,13 +54,30 @@ final class CityMovement {
     static boolean isSeat(Entity entity){return entity!=null&&entity.entityTags().contains(SEAT);}
     static boolean sit(NapoliResident npc,BlockPos chair){
         if(isSeat(npc.getVehicle()))return true;
-        var city=(ServerLevel)npc.level();if(!acquire(city,chair,npc.getUUID(),240))return false;
-        if(!city.getEntitiesOfClass(ArmorStand.class,new AABB(chair).inflate(.6),CityMovement::isSeat).isEmpty())return false;
-        var marker=new ArmorStand(city,chair.getX()+.5,chair.getY()+.35,chair.getZ()+.5);
-        marker.setInvisible(true);marker.setNoGravity(true);((dev.napuli.mixin.SeatMarkerAccessor)marker).napuli$setMarker(true);marker.addTag(SEAT);
-        city.addFreshEntity(marker);if(!npc.startRiding(marker,true,false)){marker.discard();return false;}
-        npc.getNavigation().stop();return true;
+        if (!sitAt(npc, chair)) return false;
+        npc.getNavigation().stop();
+        return true;
     }
+
+    static boolean sitAt(LivingEntity rider, BlockPos chair) {
+        if (!(rider.level() instanceof ServerLevel city) || rider.isPassenger()) return false;
+        var occupied = city.getEntitiesOfClass(ArmorStand.class, new AABB(chair).inflate(.1),
+                seat -> isSeat(seat) && !seat.getPassengers().isEmpty());
+        if (!occupied.isEmpty()) return false;
+        var marker = new ArmorStand(city, chair.getX()+.5, chair.getY()+.35, chair.getZ()+.5);
+        marker.setInvisible(true);
+        marker.setNoGravity(true);
+
+        ((dev.napuli.mixin.SeatMarkerAccessor) marker).napuli$setMarker(true);
+        marker.addTag(SEAT);
+        if (!city.addFreshEntity(marker) || !rider.startRiding(marker,true,false)) {
+            marker.discard();
+            release(city,rider.getUUID());
+            return false;
+        }
+        return true;
+    }
+
     static void stand(NapoliResident npc){var vehicle=npc.getVehicle();if(isSeat(vehicle)){npc.stopRiding();vehicle.discard();release((ServerLevel)npc.level(),npc.getUUID());}}
     static void register(){
         UseBlockCallback.EVENT.register((player,level,hand,hit)->{
@@ -69,9 +86,19 @@ final class CityMovement {
             if(state.getValue(DoorBlock.HALF)==DoubleBlockHalf.UPPER)pos=pos.below();
             if(!acquire(p.level(),pos,p.getUUID(),40)){p.sendOverlayMessage(net.minecraft.network.chat.Component.literal("Lascia passare chi è arrivato prima."));return InteractionResult.FAIL;}return InteractionResult.PASS;
         });
+        ServerTickEvents.END_LEVEL_TICK.register(level -> {
+            if (level.getGameTime() % 10 != 0) return;
+            for (var entity : level.getAllEntities()) {
+                if (!isSeat(entity)) continue;
+                if (entity.getPassengers().isEmpty() || level.isEmptyBlock(entity.blockPosition())) {
+                    for (var passenger : entity.getPassengers()) release(level, passenger.getUUID());
+                    entity.discard();
+                }
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%200!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;
             var gates=GATES.get(city);if(gates!=null){long now=city.getGameTime();gates.values().forEach(g->g.line.values().removeIf(t->now-t.seen()>240||!present(city,t.actor())));gates.values().removeIf(g->g.line.isEmpty());}
-            for(var e:city.getAllEntities())if(isSeat(e)&&e.getPassengers().isEmpty())e.discard();
+
         });
     }
     private CityMovement(){}

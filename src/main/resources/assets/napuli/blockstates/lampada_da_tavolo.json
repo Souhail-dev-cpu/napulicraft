@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "napuli:block/lampada_da_tavolo"
+    },
+    "lit=true": {
+      "model": "napuli:block/lampada_da_tavolo_accesa"
+    }
+  }
+}

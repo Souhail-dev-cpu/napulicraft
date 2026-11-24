@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  * the Carabinieri caserma with two cells, and the new girls. Runs once per world, also on cities built before.
  */
 final class NapoliInteriors {
-	static final int VERSION_NOW = 34;
+	static final int VERSION_NOW = 35;
 	private static final AttachmentType<Integer> VERSION = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT).buildAndRegister(Napuli.id("napoli_version"));
 	static final BlockPos PIZZERIA = new BlockPos(-64, 64, -20);
@@ -96,6 +96,7 @@ final class NapoliInteriors {
 		if(v<32)NapoliAtlasGuide.fixtures(world);
 		if (v < 33) NapoliHistoricArchitecture.upgrade(world);
 		if (v < 34) NapoliInteriorLayout.upgradeHistoric(world);
+		if (v < 35) NapoliInteriorLayout.repairPalaceLights(world);
 		world.setAttached(VERSION, VERSION_NOW);
 	}
 

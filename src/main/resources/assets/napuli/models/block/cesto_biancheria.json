@@ -1,0 +1,139 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/bamboo_mosaic",
+    "weave": "minecraft:block/bamboo_mosaic",
+    "white": "minecraft:block/white_wool",
+    "blue": "minecraft:block/blue_wool"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        0,
+        2
+      ],
+      "to": [
+        14,
+        9,
+        14
+      ],
+      "faces": {
+        "up": {
+          "texture": "#weave"
+        },
+        "down": {
+          "texture": "#weave"
+        },
+        "north": {
+          "texture": "#weave"
+        },
+        "south": {
+          "texture": "#weave"
+        },
+        "east": {
+          "texture": "#weave"
+        },
+        "west": {
+          "texture": "#weave"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        8,
+        1
+      ],
+      "to": [
+        15,
+        10,
+        15
+      ],
+      "faces": {
+        "up": {
+          "texture": "#weave"
+        },
+        "down": {
+          "texture": "#weave"
+        },
+        "north": {
+          "texture": "#weave"
+        },
+        "south": {
+          "texture": "#weave"
+        },
+        "east": {
+          "texture": "#weave"
+        },
+        "west": {
+          "texture": "#weave"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        10,
+        3
+      ],
+      "to": [
+        12,
+        11,
+        11
+      ],
+      "faces": {
+        "up": {
+          "texture": "#white"
+        },
+        "down": {
+          "texture": "#white"
+        },
+        "north": {
+          "texture": "#white"
+        },
+        "south": {
+          "texture": "#white"
+        },
+        "east": {
+          "texture": "#white"
+        },
+        "west": {
+          "texture": "#white"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        10,
+        7
+      ],
+      "to": [
+        13,
+        12,
+        13
+      ],
+      "faces": {
+        "up": {
+          "texture": "#blue"
+        },
+        "down": {
+          "texture": "#blue"
+        },
+        "north": {
+          "texture": "#blue"
+        },
+        "south": {
+          "texture": "#blue"
+        },
+        "east": {
+          "texture": "#blue"
+        },
+        "west": {
+          "texture": "#blue"
+        }
+      }
+    }
+  ]
+}

@@ -68,15 +68,15 @@ public final class FootballPractice {
         }
     }
 
-    private static final AttachmentType<String> POSITION = AttachmentRegistry.<String>builder()
+    static final AttachmentType<String> POSITION = AttachmentRegistry.<String>builder()
             .persistent(Codec.STRING).copyOnDeath().buildAndRegister(Napuli.id("football_position"));
 
-    private static final AttachmentType<java.util.Map<String, Integer>> ROLE_TRAINING =
+    static final AttachmentType<java.util.Map<String, Integer>> ROLE_TRAINING =
             AttachmentRegistry.<java.util.Map<String, Integer>>builder()
                     .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT)).copyOnDeath().buildAndRegister(Napuli.id("football_role_training"));
     private static final net.minecraft.resources.Identifier MOVEMENT_BONUS = Napuli.id("football_pace");
 
-    private enum Kick { PASS, DRIVE, CURL, CHIP }
+    enum Kick { PASS, DRIVE, CURL, CHIP }
 
     private FootballPractice() {}
 
@@ -352,7 +352,7 @@ public final class FootballPractice {
         return p.getAttachedOrElse(ROLE_TRAINING, java.util.Map.of()).getOrDefault(position(p).name(), 0);
     }
 
-    private static void updateMovement(ServerPlayer player, Game game) {
+    static void updateMovement(ServerPlayer player, Game game) {
         var movement = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
         if (movement == null) return;
         if (game == null) {
@@ -366,15 +366,15 @@ public final class FootballPractice {
                         net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
-    private static int shooting(ServerPlayer p) {
+    static int shooting(ServerPlayer p) {
         return FootballRatings.trained(position(p).shooting, roleTraining(p), fitness(p), position(p) == Position.ATTACCANTE);
     }
 
-    private static int pace(ServerPlayer p) {
+    static int pace(ServerPlayer p) {
         return FootballRatings.trained(position(p).speed, roleTraining(p), fitness(p), position(p) == Position.CENTROCAMPISTA);
     }
 
-    private static int defending(ServerPlayer p) {
+    static int defending(ServerPlayer p) {
         return FootballRatings.trained(position(p).defense, roleTraining(p), fitness(p), position(p) == Position.DIFENSORE);
     }
 
@@ -417,7 +417,7 @@ public final class FootballPractice {
         return new Vec3(goal + direction * DEPTH[role] + .5, 64, FootballGround.MID_Z + direction * WIDTH[role] + .5);
     }
 
-    private static final class Seat {
+    static final class Seat {
         final ServerPlayer player;
         double stamina;
         int requestUntil, nextInterception, protectedUntil, nextFoul, goals, leagueTicks;
@@ -438,7 +438,7 @@ public final class FootballPractice {
         }
     }
 
-    private static final class Game {
+    static final class Game {
         final NapoliResident[] team = new NapoliResident[10];
         final Display.ItemDisplay marker;
         final Vec3[] motion = new Vec3[team.length];
@@ -678,7 +678,7 @@ public final class FootballPractice {
             return true;
         }
 
-        private void removeActors() {
+        void removeActors() {
             for (var npc : team) if (npc != null) npc.discard();
             marker.discard();
         }
@@ -795,7 +795,7 @@ public final class FootballPractice {
             return best;
         }
 
-        private void playBall() {
+        void playBall() {
             if (owner >= 0) {
                 Vec3 pos = position(owner);
                 int direction = owner < 5 ? 1 : -1;
@@ -944,7 +944,7 @@ public final class FootballPractice {
             velocity = flat(direction).normalize().scale(speed);
         }
 
-        private void setOwner(int next) {
+        void setOwner(int next) {
             owner = next;
             curve = 0;
             held = 0;

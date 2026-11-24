@@ -222,7 +222,7 @@ public final class NapoliEmployment {
         return status(p);
     }
 
-    private static int status(ServerPlayer p) {
+    static int status(ServerPlayer p) {
         Work state = p.getAttached(WORK);
         if (!eligible(p) || state == null) { say(p, "desk"); return 1; }
         Contract contract = find(state.contract());

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:smooth_stone",
+    "minecraft:spruce_planks"
+  ],
+  "result": {
+    "id": "napuli:piano_da_lavoro",
+    "count": 1
+  }
+}

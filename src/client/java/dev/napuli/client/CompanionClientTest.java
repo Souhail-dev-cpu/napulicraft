@@ -59,7 +59,7 @@ final class CompanionClientTest {
                 else if(phase==16&&age>20&&mc.gui.screen() instanceof CompanionScreen){check(button(mc,"Acquisto casa"),"The expense history names the housing purchase");shot(mc,"qol-spese");language(mc,"en_us");phase=17;}
                 else if(phase==17&&localeReady&&age>20){mc.getConnection().sendCommand("compagno");phase=18;}
                 else if(phase==18&&age>20&&clearOverlayTicks>=10&&mc.gui.screen() instanceof CompanionScreen){check(button(mc,"Atlas and favorites"),"The server-sent menu is translated into the client's English locale");shot(mc,"qol-english");phase=181;}
-                else if(phase==181&&age>10){search(mc,"cooperative");check(button(mc,"Cooperative jobs"),"New multiplayer menu entries use English");shot(mc,"qol-improvements-english");language(mc,"nap_it");phase=19;}
+                else if(phase==181&&age>10){search(mc,"cooperative");check(button(mc,"Cooperative jobs"),"New multiplayer menu entries use English");shot(mc,"qol-improvements-english");search(mc,"");language(mc,"nap_it");phase=19;}
                 else if(phase==19&&localeReady&&age>20){mc.getConnection().sendCommand("compagno");phase=20;}
                 else if(phase==20&&age>20&&clearOverlayTicks>=10&&mc.gui.screen() instanceof CompanionScreen){check(button(mc,"Atlante e preferite"),"The same menu is translated into Neapolitan");shot(mc,"qol-napoletano");phase=201;}
                 else if(phase==201&&age>10){search(mc,"scagne");check(button(mc,"Scagne fra jucature"),"New trading menu entries use Neapolitan");shot(mc,"qol-improvements-napoletano");language(mc,"it_it");phase=21;}

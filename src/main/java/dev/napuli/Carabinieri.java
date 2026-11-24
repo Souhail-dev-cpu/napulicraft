@@ -318,8 +318,8 @@ public final class Carabinieri {
 
 	/** the parade boys have no helmet and a carabiniere saw them: whistle, the scooter stops, the music dies */
 	static void stopParade(ServerLevel level, Motorino bike, NapoliResident cc) {
-		level.playSound(null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.HOSTILE, 3f, 2f);
-		level.playSound(null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 2f, 1.6f);
+		CityEffects.sound(level,null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.HOSTILE, 3f, 2f);
+		CityEffects.sound(level,null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 2f, 1.6f);
 		for (ServerPlayer p : level.getPlayers(pl -> pl.distanceToSqr(bike) < 48 * 48)) {
 			p.sendSystemMessage(Component.translatable("napuli.casco.alt"));
 			p.sendOverlayMessage(Component.translatable("napuli.casco.alt.bar"));
@@ -347,15 +347,15 @@ public final class Carabinieri {
 			NapoliNotice.show(p, Component.translatable("napuli.casco.carcere", jailed));
 			title(p, "napuli.casco.carcere.title", "napuli.casco.carcere.sub");
 		}
-		level.playSound(null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.IRON_DOOR_CLOSE, SoundSource.HOSTILE, 1.5f, 0.8f);
+		CityEffects.sound(level,null, bike.getX(), bike.getY(), bike.getZ(), SoundEvents.IRON_DOOR_CLOSE, SoundSource.HOSTILE, 1.5f, 0.8f);
 		Napuli.LOGGER.info("[cc] {} scooter boys jailed", jailed);
 	}
 
 	public static boolean npcJailed(UUID id) { return JAILED_NPC.containsKey(id); }
 
 	private static void siren(ServerLevel level, ServerPlayer p) {
-		level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 1.4f, 1.6f);
-		level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 1.4f, 1.2f);
+		CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 1.4f, 1.6f);
+		CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.HOSTILE, 1.4f, 1.2f);
 	}
 
 	static void title(ServerPlayer p, String title, String sub) {

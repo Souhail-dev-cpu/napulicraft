@@ -8,6 +8,7 @@ import net.minecraft.world.item.Items;
 
 /** Municipal work fund and real products connect pay, upgrades, deliveries and city services. */
 final class WorkEconomy {
+    static void register(){}
     static final AttachmentType<Integer> FUND=AttachmentRegistry.<Integer>builder().persistent(Codec.INT).buildAndRegister(Napuli.id("employment_fund"));
     static int fund(ServerLevel city){return city.getAttachedOrElse(FUND,50000);}
     static void revenue(ServerLevel city,int euros){if(euros>0)city.setAttached(FUND,Math.min(1000000,fund(city)+euros));}

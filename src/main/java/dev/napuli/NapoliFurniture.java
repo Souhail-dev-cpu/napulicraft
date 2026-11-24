@@ -190,7 +190,7 @@ final class NapoliFurniture {
             if (player.isSpectator()) return InteractionResult.PASS;
             if (player instanceof ServerPlayer) {
                 level.setBlock(pos, state.cycle(BlockStateProperties.LIT), Block.UPDATE_ALL);
-                level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, .35f, 1);
+                CityEffects.sound(level,null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, .35f, 1);
             }
             return InteractionResult.SUCCESS;
         }

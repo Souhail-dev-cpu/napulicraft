@@ -241,7 +241,7 @@ final class NapoliLocalJobs {
             case "low", "middle", "high" -> {
                 int index = player.getAttachedOrElse(BEAT, 0);
                 int note = NOTES.indexOf(action);
-                player.level().playSound(null, s.npc().blockPosition(), SoundEvents.NOTE_BLOCK_HARP.value(),
+                CityEffects.sound(player.level(),null, s.npc().blockPosition(), SoundEvents.NOTE_BLOCK_HARP.value(),
                         SoundSource.RECORDS, 0.8f, PITCHES.get(note));
                 if (note != MELODY.get(index)) {
                     player.removeAttached(BEAT);
@@ -278,7 +278,7 @@ final class NapoliLocalJobs {
             player.removeAttached(DEMO);
         } else if (elapsed % 8 == 0) {
             int note = MELODY.get((int) (elapsed / 8));
-            player.level().playSound(null, demo.npc().blockPosition(), SoundEvents.NOTE_BLOCK_HARP.value(),
+            CityEffects.sound(player.level(),null, demo.npc().blockPosition(), SoundEvents.NOTE_BLOCK_HARP.value(),
                     SoundSource.RECORDS, 0.8f, PITCHES.get(note));
         }
     }

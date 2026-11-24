@@ -64,7 +64,7 @@ final class NapoliPeople {
 					return;
 				}
 			}
-			case TIFOSO -> p.level().playSound(null, npc.blockPosition(), SoundEvents.NOTE_BLOCK_TRUMPET.value(), SoundSource.NEUTRAL, 1f, 1.2f);
+			case TIFOSO -> CityEffects.sound(p.level(),null, npc.blockPosition(), SoundEvents.NOTE_BLOCK_TRUMPET.value(), SoundSource.NEUTRAL, 1f, 1.2f);
 			default -> {}
 		}
 		if (NeighbourMemory.trust(p, npc) != 0) NeighbourMemory.greet(p, npc);

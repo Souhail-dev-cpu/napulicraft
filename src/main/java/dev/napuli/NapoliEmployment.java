@@ -196,7 +196,7 @@ public final class NapoliEmployment {
             }
             if(stage==2)return status(p);
             WorkEconomy.delivery(p.level(),contract,1);
-            p.level().sendParticles(net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
+            CityEffects.particles(p.level(),net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
                     sign.getX() + .5, sign.getY() + 1, sign.getZ() + .5, 8, .35, .2, .35, .02);
             p.setAttached(WORK, new Work(state.contract(), day, 2, state.paid()));
             Timecard card = timecard(p, day);
@@ -407,8 +407,8 @@ public final class NapoliEmployment {
         int next = card.sweeps() + Math.min(advance,SWEEPS-card.sweeps()%SWEEPS);
         p.setAttached(HOURS, new Timecard(day, card.ticks(), next, now, now));
         p.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true);
-        p.level().sendParticles(ParticleTypes.POOF, pos.getX() + .5, pos.getY() + 1.08, pos.getZ() + .5, 4, .25, .04, .25, .005);
-        p.level().playSound(null, pos, net.minecraft.sounds.SoundEvents.BRUSH_GENERIC, net.minecraft.sounds.SoundSource.PLAYERS, .5f, 1);
+        CityEffects.particles(p.level(),ParticleTypes.POOF, pos.getX() + .5, pos.getY() + 1.08, pos.getZ() + .5, 4, .25, .04, .25, .005);
+        CityEffects.sound(p.level(),null, pos, net.minecraft.sounds.SoundEvents.BRUSH_GENERIC, net.minecraft.sounds.SoundSource.PLAYERS, .5f, 1);
         if (next % SWEEPS == 0)
             NapoliNotice.show(p, Component.translatable("napuli.work.swept", made / SWEEPS + 1, PATCHES));
         if (next == PATCHES * SWEEPS) {
@@ -429,7 +429,7 @@ public final class NapoliEmployment {
         long now = city.getGameTime();
         if (contract == Contract.CLEANER && work.stage() == 1) {
             BlockPos dirt = patch(card.sweeps() / SWEEPS);
-            city.sendParticles(p, ParticleTypes.DUST_PLUME, false, false,
+            CityEffects.particles(city,p, ParticleTypes.DUST_PLUME, false, false,
                     dirt.getX() + .5, dirt.getY() + 1.02, dirt.getZ() + .5, 3, .21, .01, .21, .004);
         }
         if (card.action() < 0 || now - card.action() > 2L * HOUR || card.ticks() >= CLOSE - OPEN) return;

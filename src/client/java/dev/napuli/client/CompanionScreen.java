@@ -23,6 +23,7 @@ final class CompanionScreen extends Screen {
     private EditBox search;
     private String query="";
     private int page, left, top, panelWidth, rows, rowHeight, bottom, refreshTicks;
+    private int optionCount;
     private List<CompanionBoard.Entry> visible=List.of();
     private final List<net.minecraft.client.gui.components.AbstractWidget> rowWidgets=new ArrayList<>();
     CompanionScreen(CompanionBoard board) {super(board.title());this.board=board;this.options=false;query=FILTERS.getOrDefault(board.page(),"");}
@@ -69,7 +70,7 @@ final class CompanionScreen extends Screen {
         var o=CompanionOptions.current;
         int x=left+8,w=panelWidth-16,y=top+54;
         String[] labels={t("settings.city",on(o.city)).getString(),t("settings.kitchen",on(o.kitchen)).getString(),t("settings.tracker",on(o.tracker)).getString(),t("settings.compact",on(o.compact)).getString(),t("settings.size",t(o.size==0?"settings.small":o.size==1?"settings.normal":"settings.large")).getString(),t("settings.notices",on(o.notices)).getString(),t("settings.light",on(o.lightPreset)).getString(),t("settings.particles",on(o.reducedParticles)).getString(),t("settings.flashes",on(o.reducedFlashes)).getString(),t("settings.motion",on(o.reducedMotion)).getString(),t("settings.quiet",on(o.quietAmbience)).getString(),t("settings.text",on(o.textAlerts)).getString()};
-        rows=Math.max(1,(bottom-y-52)/24);int pages=(labels.length+rows-1)/rows;page=Math.clamp(page,0,pages-1);
+        optionCount=labels.length;rows=Math.max(1,(bottom-y-52)/24);int pages=(labels.length+rows-1)/rows;page=Math.clamp(page,0,pages-1);
         for(int i=page*rows;i<Math.min(labels.length,(page+1)*rows);i++){final int option=i;var choice=button(x,y+(i-page*rows)*24,w,labels[i],()->{
             switch(option){case 0->o.city=!o.city;case 1->o.kitchen=!o.kitchen;case 2->o.tracker=!o.tracker;case 3->o.compact=!o.compact;case 4->o.size=(o.size+1)%3;case 5->o.notices=!o.notices;case 6->o.lightPreset=!o.lightPreset;case 7->o.reducedParticles=!o.reducedParticles;case 8->o.reducedFlashes=!o.reducedFlashes;case 9->o.reducedMotion=!o.reducedMotion;case 10->o.quietAmbience=!o.quietAmbience;case 11->o.textAlerts=!o.textAlerts;default->{}}
             o.save();CompanionEffectsClient.apply(minecraft);rebuildWidgets();
@@ -109,6 +110,7 @@ final class CompanionScreen extends Screen {
         g.fill(0,0,width,height,0xb009131b);g.fill(left,top,left+panelWidth,bottom,0xff10242e);
         g.fill(left,top,left+panelWidth,top+2,0xff62c8dc);
         g.text(font,font.plainSubstrByWidth(title.getString(),panelWidth-16),left+8,top+9,0xffffdeb1,false);
+        if(options)g.text(font,t("screen.page",page+1,Math.max(1,(optionCount+rows-1)/rows),optionCount),left+116,bottom-44,0xffb5d3d8,false);
         if(!options){String label=visible.isEmpty()?t("screen.empty").getString():t("screen.page",page+1,Math.max(1,(visible.size()+rows-1)/rows),visible.size()).getString();
             g.text(font,font.plainSubstrByWidth(label,Math.max(20,panelWidth-220)),left+116,bottom-20,0xffb5d3d8,false);}
         super.extractRenderState(g,mouseX,mouseY,delta);

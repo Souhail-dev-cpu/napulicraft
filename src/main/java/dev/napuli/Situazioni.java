@@ -116,7 +116,7 @@ public final class Situazioni {
 		if (isHome(p, level)) {
 			p.sendSystemMessage(Component.translatable("napuli.mamma.brava"));
 			p.getInventory().add(new ItemStack(Napuli.PIZZA, 2));
-			level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.2f);
+			CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.2f);
 		} else {
 			lanciaCiabatta(p, level);
 		}
@@ -141,7 +141,7 @@ public final class Situazioni {
 		Ciabatta c = new Ciabatta(level, p.getX() - p.getLookAngle().x * 6, p.getY() + 7, p.getZ() - p.getLookAngle().z * 6, new ItemStack(Napuli.CIABATTA_ITEM));
 		c.shoot(p.getX() - c.getX(), p.getEyeY() - c.getY(), p.getZ() - c.getZ(), 1.3f, 0f);
 		level.addFreshEntity(c);
-		level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.WITCH_THROW, SoundSource.PLAYERS, 1.5f, 0.8f);
+		CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.WITCH_THROW, SoundSource.PLAYERS, 1.5f, 0.8f);
 	}
 
 	// ---------------------------------------------------------------- casco / vigile
@@ -149,7 +149,7 @@ public final class Situazioni {
 		if (p.getRandom().nextFloat() > 0.4f) return;
 		boolean helmet = !p.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
 		if (!helmet) {
-			level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.PLAYERS, 2f, 2f);
+			CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.PLAYERS, 2f, 2f);
 			if (p.getInventory().contains(new ItemStack(Items.EMERALD))) {
 				removeOne(p, Items.EMERALD);
 				p.sendSystemMessage(Component.translatable("napuli.vigile.multa"));
@@ -158,7 +158,7 @@ public final class Situazioni {
 			}
 		} else if (!level.getEntitiesOfClass(Villager.class, new AABB(p.blockPosition()).inflate(24)).isEmpty()) {
 			p.sendSystemMessage(Component.translatable("napuli.casco.risate"));
-			level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.VILLAGER_AMBIENT, SoundSource.NEUTRAL, 1.5f, 1.3f);
+			CityEffects.sound(level,null, p.getX(), p.getY(), p.getZ(), SoundEvents.VILLAGER_AMBIENT, SoundSource.NEUTRAL, 1.5f, 1.3f);
 		}
 	}
 

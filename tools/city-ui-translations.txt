@@ -502,7 +502,7 @@ economy.title|Bilancio iniziale e prezzi|Starting budget and prices|Cunte inizia
 economy.wallet|Saldo attuale: %s €|Current balance: %s €|Sorde ’e mo: %s €
 economy.starter|Nuovi portafogli: %s €. Budget minimo indicativo: %s € per deposito, prima settimana, pane e un biglietto.|New wallets: %s €. Example minimum: %s € for deposit, first week, bread and one fare.|Portafoglie nuove: %s €. Minimo indicativo: %s € pe deposito, primma settimana, pane e nu biglietto.
 economy.first_pay|Un’ora lavorata: %s €|One work hour: %s €|N’ora ’e fatica: %s €
-economy.time|Prima riscossione dopo almeno %s secondi effettivi in servizio e il compito completato. Viaggio e attesa dell’apertura si aggiungono.|First payment requires at least %s real seconds on duty and the completed task. Travel and waiting for opening take extra time.|Primma pava doppo almeno %s seconde vere ’e servizio e ’o compito fernuto. Viaggio e attesa d’apertura se aggiungono.
+economy.time|Prima riscossione dopo almeno %s secondi in servizio a 20 TPS e il compito completato. Viaggio, apertura e rallentamenti del server si aggiungono.|First payment requires at least %s seconds on duty at 20 TPS and a completed task. Travel, opening hours and server lag add time.|Primma pava doppo almeno %s seconde ’e servizio a 20 TPS e ’o compito fernuto. Viaggio, apertura e lentezza d’ ’o server se aggiungono.
 economy.rent|Deposito %s € · ogni 7 giorni %s € con bollette · ore lavorate necessarie: %s per il deposito, %s per settimana.|Deposit %s € · %s € every 7 days including bills · work hours needed: %s for deposit, %s per week.|Deposito %s € · ogne 7 juorne %s € cu ’e bullette · ore ’e fatica: %s p’ ’o deposito, %s pe settimana.
 economy.tools|Costo degli attrezzi|Tool costs|Costo d’ ’e attrezze
 economy.tools_help|Primo attrezzo incluso. Ricambio base %s €, primo potenziamento %s € e relativo materiale: %s ore di lavoro alla paga attuale.|First tool included. Basic replacement %s €, first upgrade %s € plus its material: %s work hours at the current wage.|Primmo attrezzo cumpreso. Ricambio base %s €, primmo potenziamento %s € e ’o materiale: %s ore â pava ’e mo.
@@ -522,6 +522,8 @@ effects.cue.activity|Un’attività cittadina produce effetti nelle vicinanze.|A
 effects.cue.warning|Avviso: colpo o scoppio nelle vicinanze.|Warning: a shot or bang nearby.|Avviso: nu cuorpo o nu botto vicino.
 effects.cue.appliance|Un elettrodomestico è stato azionato nelle vicinanze.|An appliance was activated nearby.|N’elettrodomestico è stato azionato vicino.
 effects.cue.ambience|Attività o suoni cittadini nelle vicinanze.|City activity or sounds nearby.|Attività o suone cittadine vicino.
+effects.cue.danger|Avviso: allarme o pericolo nelle vicinanze.|Warning: an alarm or danger nearby.|Avviso: allarme o pericolo vicino.
+effects.cue.bell|Sta suonando un campanello nelle vicinanze.|A doorbell is ringing nearby.|Sta sunanno nu campaniello vicino.
 money.trade|Scambio tra giocatori|Player trade|Scagno fra jucature
 money.scooter|Recupero motorino|Scooter recovery|Recupero motorino
 money.cooperative|Compenso cooperativo|Cooperative reward|Pava d’ ’a fatica ’nzieme

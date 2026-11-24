@@ -31,7 +31,7 @@ public class Ciabatta extends ThrowableItemProjectile {
 		if (this.level() instanceof ServerLevel level) {
 			e.hurtServer(level, this.damageSources().thrown(this, this.getOwner()), 3f);
 			if (e instanceof LivingEntity le) le.knockback(1.2, this.getX() - e.getX(), this.getZ() - e.getZ(), this.damageSources().thrown(this, this.getOwner()), 3f);
-			level.playSound(null, e.getX(), e.getY(), e.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.2f, 1.4f);
+			CityEffects.sound(level,null, e.getX(), e.getY(), e.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.2f, 1.4f);
 		}
 	}
 

@@ -910,7 +910,7 @@ public final class FootballPractice {
                 carrier.protectedUntil = ticks + 38;
                 carrier.nextFoul = ticks + 100;
                 say(p, "foul");
-                p.level().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.NOTE_BLOCK_FLUTE.value(),
+                CityEffects.sound(p.level(),null, p.blockPosition(), net.minecraft.sounds.SoundEvents.NOTE_BLOCK_FLUTE.value(),
                         net.minecraft.sounds.SoundSource.PLAYERS, .8f, 1.65f);
             }
             double movingForward = carrier.movement.dot(delta.normalize());
@@ -964,9 +964,9 @@ public final class FootballPractice {
 
         private void contactSound(net.minecraft.world.entity.LivingEntity actor, boolean pass) {
             if (actor == null || !(actor.level() instanceof ServerLevel city)) return;
-            city.sendParticles(net.minecraft.core.particles.ParticleTypes.POOF, ball.x, ball.y + .12, ball.z,
+            CityEffects.particles(city,net.minecraft.core.particles.ParticleTypes.POOF, ball.x, ball.y + .12, ball.z,
                     pass ? 1 : 3, .09, .03, .09, .015);
-            city.playSound(null, actor.blockPosition(), net.minecraft.sounds.SoundEvents.WOOL_HIT,
+            CityEffects.sound(city,null, actor.blockPosition(), net.minecraft.sounds.SoundEvents.WOOL_HIT,
                     net.minecraft.sounds.SoundSource.PLAYERS, pass ? .42f : .75f, pass ? 1.15f : .78f);
         }
 

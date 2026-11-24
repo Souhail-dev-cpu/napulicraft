@@ -47,8 +47,8 @@ public final class CalziniSporchiItem extends Item {
             player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, NAUSEA_TICKS, 0));
             player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_TICKS, 0));
             player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
-            world.playSound(null, player.blockPosition(), SoundEvents.WARDEN_SNIFF, SoundSource.PLAYERS, 0.7f, 1.7f);
-            world.sendParticles(ParticleTypes.SNEEZE, player.getX(), player.getEyeY() - 0.2, player.getZ(),
+            CityEffects.sound(world,null, player.blockPosition(), SoundEvents.WARDEN_SNIFF, SoundSource.PLAYERS, 0.7f, 1.7f);
+            CityEffects.particles(world,ParticleTypes.SNEEZE, player.getX(), player.getEyeY() - 0.2, player.getZ(),
                     7, 0.18, 0.12, 0.18, 0.01);
             player.sendOverlayMessage(Component.translatable("napuli.socks.sniff"));
         }

@@ -98,8 +98,8 @@ public class MunacielloGigante extends Monster {
 			if (gazeTicks >= 12 || idleTicks > 20 * 40 || distanceToSqr(prey) < 9 * 9) {
 				windup = 18;
 				prey.sendOverlayMessage(Component.translatable("napuli.horror.giant_windup"));
-				level.playSound(null, blockPosition(), net.minecraft.sounds.SoundEvents.WARDEN_HEARTBEAT, SoundSource.HOSTILE, 2.0f, 0.9f);
-				level.sendParticles(ParticleTypes.LARGE_SMOKE, getX(), getY() + 3, getZ(), 30, 0.6, 1.8, 0.6, 0.02);
+				CityEffects.sound(level,null, blockPosition(), net.minecraft.sounds.SoundEvents.WARDEN_HEARTBEAT, SoundSource.HOSTILE, 2.0f, 0.9f);
+				CityEffects.particles(level,ParticleTypes.LARGE_SMOKE, getX(), getY() + 3, getZ(), 30, 0.6, 1.8, 0.6, 0.02);
 			}
 			return;
 		}
@@ -112,7 +112,7 @@ public class MunacielloGigante extends Monster {
 		if (visible && !lit && chaseTicks % 55 == 0 && distanceToSqr(prey) < 28 * 28)
 			prey.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 34, 0, false, false));
 		if (chaseTicks % 13 == 0)
-			level.sendParticles(ParticleTypes.ASH, getX(), getY() + 0.3, getZ(), 4, 0.65, 0.2, 0.65, 0.01);
+			CityEffects.particles(level,ParticleTypes.ASH, getX(), getY() + 0.3, getZ(), 4, 0.65, 0.2, 0.65, 0.01);
 		if (chaseTicks >= 20 * 32 || hiddenTicks >= 100 || brightTicks >= 60 || distanceToSqr(prey) > 110 * 110) {
 			prey.sendOverlayMessage(Component.translatable("napuli.horror.giant_lost"));
 			leave(level);
@@ -136,7 +136,7 @@ public class MunacielloGigante extends Monster {
 	}
 
 	private void leave(ServerLevel level) {
-		level.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + 3, this.getZ(), 80, 1, 3, 1, 0.02);
+		CityEffects.particles(level,ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + 3, this.getZ(), 80, 1, 3, 1, 0.02);
 		this.discard();
 	}
 

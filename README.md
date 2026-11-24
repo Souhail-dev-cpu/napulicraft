@@ -456,6 +456,7 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
 | Campo | Significato |
 | --- | --- |
 | `population` | Popolazione iniziale del nucleo cittadino |
+| `startingCash` | Saldo dei nuovi portafogli: 16 € per impostazione predefinita, regolabile fra 8 e 1000; i saldi già salvati sono conservati |
 | `maximumPopulation` | Tetto complessivo dei cittadini, regolabile fino a 512 |
 | `districtPopulation` | Limite delle aggiunte dei quartieri; i nuclei iniziali completi richiedono 76 posti |
 | `needsIntervalTicks` | Intervallo di aggiornamento dei bisogni, normalmente 600 tick |
@@ -501,7 +502,7 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 `./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, preferenze e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
 
-`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **142 test**, comprendendo ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile e accessi costieri alla metro. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La verifica del codice del 24 novembre 2026 ha superato **154 test**, comprendendo ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 

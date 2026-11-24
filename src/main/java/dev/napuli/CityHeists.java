@@ -82,7 +82,7 @@ final class CityHeists {
         active.put(target.id(), new Attempt(player.getUUID(), target, now + target.seconds() * 20L));
         if (!target.bank()) Carabinieri.crime(player, Carabinieri.Crime.THEFT);
         Music.play(player, Music.Situation.FURTO);
-        city.playSound(null, target.position(), Napuli.URLO, SoundSource.NEUTRAL, .6f, target.bank() ? .85f : 1.12f);
+        CityEffects.sound(city,null, target.position(), Napuli.URLO, SoundSource.NEUTRAL, .6f, target.bank() ? .85f : 1.12f);
         notice(player, "started", target.seconds());
         return 1;
     }

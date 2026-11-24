@@ -149,7 +149,7 @@ final class FootballGym {
             return;
         }
         if (now % 10 == 0) {
-            player.level().sendParticles(player, ParticleTypes.HAPPY_VILLAGER, false, false,
+            CityEffects.particles(player.level(),player, ParticleTypes.HAPPY_VILLAGER, false, false,
                     target.getX() + .5, target.getY() + .45, target.getZ() + .5, 5, .16, .16, .16, .01);
             instruction(player, session.drill, session.step);
         }
@@ -163,7 +163,7 @@ final class FootballGym {
         int delay = s.drill == Drill.STRENGTH ? 12 : s.drill == Drill.ACCURACY ? 6 : 3;
         int next = s.step + 1;
         if (now - s.last < delay || next == s.drill.checkpoints.size() && now - s.started < s.drill.minimumTicks) return;
-        p.level().playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, .45f, 1.4f);
+        CityEffects.sound(p.level(),null, p.blockPosition(), SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, .45f, 1.4f);
         if (next < s.drill.checkpoints.size()) {
             p.setAttached(ATTACHMENTS.session, new Session(s.drill, next, s.started, now, p.position()));
             instruction(p, s.drill, next);

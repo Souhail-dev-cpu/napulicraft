@@ -46,7 +46,7 @@ final class CityArrivals {
         var h=house(id);if(h==null||p.level().dimension()!=NapoliMap.LEVEL||p.isSpectator()||!p.isAlive()||Carabinieri.isJailed(p)||p.blockPosition().distSqr(h.entrance())>36)return 0;
         var city=p.level();var times=BELLS.computeIfAbsent(city,k->new HashMap<>());var key=p.getUUID()+"/"+id;long now=city.getGameTime();
         if(now-times.getOrDefault(key,Long.MIN_VALUE/2)<200)return 0;times.put(key,now);
-        city.playSound(null,bell(h),SoundEvents.NOTE_BLOCK_BELL.value(),SoundSource.BLOCKS,.65f,1.3f);
+        CityEffects.sound(city,null,bell(h),SoundEvents.NOTE_BLOCK_BELL.value(),SoundSource.BLOCKS,.65f,1.3f);
         boolean answered=false;
         for(var host:city.players())if(HouseGuests.host(city,id,host.getUUID())){
             host.sendSystemMessage(Component.literal(p.getName().getString()+" ha suonato a "+h.address()+". [Invita] ")

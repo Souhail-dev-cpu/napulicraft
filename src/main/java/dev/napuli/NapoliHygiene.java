@@ -87,8 +87,8 @@ final class NapoliHygiene {
 
     static void wash(ServerPlayer player, BlockPos pos, int result) {
         player.setAttached(CLEAN, result);
-        player.level().playSound(null, pos, SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, .45f, .9f);
-        player.level().sendParticles(ParticleTypes.SPLASH, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, 14, .2, .2, .2, .025);
+        CityEffects.sound(player.level(),null, pos, SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, .45f, .9f);
+        CityEffects.particles(player.level(),ParticleTypes.SPLASH, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, 14, .2, .2, .2, .025);
         player.sendOverlayMessage(Component.translatable("napuli.hygiene.washed", result));
     }
 }

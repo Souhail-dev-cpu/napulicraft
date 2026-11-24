@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.Blocks;
 
 final class CityPlayerImprovements {
     static void register(){
-        HomePermissions.register();CooperativeJobs.register();ScooterGarage.register();PlayerTrade.register();CityEffects.register();
+        WorkEconomy.register();HomePermissions.register();CooperativeJobs.register();ScooterGarage.register();PlayerTrade.register();CityEffects.register();
         CommandRegistrationCallback.EVENT.register((d,r,e)->{
             var root=Commands.literal("compagno");
             root.then(Commands.literal("scambi").executes(c->PlayerTrade.menu(c.getSource().getPlayerOrException())));

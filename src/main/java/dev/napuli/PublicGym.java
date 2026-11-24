@@ -136,8 +136,8 @@ public final class PublicGym {
 
     private static void rep(ServerPlayer p, Workout w, long now) {
         if (now - w.last < w.machine.ticks) return;
-        p.level().playSound(null, w.pos, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, .26f, 1.55f);
-        p.level().sendParticles(p, ParticleTypes.CLOUD, false, false,
+        CityEffects.sound(p.level(),null, w.pos, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, .26f, 1.55f);
+        CityEffects.particles(p.level(),p, ParticleTypes.CLOUD, false, false,
                 w.pos.getX()+.5, w.pos.getY()+.4, w.pos.getZ()+.5, 3, .17, .1, .17, .02);
         int reps = w.reps + 1;
         if (reps < w.machine.reps) {

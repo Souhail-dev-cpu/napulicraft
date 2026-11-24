@@ -106,7 +106,7 @@ public class Munaciello extends Monster {
 			if (isTamed()) { heal(4); return net.minecraft.world.InteractionResult.SUCCESS; }
 			if (!player.getUUID().equals(feeder)) { feeder = player.getUUID(); treats = 0; }
 			treats++;
-			serverPlayer.level().sendParticles(ParticleTypes.HEART, getX(), getY() + 1.2, getZ(), 5, .3, .2, .3, .02);
+			CityEffects.particles(serverPlayer.level(),ParticleTypes.HEART, getX(), getY() + 1.2, getZ(), 5, .3, .2, .3, .02);
 			NapoliNotice.show(serverPlayer, Component.translatable("napuli.munaciello.sweet", treats));
 			if (treats >= 3) {
 				owner = player.getUUID(); entityData.set(TAMED, true); setPersistenceRequired();
@@ -137,7 +137,7 @@ public class Munaciello extends Monster {
 			var original = lootOwner == null ? null : level.getServer().getPlayerList().getPlayer(lootOwner);
 			if ((target == null || !target.isAlive() || target.level() != level) && original != null && original.level() == level) target = original;
 			if (fleeTicks % 7 == 0)
-				level.sendParticles(ParticleTypes.SOUL, getX(), getY() + 0.2, getZ(), 2, 0.13, 0.16, 0.13, 0.015);
+				CityEffects.particles(level,ParticleTypes.SOUL, getX(), getY() + 0.2, getZ(), 2, 0.13, 0.16, 0.13, 0.015);
 			var chest = original == null ? null : MunacielloFriendship.chest(this, original);
 			if (chest != null) {
 				var pos = chest.getBlockPos();
@@ -167,7 +167,7 @@ public class Munaciello extends Monster {
 		}
 		if (distanceToSqr(target) < 12 * 12 && stalk == 0) {
 			target.sendOverlayMessage(Component.translatable("napuli.horror.stalk"));
-			level.playSound(null, blockPosition(), net.minecraft.sounds.SoundEvents.SOUL_ESCAPE.value(), SoundSource.HOSTILE, 0.6f, 0.8f);
+			CityEffects.sound(level,null, blockPosition(), net.minecraft.sounds.SoundEvents.SOUL_ESCAPE.value(), SoundSource.HOSTILE, 0.6f, 0.8f);
 		}
 		if (distanceToSqr(target) < 12 * 12) stalk++;
 		else stalk = 0;
@@ -186,14 +186,14 @@ public class Munaciello extends Monster {
 		this.setItemInHand(InteractionHand.MAIN_HAND, stolen);
 		this.fleeTicks = 0;
 		this.getNavigation().stop();
-		level.playSound(null, this.getX(), this.getY(), this.getZ(), Napuli.RISATA, SoundSource.HOSTILE, 1.2f, 1.4f);
+		CityEffects.sound(level,null, this.getX(), this.getY(), this.getZ(), Napuli.RISATA, SoundSource.HOSTILE, 1.2f, 1.4f);
 		NapoliNotice.show(p, Component.translatable("napuli.munaciello.steal", stolen.getHoverName()));
 		if (p instanceof net.minecraft.server.level.ServerPlayer sp) Music.play(sp, Music.Situation.FURTO);
 	}
 
 	private void vanish(ServerLevel level, boolean withLoot) {
-		level.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + 0.7, this.getZ(), 25, 0.3, 0.5, 0.3, 0.02);
-		level.playSound(null, this.getX(), this.getY(), this.getZ(), Napuli.RISATA, SoundSource.HOSTILE, 1.0f, 0.9f);
+		CityEffects.particles(level,ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + 0.7, this.getZ(), 25, 0.3, 0.5, 0.3, 0.02);
+		CityEffects.sound(level,null, this.getX(), this.getY(), this.getZ(), Napuli.RISATA, SoundSource.HOSTILE, 1.0f, 0.9f);
 		if (withLoot) returnLoot(level);
 		this.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		this.discard();

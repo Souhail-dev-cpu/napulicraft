@@ -53,6 +53,39 @@ final class FootballFacilities {
         staff(city, COACH, TRAINER_TAG, NapoliResident.Role.FOOTBALL_COACH, "napuli.football.trainer");
     }
 
+    static void upgradeGym(ServerLevel city) {
+        var blue = block("blue_concrete");
+        var gold = block("yellow_concrete");
+        for (int z = 19; z <= 35; z++) {
+            drillBlock(city, new BlockPos(353, 63, z), blue);
+            drillBlock(city, new BlockPos(355, 63, z), blue);
+        }
+        for (int z : new int[]{19, 23, 26, 28, 35}) drillBlock(city, new BlockPos(354, 63, z), Blocks.CALCITE);
+        for (var pos : List.of(new BlockPos(353, 63, 22), new BlockPos(356, 63, 26),
+                new BlockPos(353, 63, 30), new BlockPos(356, 63, 34)))
+            drillBlock(city, pos, gold);
+        drillBlock(city, new BlockPos(355, 63, 37), Blocks.CALCITE);
+        for (int x : new int[]{353, 355, 357}) {
+            drillBlock(city, new BlockPos(x, 64, 40), Blocks.POLISHED_ANDESITE);
+            drillBlock(city, new BlockPos(x, 65, 40), x == 355 ? Blocks.POLISHED_ANDESITE : Blocks.TARGET);
+        }
+        drillBlock(city, new BlockPos(355, 66, 40), Blocks.TARGET);
+        drillBlock(city, new BlockPos(351, 64, 8), Blocks.SMOOTH_STONE_SLAB);
+        drillBlock(city, new BlockPos(350, 64, 8), Blocks.ANVIL);
+        drillBlock(city, new BlockPos(352, 64, 8), Blocks.ANVIL);
+    }
+
+    static void upgradePublicGym(ServerLevel city) {
+        for (var machine : PublicGym.Machine.values()) drillBlock(city, machine.station, machine.block);
+    }
+
+    private static void drillBlock(ServerLevel city, BlockPos pos, Block block) {
+        var old = city.getBlockState(pos);
+        if (CityProperty.playerPlaced(city, pos) || city.getBlockEntity(pos) != null) return;
+        if (old.isAir() || old.is(Blocks.SAND) || old.is(Blocks.CALCITE) || old.is(Blocks.SMOOTH_STONE_SLAB)
+                || old.is(Blocks.POLISHED_ANDESITE) || old.is(block("red_terracotta"))) put(city, pos, block);
+    }
+
     private static void pavilion(ServerLevel city, int x1, int z1, int x2, int z2, int roof,
                                  int door1, int door2) {
         fill(city, x1, 63, z1, x2, 63, z2, Blocks.SMOOTH_STONE);

@@ -65,7 +65,7 @@ final class HudClient {
 	private static void draw(GuiGraphicsExtractor g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		Hud.State s = state;
-		if (hidden || s == null || mc.player == null) return;
+		if (hidden || s == null || mc.player == null || mc.gui.screen() instanceof FootballMovesScreen) return;
 		drawKitchen(g, mc.font, s);
 		if (!s.inCity()) return;
 		Font f = mc.font;

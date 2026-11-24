@@ -41,6 +41,7 @@ final class NapoliNoticeToast implements Toast {
     }
 
     @Override public void extractRenderState(GuiGraphicsExtractor g, Font font, long elapsed) {
+        if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof FootballMovesScreen) return;
         g.fill(0, 1, WIDTH - 3, height() - 2, 0xf414222d);
         g.fill(0, 1, 2, height() - 2, 0xff77d1ef);
         g.text(font, "Napulicraft", 10, 7, 0xff9cdef4, false);

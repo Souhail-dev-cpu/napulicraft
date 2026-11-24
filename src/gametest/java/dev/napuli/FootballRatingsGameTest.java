@@ -54,6 +54,18 @@ public final class FootballRatingsGameTest {
             prepareInterception(game, seat);
             h.assertTrue(FootballPractice.defending(player) == 99 && game.tryInterception(player) == 1 && game.owner == slot,
                     "99 defense wins possession in the same interception");
+            var choices = Map.of(FootballAction.Move.ROULETTE, 20, FootballAction.Move.FEINT, 10, FootballAction.Move.SIDE_STEP, 14);
+            for (var entry : choices.entrySet()) {
+                seat.protectedUntil = 0;
+                seat.stamina = 100;
+                player.setDeltaMovement(Vec3.ZERO);
+                h.assertTrue(game.skill(player, entry.getKey()) == 1 && seat.stamina == 100 - entry.getValue(),
+                        "Each skill works through the match and spends its own stamina: " + entry.getKey());
+                h.assertTrue(game.owner == slot && seat.dribbleEnds - seat.dribbleStarted == entry.getKey().ticks
+                                && player.getDeltaMovement().horizontalDistanceSqr() > .06,
+                        "The skill moves the carrier and keeps control for the animation interval");
+                h.assertTrue(game.skill(player, entry.getKey()) == 0, "A skill cannot be stacked during the same animation");
+            }
         } finally {
             FootballPractice.updateMovement(player, null);
             game.removeActors();

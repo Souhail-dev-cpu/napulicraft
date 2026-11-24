@@ -147,6 +147,7 @@ public class Napuli implements ModInitializer {
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
 					NapoliKitchen.ITEMS.values().forEach(out::accept);
 					out.accept(NapoliFurniture.WORKTOP);
+					for (var machine : PublicGym.Machine.values()) out.accept(machine.block);
 					out.accept(NapoliFurniture.SINK);
 					out.accept(NapoliFurniture.LAMP);
 					out.accept(NapoliFurniture.COFFEE_TABLE);
@@ -246,6 +247,7 @@ public class Napuli implements ModInitializer {
 		NapoliEmployment.register();
 		NapoliShower.register();
 		NapoliFurniture.register();
+		PublicGym.register();
 		NapoliHygiene.register();
 		CityLivingHomes.register();
 		CityEvents.register();

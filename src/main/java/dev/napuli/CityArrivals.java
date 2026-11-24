@@ -78,7 +78,7 @@ final class CityArrivals {
             CityNeighborhood.say(city,npc,"La casa è piena. Ci vediamo al bar?",16);
         }
         npc.setActivity(wait.cafeUntil()>0?NapoliHouseholds.Activity.SOCIAL:NapoliHouseholds.Activity.WAIT);
-        CityDomestic.move(npc,wait.cafeUntil()>0?CityNeighborhood.cafe(home.entrance()):home.entrance().south());return true;
+        CityDomestic.move(npc,wait.cafeUntil()>0?CityNeighborhood.cafe(home.entrance()):home.approach(1));return true;
     }
     static void register(){
         CommandRegistrationCallback.EVENT.register((d,a,e)->d.register(Commands.literal("casa")

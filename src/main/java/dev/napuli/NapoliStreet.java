@@ -371,6 +371,8 @@ public final class NapoliStreet {
                 return 0;
             }
             credit(player, -price);
+            WorkEconomy.revenue(player.level(),Math.max(1,price/4));
+            if(offer.stack().has(net.minecraft.core.component.DataComponents.FOOD))CityOnboarding.event(player,CityOnboarding.MEAL);
             NeighbourMemory.remember(player, session.npc(), 2);
             player.addItem(offer.stack());
             if (!offer.stack().isEmpty()) player.spawnAtLocation(player.level(), offer.stack());

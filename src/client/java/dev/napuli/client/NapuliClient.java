@@ -38,6 +38,8 @@ public class NapuliClient implements ClientModInitializer {
 		NapoliNoticeToast.register();
 		NpcSpeechBubbles.register();
 		SpeechBubbleTest.register();
+        dev.napuli.RealMultiplayerClient.register();
+        dev.napuli.WorkCareerClientTest.register();
 		FootballScreen.register();
 		FootballMenuScreen.register();
 		FootballControlsClient.register();

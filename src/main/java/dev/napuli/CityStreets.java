@@ -68,6 +68,11 @@ final class CityStreets {
         int result=low<=high?Math.clamp(NapoliExpansion.terrain(x,z),low,high):(low+high)/2;
         if(HEIGHTS.size()>=65536)HEIGHTS.clear();HEIGHTS.put(key,result);return result;
     }
+    static int walkingHeight(int x,int z){
+        for(var p:NapoliAtlas.PLACES)if(p.kind()==NapoliAtlas.Kind.PIER){int dx=Math.abs(x-p.x()),start=p.z()-p.radius();if(dx<=5&&z>=start&&z<=p.z()+p.radius())return 65;if(dx<=2&&z==start-2)return 64;if(dx<=2&&z==start-1)return 65;}
+        if(NapoliExpansion.water(x,z)&&!landmark(x,z)&&(NapoliExpansion.nearRoad(x,z,5)||Math.abs(z-NapoliExpansion.coast(x))<5))return 65;
+        return NapoliExpansion.height(x,z);
+    }
     static BlockState paving(int x,int z){
         BlockState flat=(NapoliExpansion.nearRoad(x,z,5)?Blocks.POLISHED_DEEPSLATE:Blocks.SMOOTH_STONE).defaultBlockState();
         int h=NapoliExpansion.height(x,z),best=h;Direction down=null;

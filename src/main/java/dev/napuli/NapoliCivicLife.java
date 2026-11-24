@@ -375,6 +375,7 @@ final class NapoliCivicLife {
     private static void materializeNearby(ServerLevel city) {
         Census before = census(city);
         var updated = new ArrayList<>(before.people());
+        var arrivals = new java.util.HashSet<BlockPos>();
         boolean changed = false;
         for (int i = 0; i < updated.size(); i++) {
             Citizen c = updated.get(i);
@@ -382,8 +383,9 @@ final class NapoliCivicLife {
             if(CityNetwork.inTransit(city,c.id()))continue;
             BlockPos desired = CitySimulation.location(city,c);
             var targetHome=CityLivingHomes.all().stream().filter(h->h.contains(desired)).findFirst().orElse(null);
-            BlockPos spawn = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.entrance().south():CityJourneys.spawn(city,desired);
-            if (!NapoliResidentHomes.walkable(city, spawn)
+            BlockPos approach = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.approach(1):desired;
+            BlockPos spawn = CityJourneys.spawn(city,approach,arrivals);
+            if (spawn==null||!NapoliResidentHomes.walkable(city, spawn)
                     || !HousingCapacity.canEnter(city,spawn,c.id())
                     || city.players().stream().noneMatch(p -> spawn.distToCenterSqr(p.position()) < 64 * 64)) continue;
             if (city.getEntity(c.id()) == null) {
@@ -393,6 +395,7 @@ final class NapoliCivicLife {
                 npc.setCustomName(Component.literal(c.name()));
                 npc.setCivicAge(c.age(before.day()));
                 if (!city.addFreshEntity(npc)) continue;
+                arrivals.add(spawn);
             }
             updated.set(i, c.materialized());
             changed = true;

@@ -17,6 +17,7 @@ final class NapoliMergellina {
         String address() { return name + " · " + civic(); }
         int ground(){return id.startsWith("atlas_")?DistrictLife.floor(this):64;}
         BlockPos entrance() { return new BlockPos(x + width / 2, ground(), z + depth); }
+        BlockPos approach(int distance) { var at=entrance().south(distance);return id.startsWith("atlas_")?new BlockPos(at.getX(),CityStreets.walkingHeight(at.getX(),at.getZ())+1,at.getZ()):at; }
         BlockPos sign() { return entrance().east(2); }
         BlockPos inside() { return new BlockPos(x + 5, ground(), z + 8); }
         boolean contains(BlockPos p) {

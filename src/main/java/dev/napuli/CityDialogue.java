@@ -43,7 +43,7 @@ final class CityDialogue {
         }
         var goal=CityPersonalGoals.goal(city,c.id());if(goal!=null&&!goal.complete()&&!goal.helper().isEmpty())return CityPersonalGoals.description(goal);
         var work=CityOccupations.description(city,c.id());var entity=city.getEntity(c.id());if(entity instanceof NapoliResident npc&&npc.activity()==NapoliHouseholds.Activity.WORK&&!work.isEmpty())return work;
-        return CityHabits.reason(city,c);
+        return CityHabits.reason(city,c)+" "+CityCharacter.describe(city,c);
     }
     static int ask(ServerPlayer p,UUID id,String topic,UUID subject){
         var citizen=CitySocial.nearby(p,id);if(citizen==null||!(p.level().getEntity(id) instanceof NapoliResident npc)||!npc.hasLineOfSight(p))return 0;

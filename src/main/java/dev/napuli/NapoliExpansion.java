@@ -87,6 +87,8 @@ public final class NapoliExpansion {
         CityStreets.fit(city,chunk);
         upgradeArchitecture(city, chunk);
         upgradeInteriors(city, chunk);
+        WorkResources.fit(city, chunk);
+        DistrictCharacter.fit(city, chunk);
         return true;
     }
     static boolean upgradeArchitecture(ServerLevel city, LevelChunk chunk) {
@@ -203,6 +205,8 @@ public final class NapoliExpansion {
                 upgradeInteriors(city,chunk);
                 DistrictLife.fit(city,chunk);
                 CityRailway.fit(city,chunk);
+                WorkResources.fit(city,chunk);
+                DistrictCharacter.fit(city,chunk);
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server->PENDING.clear());

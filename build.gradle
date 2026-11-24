@@ -359,3 +359,97 @@ tasks.named('runMotorinotest') {
 		}
 	}
 }
+
+// Isolated graphical multiplayer verification and exhaustive physical access audit.
+def realMpTicks = providers.gradleProperty('realMpTicks').getOrElse('12000')
+if (!(realMpTicks ==~ /[0-9]+/)) throw new GradleException('Invalid realMpTicks')
+loom.runs {
+    realMultiplayerServer {
+        server()
+        source sourceSets.gametest
+        runDir '.gradle/real-multiplayer/server'
+        vmArg '-Dnapuli.realmp=true'
+        vmArg '-Dnapuli.performance=true'
+        vmArg "-Dnapuli.realmp.ticks=${realMpTicks}"
+        vmArg '-Xmx3G'
+    }
+    realMultiplayerA {
+        client()
+        runDir '.gradle/real-multiplayer/client-a'
+        programArgs '--username', 'NapuliQA_A', '--width', '854', '--height', '480'
+        vmArg '-Dnapuli.realmp=true'
+        vmArg '-Dnapuli.performance=true'
+        vmArg '-Xmx1536M'
+    }
+    realMultiplayerB {
+        client()
+        runDir '.gradle/real-multiplayer/client-b'
+        programArgs '--username', 'NapuliQA_B', '--width', '854', '--height', '480'
+        vmArg '-Dnapuli.realmp=true'
+        vmArg '-Dnapuli.performance=true'
+        vmArg '-Xmx1536M'
+    }
+    cityAudit {
+        server()
+        source sourceSets.gametest
+        runDir '.gradle/city-audit'
+        vmArg '-Dnapuli.accessaudit=true'
+        vmArg "-Dnapuli.audit.targets=${providers.gradleProperty('auditTargets').getOrElse('')}"
+        vmArg '-Dnapuli.performance=true'
+        vmArg '-Xmx3G'
+    }
+}
+def realVerificationDirectories = [(layout.projectDirectory.dir('.gradle/real-multiplayer/server').asFile):25575, (layout.projectDirectory.dir('.gradle/city-audit').asFile):25577]
+tasks.register('prepareRealMultiplayer') {
+    def directories = realVerificationDirectories
+    doLast {
+        directories.each { directory, port ->
+            directory.mkdirs()
+            new File(directory, 'eula.txt').text = 'eula=true\n'
+            new File(directory, 'server.properties').text = """server-ip=127.0.0.1
+server-port=${port}
+online-mode=false
+white-list=false
+enforce-whitelist=false
+enable-status=false
+view-distance=3
+simulation-distance=3
+spawn-protection=0
+pause-when-empty-seconds=0
+max-tick-time=-1
+level-name=verification-world
+level-type=minecraft:flat
+generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains"}
+"""
+        }
+    }
+}
+tasks.named('runRealMultiplayerServer') {
+    dependsOn 'prepareRealMultiplayer'
+    def log = layout.projectDirectory.file('.gradle/real-multiplayer/server/logs/latest.log')
+    doLast { if (!log.asFile.exists() || !log.asFile.text.contains('[REALMP] ALL PASSED')) throw new GradleException('Graphical multiplayer test did not finish') }
+}
+['A','B'].each { suffix ->
+    tasks.named("runRealMultiplayer${suffix}") {
+        def log = layout.projectDirectory.file(".gradle/real-multiplayer/client-${suffix.toLowerCase()}/logs/latest.log")
+        doLast { if (!log.asFile.exists() || !log.asFile.text.contains('[REALMPCLIENT] ALL PASSED')) throw new GradleException('Graphical client verification did not finish') }
+    }
+}
+tasks.named('runCityAudit') {
+    dependsOn 'prepareRealMultiplayer'
+    def log = layout.projectDirectory.file('.gradle/city-audit/logs/latest.log')
+    doLast { if (!log.asFile.exists() || !log.asFile.text.contains('[CITYAUDIT] ALL PASSED')) throw new GradleException('Physical city audit found blocked approaches; see accessibilita.csv') }
+}
+
+loom.runs {
+    workCareerTest {
+        client()
+        runDir 'run-autotest'
+        vmArg '-Dnapuli.worktest=true'
+        vmArg '-Dnapuli.performance=true'
+    }
+}
+tasks.named('runWorkCareerTest') {
+    def log = layout.projectDirectory.file('run-autotest/logs/latest.log')
+    doLast { if (!log.asFile.exists() || !log.asFile.text.contains('[WORKTEST] ALL PASSED')) throw new GradleException('The native work ecosystem test did not finish') }
+}

@@ -46,7 +46,7 @@ final class CityServices {
         }
         for(int i=0;i<4;i++){var desk=CityProfessions.Category.PUBLIC.site().offset(3+i*3,0,4);if(city.isEmptyBlock(desk)&&!CityProperty.playerPlaced(city,desk))city.setBlock(desk,Blocks.OAK_SLAB.defaultBlockState(),2);}
     }
-    static BlockPos waiting(NapoliCivicLife.Citizen c,String kind){return place(kind).offset(Math.floorMod(c.id().hashCode(),3)*2-2,0,2);}
+    static BlockPos waiting(NapoliCivicLife.Citizen c,String kind){if(kind.equals("school")){int desk=Math.floorMod(c.id().hashCode(),24);return place(kind).offset((desk%6)*2-5,0,(desk/6)*2-2);}return place(kind).offset(Math.floorMod(c.id().hashCode(),3)*2-2,0,2);}
     static boolean tick(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,NapoliHouseholds.Activity wanted){
         String kind=wanted==NapoliHouseholds.Activity.CARE?"doctor":wanted==NapoliHouseholds.Activity.SCHOOL&&c.age(NapoliBroadcast.day(city))<18?"school":"";if(kind.isEmpty())return false;
         var v=book(city,c,kind);if(v.state().equals("completed")&&kind.equals("doctor"))return false;var goal=waiting(c,kind);CityMovement.stand(npc);if(npc.isSleeping())npc.stopSleeping();

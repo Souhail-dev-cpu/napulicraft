@@ -78,18 +78,19 @@ final class CitySocial {
     }
     static void open(ServerPlayer p,NapoliCivicLife.Citizen c) {
         var b=meet(p.level(),c.id(),p.getUUID(),NapoliBroadcast.day(p.level()));
+        CityOnboarding.event(p,CityOnboarding.TALK);
         var buttons=new ArrayList<ActionButton>();
         buttons.add(button("Facciamo due chiacchiere","/parla "+c.id()+" stai"));
         buttons.add(button("Porta provviste (4 grano)","/vicino aiuta "+c.id()));
         if(b.grievances()>0)buttons.add(button("Chiedi scusa","/vicino scusa "+c.id()));
         if(CityResidentShop.merchant(c))buttons.add(button("Guarda la merce","/vicino bottega "+c.id()));
         if(CityEconomy.merchant(c))buttons.add(button("Bottega e consegne","/quartiere bottega "+c.id()));
-        String doing=CityDomestic.description(p.level(),c.id());
+        String doing=CityDomestic.description(p.level(),c.id())+"\n"+CityCharacter.describe(p.level(),c);
         String heard=CityReputation.tell(p,c.id());
         String football=CityLeague.fanLine(p);if(!football.isEmpty())heard+=(heard.isEmpty()?"":"\n")+football;
         var goal=CityPersonalGoals.goal(p.level(),c.id());CityPersonalGoals.addButtons(buttons,c,goal);
         p.openDialog(Holder.direct(new MultiActionDialog(new CommonDialogData(Component.literal(c.name()),Optional.empty(),true,false,DialogAction.CLOSE,
-                List.of(new PlainMessage(Component.literal(greeting(b,p.getName().getString())),270),
+                List.of(new PlainMessage(Component.literal(CityCharacter.tastes(c.id()).greeting()+" "+greeting(b,p.getName().getString())),270),
                         new PlainMessage(Component.literal("Fiducia: "+b.trust()+" · incontri in giorni diversi: "+b.meetings()+
                                 (doing.isEmpty()?"":"\n"+doing)+(goal==null?"":"\n"+CityPersonalGoals.description(goal))+(heard.isEmpty()?"":"\n"+heard)),270)),List.of()),buttons,Optional.empty(),1)));
     }

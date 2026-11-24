@@ -562,7 +562,7 @@
 	"napuli.family.eat": "Sta mangiando.",
 	"napuli.family.sleep": "È ora di dormire.",
 	"napuli.football.league_option": "Torneo dei quartieri",
-  "napuli.football.menu": "Centro sportivo dei quartieri",
+	"napuli.football.menu": "Centro sportivo dei quartieri",
 	"napuli.football.watch_option": "Guarda dalla tribuna",
 	"napuli.football.play_option": "Entra nel Napoli",
 	"napuli.football.away_option": "Entra negli Ospiti",
@@ -825,5 +825,16 @@
 	"napuli.family.fetch": "Prende gli ingredienti dal frigo",
 	"napuli.family.prepare": "Prepara il pasto",
 	"napuli.family.clean": "Lava i piatti",
-	"napuli.family.wait": "Aspetta che si liberi un posto"
+	"napuli.family.wait": "Aspetta che si liberi un posto",
+	"napuli.guide.talk": "Conosci un vicino: parla con un cittadino",
+	"napuli.guide.job": "Visita il centro per l’impiego e scegli un mestiere",
+	"napuli.guide.transit": "Raggiungi una fermata e prendi un mezzo pubblico",
+	"napuli.guide.meal": "Compra il pranzo in una bottega",
+	"napuli.work.resource_carpenter": "Raccogli tronchi dagli alberi; al banco trasformali in assi",
+	"napuli.work.resource_baker": "Raccogli tre grano; al banco prepara il pane",
+	"napuli.work.resource_merchant": "Raccogli il grano per il rifornimento",
+	"napuli.work.resource_gardener": "Ritira un alberello al vivaio presso il banco risorse",
+	"napuli.work.resource_fisher": "Pesca un merluzzo dal molo indicato",
+	"napuli.work.resource_porter": "Ritira il carico al deposito: tasto destro o /lavoro risorse",
+	"napuli.work.resource_courier": "Ritira il pacco al deposito: tasto destro o /lavoro risorse"
 }

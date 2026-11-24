@@ -27,8 +27,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.Vec3;
 
-final class FootballGym {
+public final class FootballGym {
     private static final int SESSION_TICKS = 1200;
+    private static final int XP_PER_POINT = 100;
     private static final BlockPos BENCH = new BlockPos(351, 64, 8);
     private static final BlockPos FIRING_LINE = new BlockPos(355, 64, 37);
     private static final List<BlockPos> TARGETS = List.of(new BlockPos(353, 65, 40),
@@ -68,22 +69,35 @@ final class FootballGym {
         final net.fabricmc.fabric.api.attachment.v1.AttachmentType<Map<String, Integer>> gains =
                 AttachmentRegistry.<Map<String, Integer>>builder()
                         .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT)).copyOnDeath().buildAndRegister(Napuli.id("gym_gains"));
-        final net.fabricmc.fabric.api.attachment.v1.AttachmentType<Map<String, Long>> days =
-                AttachmentRegistry.<Map<String, Long>>builder()
-                        .persistent(Codec.unboundedMap(Codec.STRING, Codec.LONG)).copyOnDeath().buildAndRegister(Napuli.id("gym_days"));
+        final net.fabricmc.fabric.api.attachment.v1.AttachmentType<Map<String, Integer>> experience =
+                AttachmentRegistry.<Map<String, Integer>>builder()
+                        .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT)).copyOnDeath().buildAndRegister(Napuli.id("gym_stat_xp"));
     }
 
     private FootballGym() {}
 
     private static BlockPos lane(int x, int z) { return new BlockPos(x, 64, z); }
 
-    static int preparation(ServerPlayer p, int legacy) {
-        return Math.min(10, legacy + p.getAttachedOrElse(ATTACHMENTS.gains, Map.of()).values()
-                .stream().mapToInt(Integer::intValue).sum());
+    static int bonus(ServerPlayer p, String rating) {
+        return p.getAttachedOrElse(ATTACHMENTS.gains, Map.of()).getOrDefault(rating, 0)
+                + totalXp(p, rating) / XP_PER_POINT;
     }
 
-    static int bonus(ServerPlayer p, String rating) {
-        return p.getAttachedOrElse(ATTACHMENTS.gains, Map.of()).getOrDefault(rating, 0);
+    public static int progressXp(ServerPlayer p, String rating) { return totalXp(p, rating) % XP_PER_POINT; }
+
+    private static int totalXp(ServerPlayer p, String rating) {
+        return p.getAttachedOrElse(ATTACHMENTS.experience, Map.of()).getOrDefault(rating, 0);
+    }
+
+    static int earnXp(ServerPlayer p, String rating) {
+        int before = FootballPractice.rating(p, rating);
+        if (before == 99) return 0;
+        int earned = Math.min(FootballPractice.primaryRating(p, rating) ? 40 : 25,
+                before == 98 ? XP_PER_POINT - progressXp(p, rating) : XP_PER_POINT);
+        var xp = new HashMap<>(p.getAttachedOrElse(ATTACHMENTS.experience, Map.of()));
+        xp.merge(rating, earned, Integer::sum);
+        p.setAttached(ATTACHMENTS.experience, Map.copyOf(xp));
+        return earned;
     }
 
     static void register() {
@@ -103,10 +117,11 @@ final class FootballGym {
     }
 
     static void menu(ServerPlayer player) {
-        long day = NapoliBroadcast.day(player.level());
         var buttons = java.util.Arrays.stream(Drill.values()).map(drill -> {
-            boolean earned = player.getAttachedOrElse(ATTACHMENTS.days, Map.of()).getOrDefault(drill.id, Long.MIN_VALUE) >= day;
-            var title = earned ? Component.translatable("napuli.gym.practice", drill.label()) : drill.label();
+            int rating = FootballPractice.rating(player, drill.rating);
+            var title = rating == 99
+                    ? Component.translatable("napuli.gym.at_cap", drill.label())
+                    : Component.translatable("napuli.gym.with_xp", drill.label(), progressXp(player, drill.rating));
             return new ActionButton(new CommonButtonData(title,
                     Optional.of(Component.translatable("napuli.gym." + drill.id + ".tip")), 142),
                     Optional.of(new StaticAction(new ClickEvent.RunCommand("/calcio esercizio " + drill.id))));
@@ -126,6 +141,7 @@ final class FootballGym {
                 java.util.Set.of(), drill == Drill.STRENGTH ? 180 : 0, 0, true);
         long now = player.level().getGameTime();
         player.setAttached(ATTACHMENTS.session, new Session(drill, 0, now, now, player.position()));
+        NapoliNotice.show(player, Component.translatable("napuli.gym." + drill.id + ".tip"));
         instruction(player, drill, 0);
         return 1;
     }
@@ -170,26 +186,21 @@ final class FootballGym {
             return;
         }
         clear(p);
-        long day = NapoliBroadcast.day(p.level());
-        var learned = p.getAttachedOrElse(ATTACHMENTS.days, Map.of());
         int before = FootballPractice.rating(p, s.drill.rating);
-        if (p.isCreative() || learned.getOrDefault(s.drill.id, Long.MIN_VALUE) >= day || before == 99) {
+        int earned = p.isCreative() ? 0 : earnXp(p, s.drill.rating);
+        int after = FootballPractice.rating(p, s.drill.rating);
+        if (earned == 0) {
             p.sendOverlayMessage(Component.translatable("napuli.gym.complete_practice"));
-            return;
+        } else if (after > before) {
+            p.sendOverlayMessage(Component.translatable("napuli.gym.level_up", s.drill.label(), after));
+        } else {
+            p.sendOverlayMessage(Component.translatable("napuli.gym.xp_earned", earned,
+                    progressXp(p, s.drill.rating), XP_PER_POINT));
         }
-        var gains = new HashMap<>(p.getAttachedOrElse(ATTACHMENTS.gains, Map.of()));
-        int increment = Math.min(99 - before, FootballPractice.primaryRating(p, s.drill.rating) ? 2 : 1);
-        gains.merge(s.drill.rating, increment, Integer::sum);
-        var days = new HashMap<>(learned);
-        days.put(s.drill.id, day);
-        p.setAttached(ATTACHMENTS.gains, Map.copyOf(gains));
-        p.setAttached(ATTACHMENTS.days, Map.copyOf(days));
-        p.sendOverlayMessage(Component.translatable("napuli.gym.complete", s.drill.label(), increment, before + increment));
     }
 
     private static void instruction(ServerPlayer player, Drill drill, int step) {
-        player.sendOverlayMessage(Component.translatable("napuli.gym.progress", drill.label(), step,
-                drill.checkpoints.size(), Component.translatable("napuli.gym." + drill.id + ".tip")));
+        player.sendOverlayMessage(Component.translatable("napuli.gym.progress", drill.label(), step, drill.checkpoints.size()));
     }
 
     private static boolean near(ServerPlayer player, BlockPos pos, double distance) {

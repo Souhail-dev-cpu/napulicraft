@@ -101,12 +101,15 @@ public final class RadioClient {
 
 		boolean scenePlaying = UserMusic.scenePlaying();
 		Motorino parade = scenePlaying ? null : near.values().stream()
-				.filter(bike -> bike.station() == Radio.PARADE && bike.distanceToSqr(mc.player) < 40 * 40)
+				.filter(bike -> bike.inParade() && bike.station() == Radio.PARADE && bike.distanceToSqr(mc.player) < 40 * 40)
 				.filter(bike -> { Tuned t = PLAYING.get(bike.getId()); return t == null || t.station != Radio.PARADE || !t.finished; })
 				.min(java.util.Comparator.comparingDouble(bike -> bike.distanceToSqr(mc.player))).orElse(null);
 		if (scenePlaying || parade != null) sounds.stop(null, SoundSource.MUSIC);
 		for (var entry : PLAYING.entrySet()) {
-			if (scenePlaying || (parade != null && entry.getKey() != parade.getId()) || !near.containsKey(entry.getKey()))
+			Tuned track = entry.getValue();
+            boolean paradeStopped = track.station == Radio.PARADE && (parade == null || entry.getKey() != parade.getId());
+            if (paradeStopped && track.sound != null) track.finished = true;
+            if (scenePlaying || paradeStopped || (parade != null && entry.getKey() != parade.getId()) || !near.containsKey(entry.getKey()))
 				stopTrack(mc, entry.getValue());
 		}
 		for (Motorino bike : near.values()) {

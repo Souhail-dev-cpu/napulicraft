@@ -62,7 +62,7 @@ final class NapoliRadar {
     private static void draw(GuiGraphicsExtractor g, float partialTick) {
         var mc = Minecraft.getInstance();
         if (!inNapoli(mc) || level != mc.level || mc.gui.screen() != null || mode == 2) return;
-        int radius = Math.clamp(Math.min(g.guiHeight() / 5 - 4, (g.guiWidth() / 2 - 104) / 2), 24, 52);
+        int radius = Math.clamp(Math.min(g.guiHeight() / 6 - 6, (g.guiWidth() / 2 - 108) / 2), 20, 39);
         int x = radius + 9, y = g.guiHeight() - radius - 12;
         double scale = mode == 0 ? 1.65 : 3.3;
         double worldX = mc.player.getX(), worldZ = mc.player.getZ();

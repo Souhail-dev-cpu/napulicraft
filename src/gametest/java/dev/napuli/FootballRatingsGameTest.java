@@ -74,6 +74,31 @@ public final class FootballRatingsGameTest {
         h.succeed();
     }
 
+    @GameTest public void roleAndTrainingXpRemainSpecificToTheCareer(GameTestHelper h) {
+        var player = h.makeMockServerPlayerInLevel();
+        try {
+            player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            h.assertTrue(FootballPractice.selectRole(player, "ATTACCANTE") && !FootballPractice.selectRole(player, "DIFENSORE"),
+                    "The first choice defines the career role");
+            int base = FootballPractice.shooting(player);
+            int pace = FootballPractice.pace(player);
+            h.assertTrue(FootballPractice.overall(player) == 55, "Overall is the rounded mean of the five ratings");
+            h.assertTrue(FootballGym.earnXp(player, "shooting") == 40 && FootballPractice.shooting(player) == base,
+                    "A completed primary drill awards XP before increasing the rating");
+            FootballGym.earnXp(player, "shooting");
+            FootballGym.earnXp(player, "shooting");
+            h.assertTrue(FootballPractice.shooting(player) == base + 1 && FootballGym.progressXp(player, "shooting") == 20
+                            && FootballPractice.pace(player) == pace,
+                    "Three primary sessions earn one point and carry 20 XP forward for that rating only");
+            player.setAttached(FootballPractice.ROLE_TRAINING, Map.of("ATTACCANTE", 100));
+            h.assertTrue(FootballPractice.overall(player) == 99 && FootballGym.earnXp(player, "shooting") == 0,
+                    "Individual ratings and overall stop at 99");
+        } finally {
+            h.getLevel().getServer().getPlayerList().remove(player);
+        }
+        h.succeed();
+    }
+
     private static void train(ServerPlayer player, String position, int sessions) {
         player.setAttached(FootballPractice.POSITION, position);
         player.setAttached(FootballPractice.ROLE_TRAINING, Map.of(position, sessions));

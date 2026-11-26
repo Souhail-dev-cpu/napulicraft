@@ -53,7 +53,7 @@ final class NapoliNoticeToast implements Toast {
         lastUpdateNanos = System.nanoTime();
         lastElapsed=elapsed;
         if (!CompanionOptions.current.notices) { visibility=Visibility.HIDE; return; }
-        if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof CompanionScreen || net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof FootballMovesScreen) {
+        if (menuOpen()) {
             changedAt=elapsed;
             return;
         }
@@ -62,11 +62,15 @@ final class NapoliNoticeToast implements Toast {
     }
 
     @Override public void extractRenderState(GuiGraphicsExtractor g, Font font, long elapsed) {
-        if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof CompanionScreen || net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof FootballMovesScreen) return;
+        if (menuOpen()) return;
         g.fill(0, 1, WIDTH - 3, height() - 2, 0xf414222d);
         g.fill(0, 1, 2, height() - 2, 0xff77d1ef);
         g.text(font, "Napulicraft" + (repeats > 1 ? " × " + repeats : ""), 10, 7, 0xff9cdef4, false);
         for (int i = 0; i < lines.size(); i++)
             g.text(font, lines.get(i), 10, 20 + i * 10, 0xfff5f2e9, false);
+    }
+    private static boolean menuOpen() {
+        var screen = net.minecraft.client.Minecraft.getInstance().gui.screen();
+        return screen instanceof NapoliScreen || screen instanceof RadioWheelScreen || screen instanceof FootballScreen;
     }
 }

@@ -17,6 +17,7 @@ import net.minecraft.world.level.levelgen.presets.WorldPresets;
 final class CompanionClientTest {
     private static boolean previousBob,previousLightning;
     private static double previousTilt,previousFov,previousScreen;
+    private static int previewScale;
     private static int titleTicks,ticks,phase,age,last=-1,totalTicks,clearOverlayTicks;
     private static volatile boolean done,failed,localeReady;
     static void register(){if(!Boolean.getBoolean("napuli.qoltest"))return;
@@ -72,7 +73,9 @@ final class CompanionClientTest {
                 else if(phase==27&&age>15){for(var label:new String[]{"Preset cittadino leggero","Riduci particelle","Riduci lampeggi","Riduci movimento","Riduci rumori"})check(option(mc,label),"Accessible setting is reachable by keyboard: "+label);check(CompanionOptions.current.lightPreset&&CompanionOptions.current.reducedMotion&&CompanionOptions.current.reducedFlashes&&CompanionOptions.current.reducedParticles&&CompanionOptions.current.quietAmbience,"All personal effect settings are enabled");check(!mc.options.bobView().get()&&mc.options.damageTiltStrength().get()==0&&mc.options.fovEffectScale().get()==0&&mc.options.hideLightningFlash().get()&&mc.options.screenEffectScale().get()==0,"Reduced motion and flashes update actual camera options");shot(mc,"qol-accessibilita");phase=28;}
                 else if(phase==28&&age==25){shot(mc,"qol-accessibilita");}
                 else if(phase==28&&age==30){server(mc,dev.napuli.CityConvenienceClientFixture::effects);}
-                else if(phase==28&&age>40&&dev.napuli.CityConvenienceClientFixture.effectsChecked){for(var label:new String[]{"Preset cittadino leggero","Riduci particelle","Riduci lampeggi","Riduci movimento","Riduci rumori"})check(option(mc,label),"Effect settings can be restored");check(mc.options.bobView().get()==previousBob&&mc.options.damageTiltStrength().get()==previousTilt&&mc.options.fovEffectScale().get()==previousFov&&mc.options.hideLightningFlash().get()==previousLightning&&mc.options.screenEffectScale().get()==previousScreen,"Disabling accessibility modes restores original camera preferences");Napuli.LOGGER.info("[QOLTEST] ALL PASSED: navigation, journal, housing quote, career, ledger, economy, cooperative and trade boards, scooter tracking, personal effects, camera restoration and three languages");done=true;}
+                else if(phase==28&&age>40&&dev.napuli.CityConvenienceClientFixture.effectsChecked){for(var label:new String[]{"Preset cittadino leggero","Riduci particelle","Riduci lampeggi","Riduci movimento","Riduci rumori"})check(option(mc,label),"Effect settings can be restored");check(mc.options.bobView().get()==previousBob&&mc.options.damageTiltStrength().get()==previousTilt&&mc.options.fovEffectScale().get()==previousFov&&mc.options.hideLightningFlash().get()==previousLightning&&mc.options.screenEffectScale().get()==previousScreen,"Disabling accessibility modes restores original camera preferences");InterfaceClientChecks.run(mc);InterfaceClientChecks.showPreview(mc,0);phase=29;}
+                else if(phase>=29&&phase<=33&&age>15){String[] names={"ui-lavoro","ui-musica","ui-importa","ui-calcio","ui-televisione"};shot(mc,names[phase-29]);if(phase<33)InterfaceClientChecks.showPreview(mc,phase-28);else{previewScale=mc.options.guiScale().get();mc.options.guiScale().set(3);mc.resizeGui();mc.getConnection().sendCommand("compagno");}phase++;}
+                else if(phase==34&&age>20&&mc.gui.screen() instanceof CompanionScreen){shot(mc,"ui-menu-compatto");mc.options.guiScale().set(previewScale);mc.resizeGui();Napuli.LOGGER.info("[QOLTEST] ALL PASSED: city flows, three languages, accessibility, four interface sizes, search, paging, music navigation and screen gallery");done=true;}
             }catch(Throwable e){failed=true;Napuli.LOGGER.error("[QOLTEST] FAILED",e);}
         });
     }
@@ -84,6 +87,6 @@ final class CompanionClientTest {
     private static boolean option(Minecraft mc,String text){for(int n=0;n<4;n++){if(press(mc,text))return true;press(mc,"→");}for(int n=0;n<4;n++)press(mc,"←");for(int n=0;n<4;n++){if(press(mc,text))return true;press(mc,"→");}return false;}
     private static void search(Minecraft mc,String text){descendants(mc.gui.screen()).filter(EditBox.class::isInstance).map(EditBox.class::cast).findFirst().orElseThrow().setValue(text);}
     private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
-    private static void shot(Minecraft mc,String name){Screenshot.grab(mc.gameDirectory,name+".png",mc.gameRenderer.mainRenderTarget(),1,m->{});}
+    private static void shot(Minecraft mc,String name){if(mc.gui.screen()!=null)InterfaceClientChecks.bounds(mc.gui.screen());Screenshot.grab(mc.gameDirectory,name+".png",mc.gameRenderer.mainRenderTarget(),1,m->{});}
     private CompanionClientTest(){}
 }

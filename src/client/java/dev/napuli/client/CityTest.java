@@ -343,6 +343,11 @@ final class CityTest {
     private static net.minecraft.core.BlockPos footballEntry;
     private static boolean footballPoseSeen, footballPickerUsed;
     private static int footballPickerOpened;
+    private static int footballBankBalance, waitingBankTicks;
+    private static long footballBankStarted;
+    private static volatile boolean bankCheckPending, bankCheckFinished;
+    private static int waitingTrainingTicks;
+    private static volatile boolean trainingCheckPending, trainingCheckFinished;
 
     private static void football(Minecraft mc, int step) {
         if (step >= 66 && step < 127 && !footballPickerUsed) {
@@ -353,7 +358,12 @@ final class CityTest {
                 AutoTest.shot(mc, "fuorigrotta-tiri-e-mosse");
                 var buttons = descendants(screen).filter(AbstractButton.class::isInstance)
                         .map(AbstractButton.class::cast).toList();
-                assertTrue(buttons.size() == 6, "The selector shows three shots and three skills");
+                assertTrue(buttons.stream().filter(button -> button.getMessage().getContents()
+                        instanceof net.minecraft.network.chat.contents.TranslatableContents text
+                        && text.getKey().startsWith("napuli.football.move.")).count() == 6,
+                        "The selector shows three shots and three skills");
+                assertTrue(buttons.stream().anyMatch(button -> button.getMessage().equals(dev.napuli.CityText.t("close"))),
+                        "The selector also offers an explicit close button");
                 var chip = Component.translatable("napuli.football.move.pallonetto").getString();
                 footballPickerUsed = buttons.stream().filter(button -> button.getMessage().getString().equals(chip))
                         .findFirst().map(button -> {
@@ -435,12 +445,41 @@ final class CityTest {
                 mc.player.connection.sendCommand("calcio esercizio sprint");
             }
             case 440 -> {
+                // Do not run until the exercise's teleport has reached the real client.
+                if (Math.abs(mc.player.getX() - 354.5) > .6 || Math.abs(mc.player.getZ() - 19.5) > .6
+                        || Math.abs(net.minecraft.util.Mth.wrapDegrees(mc.player.getYRot())) > 1) {
+                    tick--;
+                    if (++waitingTrainingTicks > 1200) {
+                        assertTrue(false, "sprint exercise timed out waiting for its starting position");
+                        mc.stop();
+                    }
+                    break;
+                }
+                waitingTrainingTicks = 0;
                 mc.options.keyUp.setDown(true);
                 mc.options.keySprint.setDown(true);
             }
             case 502 -> {
-                mc.options.keyUp.setDown(false);
-                mc.options.keySprint.setDown(false);
+                boolean running = mc.player.getZ() < 36;
+                mc.options.keyUp.setDown(running);
+                mc.options.keySprint.setDown(running);
+                if (running || !trainingCheckFinished) {
+                    tick--;
+                    if (++waitingTrainingTicks > 1200) {
+                        mc.options.keyUp.setDown(false);
+                        mc.options.keySprint.setDown(false);
+                        assertTrue(false, "sprint exercise timed out waiting for earned XP at " + mc.player.position());
+                        mc.stop();
+                        break;
+                    }
+                    if (!trainingCheckFinished && !trainingCheckPending) {
+                        trainingCheckPending = true;
+                        server(mc, p -> {
+                            try { trainingCheckFinished = dev.napuli.FootballGym.progressXp(p, "pace") == 25; }
+                            finally { trainingCheckPending = false; }
+                        });
+                    }
+                }
             }
             case 508 -> server(mc, p -> {
                 assertTrue(p.blockPosition().getZ() >= 34, "player can run through the training lane");
@@ -507,16 +546,43 @@ final class CityTest {
                     var city = p.level();
                     view(p, 381.5, 64, -9.5, 180, 0);
                     expectBlock(p, 381, 64, -12, Blocks.ENDER_CHEST);
+                    footballBankBalance = dev.napuli.NapoliStreet.cash(p);
+                    footballBankStarted = city.getGameTime();
                     p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "colpo");
+                    assertTrue(dev.napuli.NapoliStreet.cash(p) == footballBankBalance,
+                            "starting the bank heist does not pay before the countdown");
                     AutoTest.run(city.getServer(), "tick sprint 260");
                 });
             }
-            case 735 -> server(mc, p -> {
-                assertTrue(dev.napuli.NapoliStreet.cash(p) == 98 && dev.napuli.Carabinieri.isWanted(p),
-                        "bank heist pays once and triggers the Carabinieri");
-                p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "colpo");
-                assertTrue(dev.napuli.NapoliStreet.cash(p) == 98, "bank cooldown blocks immediate repeat payout");
-            });
+            case 735 -> {
+                if (bankCheckFinished) break;
+                // Client ticks keep running during a server sprint. Wait for the server's
+                // clock, and acknowledge the checks before later steps move the player away.
+                tick--;
+                if (++waitingBankTicks > 1200) {
+                    assertTrue(false, "bank heist verification timed out waiting for the server");
+                    mc.stop();
+                    break;
+                }
+                if (!bankCheckPending) {
+                    bankCheckPending = true;
+                    server(mc, p -> {
+                        try {
+                            long elapsed = p.level().getGameTime() - footballBankStarted;
+                            if (elapsed < 260) return;
+                            int expected = footballBankBalance + 90;
+                            int paid = dev.napuli.NapoliStreet.cash(p);
+                            assertTrue(paid == expected && dev.napuli.Carabinieri.isWanted(p),
+                                    "bank heist pays once and triggers the Carabinieri (before="
+                                            + footballBankBalance + ", after=" + paid + ", elapsed=" + elapsed + " ticks)");
+                            p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "colpo");
+                            assertTrue(dev.napuli.NapoliStreet.cash(p) == expected,
+                                    "bank cooldown blocks immediate repeat payout");
+                            bankCheckFinished = true;
+                        } finally { bankCheckPending = false; }
+                    });
+                }
+            }
             case 742 -> server(mc, p -> {
                 view(p, 354.5, 64, 9.5, -90, 0);
                 var bike = new net.minecraft.core.BlockPos(355, 64, 8);

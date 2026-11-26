@@ -528,3 +528,94 @@ money.trade|Scambio tra giocatori|Player trade|Scagno fra jucature
 money.scooter|Recupero motorino|Scooter recovery|Recupero motorino
 money.cooperative|Compenso cooperativo|Cooperative reward|Pava d’ ’a fatica ’nzieme
 wallet.full|Il ricavo supera il limite del portafoglio di %s €. Libera spazio prima di riscuotere.|The payment exceeds the wallet limit of €%s. Make room before collecting it.|’A pava supera ’o limite d’ ’o portafoglio ’e %s €. Fa’ spazio primma ’e riscuotere.
+screen.menu_help|Cosa vuoi fare oggi? Cerca un servizio o scegli una scheda.|What would you like to do? Search for a service or choose a card.|Che vuo' fà ogge? Cerca nu servizio o sceglie na scheda.
+screen.browse_help|Cerca nelle voci · Scorri con la rotella o Pag ↑ / Pag ↓|Search entries · Scroll with the wheel or Page Up / Page Down|Cerca dint' 'e voce · Scorre cu 'a rutella o Pag ↑ / Pag ↓
+screen.options_help|Preferenze personali · Le modifiche si salvano subito|Personal preferences · Changes are saved automatically|Preferenze toje · 'E cagnamiente se sarvano subbeto
+screen.clear_search|Cancella ricerca|Clear search|Leva 'a ricerca
+screen.previous|Pagina precedente (Pag ↑)|Previous page (Page Up)|Pagina 'e primma (Pag ↑)
+screen.next|Pagina successiva (Pag ↓)|Next page (Page Down)|Pagina appriesso (Pag ↓)
+screen.back|Indietro|Back|Arreto
+screen.pagination|%s / %s|%s / %s|%s / %s
+screen.no_entries|Non ci sono ancora voci. Puoi cercare una meta nell'atlante.|There are no entries yet. Find a destination in the atlas.|Nun ce stanno ancora voce. Cerca na meta dint' all'atlante.
+screen.open_atlas|Esplora l'atlante|Explore the atlas|Guarda l'atlante
+screen.work_help|Scegli un lavoro · Turno %s–%s|Choose a job · Shift %s–%s|Sceglie na fatica · Turno %s–%s
+screen.work_current|Il tuo lavoro attuale|Your current job|'A fatica toja
+screen.work_choose|Scegli questo lavoro|Choose this job|Sceglie sta fatica
+screen.work_pay|Paga: %s € all'ora|Pay: €%s per hour|Paga: %s € all'ora
+screen.work_empty|Al momento non ci sono offerte. Torna al collocamento più tardi.|No job offers are available. Visit the employment office later.|Mo nun ce stanno offerte. Torna ô collocamento cchiù tarde.
+screen.football_help|Gioca, guarda una partita o prepara il tuo calciatore|Play, watch a match or prepare your player|Joca, guarda na partita o prepara 'o jucatore tuo
+screen.football_role|Ruolo della carriera|Career position|Ruolo d' 'a carriera
+screen.moves_help|Scegli una mossa · Esc per tornare in campo|Choose a move · Esc to return to the pitch|Sceglie na mossa · Esc pe turnà 'ncampo
+screen.tv_help|Trasmissione fittizia · Esc per tornare al divano|Fictional broadcast · Esc to return to the sofa|Trasmissione 'e fantasia · Esc pe turnà ô divano
+screen.tv_news|Notizie dai quartieri: lavoro, famiglie ed eventi in città.|Neighborhood news: jobs, families and city events.|Nutizie d' 'e quartiere: fatica, famiglie e feste 'a città.
+screen.tv_no_match|Nessuna partita in diretta. Torna per il prossimo incontro.|No live match. Come back for the next game.|Nun ce sta na partita 'n diretta. Torna p' 'a prossima.
+settings.help.0|Mostra nome, denaro, ora e reputazione durante il gioco.|Show your name, money, time and reputation while playing.|Fa vedé nomme, solde, ora e reputazzione mentre juoche.
+settings.help.1|Mostra sazietà, calore e igiene del personaggio.|Show your character's fullness, heat and hygiene.|Fa vedé sazzietà, calore e pulizzia d' 'o personaggio.
+settings.help.2|Mostra l'attività seguita, la distanza e la direzione.|Show the tracked activity, distance and direction.|Fa vedé chello ca segue, distanza e direzzione.
+settings.help.3|Riduce le informazioni nell'HUD per lasciare più spazio al gioco.|Reduce HUD information to leave more room for the game.|Fa cchiù piccerillo 'o pannello pe lassà spazio ô juoco.
+settings.help.4|Cambia la dimensione del testo dei pannelli durante il gioco.|Change the size of in-game HUD text.|Cagna 'a misura d' 'e scritte mentre juoche.
+settings.help.5|Mostra o nasconde gli avvisi della città.|Show or hide city notifications.|Fa vedé o annasconne l'avvise d' 'a città.
+settings.help.6|Limita le particelle cittadine e accorcia la distanza delle nuvolette.|Limit city particles and reduce speech bubble distance.|Limita 'e particelle e avvicina 'e nuvolette d' 'e parole.
+settings.help.7|Riduce gli effetti di particelle prodotti dalla città.|Reduce particle effects produced by the city.|Fa meno particelle dint' 'a città.
+settings.help.8|Riduce i lampeggi e nasconde i lampi di Minecraft.|Reduce flashing effects and hide Minecraft lightning flashes.|Fa meno lampe e annasconne 'e lampi 'e Minecraft.
+settings.help.9|Riduce oscillazioni, scuotimenti e altri movimenti della telecamera.|Reduce view bobbing, shaking and other camera movement.|Fa muovere meno 'a telecamera.
+settings.help.10|Riduce i rumori ambientali cittadini.|Reduce city ambient sounds.|Fa sentì meno rummore d' 'a città.
+settings.help.11|Affianca un avviso scritto ai segnali sonori o visivi supportati.|Add a text notice to supported audio or visual cues.|Mette n'avviso scritto vicino ê suone e ê signale.
+music.title|La tua musica|Your music|'A musica toja
+music.subtitle|%s brani · Frecce per scegliere, titolo per ascoltare|%s tracks · Arrows to choose, title to preview|%s canzone · Frecce pe scegliere, titolo pe sentì
+music.folder|Apri cartella|Open folder|Arape cartella
+music.reload|Ricarica|Reload|Ricarica
+music.import|Importa link|Import link|Miette nu link
+music.loaded|Libreria aggiornata: %s brani|Library updated: %s tracks|Libreria aggiornata: %s canzone
+music.random|Casuale|Random|A caso
+music.missing|File mancante: %s|Missing file: %s|Manca 'o file: %s
+music.preview|Ascolta: %s|Preview: %s|Siente: %s
+music.preview_help|Ascolta 12 secondi di %s|Preview 12 seconds of %s|Siente 12 seconde 'e %s
+music.earlier|Inizia 5 secondi prima|Start 5 seconds earlier|Accumincia 5 seconde primma
+music.later|Inizia 5 secondi dopo|Start 5 seconds later|Accumincia 5 seconde appriesso
+music.previous|Brano precedente|Previous track|Canzone 'e primma
+music.next|Brano successivo|Next track|Canzone appriesso
+music.stop|Ferma|Stop|Ferma
+music.stopped|Ascolto interrotto|Preview stopped|Musica fermata
+music.saved|Scelta salvata|Choice saved|Scelta sarvata
+music.playing|In ascolto: %s · da %s|Playing: %s · from %s|Staje sentenno: %s · da %s
+music.folder_opened|Aggiungi file MP3, OGG o WAV e premi Ricarica.|Add MP3, OGG or WAV files, then select Reload.|Miette file MP3, OGG o WAV e priemme Ricarica.
+music.empty_title|Aggiungi il tuo primo brano|Add your first track|Miette 'a prima canzone toja
+music.empty_help|Apri la cartella, aggiungi file MP3, OGG o WAV e premi Ricarica. Le sottocartelle diventano stazioni radio. Puoi anche importare un link diretto a un file audio.|Open the folder, add MP3, OGG or WAV files and select Reload. Subfolders become radio stations. You can also import a direct audio file link.|Arape 'a cartella, miette file MP3, OGG o WAV e priemme Ricarica. 'E sottocartelle addeventano stazzione radio. Puoe pure mettere nu link diretto a nu file audio.
+music.autosave|Le scelte si salvano subito. Il titolo avvia un ascolto di 12 secondi.|Choices are saved automatically. Select a title for a 12-second preview.|'E scelte se sarvano subbeto. 'O titolo fa sentì 12 seconde.
+music.download_title|Importa un brano|Import a track|Miette na canzone
+music.download_subtitle|File MP3, OGG o WAV · Massimo 60 MB|MP3, OGG or WAV file · Up to 60 MB|File MP3, OGG o WAV · Massimo 60 MB
+music.link|Link diretto al file audio|Direct audio file link|Link diretto ô file audio
+music.download|Scarica brano|Download track|Scarica canzone
+music.download_help|Incolla un link al file audio. Usa musica che puoi utilizzare; i link di YouTube e Spotify non sono supportati.|Paste a link to an audio file. Use music you have permission to use; YouTube and Spotify links are not supported.|Miette nu link ô file audio. Usa musica ca puo' usà; 'e link 'e YouTube e Spotify nun funzionano.
+music.invalid_link|Link non valido. Inserisci un indirizzo http:// o https:// completo.|Invalid link. Enter a complete http:// or https:// address.|Link sbagliato. Miette n'indirizzo http:// o https:// completo.
+music.streaming_link|Serve un link diretto a un file MP3, OGG o WAV. Questo è un sito di streaming.|Use a direct MP3, OGG or WAV file link. This is a streaming site.|Ce vo' nu link diretto a nu file MP3, OGG o WAV. Chisto è nu sito 'e streaming.
+music.downloading|Download in corso… Puoi tornare alla tua musica.|Downloading… You can return to your music.|Sto scaricanno… Puoe turnà â musica toja.
+music.downloaded|Scaricato: %s (%s KB)|Downloaded: %s (%s KB)|Scaricato: %s (%s KB)
+music.download_failed|Download non riuscito: %s|Download failed: %s|Nun se pò scaricà: %s
+screen.tv_channel.SPORT|Sport · Partite della città|Sport · City matches|Sport · Partite d' 'a città
+screen.tv_channel.NEWS|Notizie dai quartieri|Neighborhood news|Nutizie d' 'e quartiere
+screen.tv_channel.WEATHER|Meteo di Napoli|Napoli weather|Tiempo 'e Napule
+screen.tv_back|Torna al divano|Back to the sofa|Torna ô divano
+radio.off|Radio spenta|Radio off|Radio stutata
+radio.choose|Scegli una stazione|Choose a station|Sceglie na stazzione
+radio.silence|Un po' di silenzio|A little silence|Nu poco 'e silenzio
+radio.station_info|%s · %s brani|%s · %s tracks|%s · %s canzone
+radio.controls|Frecce e Invio · Mouse e rilascio %s · Esc annulla|Arrows and Enter · Mouse and release %s · Esc cancels|Frecce e Invio · Mouse e lassa %s · Esc annulla
+music.server_status|Il server ha risposto con il codice %s|The server returned status %s|'O server ha risposto cu 'o codice %s
+music.audio_type|Il link non contiene un file audio MP3, OGG o WAV|The link does not contain an MP3, OGG or WAV file|'O link nun tene nu file audio MP3, OGG o WAV
+music.too_large|Il file supera il limite di 60 MB|The file exceeds the 60 MB limit|'O file passa 'o limite 'e 60 MB
+music.unsupported|Impossibile riprodurre questo formato audio|This audio format cannot be played|Nun se pò sentì stu formato audio
+music.situation.morte|Quando muori|When you die|Quanno muore
+music.situation.gigante|Arriva il Munaciello gigante|The giant Munaciello arrives|Arriva 'o Munaciello gigante
+music.situation.lite|Litigate e motorini|Arguments and scooters|Litigate e motorine
+music.situation.ospedale|Poca vita|Low health|Poca vita
+music.situation.furto|Furto del Munaciello|The Munaciello steals from you|'O Munaciello t'arrobba
+music.situation.vittoria|Vittoria|Victory|Vittoria
+music.situation.diamanti|Diamanti|Diamonds|Diamante
+music.situation.nether|Nether|Nether|Nether
+music.situation.amore|Amore|Love|Ammore
+music.situation.risveglio|Risveglio|Waking up|Buongiorno
+music.situation.notte|Notte|Night|Notte
+music.situation.radio|Radio in strada|Street radio|Radio pe' strada
+music.situation.urlo|Urlo del gigante (5 s)|Giant scream (5 s)|Urlo d' 'o gigante (5 s)

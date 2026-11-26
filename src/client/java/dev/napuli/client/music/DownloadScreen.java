@@ -1,6 +1,8 @@
 package dev.napuli.client.music;
 
 import dev.napuli.SongDownloadFiles;
+import static dev.napuli.CityText.t;
+import dev.napuli.client.NapoliScreen;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,6 +19,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -24,35 +27,44 @@ import net.minecraft.network.chat.Component;
  * Streaming sites (YouTube, Spotify...) are not supported: use music you have the right to use, e.g. free music from
  * Free Music Archive, Jamendo, Internet Archive, Pixabay Music, or your own files.
  */
-public final class DownloadScreen extends Screen {
+public final class DownloadScreen extends NapoliScreen {
 	private static final long MAX_BYTES = 60L * 1024 * 1024;
 	private static final List<String> STREAMING = List.of("youtube.", "youtu.be", "spotify.", "soundcloud.", "deezer.", "music.apple.",
 			"tidal.", "amazon.", "tiktok.");
 	private final Screen parent;
 	private EditBox url;
 	private Button go;
-	private volatile String status = "";
+	private volatile Component status = Component.empty();
 	private volatile int statusColor = 0xFFBBBBBB;
 	private volatile boolean busy;
 
 	DownloadScreen(Screen parent) {
-		super(Component.literal("Scarica canzone"));
+		super(t("music.download_title"));
 		this.parent = parent;
 	}
+	@Override public boolean isPauseScreen() { return true; }
 
 	@Override
 	protected void init() {
-		int w = Math.min(380, width - 40);
-		url = new EditBox(font, width / 2 - w / 2, height / 2 - 20, w, 20, Component.literal("Link"));
+		String entered = url == null ? "" : url.getValue();
+		layout(460, 236);
+		int w = panelWidth - 24;
+		url = new EditBox(font, left + 12, top + 96, w, 20, t("music.link"));
 		url.setMaxLength(2000);
+		url.setValue(entered);
 		url.setHint(Component.literal("https://.../canzone.mp3"));
 		addRenderableWidget(url);
 		setInitialFocus(url);
-		go = addRenderableWidget(Button.builder(Component.literal("⬇ Scarica"), b -> start()).bounds(width / 2 - 104, height / 2 + 10, 100, 20).build());
-		addRenderableWidget(Button.builder(Component.literal("Indietro"), b -> onClose()).bounds(width / 2 + 4, height / 2 + 10, 100, 20).build());
+		go = button(left + 12, bottom - 26, (w - 6) / 2, t("music.download"), this::start);
+		button(left + 18 + (w - 6) / 2, bottom - 26, (w - 6) / 2, t("screen.back"), this::onClose);
+		url.setResponder(value -> updateControls());
+		updateControls();
 	}
 
-	private void say(String s, int color) { status = s; statusColor = color; }
+	@Override protected Component subtitle() { return t("music.download_subtitle"); }
+	private void say(Component message, int color) { status = message; statusColor = color; }
+	private void updateControls() { go.active = !busy && !url.getValue().isBlank(); url.setEditable(!busy); }
+	@Override public void tick() { super.tick(); updateControls(); }
 
 	private void start() {
 		if (busy) return;
@@ -62,16 +74,17 @@ public final class DownloadScreen extends Screen {
 			uri = URI.create(link);
 			if (uri.getScheme() == null || !(uri.getScheme().equals("https") || uri.getScheme().equals("http")) || uri.getHost() == null) throw new IllegalArgumentException();
 		} catch (Exception e) {
-			say("Link nun valido: ce vo' https://...", 0xFFFF8A80);
+			say(t("music.invalid_link"), ERROR);
 			return;
 		}
 		String host = uri.getHost().toLowerCase(Locale.ROOT);
 		for (String s : STREAMING) if (host.contains(s)) {
-			say("Chisto è nu sito 'e streaming: serve nu link DIRETTO a nu file .mp3/.ogg/.wav", 0xFFFF8A80);
+			say(t("music.streaming_link"), ERROR);
 			return;
 		}
 		busy = true;
-		say("Sto scaricanno...", 0xFFFFD54F);
+		updateControls();
+		say(t("music.downloading"), GOLD);
 		Thread t = new Thread(() -> download(uri), "Napulicraft song download");
 		t.setDaemon(true);
 		t.start();
@@ -83,14 +96,14 @@ public final class DownloadScreen extends Screen {
 			HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(15)).build();
 			HttpRequest req = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(120)).header("User-Agent", "Napulicraft-Minecraft-mod").GET().build();
 			HttpResponse<InputStream> res = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
-			if (res.statusCode() / 100 != 2) throw new Exception("il server ha risposto " + res.statusCode());
+			if (res.statusCode() / 100 != 2) throw new Exception(t("music.server_status", res.statusCode()).getString());
 			String type = res.headers().firstValue("Content-Type").orElse("").toLowerCase(Locale.ROOT);
 			String name = fileName(res.uri(), res.headers().firstValue("Content-Disposition").orElse(""));
 			String ext = extension(name, type);
-			if (ext == null) throw new Exception("nun è nu file audio (.mp3/.ogg/.wav)");
+			if (ext == null) throw new Exception(t("music.audio_type").getString());
 			if (!name.toLowerCase(Locale.ROOT).endsWith(ext)) name = name + ext;
 			long len = res.headers().firstValueAsLong("Content-Length").orElse(-1);
-			if (len > MAX_BYTES) throw new Exception("file troppo gruosso (max 60 MB)");
+			if (len > MAX_BYTES) throw new Exception(t("music.too_large").getString());
 			File dir = UserMusic.folder();
 			tmp = File.createTempFile("napuli-dl", ext, dir);
 			long total = 0;
@@ -99,7 +112,7 @@ public final class DownloadScreen extends Screen {
 				int n;
 				while ((n = in.read(buf)) > 0) {
 					total += n;
-					if (total > MAX_BYTES) throw new Exception("file troppo gruosso (max 60 MB)");
+					if (total > MAX_BYTES) throw new Exception(t("music.too_large").getString());
 					out.write(buf, 0, n);
 				}
 			}
@@ -111,12 +124,12 @@ public final class DownloadScreen extends Screen {
 				if (!check.read(4096).hasRemaining()) throw new Exception("empty");
 			} catch (Exception bad) {
 				Files.deleteIfExists(target.toPath());
-				throw new Exception("'o file nun se sente: formato nun supportato");
+				throw new Exception(t("music.unsupported").getString());
 			}
 			UserMusic.rescan();
-			say("✔ Scaricata: " + target.getName() + " (" + total / 1024 + " KB)", 0xFFA5D6A7);
+			say(t("music.downloaded", target.getName(), total / 1024), SUCCESS);
 		} catch (Exception e) {
-			say("Nun se pò scarricà: " + e.getMessage(), 0xFFFF8A80);
+			say(t("music.download_failed", e.getMessage()), ERROR);
 		} finally {
 			if (tmp != null) tmp.delete();
 			busy = false;
@@ -146,18 +159,19 @@ public final class DownloadScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float a) {
-		super.extractRenderState(g, mx, my, a);
-		go.active = !busy;
-		g.centeredText(font, "⬇ Scarica na canzone da nu link diretto", width / 2, height / 2 - 62, 0xFFFFD54F);
-		g.centeredText(font, "Link a nu file .mp3 / .ogg / .wav (no YouTube/Spotify).", width / 2, height / 2 - 48, 0xFF9E9E9E);
-		g.centeredText(font, "Usa musica ca puo' usà: Free Music Archive, Jamendo, Internet Archive, Pixabay...", width / 2, height / 2 - 37, 0xFF9E9E9E);
-		g.centeredText(font, status, width / 2, height / 2 + 40, statusColor);
+	protected void extractPanel(GuiGraphicsExtractor g, int mx, int my, float a) {
+		paragraph(g, t("music.download_help"), left + 12, top + 46, panelWidth - 24, 3, MUTED);
+		g.text(font, t("music.link"), left + 12, top + 82, TEXT, false);
+		paragraph(g, status, left + 12, top + 128, panelWidth - 24, Math.max(1, (panelHeight - 170) / 11), statusColor);
+	}
+	@Override public boolean keyPressed(KeyEvent event) {
+		if (event.key() == 257 && url.isFocused() && go.active) { start(); return true; }
+		return super.keyPressed(event);
 	}
 
 	@Override
 	public void onClose() {
 		UserMusic.rescan();
-		minecraft.gui.setScreen(parent instanceof SongsScreen ? new SongsScreen(null) : parent);
+		minecraft.gui.setScreen(parent);
 	}
 }

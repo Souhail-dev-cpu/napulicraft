@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import dev.napuli.Radio;
+import static dev.napuli.CityText.t;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,6 +18,7 @@ final class RadioWheelScreen extends Screen {
 	private int mouseX, mouseY;
 	private int clicked = -2;
 	private long lastClick;
+	private int keyboardSelection = -2;
 
 	RadioWheelScreen() { super(Component.translatable("napuli.radio.wheel")); RadioClient.reload(); }
 
@@ -30,7 +32,7 @@ final class RadioWheelScreen extends Screen {
 		return new double[] {width / 2.0 + Math.cos(a) * radius, height / 2.0 + Math.sin(a) * radius};
 	}
 
-	private int radius() { return Math.min(95, Math.min(width, height) / 2 - 30); }
+	private int radius() { return Math.max(36, Math.min(95, Math.min(width, height) / 2 - 34)); }
 
 	private int pick(double mx, double my) {
 		double dx = mx - width / 2.0, dy = my - height / 2.0;
@@ -44,8 +46,9 @@ final class RadioWheelScreen extends Screen {
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float a) {
+		if (mx != mouseX || my != mouseY) keyboardSelection = -2;
 		mouseX = mx; mouseY = my;
-		hovered = pick(mx, my);
+		hovered = keyboardSelection == -2 ? pick(mx, my) : keyboardSelection;
 		g.fill(0, 0, width, height, 0x88000000);
 		List<dev.napuli.client.music.UserMusic.Station> st = RadioClient.stations();
 		int current = RadioClient.currentStation();
@@ -71,13 +74,15 @@ final class RadioWheelScreen extends Screen {
 		}
 		// centre: what you are pointing at
 		String name, line;
-		if (hovered == -2) { name = current == Radio.OFF ? "Radio spenta" : current < st.size() ? st.get(current).name() : ""; line = "Punta 'na stazione e lassa R"; }
-		else if (hovered == Radio.OFF) { name = "Radio spenta"; line = "Nu poco 'e silenzio"; }
-		else { name = st.get(hovered).name(); line = st.get(hovered).dj() + "  ·  " + st.get(hovered).songs().size() + " canzoni"; }
-		g.centeredText(font, name, width / 2, height / 2 - 10, 0xFFFFFFFF);
-		g.centeredText(font, line, width / 2, height / 2 + 4, 0xFFBBBBBB);
+		if (hovered == -2) { name = current == Radio.OFF ? t("radio.off").getString() : current >= 0 && current < st.size() ? st.get(current).name() : ""; line = t("radio.choose").getString(); }
+		else if (hovered == Radio.OFF) { name = t("radio.off").getString(); line = t("radio.silence").getString(); }
+		else { name = st.get(hovered).name(); line = t("radio.station_info", st.get(hovered).dj(), st.get(hovered).songs().size()).getString(); }
+		int centerWidth = Math.max(80, r * 2 - 56);
+		g.centeredText(font, NapoliScreen.fit(font, name, centerWidth), width / 2, height / 2 - 10, NapoliScreen.TEXT);
+		g.centeredText(font, NapoliScreen.fit(font, line, centerWidth), width / 2, height / 2 + 4, NapoliScreen.MUTED);
 		g.centeredText(font, Component.translatable("napuli.radio.wheel"), width / 2, 8, 0xFFFFD54F);
-		g.centeredText(font, Component.translatable("napuli.radio.skip_hint"), width / 2, height - 14, 0xFFEEEEEE);
+		g.centeredText(font, NapoliScreen.fit(font, t("radio.controls", RadioClient.KEY.getTranslatedKeyMessage()).getString(), width - 16), width / 2, height - 25, NapoliScreen.MUTED);
+		g.centeredText(font, NapoliScreen.fit(font, Component.translatable("napuli.radio.skip_hint").getString(), width - 16), width / 2, height - 12, NapoliScreen.MUTED);
 	}
 
 	private static int darker(int c) {
@@ -94,9 +99,27 @@ final class RadioWheelScreen extends Screen {
 	}
 
 	private void choose() {
-		int pick = pick(mouseX, mouseY);
+		int pick = keyboardSelection == -2 ? pick(mouseX, mouseY) : keyboardSelection;
 		if (pick != -2 && pick != RadioClient.currentStation()) RadioClient.tune(pick);
 		onClose();
+	}
+	@Override public boolean keyPressed(KeyEvent event) {
+		int key = event.key();
+		if (key >= 262 && key <= 265) {
+			int current = keyboardSelection == -2 ? RadioClient.currentStation() : keyboardSelection;
+			int direction = key == 263 || key == 265 ? -1 : 1;
+			keyboardSelection = Math.floorMod(current + 1 + direction, slots()) - 1;
+			hovered = keyboardSelection;
+			triggerImmediateNarration(false);
+			return true;
+		}
+		if (key == 257 || key == 335) { choose(); return true; }
+		return super.keyPressed(event);
+	}
+	@Override public Component getNarrationMessage() {
+		var stations = RadioClient.stations();
+		Component station = hovered >= 0 && hovered < stations.size() ? Component.literal(stations.get(hovered).name()) : t("radio.off");
+		return title.copy().append(". ").append(station).append(". ").append(t("radio.controls", RadioClient.KEY.getTranslatedKeyMessage()));
 	}
 
 	@Override

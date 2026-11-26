@@ -42,8 +42,8 @@ final class CityCompanion {
         }return 1;
     }
     static int home(ServerPlayer p){
-        String[] keys={"atlas","tracker","work","housing","wallet","travel","recipes","shop","group","journal","ledger","help"};
-        String[] commands={"compagno atlante","compagno obiettivi","compagno carriera","compagno case","portafoglio","compagno trasporti","compagno ricette","negozio","compagno amici","compagno diario","compagno spese","compagno aiuto"};
+        String[] keys={"atlas","work","housing","travel","shop","recipes","journal","help","tracker","wallet","ledger","group"};
+        String[] commands={"compagno atlante","compagno carriera","compagno case","compagno trasporti","negozio","compagno ricette","compagno diario","compagno aiuto","compagno obiettivi","portafoglio","compagno spese","compagno amici"};
         var entries=new ArrayList<CompanionBoard.Entry>();
         for(int i=0;i<keys.length;i++)entries.add(new CompanionBoard.Entry(t("menu."+keys[i]),t("menu."+keys[i]+"_help"),commands[i]));
         for(var item:List.of("coop","trade","scooter","economy")){String command=switch(item){case "coop"->"cooperative";case "trade"->"scambi";case "scooter"->"motorini";default->"economia";};entries.add(new CompanionBoard.Entry(t("menu."+item),t("menu."+item+"_help"),"compagno "+command));}

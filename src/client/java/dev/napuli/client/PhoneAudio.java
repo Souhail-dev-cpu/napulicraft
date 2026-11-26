@@ -13,12 +13,15 @@ final class PhoneAudio {
     private static final ArrayBlockingQueue<byte[]> QUEUE=new ArrayBlockingQueue<>(12);
     private static volatile UUID call;
     private static volatile boolean microphone;
+    private static volatile boolean speakerMuted;
     private static volatile TargetDataLine capture;
     private static volatile SourceDataLine speaker;
     private static volatile int captureEpoch, playbackEpoch;
     private static boolean startingSpeaker;
     static volatile String error="";
     static boolean muted(){return !microphone;}
+    static boolean speakerMuted(){return speakerMuted;}
+    static void toggleSpeaker(){speakerMuted=!speakerMuted;QUEUE.clear();var line=speaker;if(line!=null)line.flush();}
     static void call(UUID next){if(java.util.Objects.equals(call,next))return;stop();call=next;error="";}
     static void toggle(){if(call==null)return;if(microphone){captureEpoch++;microphone=false;var line=capture;if(line!=null)line.close();return;}int epoch=++captureEpoch;microphone=true;error="";UUID session=call;
         Thread.ofVirtual().name("Napuli phone microphone").start(()->{
@@ -36,7 +39,7 @@ final class PhoneAudio {
         });
     }
     static void receive(PhonePacket.Voice frame){
-        if(!frame.call().equals(call))return;
+        if(!frame.call().equals(call)||speakerMuted)return;
         if(!QUEUE.offer(frame.pcm().clone())){QUEUE.poll();QUEUE.offer(frame.pcm().clone());}
         if(speaker!=null)return;
         synchronized(QUEUE){if(speaker!=null||startingSpeaker)return;
@@ -50,6 +53,6 @@ final class PhoneAudio {
             });
         }
     }
-    static void stop(){call=null;captureEpoch++;playbackEpoch++;microphone=false;QUEUE.clear();var mic=capture;if(mic!=null)mic.close();capture=null;var out=speaker;if(out!=null)out.close();speaker=null;synchronized(QUEUE){startingSpeaker=false;}}
+    static void stop(){call=null;captureEpoch++;playbackEpoch++;microphone=false;speakerMuted=false;QUEUE.clear();var mic=capture;if(mic!=null)mic.close();capture=null;var out=speaker;if(out!=null)out.close();speaker=null;synchronized(QUEUE){startingSpeaker=false;}}
     private PhoneAudio(){}
 }

@@ -12,8 +12,10 @@ final class PhonePhoto {
         try{var directory=mc.gameDirectory.toPath().resolve("screenshots");java.nio.file.Files.createDirectories(directory);java.awt.Desktop.getDesktop().open(directory.toFile());}
         catch(Exception ignored){mc.execute(()->{if(mc.player!=null)mc.player.sendSystemMessage(dev.napuli.CityText.t("phone.photos_help"));});}
     });}
-    static void register(){ClientTickEvents.END_CLIENT_TICK.register(mc->{if(back==null)return;if(mc.player==null){back=null;return;}if(--wait>0)return;
-        var screen=back;back=null;Screenshot.grab(mc.gameDirectory,"telefono-"+System.currentTimeMillis()+".png",mc.gameRenderer.mainRenderTarget(),1,m->{});mc.gui.setScreen(screen);
+    static void register(){ClientTickEvents.END_CLIENT_TICK.register(mc->{if(back==null)return;if(mc.player==null||mc.gui.screen()!=null){back=null;return;}if(--wait>0)return;
+        var screen=back;back=null;String name="telefono-"+System.currentTimeMillis()+".png";Screenshot.grab(mc.gameDirectory,name,mc.gameRenderer.mainRenderTarget(),1,m->mc.execute(()->{
+            if(mc.player!=null&&mc.gui.screen()==null){screen.photoSaved(java.nio.file.Files.isRegularFile(mc.gameDirectory.toPath().resolve("screenshots").resolve(name)));mc.gui.setScreen(screen);}
+        }));
     });}
     private PhonePhoto(){}
 }

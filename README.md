@@ -21,6 +21,7 @@ Il progetto conserva il proprio carattere parodistico: Munaciello, motorini con 
 - [Bus, tram, metropolitana e motorini](#bus-tram-metropolitana-e-motorini)
 - [Cucina napoletana](#cucina-napoletana)
 - [Telefoni](#telefoni)
+- [Chat di prossimità](#chat-di-prossimità)
 - [Calcio, televisione ed eventi](#calcio-televisione-ed-eventi)
 - [Missioni, folklore e personaggi](#missioni-folklore-e-personaggi)
 - [Carabinieri, reati e tasse](#carabinieri-reati-e-tasse)
@@ -310,7 +311,24 @@ La [guida alla cucina](docs/CUCINA.md) e il [ricettario completo](docs/CUCINA_RI
 
 **OnePlus 16, vivo X500 Pro Max, iQOO 15, iQOO 16 e OnePlus 15** sono oggetti 3D costruibili, con hardware delle versioni cinesi e interfacce ricreate di ColorOS e OriginOS. Porta un telefono nello zaino e premi **P**, usa **`/telefono`** oppure fai tasto destro con il telefono in mano.
 
-Le app includono GPS sul terreno del mondo e navigazione pedonale a Napoli, rubrica, messaggi privati persistenti anche per contatti offline, chiamate con accettazione e voce, fotocamera, foto e impostazioni. Il microfono parte spento e si attiva dal telefono durante una chiamata. Un caricatore USB-C e redstone ripristinano la batteria. Modelli, ricette, hardware, funzionamento e prove sono nella [guida ai telefoni](docs/TELEFONI.md).
+Ogni giocatore riceve un **numero personale casuale +39**, persistente nel mondo. La rubrica è personale: salva un numero oppure scambia i contatti con chi si trova entro 8 blocchi, con accettazione del destinatario. Usa **`/telefono mio`**, **`/telefono scambia Nome`** e **`/telefono accetta Nome`**. Solo gli OP possono usare **`/telefono numero Nome +39 666 666 666`** per impostare un numero personalizzato univoco.
+
+Le interfacce ColorOS e OriginOS hanno widget e dock distinti, badge e centro notifiche. Le app includono GPS e navigazione pedonale a Napoli, tastierino, chiamate vocali con accettazione e cronologia, messaggi privati con ricevute di lettura e invio della posizione, contatti, fotocamera, galleria fotografica, note persistenti, calcolatrice e impostazioni. Il microfono parte spento. Un caricatore USB-C e redstone ripristinano la batteria. Modelli, ricette, hardware e comandi sono nella [guida ai telefoni](docs/TELEFONI.md).
+
+## Chat di prossimità
+
+La chat normale raggiunge soltanto i giocatori nella **stessa dimensione, entro 15 blocchi** dal mittente. La distanza include altezza e dislivelli; il confine dei 15 blocchi è incluso. Anche il mittente vede il proprio messaggio. La selezione dei destinatari avviene sul server, mantenendo firme e filtri nativi dei messaggi.
+
+Con **`/urlo messaggio`** raggiungi tutti i giocatori **entro 70 blocchi**, sempre nella stessa dimensione. Il messaggio appare anche al mittente ed è contrassegnato da **URLO**. Il comando è disponibile a tutti; usa la posizione effettiva del mittente al momento della consegna e include il confine dei 70 blocchi. Esempio: `/urlo La piazza è aperta a tutti!`.
+
+Per parlare privatamente con un giocatore vicino:
+
+| Comando | Distanza massima | Destinatari |
+| --- | --- | --- |
+| `/sussurro NomeGiocatore messaggio` | 5 blocchi | Solo mittente e giocatore indicato |
+| `/bisbiglio NomeGiocatore messaggio` | 2 blocchi | Solo mittente e giocatore indicato, come all'orecchio |
+
+Esempi: `/sussurro Luca Ci vediamo alla banca` e `/bisbiglio Luca Seguimi piano`. Entrambi i comandi sono disponibili a tutti i giocatori. Il completamento propone le persone vicine; se il destinatario si allontana o cambia dimensione prima della consegna, il messaggio non viene inviato e il mittente riceve un avviso. I messaggi e le chiamate dei telefoni possono raggiungere i rispettivi destinatari anche a distanza.
 
 ## Calcio, televisione ed eventi
 
@@ -399,6 +417,9 @@ Le azioni sono disponibili anche tramite dialoghi e cartelli. Gli identificativi
 | `/napoli meta ID` · `/napoli annulla` | Imposta o interrompe una destinazione a piedi |
 | `/napoli sotterranea` | Attiva o disattiva le indicazioni per il percorso sotterraneo |
 | `/citta` · `/portafoglio` | Mostra lo stato della città o il denaro disponibile |
+| `/sussurro NOME MESSAGGIO` | Messaggio privato a un giocatore entro 5 blocchi |
+| `/bisbiglio NOME MESSAGGIO` | Messaggio privato all'orecchio a un giocatore entro 2 blocchi |
+| `/urlo MESSAGGIO` | Messaggio a tutti i giocatori entro 70 blocchi nella stessa dimensione |
 | `/lavoro` · `/lavoro segui` | Consulta l'impiego e segue le indicazioni per il collocamento |
 | `/casa` | Elenca immobili, identificativi e coordinate |
 | `/casa compra ID` · `/casa affitta ID` · `/casa mutuo ID` | Avvia un contratto presso il cartello dell'immobile |

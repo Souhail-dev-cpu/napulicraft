@@ -12,22 +12,49 @@ Il vivo X500 Pro Max riprende il riferimento dell'utente con scocca grigio scuro
 
 Il OnePlus 15 segue l'ultimo riferimento dell'utente: scocca nera, marchio inciso, capsula verticale delle fotocamere e sfondo blu con scritta `Never Settle` sul modello fisico. La Home usa lo stesso sfondo senza lettering, per lasciare leggibili orologio e applicazioni. L'iQOO 15 ha scocca perlata con venature grigie e rosa, modulo nero in alto a sinistra e sfondo rosso-arancio. Entrambi escludono le icone della Cina presenti nelle fotografie. [Asset e prompt](../tools/phone-15-reference-art.md).
 
+## Numeri personali e scambio di contatti
+
+Ogni giocatore riceve al primo accesso un **numero casuale univoco +39**, salvato nel mondo e associato al proprio UUID. I numeri generati hanno dieci cifre dopo +39 e iniziano per 3. Lo stesso numero resta dopo morte, logout, cambio del dispositivo e riavvio. I precedenti numeri progressivi `081…` vengono convertiti automaticamente senza eliminare le conversazioni.
+
+Leggi il tuo numero in **Contatti → Il mio numero**, copialo negli appunti oppure usa **`/telefono mio`**. Sono numeri interni al server Minecraft.
+
+La rubrica è personale: non espone l'elenco di tutti i numeri del server. Per aggiungere qualcuno, premi **+** in Contatti e inserisci il suo numero. Il tastierino accetta numeri con o senza spazi; si può chiamare anche un numero non ancora salvato. Con **+** in Messaggi puoi salvare un numero e iniziare una conversazione.
+
+Per scambiarsi i contatti, entrambi i giocatori devono avere un telefono carico, modalità aereo spenta e trovarsi **entro 8 blocchi** nella stessa dimensione. Apri **Contatti → Scambia numero → Vicini** e scegli il giocatore. Il destinatario apre **Richieste** e accetta: i due numeri vengono aggiunti a entrambe le rubriche. La richiesta scade dopo 60 secondi. Puoi anche usare **`/telefono scambia NomeGiocatore`**; il destinatario risponde con **`/telefono accetta NomeMittente`**.
+
+Solo gli **OP con livello di permessi almeno 2** possono personalizzare un numero:
+
+```text
+/telefono numero NomeGiocatore +39 666 666 666
+```
+
+Il giocatore deve essere online. Il comando accetta **9 o 10 cifre dopo +39**, verifica il formato e impedisce duplicati; l'aggiornamento appare anche nelle rubriche che hanno già quel contatto. Il permesso viene verificato sul server. Non è presente un'azione di rete che permetta ai normali giocatori di cambiare il proprio numero.
+
+## Interfacce
+
+ColorOS usa un orologio orizzontale, schede traslucide e un dock arrotondato. OriginOS usa l'orologio disposto in verticale e widget modulari separati per meteo e batteria. Entrambe le Home hanno una griglia a quattro colonne, badge per messaggi e richieste, centro notifiche e accesso rapido alla chiamata in corso. Le scelte visive seguono i riferimenti ufficiali di [ColorOS](https://www.oppo.com/ph/coloros16/) e [OriginOS](https://www.vivo.com/pg/originos).
+
+**Esc** torna alla schermata precedente; dalla Home chiude il telefono. La barra inferiore torna alla Home. Le bozze di chat vengono conservate mentre passi fra le app; il testo inviato viene svuotato dopo la conferma del server. Gli errori vengono mostrati nel telefono.
+
 ## Applicazioni
 
 | App | Funzione |
 | --- | --- |
 | Mappe | Mostra posizione, coordinate e terreno dei chunk già ricevuti. Cerca monumenti, fermate, botteghe, casa e lavoro a Napoli. Selezionando una meta attivi il percorso pedonale e il tracker della città. Istruzioni e posizione si aggiornano mentre cammini; non vengono caricati chunk per esplorare la mappa. |
-| Contatti | Rubrica dei giocatori che hanno aperto almeno una volta un telefono in quel mondo. Ogni account ha un numero stabile; la ricerca accetta nomi e numeri. |
-| Messaggi | Conversazioni private con destinatari online o già presenti in rubrica. Anche i messaggi destinati a un account offline vengono conservati. Ogni account mantiene gli ultimi 64 messaggi complessivi, inclusi gli inviati. |
-| Telefono | Chiamate fra due giocatori online con un telefono carico e modalità aereo spenta. Il destinatario sente una suoneria e deve accettare; le chiamate senza risposta scadono dopo 30 secondi. Puoi terminare, aprire la chat e attivare/disattivare il microfono. |
+| Contatti | Rubrica personale fino a 128 contatti, aggiunta tramite numero, schede dei contatti, copia del proprio numero e scambio con accettazione. La ricerca accetta nomi e numeri, anche con spazi. |
+| Messaggi | Conversazioni private, bozze per interlocutore, testo a capo, orari, invio della propria posizione e ricevute di lettura: un segno indica invio, due segni indicano lettura. I messaggi per destinatari offline sono conservati. Ogni account mantiene gli ultimi 64 messaggi complessivi; si può eliminare la propria copia di una conversazione. |
+| Telefono | Tastierino per comporre un numero, rubrica e registro delle ultime 32 chiamate (concluse, annullate, rifiutate o senza risposta). Le chiamate richiedono due giocatori online con telefono carico e modalità aereo spenta. Il destinatario deve accettare; le chiamate senza risposta scadono dopo 30 secondi. Controlli separati per microfono e ascolto dell'audio. |
 | Fotocamera | Mirino sul mondo e scatto di uno screenshot reale. La foto viene salvata nella cartella `screenshots` dell'istanza, con nome `telefono-<tempo>.png`. |
-| Foto | Indica dove sono salvate le immagini e apre la cartella delle foto. |
-| Impostazioni | Modalità aereo, aspetto chiaro/scuro salvato sul client e ricarica. |
+| Foto | Galleria delle ultime 24 fotografie del telefono, miniature, visualizzazione della foto selezionata e accesso alla cartella. Le immagini vengono caricate in secondo piano. |
+| Note | Fino a 16 note personali di 256 caratteri, modificabili ed eliminabili, salvate nell'account nel mondo. Restano disponibili in modalità aereo. |
+| Calcolatrice | Somma, sottrazione, moltiplicazione, divisione, decimali, percentuali, cambio di segno e precedenza delle operazioni. Funziona offline. |
+| Notifiche | Messaggi non letti, richieste di contatto e controlli rapidi di modalità aereo, tema e suoneria. |
+| Impostazioni | Numero personale, modalità aereo, aspetto chiaro/scuro, suoneria silenziosa, batteria e ricarica. |
 | Info | Modello, sistema di riferimento, CPU, GPU, RAM, memoria, schermo, batteria, ricarica e fotocamere. |
 
 Il microfono **parte spento**. Dopo aver risposto, premi **Attiva microfono** per inviare la voce. La mod usa i dispositivi audio predefiniti del sistema: se non sono disponibili, mostra un messaggio nel telefono. L'audio usa la connessione del server Minecraft, con campioni mono a 16 kHz, esclusivamente fra i due partecipanti della chiamata accettata. Non servono servizi telefonici esterni. La chiusura dell'interfaccia lascia proseguire una chiamata; terminarla, uscire dal server, perdere il telefono o attivare la modalità aereo interrompe l'audio.
 
-Le conversazioni e il numero appartengono all'account nel mondo. Rubare o cedere il telefono trasferisce il dispositivo e la batteria; non trasferisce i messaggi personali del proprietario precedente.
+Numero, rubrica, conversazioni, note e cronologia chiamate appartengono all'account nel mondo. Rubare o cedere il telefono trasferisce il dispositivo e la batteria; non trasferisce i dati personali del proprietario precedente. Le foto restano nella cartella locale del client.
 
 ## Batteria e ricarica
 

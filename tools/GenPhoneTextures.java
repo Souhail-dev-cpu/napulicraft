@@ -87,7 +87,7 @@ public final class GenPhoneTextures {
         }
         var clock=image(704,128);color(0xffffff);g.setFont(new Font("SansSerif",Font.PLAIN,98));for(int i=0;i<11;i++){String glyph=i==10?":":Integer.toString(i);g.drawString(glyph,i*64+(64-g.getFontMetrics().stringWidth(glyph))/2,105);}save(clock,"clock");
         var darkClock=image(704,128);color(0x2b241e);g.setFont(new Font("SansSerif",Font.PLAIN,98));for(int i=0;i<11;i++){String glyph=i==10?":":Integer.toString(i);g.drawString(glyph,i*64+(64-g.getFontMetrics().stringWidth(glyph))/2,105);}save(darkClock,"clock_dark");
-        String[] icons={"calls","messages","gps","contacts","settings","about","camera","photos"};int[] tones={0x31b56b,0x347de8,0xe5eee4,0xef964e,0x8c919c,0x8762ce,0x3b4658,0xe76d87};
+        String[] icons={"calls","messages","gps","contacts","settings","about","camera","photos","notes","calculator","share"};int[] tones={0x31b56b,0x347de8,0xe5eee4,0xef964e,0x8c919c,0x8762ce,0x3b4658,0xe76d87,0xf0bb43,0x333b4a,0x4d8ee9};
         for(int i=0;i<icons.length;i++){String id=icons[i];var icon=image(128,128);g.setPaint(new GradientPaint(0,0,new Color(tones[i]).brighter(),110,128,new Color(tones[i])));g.fillRoundRect(2,2,124,124,31,31);g.setStroke(new BasicStroke(8,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));color(0xffffff);
             switch(id){case "calls"->{g.rotate(-.7,64,64);g.drawArc(35,23,61,79,90,180);g.fillRoundRect(28,22,22,31,8,8);g.fillRoundRect(28,78,22,31,8,8);}
                 case "messages"->{g.fillRoundRect(24,28,80,61,18,18);g.fillPolygon(new int[]{37,37,58},new int[]{77,106,82},3);color(0x7db5ef);g.setStroke(new BasicStroke(5));g.drawLine(40,48,86,48);g.drawLine(40,65,72,65);}
@@ -97,10 +97,13 @@ public final class GenPhoneTextures {
                 case "about"->{g.drawOval(26,26,76,76);g.fillOval(59,43,10,10);g.drawLine(64,65,64,88);}
                 case "camera"->{g.fillRoundRect(18,34,92,66,16,16);g.fillRoundRect(38,24,49,30,9,9);lens(40,44,48);}
                 case "photos"->{for(int n=0;n<8;n++){g.rotate(Math.PI/4,64,64);g.setColor(new Color(Color.HSBtoRGB(n/8f,.55f,.98f)));g.fillOval(50,13,29,54);}}
+                case "notes"->{g.fillRoundRect(27,21,76,89,12,12);color(0xe6b946);g.setStroke(new BasicStroke(5));for(int row=42;row<97;row+=17)g.drawLine(40,row,row==93?74:89,row);}
+                case "calculator"->{g.setStroke(new BasicStroke(5));g.drawLine(33,40,55,40);g.drawLine(44,29,44,51);g.drawLine(78,40,100,40);g.drawLine(34,78,54,98);g.drawLine(54,78,34,98);g.drawLine(79,81,101,81);g.drawLine(79,94,101,94);}
+                case "share"->{g.fillOval(27,27,29,29);g.fillOval(76,27,29,29);g.fillRoundRect(17,65,49,32,17,17);g.fillRoundRect(66,65,49,32,17,17);color(0xe0edff);g.setStroke(new BasicStroke(5));g.drawLine(47,108,82,108);g.drawLine(74,101,82,108);g.drawLine(74,115,82,108);}
             }save(icon,"icons/"+id);
         }
         var charger=image(64,64);color(0x66717c);g.fillRoundRect(15,20,34,31,7,7);color(0xe8ecea);g.fillRoundRect(17,20,29,27,7,7);color(0x555c67);g.fillRect(23,8,5,13);g.fillRect(36,8,5,13);g.setStroke(new BasicStroke(4));g.draw(new Arc2D.Float(41,31,18,26,-90,190,Arc2D.OPEN));save(charger,"caricatore_usb_c");
-        System.out.println("Generated five detailed phone shells and eight OS icons.");
+        System.out.println("Generated five detailed phone shells and eleven OS icons.");
         comparison("oneplus_16","OnePlus 16");comparison("iqoo_16","iQOO 16");comparison("vivo_x500_pro_max","vivo X500 Pro Max");comparison("oneplus_15","OnePlus 15");comparison("iqoo_15","iQOO 15");
     }
     static void comparison(String id,String name)throws Exception{

@@ -676,7 +676,7 @@ phone.mic_disable|Disattiva microfono|Mute microphone|Stuta 'o microfono
 phone.mic_hint|Il microfono parte spento. Attivalo per parlare con l'altro giocatore.|The microphone starts muted. Enable it to speak to the other player.|'O microfono parte stutato. Appiccialo pe parlà cu ll'ato.
 phone.mic_error|Microfono non disponibile. Controlla il dispositivo e i permessi audio del sistema.|Microphone unavailable. Check your input device and system audio permissions.|Microfono nun disponibile. Cuntrolla 'o dispositivo e 'e permessi audio.
 phone.speaker_error|Uscita audio non disponibile. Controlla cuffie o altoparlanti.|Audio output unavailable. Check your headphones or speakers.|Audio nun disponibile. Cuntrolla 'e cuffie o 'e casse.
-phone.no_contacts|La rubrica mostra chi ha già usato un telefono in questo mondo. Gli altri giocatori devono aprire il proprio telefono una volta.|Contacts appear after using a phone in this world. Other players must open their phone once.|'A rubrica mostra chi ha già usato nu telefono dint'a stu munno. Ll'ate l'hanna aprì na vota.
+phone.no_contacts|La tua rubrica è vuota. Premi + per salvare un numero oppure Scambia per conoscere un giocatore vicino.|Your contacts are empty. Press + to save a number or Exchange to meet a nearby player.|'A rubrica toja è vacante. Primme + pe salvà nu nummero o Scambia cu nu juocatore vicino.
 phone.no_messages|Nessun messaggio. Scrivi qui sotto per iniziare. I messaggi restano salvati anche dopo la disconnessione.|No messages. Write below to start. Messages are saved across disconnections.|Nisciuno messaggio. Scrive ccà sotto pe accummincià. 'E messagge restano salvate.
 phone.message_sent|Messaggio inviato.|Message sent.|Messaggio mannato.
 phone.new_message|Nuovo messaggio da %s · P per leggere|New message from %s · P to read|Messaggio nuovo 'a %s · P pe leggere
@@ -701,3 +701,94 @@ phone.stop_gps|Interrompi navigazione|Stop navigation|Ferma 'a navigazzione
 phone.capture|Scatta|Capture|Scatta
 phone.photos_folder|Apri cartella delle foto|Open photos folder|Apre 'a cartella d''e fotografie
 phone.photos_help|Le foto del telefono sono screenshot reali del tuo mondo. Le trovi nella cartella screenshots di Minecraft, con nome telefono-….png.|Phone photos are real screenshots of your world. Find telefono-….png in Minecraft's screenshots folder.|'E fotografie d''o telefono so' screenshot vere d''o munno tuo. Stanno dint'a screenshots, cu nomme telefono-….png.
+phone.unknown_number|Numero inesistente o non disponibile. Controlla il prefisso +39.|Number not found or unavailable. Check the +39 prefix.|Nummero inesistente o nun disponibile. Cuntrolla +39.
+phone.contacts_full|Una delle rubriche è piena: massimo 128 contatti.|One contact list is full: 128 contacts maximum.|Na rubrica è chiena: massimo 128 cuntatte.
+phone.contact_saved|%s è stato salvato nei contatti.|%s was saved to contacts.|%s è stato salvato dint'ê cuntatte.
+phone.contact_removed|Contatto rimosso. Le conversazioni restano salvate.|Contact removed. Conversations are kept.|Cuntatto levato. 'E messagge restano salvate.
+phone.share_near|Avvicinatevi entro 8 blocchi, con telefoni carichi e modalità aereo spenta.|Stay within 8 blocks with charged phones and airplane mode off.|Avvicinateve dint'a 8 blocchi, cu telefone cariche e senza modalità aereo.
+phone.share_pending|Richiesta già inviata. Attendi la risposta prima di riprovare.|Request already sent. Wait for a reply before trying again.|Richiesta già mannata. Aspetta 'a risposta.
+phone.share_full|Questo giocatore ha già troppe richieste in attesa.|This player has too many pending requests.|Stu juocatore tene troppe richieste.
+phone.share_sent|Richiesta di scambio inviata a %s.|Contact exchange sent to %s.|Richiesta 'e scambio mannata a %s.
+phone.share_received|%s vuole scambiare i numeri. Apri Contatti → Scambia → Richieste.|%s wants to exchange numbers. Open Contacts → Exchange → Requests.|%s vo' scagnà 'e nummere. Apre Cuntatte → Scambia → Richieste.
+phone.share_command|Per accettare: /telefono accetta %s (entro 60 secondi).|To accept: /telefono accetta %s (within 60 seconds).|Pe accettà: /telefono accetta %s (dint'a 60 seconde).
+phone.share_declined|Richiesta rifiutata.|Request declined.|Richiesta rifiutata.
+phone.share_expired|La richiesta è scaduta o non ti è destinata.|Request expired or not addressed to you.|'A richiesta è scaduta o nun è pe tte.
+phone.invalid_text|Scrivi da 1 a 256 caratteri.|Enter between 1 and 256 characters.|Scrive 'a 1 a 256 carattere.
+phone.notes_full|Hai già 16 note. Elimina una nota per crearne un'altra.|You have 16 notes. Delete one before creating another.|Tiene già 16 note. Levane una pe ne fa' n'ata.
+phone.note_saved|Nota salvata.|Note saved.|Nota salvata.
+phone.note_deleted|Nota eliminata.|Note deleted.|Nota levata.
+phone.thread_deleted|Conversazione eliminata dal tuo telefono.|Conversation deleted from your phone.|Cunversazzione levata d'ô telefono tuo.
+phone.position_message|La mia posizione: %s · %s|My location: %s · %s|'A posizione mia: %s · %s
+phone.my_number|Il tuo numero personale è %s.|Your personal number is %s.|'O nummero personale tuo è %s.
+phone.invalid_number|Usa +39 seguito da 9 o 10 cifre, per esempio +39 666 666 666.|Use +39 followed by 9 or 10 digits, e.g. +39 666 666 666.|Usa +39 e 9 o 10 cifre, pe esempio +39 666 666 666.
+phone.number_taken|Questo numero appartiene già a un altro giocatore.|This number already belongs to another player.|Stu nummero è già 'e n'ato juocatore.
+phone.number_changed|Numero di %s impostato a %s.|%s now has the number %s.|Nummero 'e %s cagnato a %s.
+phone.call_missed|Chiamata senza risposta.|Call unanswered.|Chiamata senza risposta.
+phone.need_phone|Porta un telefono nell'inventario per aprirlo.|Carry a phone in your inventory to open it.|Pporta nu telefono dint'ô zaino pe l'aprì.
+phone.retry|Nessuna conferma ricevuta. Il testo è conservato: puoi riprovare.|No confirmation received. Your draft is kept; try again.|Nisciuna cunferma. 'O testo è salvato: puo' ripruvà.
+phone.photo_saved|Foto salvata. La trovi nell'app Foto.|Photo saved. Find it in Photos.|Fotografia salvata. 'A truove dint'a Foto.
+phone.notifications|Notifiche|Notifications|Nutifiche
+phone.game_day|Giorno %s · Napoli|Day %s · Naples|Juorno %s · Napule
+phone.nearby|Vicini|Nearby|Vicine
+phone.requests|Richieste|Requests|Richieste
+phone.add_contact|Aggiungi contatto|Add contact|Aggiunge cuntatto
+phone.number_hint|+39 333 123 4567|+39 333 123 4567|+39 333 123 4567
+phone.save_write|Salva e scrivi|Save and message|Salva e scrive
+phone.save_contact|Salva contatto|Save contact|Salva cuntatto
+phone.exchange|Scambia numero|Exchange numbers|Scambia nummero
+phone.mycard|Il mio numero|My number|'O nummero mio
+phone.copy_number|Copia numero|Copy number|Copia nummero
+phone.copied|Numero copiato negli appunti.|Number copied to clipboard.|Nummero copiato dint'ê appunte.
+phone.accept|Accetta|Accept|Accetta
+phone.decline|Rifiuta|Decline|Rifiuta
+phone.remove_contact|Rimuovi contatto|Remove contact|Leva cuntatto
+phone.audio_off|Audio: spento|Audio: muted|Audio: stutato
+phone.audio_on|Audio: attivo|Audio: on|Audio: appicciato
+phone.dialpad|Tastiera|Keypad|Tastiera
+phone.recents|Recenti|Recents|Recente
+phone.call_answered|Conclusa|Completed|Fernuta
+phone.call_cancelled|Annullata|Cancelled|Annullata
+phone.call_declined|Rifiutata|Declined|Rifiutata
+phone.position|Posizione|Location|Posizione
+phone.sending|Invio…|Sending…|Manno…
+phone.delete_thread|Elimina chat|Delete chat|Leva chat
+phone.cancel|Annulla|Cancel|Annulla
+phone.battery|Batteria|Battery|Batteria
+phone.notes|Note|Notes|Note
+phone.note_hint|Scrivi una nota…|Write a note…|Scrive na nota…
+phone.save_note|Salva nota|Save note|Salva nota
+phone.delete_note|Elimina nota|Delete note|Leva nota
+phone.calculator|Calcolatrice|Calculator|Calcolatrice
+phone.share|Scambio contatti|Exchange contacts|Scambio cuntatte
+phone.airplane_short|Aereo|Airplane|Aereo
+phone.theme|Tema|Theme|Tema
+phone.ringtone|Suoneria|Ringtone|Suneria
+phone.pending_contacts|%s richieste di contatto|%s contact requests|%s richieste 'e cuntatto
+phone.unread_messages|Messaggi da leggere|Unread messages|Messagge 'a leggere
+phone.contact_details|Contatto|Contact|Cuntatto
+phone.compose|Nuovo messaggio|New message|Messaggio nuovo
+phone.mycard_help|Il numero appartiene al tuo account in questo mondo. Resta lo stesso dopo morte, cambio di telefono e riavvio.|Your number belongs to your account in this world. It survives death, phone changes and restarts.|'O nummero è d'ô conto tuo dint'a stu munno. Resta doppo 'a morte, cagnanno telefono e riavvianno.
+phone.nearby_help|Giocatori con telefono entro 8 blocchi|Players with phones within 8 blocks|Juocature cu telefono dint'a 8 blocchi
+phone.no_requests|Nessuna richiesta in attesa. Chiedi a un giocatore vicino di condividere il suo numero.|No pending requests. Ask a nearby player to share their number.|Nisciuna richiesta. Fatte mannà 'o nummero 'a nu juocatore vicino.
+phone.delete_thread_help|Eliminare questa conversazione? Viene rimossa solo la tua copia. Il destinatario conserva i propri messaggi.|Delete this conversation? Only your copy is removed. The recipient keeps their messages.|Vuò levà sta cunversazzione? Sulo 'a copia toja se leva. Ll'ato se tene 'e messagge suje.
+phone.battery_help|Ricarica con Caricatore USB-C e una redstone. Una ricarica aggiunge fino a 2000 mAh.|Recharge with a USB-C Charger and one redstone. Adds up to 2000 mAh.|Ricarica cu Caricatore USB-C e na redstone. Aggiunge fino a 2000 mAh.
+phone.loading|Caricamento delle foto…|Loading photos…|Carico 'e fotografie…
+phone.photos_error|Alcune foto non si possono aprire. Puoi usare la cartella delle foto.|Some photos could not be opened. You can use the photos folder.|Certe fotografie nun se ponno aprì. Usa 'a cartella d''e fotografie.
+phone.no_photos|Nessuna foto. Apri Fotocamera e premi Scatta. La galleria mostra le ultime 24 fotografie del telefono.|No photos. Open Camera and press Capture. The gallery shows your latest 24 phone photos.|Nisciuna fotografia. Apre Fotocamera e primme Scatta. 'A galleria mostra ll'ultime 24 fotografie.
+phone.no_notes|Premi + per creare una nota personale. Le note restano nel tuo account anche cambiando telefono.|Press + to create a personal note. Notes stay with your account when changing phones.|Primme + pe creà na nota toja. 'E note restano cu tte quanno cagne telefono.
+phone.no_notifications|Non ci sono nuove notifiche.|No new notifications.|Nun ce stanno nutifiche nove.
+phone.current_world|Mondo|World|Munno
+phone.rain|Pioggia|Rain|Chiove
+phone.clear|Sereno|Clear|Sereno
+phone.no_calls|Nessuna chiamata recente. Usa la tastiera per comporre un numero.|No recent calls. Use the keypad to dial a number.|Nisciuna chiamata recente. Usa 'a tastiera pe fa' nu nummero.
+phone.silent_on|Suoneria: silenziosa|Ringtone: silent|Suneria: stutata
+phone.silent_off|Suoneria: attiva|Ringtone: on|Suneria: appicciata
+phone.add_help|Inserisci il numero completo. Puoi salvarlo, chiamarlo o scambiarlo con chi è vicino.|Enter the full number. Save it, call it or exchange contacts with a nearby player.|Miette 'o nummero sano. 'O puo' salvà, chiammà o scagnà cu chi sta vicino.
+phone.calculation_error|Errore|Error|Errore
+chat.self|Scegli un altro giocatore a cui parlare.|Choose another player to speak to.|Sceglie n'ato juocatore cu cui parlà.
+chat.too_far|%s deve trovarsi nella tua stessa dimensione, entro %s blocchi.|%s must be in your dimension, within %s blocks.|%s ha dda stà dint'â stessa dimensione toja, dint'a %s blocchi.
+chat.empty|Scrivi un messaggio dopo il nome del giocatore.|Write a message after the player's name.|Scrive nu messaggio doppo 'o nomme d'ô juocatore.
+chat.sussurro_name|%s (sussurro)|%s (whisper)|%s (sussurro)
+chat.bisbiglio_name|%s (all'orecchio)|%s (in your ear)|%s (dint'a recchia)
+chat.urlo_name|%s (URLO)|%s (SHOUT)|%s (STRILLO)
+chat.shout_empty|Scrivi un messaggio dopo /urlo.|Write a message after /urlo.|Scrive nu messaggio doppo /urlo.

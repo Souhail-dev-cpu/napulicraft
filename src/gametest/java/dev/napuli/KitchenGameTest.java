@@ -193,6 +193,47 @@ public final class KitchenGameTest {
         }); helper.succeed();
     }
 
+    @GameTest public void newAlcoholicDrinksConsumeOneServingAndReturnOneBottle(GameTestHelper helper) {
+        withPlayers(helper, 1, players -> {
+            var player = players.getFirst();
+            helper.assertTrue(DistrictShops.drinks().size() == 11, "All requested drinks are distinct shop products");
+            for (var product : DistrictShops.drinks()) {
+                player.getInventory().clearContent(); player.removeAllEffects();
+                player.removeAttached(KitchenEffects.DRINKS); player.removeAttached(KitchenEffects.DRINK_WINDOW);
+                var serving = new ItemStack(product.item());
+                helper.assertTrue(serving.getMaxStackSize() == 16, "Bottled drink stack size: " + product.id());
+                helper.assertTrue(NapoliKitchen.food(serving).effect().equals("ALCOHOL"), "Shared alcohol effect: " + product.id());
+                var remainder = serving.finishUsingItem(player.level(), player);
+                helper.assertTrue(remainder.is(Items.GLASS_BOTTLE) && remainder.getCount() == 1, "One empty bottle returned: " + product.id());
+                helper.assertTrue(player.hasEffect(MobEffects.LUCK) && !player.hasEffect(MobEffects.NAUSEA), "One drink gives luck without drunkenness: " + product.id());
+                serving = new ItemStack(product.item(), 2);
+                remainder = serving.finishUsingItem(player.level(), player);
+                helper.assertTrue(remainder.is(product.item()) && remainder.getCount() == 1, "Only one portion removed from stack: " + product.id());
+                helper.assertTrue(player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Stack consumption adds exactly one empty bottle: " + product.id());
+            }
+        }); helper.succeed();
+    }
+
+    @GameTest public void mixedAlcoholSharesTheExistingLimoncelloCounter(GameTestHelper helper) {
+        withPlayers(helper, 2, players -> {
+            var player = players.getFirst();
+            eat(player, "limoncello"); eat(player, "amaro_napoletano");
+            helper.assertTrue(!player.hasEffect(MobEffects.NAUSEA), "Two mixed drinks stay below the threshold");
+            eat(player, "falanghina");
+            helper.assertTrue(player.getAttachedOrElse(KitchenEffects.DRINKS, 0) == 3 && player.hasEffect(MobEffects.NAUSEA)
+                    && player.hasEffect(MobEffects.SLOWNESS) && player.hasEffect(MobEffects.JUMP_BOOST), "Three different drinks cause the same drunkenness as limoncello");
+            var other = players.get(1);
+            helper.assertTrue(other.getAttachedOrElse(KitchenEffects.DRINKS, 0) == 0, "Alcohol counters are personal");
+            // No consumption in this tick: exercise expiry independently of the just-consumed guard.
+            other.setAttached(KitchenEffects.DRINKS, 2); other.setAttached(KitchenEffects.DRINK_WINDOW, 1);
+            KitchenEffects.tick(helper.getLevel().getServer());
+            helper.assertTrue(other.getAttachedOrElse(KitchenEffects.DRINKS, 0) == 0
+                    && other.getAttachedOrElse(KitchenEffects.DRINK_WINDOW, 0) == 0, "The minute window clears accumulated drinks");
+            eat(other, "champagne");
+            helper.assertTrue(!other.hasEffect(MobEffects.NAUSEA), "Drinking after expiry starts a fresh count");
+        }); helper.succeed();
+    }
+
     @GameTest public void struffoliHealOnlyNearbyTeammates(GameTestHelper helper) {
         withPlayers(helper, 3, players -> {
             var scoreboard = helper.getLevel().getServer().getScoreboard();

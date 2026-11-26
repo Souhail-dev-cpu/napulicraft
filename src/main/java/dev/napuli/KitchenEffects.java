@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 
 /** Per-player timers follow potion time: logout pauses them and death clears them. */
 public final class KitchenEffects {
+    // Keep the saved limoncello attachment IDs: all alcoholic drinks now share these counters.
     static final AttachmentType<Integer> BABA = counter("baba_rush"), CAPITONE = counter("capitone_crash"),
             DRINKS = counter("limoncello_drinks"), DRINK_WINDOW = counter("limoncello_window"),
             COOLING = counter("watermelon_cooling"), HEAT = counter("body_heat"), FRIED_STREAK = counter("fried_streak");
@@ -91,7 +92,7 @@ public final class KitchenEffects {
                     NapoliNotice.show(player, Component.translatable("napuli.kitchen.puzzle_ready"));
                 }
             }
-            case "LIMONCELLO" -> {
+            case "LIMONCELLO", "ALCOHOL" -> {
                 effect(player, MobEffects.LUCK, 45, 0);
                 int drinks = player.getAttachedOrElse(DRINKS, 0) + 1;
                 player.setAttached(DRINKS, Math.min(drinks, 10));

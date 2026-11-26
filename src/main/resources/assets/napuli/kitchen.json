@@ -557,6 +557,160 @@
       "container": "glass_bottle",
       "rare": false,
       "shape": "bottle"
+    },
+    {
+      "id": "amaro_napoletano",
+      "it": "Amaro Napoletano",
+      "en": "Neapolitan Amaro",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "crema_limone",
+      "it": "Crema di Limone",
+      "en": "Lemon Cream Liqueur",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "liquore_finocchietto",
+      "it": "Liquore di Finocchietto",
+      "en": "Wild Fennel Liqueur",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "liquore_liquirizia",
+      "it": "Liquore di Liquirizia",
+      "en": "Liquorice Liqueur",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "liquore_mandorla",
+      "it": "Liquore di Mandorla",
+      "en": "Almond Liqueur",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "falanghina",
+      "it": "Falanghina",
+      "en": "Falanghina",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "wine"
+    },
+    {
+      "id": "aglianico",
+      "it": "Aglianico",
+      "en": "Aglianico",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "wine"
+    },
+    {
+      "id": "prosecco",
+      "it": "Prosecco",
+      "en": "Prosecco",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "sparkling"
+    },
+    {
+      "id": "spumante",
+      "it": "Spumante",
+      "en": "Sparkling Wine",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "sparkling"
+    },
+    {
+      "id": "grappa",
+      "it": "Grappa",
+      "en": "Grappa",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "liqueur"
+    },
+    {
+      "id": "champagne",
+      "it": "Champagne",
+      "en": "Champagne",
+      "nutrition": 1,
+      "saturation": 0.1,
+      "seconds": 0.8,
+      "effect": "ALCOHOL",
+      "sweet": false,
+      "fried": false,
+      "container": "glass_bottle",
+      "rare": false,
+      "shape": "sparkling"
     }
   ],
   "recipes": [
@@ -1246,6 +1400,148 @@
         "minecraft:melon_slice",
         "minecraft:melon_slice",
         "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "amaro_napoletano",
+      "output": "napuli:amaro_napoletano",
+      "count": 1,
+      "ingredients": [
+        "napuli:rum",
+        "minecraft:fern",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "crema_limone",
+      "output": "napuli:crema_limone",
+      "count": 1,
+      "ingredients": [
+        "napuli:limoncello",
+        "minecraft:milk_bucket",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "liquore_finocchietto",
+      "output": "napuli:liquore_finocchietto",
+      "count": 1,
+      "ingredients": [
+        "napuli:rum",
+        "minecraft:wheat_seeds",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "liquore_liquirizia",
+      "output": "napuli:liquore_liquirizia",
+      "count": 1,
+      "ingredients": [
+        "napuli:rum",
+        "minecraft:cocoa_beans",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "liquore_mandorla",
+      "output": "napuli:liquore_mandorla",
+      "count": 1,
+      "ingredients": [
+        "napuli:rum",
+        "minecraft:pumpkin_seeds",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "falanghina",
+      "output": "napuli:falanghina",
+      "count": 1,
+      "ingredients": [
+        "minecraft:sweet_berries",
+        "minecraft:sugar",
+        "napuli:lievito",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "aglianico",
+      "output": "napuli:aglianico",
+      "count": 1,
+      "ingredients": [
+        "minecraft:sweet_berries",
+        "minecraft:sweet_berries",
+        "napuli:lievito",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "prosecco",
+      "output": "napuli:prosecco",
+      "count": 1,
+      "ingredients": [
+        "napuli:falanghina",
+        "minecraft:sugar",
+        "napuli:lievito",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "spumante",
+      "output": "napuli:spumante",
+      "count": 1,
+      "ingredients": [
+        "minecraft:sweet_berries",
+        "minecraft:honey_bottle",
+        "napuli:lievito",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "grappa",
+      "output": "napuli:grappa",
+      "count": 1,
+      "ingredients": [
+        "napuli:aglianico",
+        "napuli:rum",
+        "minecraft:glass_bottle"
+      ],
+      "station": "COFFEE",
+      "fuel": false
+    },
+    {
+      "id": "champagne",
+      "output": "napuli:champagne",
+      "count": 1,
+      "ingredients": [
+        "napuli:falanghina",
+        "minecraft:honey_bottle",
+        "napuli:lievito",
         "minecraft:glass_bottle"
       ],
       "station": "COFFEE",

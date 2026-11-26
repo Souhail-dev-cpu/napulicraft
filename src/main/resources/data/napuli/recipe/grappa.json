@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "napuli:aglianico",
+    "napuli:rum",
+    "minecraft:glass_bottle"
+  ],
+  "result": {
+    "id": "napuli:grappa",
+    "count": 1
+  }
+}

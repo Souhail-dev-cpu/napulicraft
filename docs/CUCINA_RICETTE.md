@@ -65,6 +65,17 @@ Tutte disponibili senza quest. `+` indica ingredienti nella crafting table; le p
 | sartu riso ×1 | sartu riso crudo + tronchi | OVEN |
 | limoncello ×1 | limone + rum + sugar + glass bottle | COFFEE |
 | acqua cocomero ×1 | melon slice + melon slice + sugar + glass bottle | COFFEE |
+| amaro napoletano ×1 | rum + fern + sugar + glass bottle | COFFEE |
+| crema limone ×1 | limoncello + milk bucket + sugar + glass bottle | COFFEE |
+| liquore finocchietto ×1 | rum + wheat seeds + sugar + glass bottle | COFFEE |
+| liquore liquirizia ×1 | rum + cocoa beans + sugar + glass bottle | COFFEE |
+| liquore mandorla ×1 | rum + pumpkin seeds + sugar + glass bottle | COFFEE |
+| falanghina ×1 | sweet berries + sugar + lievito + glass bottle | COFFEE |
+| aglianico ×1 | sweet berries + sweet berries + lievito + glass bottle | COFFEE |
+| prosecco ×1 | falanghina + sugar + lievito + glass bottle | COFFEE |
+| spumante ×1 | sweet berries + honey bottle + lievito + glass bottle | COFFEE |
+| grappa ×1 | aglianico + rum + glass bottle | COFFEE |
+| champagne ×1 | falanghina + honey bottle + lievito + glass bottle | COFFEE |
 | pizza cruda ×1 | impasto + pomodoro + mozzarella | TABLE |
 | pizza ×1 | pizza cruda + tronchi | OVEN |
 | cafe ×1 | chicchi caffe + sugar + glass bottle | COFFEE |

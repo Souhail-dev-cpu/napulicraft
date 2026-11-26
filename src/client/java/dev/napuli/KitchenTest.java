@@ -35,6 +35,8 @@ import net.minecraft.world.phys.Vec3;
 public final class KitchenTest {
     private static volatile int phase, clientStep, monkId;
     private static volatile boolean finished;
+    private static volatile int drinkIndex;
+    private static int clientDrinkIndex = -1;
     private static int titleTicks, elapsed, phaseTicks, captureTicks, feedTicks;
     private static Vec3 start;
     private static Munaciello monk;
@@ -61,7 +63,7 @@ public final class KitchenTest {
         }
         mc.options.pauseOnLostFocus = false;
         if (mc.gui.screen() instanceof PauseScreen) mc.gui.setScreen(null);
-        mc.options.keyUse.setDown(phase == 3 || phase == 4 || phase == 6);
+        mc.options.keyUse.setDown(phase == 3 || phase == 4 || phase == 6 || phase == 20);
         mc.options.keyUp.setDown(phase == 3);
         mc.options.keySprint.setDown(phase == 3);
         if ((phase == 1 || phase == 7) && clientStep != phase && mc.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
@@ -133,6 +135,30 @@ public final class KitchenTest {
             Screenshot.grab(mc.gameDirectory, "kitchen-foods-and-friend.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
             clientStep = 12;
         }
+        if (phase == 20 && clientDrinkIndex != drinkIndex && drinkIndex < DistrictShops.drinks().size()
+                && mc.player.getMainHandItem().is(DistrictShops.drinks().get(drinkIndex).item())) {
+            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND); clientDrinkIndex = drinkIndex;
+        }
+        if (phase == 21 && clientStep != 21) {
+            if (!(mc.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.InventoryScreen)) {
+                mc.gui.toastManager().clear();
+                mc.gui.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)); captureTicks = 0;
+            } else if (++captureTicks > 30) {
+                Screenshot.grab(mc.gameDirectory, "kitchen-alcolici.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+                mc.player.closeContainer(); clientStep = 21;
+            }
+        }
+        if (phase == 22 && clientStep != 22 && press(mc, "Pagina successiva")) clientStep = 22;
+        if (phase == 23 && clientStep != 23 && descendants(mc.gui.screen()).filter(AbstractButton.class::isInstance)
+                .map(AbstractButton.class::cast).anyMatch(b -> b.getMessage().getString().contains("Prosecco"))) {
+            if (press(mc, "Pagina successiva")) clientStep = 23;
+        }
+        if (phase == 24 && clientStep != 24 && descendants(mc.gui.screen()).filter(AbstractButton.class::isInstance)
+                .map(AbstractButton.class::cast).anyMatch(b -> b.getMessage().getString().contains("Champagne"))) {
+            Screenshot.grab(mc.gameDirectory, "kitchen-bottega-alcolici.png", mc.gameRenderer.mainRenderTarget(), 1, message -> {});
+            if (press(mc, "Bottega")) clientStep = 24;
+        }
+        if (phase == 25 && clientStep != 25 && press(mc, "Vini e liquori")) clientStep = 25;
     }
     private static void click(Minecraft mc, int slot, net.minecraft.world.inventory.ContainerInput action) {
         mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, 0, action, mc.player);
@@ -153,7 +179,7 @@ public final class KitchenTest {
         if (finished || server.getPlayerList().getPlayers().isEmpty()) return;
         var player = server.getPlayerList().getPlayers().getFirst();
         try {
-            if (++elapsed > 2000) throw new IllegalStateException("Timed out in phase " + phase + ", client " + clientStep);
+            if (++elapsed > 3600) throw new IllegalStateException("Timed out in phase " + phase + ", client " + clientStep);
             phaseTicks++;
             switch (phase) {
                 case 0 -> {
@@ -272,7 +298,32 @@ public final class KitchenTest {
                 case 18 -> { if (phaseTicks > 15) { openStation(player, COFFEE); next(19); } }
                 case 19 -> {
                     if (clientStep != 19 || phaseTicks < 10) return;
-                    Napuli.LOGGER.info("[KITCHENTEST] ALL PASSED: furnace slots, crafting grid, fishing boats, arcade effects and kitchen progression");
+                    player.closeContainer(); player.getInventory().clearContent(); player.removeAllEffects();
+                    player.removeAttached(KitchenEffects.DRINKS); player.removeAttached(KitchenEffects.DRINK_WINDOW);
+                    player.getInventory().setItem(0, new ItemStack(DistrictShops.drinks().getFirst().item())); next(20);
+                }
+                case 20 -> {
+                    if (!player.getMainHandItem().is(Items.GLASS_BOTTLE)) return;
+                    check(player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Native drinking returns one bottle");
+                    if (drinkIndex == 2) check(player.hasEffect(MobEffects.NAUSEA), "Three mixed native drinks cause drunkenness");
+                    if (++drinkIndex < DistrictShops.drinks().size()) {
+                        player.getInventory().setItem(0, new ItemStack(DistrictShops.drinks().get(drinkIndex).item()));
+                    } else {
+                        player.getInventory().clearContent(); player.removeAllEffects();
+                        int slot=0; for (var drink:DistrictShops.drinks()) player.getInventory().setItem(slot++,new ItemStack(drink.item()));
+                        next(21);
+                    }
+                }
+                case 21 -> {
+                    if (clientStep != 21) return;
+                    DistrictShops.drinksMenu(player,DistrictLife.districts().getFirst().id(),1); next(22);
+                }
+                case 22 -> { if (clientStep == 22 && phaseTicks > 10) next(23); }
+                case 23 -> { if (clientStep == 23 && phaseTicks > 10) next(24); }
+                case 24 -> { if (clientStep == 24 && phaseTicks > 10) next(25); }
+                case 25 -> {
+                    if (clientStep != 25 || phaseTicks < 10) return;
+                    Napuli.LOGGER.info("[KITCHENTEST] ALL PASSED: furnace slots, crafting grid, fishing boats, arcade effects, kitchen progression, 11 alcoholic drinks and paged shop");
                     finished = true;
                 }
             }

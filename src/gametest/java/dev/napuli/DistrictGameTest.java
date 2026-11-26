@@ -45,6 +45,21 @@ public final class DistrictGameTest {
             int money=DistrictShops.ledger(city,a.id()).till();DistrictShops.credit(city,a,2);h.assertTrue(DistrictShops.ledger(city,a.id()).till()==money+2,"Sales enter the local till");
         }finally{restore(city,CityEconomy.STOCKS,stocks);restore(city,DistrictShops.LEDGERS,ledgers);}h.succeed();
     }
+    @GameTest public void newDrinksMigrateOldShopLedgersWithoutRefillingSoldStock(GameTestHelper h){
+        var city=h.getLevel();var saved=city.removeAttached(DistrictShops.LEDGERS);
+        try{
+            var a=DistrictLife.districts().getFirst();var b=DistrictLife.districts().get(1);
+            DistrictShops.put(city,a.id(),new DistrictShops.Ledger(Map.of("mele",0,"caffe",7),53,12));
+            var migrated=DistrictShops.ledger(city,a.id());
+            h.assertTrue(migrated.till()==53&&migrated.delivered()==12&&migrated.goods().get("mele")==0&&migrated.goods().get("caffe")==7,"Migration preserves cash, delivery date and existing quantities");
+            for(var product:DistrictShops.drinks()){
+                h.assertTrue(DistrictShops.quantity(city,a,product.id())==product.initial(),"New drink stock exists in old saves: "+product.id());
+                h.assertTrue(DistrictShops.reserve(city,a,product.id(),product.initial()),"All initial bottles can be reserved");
+                h.assertTrue(DistrictShops.quantity(city,a,product.id())==0&&!DistrictShops.reserve(city,a,product.id(),1),"Reading a sold-out ledger never replenishes bottles");
+                h.assertTrue(DistrictShops.quantity(city,b,product.id())==product.initial(),"Districts retain independent drink stocks");
+            }
+        }finally{restore(city,DistrictShops.LEDGERS,saved);}h.succeed();
+    }
     @GameTest public void allTransportStopsAreConnectedByTraversableRoutes(GameTestHelper h){
         for(var line:CityNetwork.lines()){
             var plan=CityNetwork.plan(line);h.assertTrue(plan.fleet()>=2&&plan.fleet()<=32,"Vehicle counts stay bounded");

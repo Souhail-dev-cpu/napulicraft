@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:sweet_berries",
+    "minecraft:sweet_berries",
+    "napuli:lievito",
+    "minecraft:glass_bottle"
+  ],
+  "result": {
+    "id": "napuli:aglianico",
+    "count": 1
+  }
+}

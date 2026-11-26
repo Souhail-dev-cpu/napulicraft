@@ -713,8 +713,9 @@ final class CityTest {
         var staff = mc.player.level().getEntitiesOfClass(NapoliResident.class, mc.player.getBoundingBox().inflate(5),
                 npc -> npc.role() == role).stream().min(java.util.Comparator.comparingDouble(npc -> npc.distanceToSqr(mc.player)));
         assertTrue(staff.isPresent(), "workplace NPC is available to talk to: " + role);
-        staff.ifPresent(npc -> mc.gameMode.interact(mc.player, npc,
-                new net.minecraft.world.phys.EntityHitResult(npc), InteractionHand.MAIN_HAND));
+        staff.ifPresent(npc -> {
+            mc.gameMode.interact(mc.player, npc, new net.minecraft.world.phys.EntityHitResult(npc), InteractionHand.MAIN_HAND);
+        });
     }
 
     private static void expectBlock(net.minecraft.server.level.ServerPlayer p, int x, int y, int z,

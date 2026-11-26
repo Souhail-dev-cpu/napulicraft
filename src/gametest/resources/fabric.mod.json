@@ -37,7 +37,8 @@
       "dev.napuli.PlayerSafetyRegressionGameTest",
       "dev.napuli.CooperativeRegressionGameTest",
       "dev.napuli.StartupAttachmentGameTest",
-      "dev.napuli.WorkResourcesRegressionGameTest"
+      "dev.napuli.WorkResourcesRegressionGameTest",
+      "dev.napuli.PickpocketGameTest"
     ]
   },
   "depends": {

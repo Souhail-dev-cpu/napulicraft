@@ -52,7 +52,7 @@ Per un server dedicato, installa le stesse mod nella sua cartella `mods`. È sup
 Al primo ingresso il giocatore viene accompagnato automaticamente nella dimensione di Napoli. Puoi usare `/napoli` per raggiungerla e `/napoli esci` per tornare al punto di provenienza registrato. I normali comandi di esplorazione non richiedono privilegi da operatore.
 
 1. Apri `/napoli luoghi`, scegli una meta e segui distanza e direzione durante il cammino.
-2. Parla con i cittadini con il **tasto destro**: consulta le informazioni e le azioni disponibili, conosci le loro necessità e costruisci rapporti nel tempo.
+2. Usa il **tasto destro** su un cittadino per parlare e accedere ai suoi servizi. **Shift + tasto destro** su NPC o giocatori apre il loro inventario per rubare.
 3. Usa `/lavoro` e `/lavoro segui` per consultare gli incarichi e raggiungere lo sportello del collocamento.
 4. Consulta `/casa` e i cartelli degli immobili per acquistare, affittare o richiedere un mutuo.
 5. Apri `/negozio` per una bottega di quartiere e `/trasporti` per la rete cittadina.
@@ -92,6 +92,8 @@ Le nuove funzioni sono raggiungibili dallo stesso menu:
 
 Acquisti e prenotazioni spiegano il motivo di un rifiuto, per esempio denaro mancante, inventario pieno, bottega chiusa, fermata lontana o viaggio già prenotato.
 
+Il **tasto destro sugli NPC** apre dialoghi e servizi; **Shift + tasto destro su NPC o giocatori** apre il loro inventario per rubare. Il clic normale sui giocatori non apre l'inventario. L'interfaccia mostra tasche o zaino, barra rapida, mano secondaria e armatura. Puoi rubare soltanto **5 oggetti singoli scelti casualmente per bersaglio e giorno di gioco**: gli slot col bordo azzurro indicano le quantità ancora disponibili; gli altri rimangono consultabili. Ogni clic trasferisce un oggetto. Il limite è condiviso fra tutti i ladri e sopravvive a chiusura della schermata, disconnessione e riavvio; riaprire non cambia la selezione. Il nuovo giorno rinnova la scelta fra gli oggetti ancora presenti. Le tasche dei residenti sono conservate nel mondo. Inventario pieno, oggetto spostato, bersaglio lontano o non più disponibile impediscono il trasferimento. In città il furto può allertare i Carabinieri e danneggia la fiducia del cittadino. Anche il pulsante **Parla** nella schermata delle tasche permette di tornare a dialoghi, negozi e lavori.
+
 ## Funzionalità principali
 
 | Sistema | Contenuti |
@@ -103,7 +105,7 @@ Acquisti e prenotazioni spiegano il motivo di un rifiuto, per esempio denaro man
 | Abitare | 35 immobili acquistabili o affittabili, mutui, bollette, chiavi, campanelli, ospiti e cene |
 | Lavoro | 85 professioni NPC, otto contratti giocabili, kit iniziali, raccolta guidata, risorse rinnovabili, quattro ranghi e tre livelli di attrezzatura |
 | Trasporti | Dieci linee di bus, tram e metro con fermate, passeggeri, capienza, biglietti e cambi |
-| Cucina | 71 ricette, quattro postazioni, ingredienti rinnovabili, effetti alimentari e progressione da pizzaiolo |
+| Cucina | 82 ricette, quattro postazioni, ingredienti rinnovabili, effetti alimentari e progressione da pizzaiolo |
 | Attività | Calcio giocabile, torneo dei quartieri, TV, eventi, missioni e obiettivi personali degli abitanti |
 | Contenuti caratteristici | Motorini a tre posti, radio locale, Munaciello, personaggi parodistici e sistema di polizia |
 
@@ -280,16 +282,18 @@ Se il conducente scende o si disconnette, il passeggero successivo prende il com
 
 ## Cucina napoletana
 
-La cucina comprende **71 ricette** disponibili in sopravvivenza, nel ricettario e nella scheda creativa. Gli ingredienti aggiuntivi si ricavano da risorse vanilla rinnovabili; le ricette sono accessibili senza completare missioni o raggiungere una reputazione.
+La cucina comprende **82 ricette** disponibili in sopravvivenza, nel ricettario e nella scheda creativa. Gli ingredienti aggiuntivi si ricavano da risorse vanilla rinnovabili; le ricette sono accessibili senza completare missioni o raggiungere una reputazione.
 
 | Postazione | Funzione |
 | --- | --- |
 | Forno a Legna Portatile | Cottura di pizze, dolci e preparazioni, con tronchi come combustibile |
 | Tavolo da Pizzaiolo | Ingredienti, impasti, preparazioni crude e insalate |
 | Banca della Frittura | Cottura dei fritti con olio |
-| Banca del Caffè | Chicchi, caffè, rum da cucina, limoncello e acqua di cocomero |
+| Banca del Caffè | Chicchi, caffè, rum da cucina, vini, liquori e acqua di cocomero |
 
 Le postazioni si possono costruire, piazzare, usare e trasportare. Fra le pietanze ci sono pizza margherita e a portafoglio, fritto misto, sfogliatelle, babà, pastiera, zeppole, struffoli, roccocò, mustaccioli, casatiello, lasagne, chiacchiere, spaghetti alle vongole, baccalà, capitone, minestra maritata, insalata di rinforzo, salsiccia e friarielli, gattò e sartù.
+
+La sezione **Vini e liquori** di `/negozio` vende Amaro Napoletano, Crema di Limone, liquori di Finocchietto, Liquirizia e Mandorla, Falanghina, Aglianico, Prosecco, Spumante, Grappa e Champagne. Le 11 bevande hanno texture proprie e ricette nella crafting table e nella Banca del Caffè. Restituiscono la bottiglia vuota e condividono con il Limoncello il conteggio dell'ubriachezza: tre alcolici in un minuto, anche diversi, attivano gli effetti comici.
 
 Gli alimenti hanno effetti differenti: cure, rigenerazione, fortuna, resistenza e bonus temporanei, talvolta seguiti da penalità. Gli struffoli curano anche i compagni della stessa squadra vanilla vicini. La pizza a portafoglio e le chiacchiere si consumano rapidamente senza interrompere la corsa.
 
@@ -427,6 +431,7 @@ I tasti aggiuntivi sono modificabili nelle impostazioni dei comandi di Minecraft
 | Tasto o azione | Funzione |
 | --- | --- |
 | Tasto destro su NPC, cartello o postazione | Interazione e menu disponibili |
+| Shift + tasto destro su NPC o giocatori | Apre l'inventario per rubare |
 | J | Gestione delle canzoni |
 | O | Menu cittadino, ricerca, preferiti e impostazioni HUD |
 | R sul motorino | Tocco: stazione successiva; pressione prolungata: ruota della radio, per il conducente |
@@ -515,13 +520,14 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 `./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, economia, bacheche cooperative e scambi, ultimo motorino, preferenze degli effetti, ripristino della telecamera e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. La prova verifica anche quattro dimensioni dell’interfaccia (da 320 × 240 a 960 × 540), assenza di sovrapposizioni fra i controlli, ricerca senza accenti, recupero dai risultati vuoti, rotella, tastiera, conservazione del link e ritorno dalla schermata di importazione musicale. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
 
-`build` include i **GameTest del server**. La suite comprende **178 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La suite comprende **189 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 
 | Task Gradle | Ambito |
 | --- | --- |
 | `runGameTest` | Suite automatica del server |
+| `runPickpocketTest` | Inventario di NPC e giocatori, furto di cinque unità, limite giornaliero, dialoghi e quattro dimensioni della GUI |
 | `runWorkCareerTest` | Client grafico: raccolta nativa, preparazione, paga a tempo, otto banchi, promozione, potenziamento e ricrescita |
 | `runCityAudit` | Controllo fisico di tutti gli accessi censiti, con rapporto CSV |
 | `runRealMultiplayerServer` | Server isolato per due client grafici, acquisti simultanei, ospiti, metro e riconnessione |
@@ -574,7 +580,7 @@ La versione include numero di esecuzione e tentativo, per esempio `1.1.0-beta.42
 | [Mappa di Napoli](docs/MAPPA_NAPOLI.md) | Atlante, dimensioni, luoghi, generazione e fonti geografiche |
 | [Quartieri e trasporti](docs/QUARTIERI_E_TRASPORTI.md) | Nuovi residenti, botteghe, linee, biglietti e prove multiplayer |
 | [Cucina](docs/CUCINA.md) | Postazioni, alimenti, effetti, progressione e Munaciello |
-| [Ricettario completo](docs/CUCINA_RICETTE.md) | Le 71 ricette con ingredienti e quantità |
+| [Ricettario completo](docs/CUCINA_RICETTE.md) | Le 82 ricette con ingredienti e quantità |
 | [NPC e polizia](docs/IA_POLIZIA.md) | Navigazione, inseguimenti, barricata e vandalismo |
 
 Codice e texture del progetto sono distribuiti con [licenza MIT](LICENSE). Il JAR include **JLayer 1.0.1**, distribuito con licenza **LGPL-2.1**, per decodificare i file MP3.

@@ -2,7 +2,7 @@
 
 Tutti gli alimenti richiesti sono disponibili in sopravvivenza, nel ricettario e nella scheda creativa di Napulicraft.
 Le ricette non richiedono reputazione o quest. Gli ingredienti nuovi si ottengono da risorse vanilla rinnovabili.
-La [lista completa delle 71 ricette](CUCINA_RICETTE.md) indica quantità, ingredienti e postazioni.
+La [lista completa delle 82 ricette](CUCINA_RICETTE.md) indica quantità, ingredienti e postazioni.
 
 ## Preparazione
 
@@ -15,9 +15,22 @@ Le quattro postazioni si possono costruire, piazzare, raccogliere e trasportare.
 | Forno a Legna Portatile | Cuoce pizze, dolci e piatti pronti da cuocere | Fornace + 2 mattoni + lingotto di ferro |
 | Tavolo da Pizzaiolo | Ingredienti, impasti, preparazioni crude e insalate | Crafting table + pietra liscia + ciotola |
 | Banca della Frittura | Cuoce le preparazioni crude con uno slot per il combustibile | Calderone + fornace + lingotto di ferro |
-| Banca del Caffè | Prepara chicchi, rum da cucina, caffè, limoncello e acqua di cocomero | Crafting table + lingotto di rame + bottiglia + cacao |
+| Banca del Caffè | Prepara chicchi, rum da cucina, caffè, vini, liquori e acqua di cocomero | Crafting table + lingotto di rame + bottiglia + cacao |
 
-Il forno cuoce con tronchi e la friggitoria usa olio. Le preparazioni usano la griglia 3×3. La Banca del Caffè accetta le sue ricette di caffè, chicchi, rum, limoncello e acqua di cocomero.
+Il forno cuoce con tronchi e la friggitoria usa olio. Le preparazioni usano la griglia 3×3. La Banca del Caffè accetta le sue ricette di caffè, chicchi, rum, vini, liquori e acqua di cocomero.
+
+## Vini e liquori
+
+Sono disponibili **Amaro Napoletano, Crema di Limone, Liquore di Finocchietto, Liquore di Liquirizia,
+Liquore di Mandorla, Falanghina, Aglianico, Prosecco, Spumante, Grappa e Champagne**, oltre al Limoncello.
+Li trovi nella scheda creativa, nel ricettario e nelle botteghe dei quartieri: apri `/negozio`, poi **Vini e liquori**.
+La sezione ha tre pagine con un massimo di quattro bevande; valgono i normali orari del negozio, prezzi, scorte e rifornimenti giornalieri.
+Le botteghe dei vecchi salvataggi ricevono le nuove voci senza modificare saldi o scorte già esistenti.
+
+Le ricette sono semplificazioni di gioco con ingredienti rinnovabili e si preparano nella crafting table o nella
+Banca del Caffè. Ogni bevanda si impila fino a 16, si beve in 0,8 s e restituisce una bottiglia di vetro.
+Tutti questi alcolici danno Fortuna I per 45 s. **Tre bevande nel periodo di un minuto**, anche mescolando tipi
+diversi e Limoncello, causano Nausea per 20 s, Lentezza per 10 s e Salto II per 10 s. Il conteggio è personale.
 
 ## Alimenti ed effetti
 

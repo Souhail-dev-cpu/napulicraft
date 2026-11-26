@@ -79,12 +79,18 @@ public final class NapoliKitchen {
             for (var value : catalogue.getAsJsonArray("foods")) {
                 JsonObject spec = value.getAsJsonObject();
                 String id = spec.get("id").getAsString(), container = text(spec, "container");
+                var lore = new ArrayList<Component>();
+                if (spec.get("effect").getAsString().equals("ALCOHOL") || spec.get("effect").getAsString().equals("LIMONCELLO")) {
+                    if (!id.equals("limoncello")) lore.add(Component.translatable("napuli.food." + id));
+                    for (String line : List.of("alcohol_luck", "alcohol_limit", "alcohol_mixed"))
+                        lore.add(Component.translatable("napuli.food." + line));
+                } else lore.add(Component.translatable("napuli.food." + id));
                 var consumable = "glass_bottle".equals(container) ? Consumables.defaultDrink() : Consumables.defaultFood();
                 var properties = properties(id).stacksTo(container == null ? 64 : 16)
                         .food(new FoodProperties.Builder().nutrition(spec.get("nutrition").getAsInt())
                                 .saturationModifier(spec.get("saturation").getAsFloat()).alwaysEdible().build(),
                                 consumable.consumeSeconds(spec.get("seconds").getAsFloat()).build())
-                        .component(DataComponents.LORE, new ItemLore(List.of(Component.translatable("napuli.food." + id))));
+                        .component(DataComponents.LORE, new ItemLore(lore));
                 if (container != null) properties.usingConvertsTo(item("minecraft:" + container));
                 if (id.equals("pizza_portafoglio") || id.equals("chiacchiere"))
                     properties.component(DataComponents.USE_EFFECTS, new net.minecraft.world.item.component.UseEffects(true, true, 1f));

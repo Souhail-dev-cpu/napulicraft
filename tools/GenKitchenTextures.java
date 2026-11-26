@@ -141,9 +141,37 @@ public final class GenKitchenTextures {
             case "bowl","plate" -> {oval(1,7,14,7,INK);oval(2,6,12,6,WHITE);oval(3,6,10,4,id.contains("minestra")?0x739348:0xc6a24e);for(int x=4;x<13;x+=3){px(x,8,accent);px(x-1,7,WHITE);}rect(3,11,13,13,0x8e5637);}
             case "fish" -> {poly(new int[]{2,12,13,15,13,12,2,1},new int[]{7,5,2,3,8,11,10,8},INK);oval(2,6,10,4,GOLD);px(3,7,WHITE);px(4,7,INK);line(6,7,9,7,LIGHT);}
             case "bottle" -> {rect(6,1,10,5,INK);rect(7,2,9,5,WHITE);rect(4,5,12,14,INK);rect(5,6,11,13,id.contains("cocomero")?0xd55c61:0xd9d05f);rect(6,7,7,12,WHITE);rect(7,0,9,2,0x8d633d);}
+            case "liqueur", "wine", "sparkling" -> drink(id, shape);
             case "coin" -> {oval(2,2,12,12,0x99621d);oval(3,2,10,11,0xf6cc53);line(6,5,9,5,WHITE);line(6,7,9,7,0xa46d23);line(6,9,9,9,WHITE);}
             default -> ingredient(id,seed);
         }
+    }
+    static void drink(String id, String shape) {
+        int liquid = switch (id) {
+            case "amaro_napoletano" -> 0x82462b;
+            case "crema_limone" -> 0xf3dda0;
+            case "liquore_finocchietto" -> 0x739b50;
+            case "liquore_liquirizia" -> 0x40312e;
+            case "liquore_mandorla" -> 0xc79a66;
+            case "falanghina" -> 0xd9cf79;
+            case "aglianico" -> 0x852e46;
+            case "prosecco" -> 0xb2c974;
+            case "spumante" -> 0xce9875;
+            case "grappa" -> 0xbdd9da;
+            default -> 0xd3b65c;
+        };
+        boolean wine = shape.equals("wine"), sparkling = shape.equals("sparkling");
+        int left = wine ? 5 : 4, right = wine ? 10 : 11;
+        int glass = sparkling ? 0x365b47 : wine ? 0x3d634d : 0x667d78;
+        rect(6, 1, 9, 6, INK); rect(7, 2, 8, 6, glass);
+        rect(left, 6, right, 14, INK); rect(left + 1, 6, right - 1, 13, glass);
+        rect(left + 1, 8, right - 1, 13, liquid);
+        line(left + 1, 7, left + 1, 12, 0xc6e2d1);
+        rect(6, 9, 9, 11, sparkling ? 0xf2cc68 : WHITE);
+        px(7, 10, liquid); px(8, 10, liquid);
+        rect(6, 1, 9, 2, sparkling ? GOLD : id.equals("aglianico") ? 0xa74a55 : 0x9c7853);
+        if (sparkling) { rect(6, 3, 9, 4, GOLD); px(12, 3, LIGHT); px(13, 5, WHITE); }
+        else if (!wine) px(8, 4, WHITE);
     }
     static void ingredient(String id,int seed){
         if(id.equals("pizza_cruda")){food(id,"pie",seed);return;}

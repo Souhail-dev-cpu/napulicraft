@@ -36,6 +36,8 @@ public class NapuliClient implements ClientModInitializer {
 		RadioClient.register();
 		HudClient.register();
 		CompanionScreen.register();
+		PickpocketScreen.register();
+		PickpocketClientTest.register();
 		CompanionClientTest.register();
 		NapoliRadar.register();
 		NapoliNoticeToast.register();

@@ -619,3 +619,31 @@ music.situation.risveglio|Risveglio|Waking up|Buongiorno
 music.situation.notte|Notte|Night|Notte
 music.situation.radio|Radio in strada|Street radio|Radio pe' strada
 music.situation.urlo|Urlo del gigante (5 s)|Giant scream (5 s)|Urlo d' 'o gigante (5 s)
+pick.title|Inventario · %s|Inventory · %s|Inventario · %s
+pick.subtitle|Rubati oggi: %s/%s · Oggetti singoli|Stolen today: %s/%s · Individual items|Arrubbate ogge: %s/%s · Oggette singule
+pick.legend|Bordo azzurro: rubabile · Grigio: sola lettura|Cyan border: stealable · Grey: view only|Bordo azzurro: se pò arrubbà · Grigio: se guarda
+pick.help|Disponibili: %s oggetti. Ogni clic ne ruba uno.|Available: %s items. Each click steals one.|Disponibile: %s oggette. Ogne clic ne piglia uno.
+pick.exhausted|Limite raggiunto. Potrai rubare ancora domani.|Daily limit reached. You can steal again tomorrow.|Limite 'e ogge raggiunto. Puoe arrubbà dimane.
+pick.hotbar|Barra rapida · %s|Hotbar · %s|Barra rapida · %s
+pick.bag|Zaino · %s|Backpack · %s|Sacca · %s
+pick.pocket|Tasca · %s|Pocket · %s|Sacca · %s
+pick.gear.mainhand|Mano principale|Main hand|Mano principale
+pick.gear.offhand|Mano secondaria|Off hand|N'ata mano
+pick.gear.head|Testa|Head|Capa
+pick.gear.chest|Torso|Chest|Pietto
+pick.gear.legs|Gambe|Legs|Gamme
+pick.gear.feet|Piedi|Feet|Piere
+pick.empty|Vuoto|Empty|Vacante
+pick.allowed|Puoi rubarne ancora %s oggi. Clicca per prenderne uno.|You can steal %s more today. Click to take one.|Ne puoe arrubbà ancora %s ogge. Clicca pe pigliarne uno.
+pick.locked|Puoi guardare questo oggetto, ma oggi non puoi rubarlo.|You can inspect this item, but cannot steal it today.|Puoe guardà st'oggetto, ma ogge nun 'o puoe arrubbà.
+pick.talk|Parla|Talk|Parla
+pick.taken|Oggetto rubato e aggiunto al tuo inventario.|Item stolen and added to your inventory.|Oggetto arrubbato e miso dint' 'o zaino tuo.
+pick.cannot_take|Oggetto non disponibile oppure inventario pieno.|Item unavailable or your inventory is full.|Oggetto nun disponibile o zaino chino.
+pick.victim|Ti è stato rubato: %s.|An item was stolen from you: %s.|T'hanno arrubbato: %s.
+pick.closed|Inventario chiuso: bersaglio non raggiungibile o giornata cambiata.|Inventory closed: target out of reach or a new day has started.|Inventario chiuso: bersaglio luntano o juorno cagnato.
+shop.drinks|Vini e liquori|Wines and liqueurs|Vine e licuore
+shop.drinks_info|Pagina %s/%s · Scorte locali e prezzi finali.|Page %s/%s · Local stock and final prices.|Pàggina %s/%s · Scorte d'a puteca e prezze finale.
+shop.drinks_status|Stato: %s|Status: %s|Stato: %s
+shop.previous|← Pagina precedente|← Previous page|← Pàggina primma
+shop.next|Pagina successiva →|Next page →|Pàggina appriesso →
+shop.back|← Bottega|← Shop|← Puteca

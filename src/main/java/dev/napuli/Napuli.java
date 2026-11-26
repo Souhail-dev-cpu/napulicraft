@@ -134,6 +134,7 @@ public class Napuli implements ModInitializer {
 		Hud.register();
 		NapoliNotice.register();
 		CityCompanion.register();
+		Pickpocket.register();
 		NpcSpeech.register();
         CityVerification.register();
 		CityRailway.register();

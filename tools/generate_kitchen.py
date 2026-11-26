@@ -67,6 +67,25 @@ foods = [
     ('acqua_cocomero','Acqua di Cocomero','Cooling watermelon water',3,.25,.6,'COOLING',['melon_slice','melon_slice','sugar','glass_bottle'],'COFFEE',False,False,False,'glass_bottle',False,'bottle'),
 ]
 
+# Fictional crafting shortcuts use renewable ingredients, like the existing limoncello recipe.
+# id, Italian/English name, ingredients, Italian/English tasting note.
+drinks = [
+    ('amaro_napoletano', 'Amaro Napoletano', 'Neapolitan Amaro', ['napuli:rum', 'fern', 'sugar', 'glass_bottle'], 'Amaro erbaceo e dolce.', 'A sweet, herbal bitter.'),
+    ('crema_limone', 'Crema di Limone', 'Lemon Cream Liqueur', ['napuli:limoncello', 'milk_bucket', 'sugar', 'glass_bottle'], 'Liquore cremoso al limone.', 'A creamy lemon liqueur.'),
+    ('liquore_finocchietto', 'Liquore di Finocchietto', 'Wild Fennel Liqueur', ['napuli:rum', 'wheat_seeds', 'sugar', 'glass_bottle'], 'Liquore dal profumo di finocchietto.', 'An aromatic wild fennel liqueur.'),
+    ('liquore_liquirizia', 'Liquore di Liquirizia', 'Liquorice Liqueur', ['napuli:rum', 'cocoa_beans', 'sugar', 'glass_bottle'], 'Liquore scuro alla liquirizia.', 'A dark liquorice liqueur.'),
+    ('liquore_mandorla', 'Liquore di Mandorla', 'Almond Liqueur', ['napuli:rum', 'pumpkin_seeds', 'sugar', 'glass_bottle'], 'Liquore dolce alla mandorla.', 'A sweet almond liqueur.'),
+    ('falanghina', 'Falanghina', 'Falanghina', ['sweet_berries', 'sugar', 'napuli:lievito', 'glass_bottle'], 'Bianco fresco e profumato.', 'A fresh, fragrant white wine.'),
+    ('aglianico', 'Aglianico', 'Aglianico', ['sweet_berries', 'sweet_berries', 'napuli:lievito', 'glass_bottle'], 'Rosso dal gusto intenso.', 'A full-bodied red wine.'),
+    ('prosecco', 'Prosecco', 'Prosecco', ['napuli:falanghina', 'sugar', 'napuli:lievito', 'glass_bottle'], 'Bollicine per l\'aperitivo.', 'Bubbles for an aperitif.'),
+    ('spumante', 'Spumante', 'Sparkling Wine', ['sweet_berries', 'honey_bottle', 'napuli:lievito', 'glass_bottle'], 'Vino spumante per un brindisi.', 'A sparkling wine for a toast.'),
+    ('grappa', 'Grappa', 'Grappa', ['napuli:aglianico', 'napuli:rum', 'glass_bottle'], 'Distillato dal gusto deciso.', 'A bold grape spirit.'),
+    ('champagne', 'Champagne', 'Champagne', ['napuli:falanghina', 'honey_bottle', 'napuli:lievito', 'glass_bottle'], 'Bollicine per le grandi occasioni.', 'Bubbles for special occasions.'),
+]
+for item_id, it, en, inputs, _, _ in drinks:
+    shape = 'sparkling' if item_id in ('prosecco', 'spumante', 'champagne') else 'wine' if item_id in ('falanghina', 'aglianico') else 'liqueur'
+    foods.append((item_id, it, en, 1, .1, .8, 'ALCOHOL', inputs, 'COFFEE', False, False, False, 'glass_bottle', False, shape))
+
 def normalize(items):
     return [x if ':' in x else vanilla(x) for x in items]
 
@@ -168,10 +187,18 @@ for lang in ('it_it','nap_it','en_us'):
         'GATTO': ('Heals 3 hearts; Regeneration I for 10 s. Very filling.', 'Cura 3 cuori; Rigenerazione I per 10 s. Molto saziante.'),
         'PUZZLE': ('Unlocks the craftable Sartu Puzzle Tablet.', "Sblocca la Tavoletta dell'Enigma, craftabile."),
         'LIMONCELLO': ('Luck I for 45 s; 3 drinks within a minute cause comical drunkenness.', 'Fortuna I per 45 s; 3 bicchieri entro un minuto causano ubriachezza comica.'),
+        'ALCOHOL': ('Luck I for 45 s; 3 alcoholic drinks within a minute cause comical drunkenness, even when mixed.', 'Fortuna I per 45 s; 3 alcolici entro un minuto causano ubriachezza comica, anche se diversi.'),
         'COOLING': ('Reduces heat by 60, cools for 2 min; Fire Resistance for 30 s.', 'Riduce il calore di 60, rinfresca per 2 min; Resistenza al Fuoco per 30 s.'),
     }
     for food in catalogue['foods']:
         translations['napuli.food.'+food['id']] = effects[food['effect']][0 if english else 1]
+    for item_id, _, _, _, it_note, en_note in drinks:
+        translations['napuli.food.'+item_id] = en_note if english else it_note
+    translations.update({
+        'napuli.food.alcohol_luck': 'Luck I for 45 s.' if english else 'Fortuna I per 45 s.',
+        'napuli.food.alcohol_limit': '3 drinks in 1 minute: drunkenness.' if english else '3 alcolici in 1 minuto: ubriachezza.',
+        'napuli.food.alcohol_mixed': 'Different alcoholic drinks count together.' if english else 'Il totale include alcolici diversi.',
+    })
     if lang == 'it_it':
         translations['item.napuli.cafe'] = 'Caffè Napoletano'
     translations.update({
@@ -191,7 +218,7 @@ for lang in ('it_it','nap_it','en_us'):
         'napuli.kitchen.chef':'Pizza reputation: %s pizzas · %s helpers available for quests.' if english else 'Reputazione da Pizzaiolo: %s pizze · %s aiutanti disponibili nelle quest.',
         'napuli.kitchen.help':'Your cooking earned help from %s NPCs for this quest!' if english else 'La tua cucina ti ha fatto guadagnare %s aiutanti per questa quest!',
         'napuli.kitchen.extreme':'Extreme fullness! Take a break from fried food.' if english else 'Sazio estremo! Fai una pausa dai fritti.',
-        'napuli.kitchen.drunk':'Comical drunkenness! Maybe stop at one limoncello next time...' if english else "Ubriachezza comica! Magari fermati a un limoncello la prossima volta...",
+        'napuli.kitchen.drunk':'Comical drunkenness! Maybe stop at one drink next time...' if english else "Ubriachezza comica! Magari fermati a un bicchiere la prossima volta...",
         'napuli.kitchen.hot':'You are overheating. Find shade or drink watermelon water.' if english else 'Troppo caldo! Cerca ombra o bevi acqua di cocomero.',
         'napuli.kitchen.puzzle_ready':'Sartu eaten: you can now solve a Sartu Puzzle Tablet!' if english else "Sartù mangiato: ora puoi risolvere una Tavoletta dell'Enigma!",
         'napuli.kitchen.puzzle_locked':'Eat Sartu di Riso to unlock this puzzle.' if english else 'Mangia il Sartù di Riso per sbloccare questo enigma.',
@@ -211,7 +238,7 @@ for lang in ('it_it','nap_it','en_us'):
 
 lines=['# Ricette della cucina napoletana','', 'Tutte disponibili senza quest. `+` indica ingredienti nella crafting table; le preparazioni crude vanno nel forno a legna o nella friggitoria (10 secondi).', '', '| Risultato | Ingredienti | Postazione alternativa |','| --- | --- | --- |']
 for r in recipes:
-    names = [x.removeprefix('minecraft:').removeprefix('napuli:').replace('_',' ') for x in r['ingredients']]
+    names = ['carta' if x == 'minecraft:paper' else x.removeprefix('minecraft:').removeprefix('napuli:').replace('_',' ') for x in r['ingredients']]
     station = 'TABLE' if r['id'] == 'olio' else r['station']
     lines.append('| '+r['output'].removeprefix('napuli:').replace('_',' ')+f" ×{r['count']} | "+' + '.join(names)+((' + tronchi' if station == 'OVEN' else ' + olio') if r['fuel'] else '')+' | '+station+' |')
 path=ROOT/'docs/CUCINA_RICETTE.md'

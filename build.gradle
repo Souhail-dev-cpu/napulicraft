@@ -14,6 +14,13 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+        pickpocketTest {
+            client()
+            name 'Napoli daily pickpocket inventory test'
+            vmArg '-Dnapuli.pickpockettest=true'
+            runDir '.gradle/pickpocket-client'
+            programArgs '--width', '1100', '--height', '720'
+        }
         qolTest {
             client()
             name "Napoli player quality of life test"
@@ -304,6 +311,30 @@ tasks.named('runQolTest') {
     doLast {
         if (!log.asFile.exists() || !log.asFile.text.contains('[QOLTEST] ALL PASSED'))
             throw new GradleException('Player quality of life client test failed; see .gradle/qol-client/logs/latest.log')
+    }
+}
+
+tasks.register('preparePickpocketTest') {
+    def directory = layout.projectDirectory.dir('.gradle/pickpocket-client').asFile
+    doLast {
+        directory.mkdirs()
+        def options = new File(directory, 'options.txt')
+        def text = options.exists() ? options.getText('UTF-8') : ''
+        [onboardAccessibility:'false', tutorialStep:'none', renderDistance:'4', simulationDistance:'5', guiScale:'2', maxFps:'60', pauseOnLostFocus:'false', lang:'it_it'].each { key, value ->
+            def pattern = java.util.regex.Pattern.compile('(?m)^' + key + ':.*$')
+            if (pattern.matcher(text).find()) text = pattern.matcher(text).replaceAll(key + ':' + value)
+            else text += "\n${key}:${value}\n"
+        }
+        options.setText(text, 'UTF-8')
+    }
+}
+tasks.named('runPickpocketTest') {
+    dependsOn 'preparePickpocketTest'
+    mustRunAfter 'runGameTest'
+    def log = layout.projectDirectory.file('.gradle/pickpocket-client/logs/latest.log')
+    doLast {
+        if (!log.asFile.exists() || !log.asFile.text.contains('[PICKPOCKETTEST] ALL PASSED'))
+            throw new GradleException('Pickpocket client verification failed; see .gradle/pickpocket-client/logs/latest.log')
     }
 }
 tasks.named('runLivingCityTest') {

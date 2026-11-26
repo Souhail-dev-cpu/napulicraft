@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "napuli:item/phones/caricatore_usb_c"
+  }
+}

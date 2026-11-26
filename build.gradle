@@ -14,6 +14,13 @@ loom {
 	splitEnvironmentSourceSets()
 
 	runs {
+        phoneTest {
+            client()
+            name 'Napoli phone interfaces and multiplayer communications'
+            vmArg '-Dnapuli.phonetest=true'
+            runDir '.gradle/phone-client'
+            programArgs '--width', '1100', '--height', '900'
+        }
         pickpocketTest {
             client()
             name 'Napoli daily pickpocket inventory test'
@@ -301,6 +308,30 @@ tasks.register('prepareQolTest') {
             else text += "\n${key}:${value}\n"
         }
         options.setText(text, 'UTF-8')
+    }
+}
+
+tasks.register('preparePhoneTest') {
+    def directory = layout.projectDirectory.dir('.gradle/phone-client').asFile
+    doLast {
+        directory.mkdirs()
+        def options = new File(directory, 'options.txt')
+        def text = options.exists() ? options.getText('UTF-8') : ''
+        [onboardAccessibility:'false', tutorialStep:'none', renderDistance:'4', simulationDistance:'5', guiScale:'2', maxFps:'60', pauseOnLostFocus:'false', lang:'it_it'].each { key, value ->
+            def pattern = java.util.regex.Pattern.compile('(?m)^' + key + ':.*$')
+            if (pattern.matcher(text).find()) text = pattern.matcher(text).replaceAll(key + ':' + value)
+            else text += "\n${key}:${value}\n"
+        }
+        options.setText(text, 'UTF-8')
+    }
+}
+tasks.named('runPhoneTest') {
+    dependsOn 'preparePhoneTest'
+    mustRunAfter 'runGameTest'
+    def log = layout.projectDirectory.file('.gradle/phone-client/logs/latest.log')
+    doLast {
+        if (!log.asFile.exists() || !log.asFile.text.contains('[PHONETEST] ALL PASSED'))
+            throw new GradleException('Phone client test failed; see .gradle/phone-client/logs/latest.log')
     }
 }
 

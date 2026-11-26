@@ -647,3 +647,57 @@ shop.drinks_status|Stato: %s|Status: %s|Stato: %s
 shop.previous|← Pagina precedente|← Previous page|← Pàggina primma
 shop.next|Pagina successiva →|Next page →|Pàggina appriesso →
 shop.back|← Bottega|← Shop|← Puteca
+phone.item_help|Tasto destro o P: apri. GPS, chat e chiamate.|Right-click or P: open. GPS, chat and calls.|Tasto destro o P: apre. GPS, chat e chiamate.
+phone.home|Home|Home|Home
+phone.home_date|La città, sempre con te.|Your city, always with you.|Napule, sempe cu tte.
+phone.weather|Meteo|Weather|Meteo
+phone.calls|Telefono|Phone|Telefono
+phone.messages|Messaggi|Messages|Messagge
+phone.gps|Mappe|Maps|Mappe
+phone.contacts|Contatti|Contacts|Cuntatte
+phone.settings|Impostazioni|Settings|Impostazzione
+phone.about|Info|About|Info
+phone.camera|Fotocamera|Camera|Fotocamera
+phone.photos|Foto|Photos|Fotografie
+phone.thread|Conversazione|Conversation|Cunversazzione
+phone.search|Cerca nome, numero o luogo|Search name, number or place|Cerca nomme, nummero o posto
+phone.write|Scrivi un messaggio…|Write a message…|Scrive nu messaggio…
+phone.send|Invia|Send|Manna
+phone.call|Chiama|Call|Chiamma
+phone.answer|Rispondi|Answer|Rispunne
+phone.end|Termina chiamata|End call|Fernisce 'a chiamata
+phone.call_chat|Apri conversazione|Open conversation|Apre 'a cunversazzione
+phone.active_call|In chiamata con %s|In a call with %s|Staje chiammanno %s
+phone.incoming|Chiamata da %s · Apri P|Call from %s · Open P|Te chiamma %s · Apre P
+phone.ringing_in|Chiamata in arrivo|Incoming call|Chiamata 'n arrivo
+phone.ringing_out|Chiamata in corso…|Calling…|Staje chiammanno…
+phone.mic_enable|Attiva microfono|Enable microphone|Appiccia 'o microfono
+phone.mic_disable|Disattiva microfono|Mute microphone|Stuta 'o microfono
+phone.mic_hint|Il microfono parte spento. Attivalo per parlare con l'altro giocatore.|The microphone starts muted. Enable it to speak to the other player.|'O microfono parte stutato. Appiccialo pe parlà cu ll'ato.
+phone.mic_error|Microfono non disponibile. Controlla il dispositivo e i permessi audio del sistema.|Microphone unavailable. Check your input device and system audio permissions.|Microfono nun disponibile. Cuntrolla 'o dispositivo e 'e permessi audio.
+phone.speaker_error|Uscita audio non disponibile. Controlla cuffie o altoparlanti.|Audio output unavailable. Check your headphones or speakers.|Audio nun disponibile. Cuntrolla 'e cuffie o 'e casse.
+phone.no_contacts|La rubrica mostra chi ha già usato un telefono in questo mondo. Gli altri giocatori devono aprire il proprio telefono una volta.|Contacts appear after using a phone in this world. Other players must open their phone once.|'A rubrica mostra chi ha già usato nu telefono dint'a stu munno. Ll'ate l'hanna aprì na vota.
+phone.no_messages|Nessun messaggio. Scrivi qui sotto per iniziare. I messaggi restano salvati anche dopo la disconnessione.|No messages. Write below to start. Messages are saved across disconnections.|Nisciuno messaggio. Scrive ccà sotto pe accummincià. 'E messagge restano salvate.
+phone.message_sent|Messaggio inviato.|Message sent.|Messaggio mannato.
+phone.new_message|Nuovo messaggio da %s · P per leggere|New message from %s · P to read|Messaggio nuovo 'a %s · P pe leggere
+phone.busy|Contatto offline, non raggiungibile o già in chiamata.|Contact offline, unreachable or already in a call.|Cuntatto offline, nun disponibile o già 'n chiamata.
+phone.call_ended|Chiamata terminata.|Call ended.|Chiamata fernuta.
+phone.unavailable|Telefono scarico, non disponibile o in modalità aereo.|Phone empty, unavailable or in airplane mode.|Telefono scarico, nun disponibile o 'n modalità aereo.
+phone.airplane|Modalità aereo attiva.|Airplane mode enabled.|Modalità aereo appicciata.
+phone.airplane_on|Modalità aereo: attiva|Airplane mode: on|Modalità aereo: appicciata
+phone.airplane_off|Modalità aereo: spenta|Airplane mode: off|Modalità aereo: stutata
+phone.dark_on|Aspetto: scuro|Appearance: dark|Aspetto: scuro
+phone.dark_off|Aspetto: chiaro|Appearance: light|Aspetto: chiaro
+phone.recharge|Ricarica · USB-C + redstone|Recharge · USB-C + redstone|Ricarica · USB-C + redstone
+phone.need_redstone|Serve 1 redstone per ricaricare.|You need 1 redstone to recharge.|Serve 1 redstone pe ricaricà.
+phone.need_charger|Porta un Caricatore USB-C nell'inventario.|Carry a USB-C Charger in your inventory.|Pporta nu Caricatore USB-C dint'ô zaino.
+phone.charged|Ricaricati 2000 mAh.|Recharged 2000 mAh.|Ricaricate 2000 mAh.
+phone.charging|Ricarica dichiarata|Rated charging|Ricarica dichiarata
+phone.to_napoli|Vai a Napoli|Go to Naples|Va a Napule
+phone.pick_destination|Scegli una destinazione di Napoli.|Choose a Naples destination.|Sceglie na destinazzione 'e Napule.
+phone.route_started|Navigazione avviata.|Navigation started.|Navigazzione accumminciata.
+phone.route_stopped|Navigazione interrotta.|Navigation stopped.|Navigazzione fernuta.
+phone.stop_gps|Interrompi navigazione|Stop navigation|Ferma 'a navigazzione
+phone.capture|Scatta|Capture|Scatta
+phone.photos_folder|Apri cartella delle foto|Open photos folder|Apre 'a cartella d''e fotografie
+phone.photos_help|Le foto del telefono sono screenshot reali del tuo mondo. Le trovi nella cartella screenshots di Minecraft, con nome telefono-….png.|Phone photos are real screenshots of your world. Find telefono-….png in Minecraft's screenshots folder.|'E fotografie d''o telefono so' screenshot vere d''o munno tuo. Stanno dint'a screenshots, cu nomme telefono-….png.

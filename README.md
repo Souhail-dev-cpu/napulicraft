@@ -20,6 +20,7 @@ Il progetto conserva il proprio carattere parodistico: Munaciello, motorini con 
 - [Economia, negozi e lavoro](#economia-negozi-e-lavoro)
 - [Bus, tram, metropolitana e motorini](#bus-tram-metropolitana-e-motorini)
 - [Cucina napoletana](#cucina-napoletana)
+- [Telefoni](#telefoni)
 - [Calcio, televisione ed eventi](#calcio-televisione-ed-eventi)
 - [Missioni, folklore e personaggi](#missioni-folklore-e-personaggi)
 - [Carabinieri, reati e tasse](#carabinieri-reati-e-tasse)
@@ -63,6 +64,8 @@ Per un'introduzione giocabile usa **`/inizio`**: conosci un vicino, scegli un la
 ## Menu cittadino e comodità
 
 Premi **O** per aprire il menu cittadino; il tasto è modificabile nei controlli di Minecraft. Sono disponibili anche **`/compagno`** e **`/citta menu`**. Dal menu raggiungi casa, lavoro, portafoglio, botteghe, trasporti, ricettario, guida e inviti.
+
+Durante il gioco la scorciatoia del menu ha precedenza sulla schermata amici di Minecraft, anch'essa assegnata a O. Il collegamento segue il tasto scelto nei controlli e si attiva quando non ci sono altre schermate aperte.
 
 Il menu mette in primo piano le attività quotidiane e dispone le schede su due colonne quando c'è spazio. La ricerca mantiene il testo durante il ridimensionamento; **×** la azzera. Scorri le pagine con la **rotella**, **Pag ↑ / Pag ↓** o le frecce in basso. **Indietro** risale alla sezione principale; dalle opzioni ritorni alla scheda aperta. I pulsanti ai limiti delle pagine sono disattivati e le ricerche senza risultati propongono un'azione per ripartire. Usa **Tab** e **Invio** per spostarti fra i controlli e attivarli.
 
@@ -303,6 +306,12 @@ L'interfaccia mostra **Fame Napoletana**, che rappresenta la sazietà eccessiva,
 
 La [guida alla cucina](docs/CUCINA.md) e il [ricettario completo](docs/CUCINA_RICETTE.md) indicano ingredienti, quantità, effetti e durate.
 
+## Telefoni
+
+**OnePlus 16, vivo X500 Pro Max, iQOO 15, iQOO 16 e OnePlus 15** sono oggetti 3D costruibili, con hardware delle versioni cinesi e interfacce ricreate di ColorOS e OriginOS. Porta un telefono nello zaino e premi **P**, usa **`/telefono`** oppure fai tasto destro con il telefono in mano.
+
+Le app includono GPS sul terreno del mondo e navigazione pedonale a Napoli, rubrica, messaggi privati persistenti anche per contatti offline, chiamate con accettazione e voce, fotocamera, foto e impostazioni. Il microfono parte spento e si attiva dal telefono durante una chiamata. Un caricatore USB-C e redstone ripristinano la batteria. Modelli, ricette, hardware, funzionamento e prove sono nella [guida ai telefoni](docs/TELEFONI.md).
+
 ## Calcio, televisione ed eventi
 
 Il centro sportivo permette di **giocare o assistere alle partite**, scegliere un ruolo, allenarsi in palestra e sviluppare la carriera calcistica. L'HUD mostra la stamina e i comandi pertinenti al possesso. Con **U** apri il selettore compatto per tiro teso, tiro a giro, pallonetto, roulette, finta di corpo e tocco laterale.
@@ -434,6 +443,7 @@ I tasti aggiuntivi sono modificabili nelle impostazioni dei comandi di Minecraft
 | Shift + tasto destro su NPC o giocatori | Apre l'inventario per rubare |
 | J | Gestione delle canzoni |
 | O | Menu cittadino, ricerca, preferiti e impostazioni HUD |
+| P o tasto destro con un telefono | Telefono: mappe, chiamate, contatti, messaggi, foto e impostazioni |
 | R sul motorino | Tocco: stazione successiva; pressione prolungata: ruota della radio, per il conducente |
 | H | Mostra o nasconde i pannelli della città e della cucina |
 | W / S e mouse sul motorino | Avanzamento, retromarcia e direzione |
@@ -520,7 +530,7 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 `./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, economia, bacheche cooperative e scambi, ultimo motorino, preferenze degli effetti, ripristino della telecamera e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. La prova verifica anche quattro dimensioni dell’interfaccia (da 320 × 240 a 960 × 540), assenza di sovrapposizioni fra i controlli, ricerca senza accenti, recupero dai risultati vuoti, rotella, tastiera, conservazione del link e ritorno dalla schermata di importazione musicale. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
 
-`build` include i **GameTest del server**. La suite comprende **189 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La suite comprende **197 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 
@@ -528,6 +538,7 @@ Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) 
 | --- | --- |
 | `runGameTest` | Suite automatica del server |
 | `runPickpocketTest` | Inventario di NPC e giocatori, furto di cinque unità, limite giornaliero, dialoghi e quattro dimensioni della GUI |
+| `runPhoneTest` | Cinque telefoni, hardware, chat privata, chiamate in entrata e uscita, voce, GPS, ricarica, foto e quattro dimensioni della GUI |
 | `runWorkCareerTest` | Client grafico: raccolta nativa, preparazione, paga a tempo, otto banchi, promozione, potenziamento e ricrescita |
 | `runCityAudit` | Controllo fisico di tutti gli accessi censiti, con rapporto CSV |
 | `runRealMultiplayerServer` | Server isolato per due client grafici, acquisti simultanei, ospiti, metro e riconnessione |

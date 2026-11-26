@@ -135,6 +135,7 @@ public class Napuli implements ModInitializer {
 		NapoliNotice.register();
 		CityCompanion.register();
 		Pickpocket.register();
+		Phones.register();
 		NpcSpeech.register();
         CityVerification.register();
 		CityRailway.register();
@@ -152,6 +153,8 @@ public class Napuli implements ModInitializer {
 					for (Item i : new Item[] {CORNICELLO, PIZZA, CAFE, CIABATTA_ITEM, CALZINI_SPORCHI, FORMAGGIO_PIEDE, MOTORINO_ITEM, CASCO, KNUCKLES, KNIFE, BATON, PISTOL, BOMBA_CARTA,
 							NAPULETANO_EGG, MUNACIELLO_EGG, GIGANTE_EGG}) out.accept(i);
 					NapoliKitchen.ITEMS.values().forEach(out::accept);
+					Phones.ITEMS.values().forEach(out::accept);
+					out.accept(Phones.CHARGER);
 					out.accept(NapoliFurniture.WORKTOP);
 					for (var machine : PublicGym.Machine.values()) out.accept(machine.block);
 					out.accept(NapoliFurniture.SINK);

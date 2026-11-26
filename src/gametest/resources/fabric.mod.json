@@ -38,7 +38,8 @@
       "dev.napuli.CooperativeRegressionGameTest",
       "dev.napuli.StartupAttachmentGameTest",
       "dev.napuli.WorkResourcesRegressionGameTest",
-      "dev.napuli.PickpocketGameTest"
+      "dev.napuli.PickpocketGameTest",
+      "dev.napuli.PhoneGameTest"
     ]
   },
   "depends": {

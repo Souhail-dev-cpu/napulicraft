@@ -130,7 +130,8 @@ final class NapoliRadar {
         }
     }
 
-    private static int terrainColor(int x, int z) {
+    static int terrainColor(int x, int z) {
+        if(level==null)return UNKNOWN;
         long key = ChunkPos.pack(x, z);
         int color = TERRAIN.get(key);
         if (color != 0) return color;

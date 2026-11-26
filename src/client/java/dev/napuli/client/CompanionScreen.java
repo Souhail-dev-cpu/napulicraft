@@ -9,13 +9,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 
 /** Searchable city hub. Commands and transactions are still checked by the server. */
-final class CompanionScreen extends NapoliScreen {
+public final class CompanionScreen extends NapoliScreen {
     static final KeyMapping OPEN = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.napuli.companion", InputConstants.KEY_O, KeyMapping.Category.register(Napuli.id("companion"))));
     private static final Map<String, String> FILTERS = new HashMap<>();
     private final CompanionBoard board;
@@ -47,9 +48,19 @@ final class CompanionScreen extends NapoliScreen {
             ctx.client().gui.setScreen(screen);
         });
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
-            while (OPEN.consumeClick()) if (mc.player != null && mc.gui.screen() == null && mc.getConnection() != null) mc.getConnection().sendCommand("compagno");
+            // Retain support for mouse bindings; keyboard input is handled before vanilla global shortcuts.
+            while (OPEN.consumeClick()) openMenu(mc);
             if (mc.level == null) FILTERS.clear();
         });
+    }
+    public static boolean handleOpenKey(Minecraft mc, InputConstants.Key key) {
+        return OPEN.matches(key) && openMenu(mc);
+    }
+    private static boolean openMenu(Minecraft mc) {
+        if (mc.player == null || mc.gui.screen() != null || mc.gui.overlay() != null
+                || mc.options.keyDebugModifier.isDown() || mc.getConnection() == null) return false;
+        mc.getConnection().sendCommand("compagno");
+        return true;
     }
     private void command(String command) {
         if (command.isEmpty()) return;

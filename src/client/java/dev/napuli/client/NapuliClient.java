@@ -38,6 +38,9 @@ public class NapuliClient implements ClientModInitializer {
 		CompanionScreen.register();
 		PickpocketScreen.register();
 		PickpocketClientTest.register();
+		PhoneClient.register();
+		PhonePhoto.register();
+		PhoneClientTest.register();
 		CompanionClientTest.register();
 		NapoliRadar.register();
 		NapoliNoticeToast.register();

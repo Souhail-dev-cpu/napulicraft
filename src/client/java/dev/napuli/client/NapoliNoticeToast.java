@@ -71,6 +71,6 @@ final class NapoliNoticeToast implements Toast {
     }
     private static boolean menuOpen() {
         var screen = net.minecraft.client.Minecraft.getInstance().gui.screen();
-        return screen instanceof NapoliScreen || screen instanceof RadioWheelScreen || screen instanceof FootballScreen;
+        return screen instanceof NapoliScreen || screen instanceof RadioWheelScreen || screen instanceof FootballScreen || screen instanceof PhoneScreen;
     }
 }

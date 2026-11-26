@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 final class CompanionOptions {
     static CompanionOptions current = new CompanionOptions();
     boolean city = true, kitchen = true, tracker = true, compact, notices = true;
-    boolean lightPreset, reducedParticles, reducedFlashes, reducedMotion, quietAmbience, textAlerts=true;
+    boolean lightPreset, reducedParticles, reducedFlashes, reducedMotion, quietAmbience, phoneDark, textAlerts=true;
     Boolean savedBob, savedLightning;
     Double savedTilt, savedFov, savedScreen;
     int size = 1;

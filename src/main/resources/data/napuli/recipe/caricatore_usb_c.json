@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:copper_ingot",
+    "minecraft:iron_ingot",
+    "minecraft:string",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "napuli:caricatore_usb_c",
+    "count": 1
+  }
+}

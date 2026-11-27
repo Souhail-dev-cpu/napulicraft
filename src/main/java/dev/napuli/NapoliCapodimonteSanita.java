@@ -79,7 +79,7 @@ final class NapoliCapodimonteSanita {
             city.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
     }
 
-    private static Set<ChunkPos> shell(ServerLevel city, BlockPos origin, int width, int depth, int roof, Set<Block> previous) {
+    static Set<ChunkPos> shell(ServerLevel city, BlockPos origin, int width, int depth, int roof, Set<Block> previous) {
         var chunks = new HashSet<ChunkPos>();
         for (int cx = origin.getX() >> 4; cx <= (origin.getX() + width) >> 4; cx++) {
             for (int cz = origin.getZ() >> 4; cz <= (origin.getZ() + depth) >> 4; cz++) {

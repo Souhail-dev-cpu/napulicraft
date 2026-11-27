@@ -27,6 +27,14 @@ import net.minecraft.world.phys.Vec3;
  * Sneak + right click to pick it up when empty. Riding it turns the radio on.
  */
 public class Motorino extends Mob {
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> CITIZEN=net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> POLICE=net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    public boolean policeVehicle(){return entityData.get(POLICE);}
+    void configurePolice(){entityData.set(POLICE,true);setNoAi(true);getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);}
+    boolean residentOwned(){return entityData.get(CITIZEN);}
+    void configureResident(){entityData.set(CITIZEN,true);setNoAi(true);}
+    @Override public boolean shouldBeSaved(){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&super.shouldBeSaved();}
+    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&super.saveAsPassenger(out);}
 	public static final int MAX_PASSENGERS = 3;
 	private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> STATION =
 			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
@@ -59,6 +67,8 @@ public class Motorino extends Mob {
 		super.defineSynchedData(b);
 		b.define(STATION, Radio.OFF);
 		b.define(PARADE, false);
+		b.define(CITIZEN,false);
+        b.define(POLICE,false);
 	}
 
 	/** every rider wears something on the head */
@@ -88,6 +98,8 @@ public class Motorino extends Mob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
+        if(level() instanceof ServerLevel city&&PoliceVehicles.drive(this,city))return;
+		if(level() instanceof ServerLevel city&&CityMobility.drive(this,city))return;
 		if (!level().isClientSide() && !inParade() && tickCount % 20 == 0 && !ScooterGarage.observe(this, getFirstPassenger() instanceof ServerPlayer p ? p : null)) return;
 		if (level().isClientSide() || paradeTicks <= 0) return;
 		ServerLevel sl = (ServerLevel) level();
@@ -137,6 +149,7 @@ public class Motorino extends Mob {
 
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+		if(CityMobility.managed(this)||PoliceVehicles.managed(this))return InteractionResult.PASS;
 		if (inParade()) return InteractionResult.PASS;
 		if (player instanceof ServerPlayer p && !ScooterGarage.observe(this,p)) return InteractionResult.FAIL;
 		if (player.isSecondaryUseActive()) {
@@ -165,12 +178,15 @@ public class Motorino extends Mob {
 
 	@Override
 	protected boolean canAddPassenger(Entity passenger) {
+        if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);
+		if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);
 		return getPassengers().size() < MAX_PASSENGERS && (!inParade() || !(passenger instanceof Player));
 	}
 
 	@Override
 	protected void addPassenger(Entity passenger) {
 		super.addPassenger(passenger);
+		if(CityMobility.managed(this)||PoliceVehicles.managed(this))return;
 		if (level().isClientSide() || inParade()) return;
 		if (getPassengers().size() == 1 && getControllingPassenger() instanceof ServerPlayer) setStation(lastStation);
 		ScooterGarage.observe(this,getFirstPassenger() instanceof ServerPlayer p?p:null);
@@ -223,6 +239,7 @@ public class Motorino extends Mob {
 	@Override
 	protected void removePassenger(Entity passenger) {
 		super.removePassenger(passenger);
+		if(CityMobility.managed(this)||PoliceVehicles.managed(this))return;
 		if (!level().isClientSide() && !inParade()) ScooterGarage.observe(this,null);
 		if (level().isClientSide() || inParade()) return;
 		if (getControllingPassenger() == null) setStation(Radio.OFF);

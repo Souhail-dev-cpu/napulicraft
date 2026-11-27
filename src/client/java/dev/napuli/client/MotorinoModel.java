@@ -12,7 +12,8 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 
 /** Ground at y=24, front at negative z. UV layout is painted by GenNewTextures. */
-public class MotorinoModel extends EntityModel<LivingEntityRenderState> {
+public class MotorinoModel extends EntityModel<MotorinoModel.State> {
+    public static final class State extends LivingEntityRenderState {boolean police;}
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Napuli.id("motorino"), "main");
     private final ModelPart frontWheel;
     private final ModelPart rearWheel;
@@ -40,6 +41,7 @@ public class MotorinoModel extends EntityModel<LivingEntityRenderState> {
         box(root, "tail_light", 108, 8, -2.5f, 11, 19, 5, 2, 1);
         box(root, "grab_rail", 72, 54, -4, 6, 18, 8, 3, 2);
         box(root, "exhaust", 72, 62, 5, 15, 6, 2, 3, 13);
+        box(root, "beacon", 54, 18, -2, -2, 15, 4, 4, 4);
         return LayerDefinition.create(mesh, 128, 128);
     }
 
@@ -53,8 +55,9 @@ public class MotorinoModel extends EntityModel<LivingEntityRenderState> {
     }
 
     @Override
-    public void setupAnim(LivingEntityRenderState state) {
+    public void setupAnim(State state) {
         super.setupAnim(state);
+        var beacon=root.getChild("beacon");beacon.visible=state.police;beacon.yScale=1+(float)Math.sin(state.ageInTicks*.6)*.15f;
         float spin = state.walkAnimationPos * 1.4f;
         frontWheel.xRot = spin;
         rearWheel.xRot = spin;

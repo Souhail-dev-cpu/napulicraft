@@ -34,8 +34,10 @@ final class Pickpocket {
                 Codec.LONG.fieldOf("day").forGetter(Daily::day), Codec.INT.fieldOf("stolen").forGetter(Daily::stolen),
                 Choice.CODEC.listOf().fieldOf("choices").forGetter(Daily::choices)).apply(i, Daily::new));
     }
-    record Pocket(List<ItemStack> items) {
-        static final Codec<Pocket> CODEC = ItemStack.OPTIONAL_CODEC.listOf().xmap(Pocket::new, Pocket::items);
+    record Pocket(List<ItemStack> items,int version,String theme) {
+        Pocket(List<ItemStack> items){this(items,1,"");}
+        private static final Codec<Pocket> CURRENT=RecordCodecBuilder.create(i->i.group(ItemStack.OPTIONAL_CODEC.listOf().fieldOf("items").forGetter(Pocket::items),Codec.INT.fieldOf("version").forGetter(Pocket::version),Codec.STRING.fieldOf("theme").forGetter(Pocket::theme)).apply(i,Pocket::new));
+        static final Codec<Pocket> CODEC=Codec.either(CURRENT,ItemStack.OPTIONAL_CODEC.listOf()).xmap(e->e.map(p->p,items->new Pocket(items,0,"")),p->com.mojang.datafixers.util.Either.left(p));
     }
     record Session(LivingEntity target, UUID token, long day, boolean reported) {}
     record Slot(Component label, Supplier<ItemStack> read, Consumer<ItemStack> write) {
@@ -72,15 +74,19 @@ final class Pickpocket {
     }
     private static ServerLevel storage(LivingEntity target) { return ((ServerLevel)target.level()).getServer().overworld(); }
     static long day(LivingEntity target) { return Math.floorDiv(target.level().getOverworldClockTime(), 24000); }
+    static boolean behind(Entity thief,LivingEntity victim){
+        var toward=thief.position().subtract(victim.position()).multiply(1,0,1);if(toward.horizontalDistanceSqr()<.04)return false;
+        var facing=net.minecraft.world.phys.Vec3.directionFromRotation(0,victim.getYHeadRot());return facing.dot(toward.normalize())<=-.5;
+    }
     static boolean valid(ServerPlayer player, LivingEntity target) {
         return supported(target) && player != target && player.isAlive() && !player.isSpectator()
                 && !Carabinieri.isJailed(player) && target.isAlive() && !target.isRemoved() && !target.isSpectator()
-                && player.level() == target.level() && player.distanceToSqr(target) <= 36 && player.hasLineOfSight(target)
+                && player.level() == target.level() && player.distanceToSqr(target) <= 9 && Math.abs(player.getY()-target.getY())<=1.5 && behind(player,target) && player.hasLineOfSight(target)
                 && (target instanceof ServerPlayer p ? p.level().getServer().getPlayerList().getPlayer(p.getUUID()) == p : true)
                 && player.containerMenu == player.inventoryMenu;
     }
     static boolean open(ServerPlayer player, LivingEntity target) {
-        if (!valid(player, target)) return false;
+        if (!valid(player, target)) {if(!behind(player,target))NapoliNotice.show(player,t("pick.behind"));return false;}
         var session = new Session(target, UUID.randomUUID(), day(player), false);
         player.setAttached(OPEN, session);
         send(player, session, true, Component.empty());
@@ -100,7 +106,7 @@ final class Pickpocket {
                 final int index = i;
                 slots.add(new Slot(t("pick.pocket", i + 1), () -> pocket(npc).items.get(index), item -> {
                     var items = new ArrayList<>(pocket(npc).items);
-                    items.set(index, item); savePocket(npc, new Pocket(List.copyOf(items)));
+                    items.set(index, item); savePocket(npc, new Pocket(List.copyOf(items),1,NpcBelongings.theme(npc)));
                 }));
             }
         } else if (target instanceof InventoryCarrier carrier) {
@@ -120,13 +126,13 @@ final class Pickpocket {
     }
     private static Pocket pocket(NapoliResident npc) {
         var existing = storage(npc).getAttachedOrElse(POCKETS, Map.of()).get(npc.getUUID().toString());
-        if (existing != null) return existing;
-        // Citizens previously had no bag. Supplies are created once, never on daily reset or reopening.
-        var items = new ArrayList<ItemStack>(List.of(new ItemStack(Items.BREAD, 2), new ItemStack(Items.WHEAT, 2),
-                new ItemStack(Items.STICK, 2), new ItemStack(Items.PAPER), new ItemStack(Items.TORCH, 2),
-                new ItemStack(Items.COAL), ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY));
-        Collections.rotate(items, Math.floorMod(npc.getUUID().hashCode(), items.size()));
-        var pocket = new Pocket(List.copyOf(items)); savePocket(npc, pocket); return pocket;
+        String theme=NpcBelongings.theme(npc);if(existing!=null&&existing.version()>=1&&existing.theme().equals(theme))return existing;
+        var items=new ArrayList<>(NpcBelongings.create(npc));
+        // Migration and job changes preserve depletion; empty pockets never refill.
+        if(existing!=null){int left=existing.items().stream().mapToInt(ItemStack::getCount).sum();for(int i=0;i<items.size();i++){var stack=items.get(i);int amount=Math.min(left,stack.getCount());items.set(i,amount==0?ItemStack.EMPTY:stack.copyWithCount(amount));left-=amount;}}
+        var pocket=new Pocket(List.copyOf(items),1,theme);savePocket(npc,pocket);
+        if(existing!=null){var old=storage(npc).getAttachedOrElse(DAYS,Map.of()).get(npc.getUUID().toString());if(old!=null&&old.day()==day(npc)){var selected=select(old.day(),items,npc.getRandom());saveDaily(npc,new Daily(old.day(),old.stolen(),selected.choices()));}}
+        return pocket;
     }
     private static void savePocket(NapoliResident npc, Pocket pocket) {
         var world = storage(npc); var pockets = new HashMap<>(world.getAttachedOrElse(POCKETS, Map.of()));
@@ -135,8 +141,9 @@ final class Pickpocket {
     static Daily daily(LivingEntity target, List<Slot> slots) {
         var existing = storage(target).getAttachedOrElse(DAYS, Map.of()).get(target.getUUID().toString());
         long day = day(target);
-        if (existing != null && existing.day == day) return existing;
-        var daily = select(day, slots.stream().map(Slot::get).toList(), target.getRandom());
+        if (existing != null && existing.day == day) {if(target instanceof NapoliResident&&existing.choices().stream().anyMatch(c->c.slot()>=9)){existing=new Daily(existing.day(),existing.stolen(),existing.choices().stream().filter(c->c.slot()<9).toList());saveDaily(target,existing);}return existing;}
+        // Equipment controlled by the job simulation cannot become a renewable theft reward.
+        var daily = select(day, slots.stream().limit(target instanceof NapoliResident?9:slots.size()).map(Slot::get).toList(), target.getRandom());
         saveDaily(target, daily); return daily;
     }
     static Daily select(long day, List<ItemStack> items, RandomSource random) {

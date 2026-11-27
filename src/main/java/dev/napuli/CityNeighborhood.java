@@ -18,6 +18,21 @@ final class CityNeighborhood {
     private static final Map<ServerLevel,Map<UUID,Scene>> SCENES=new WeakHashMap<>();
     private static final Map<ServerLevel,Map<UUID,Long>> HEARD=new WeakHashMap<>();
     private static final Map<ServerLevel,Map<UUID,Long>> NEXT=new WeakHashMap<>();
+    static boolean free(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,NapoliHouseholds.Activity wanted){
+        var life=CitySimulation.life(city,c.id());
+        return !npc.isSleeping()&&!npc.isPassenger()&&npc.getTarget()==null&&!CityPublicOrder.jailed(city,c.id())&&!CityConversation.engaged(city,c.id())
+                &&life.health()>=45&&life.needs().hunger()>=30&&life.needs().sleep()>=25&&life.needs().bladder()>=25
+                &&(wanted==NapoliHouseholds.Activity.SOCIAL||wanted==NapoliHouseholds.Activity.PLAY||wanted==NapoliHouseholds.Activity.REST);
+    }
+    private static void finish(ServerLevel city,UUID actor,Scene scene,boolean completed){
+        var scenes=SCENES.get(city);scenes.remove(actor);
+        if(scene.basket()!=null){var basket=city.getEntity(scene.basket());if(basket!=null)basket.discard();}
+        var ids=new ArrayList<UUID>();ids.add(actor);
+        if(scene.partner()!=null){var paired=scenes.get(scene.partner());if(paired!=null&&actor.equals(paired.partner())){scenes.remove(scene.partner());ids.add(scene.partner());}}
+        for(var id:ids){if(city.getEntity(id) instanceof NapoliResident npc){npc.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);npc.setGesture(CityGestures.Gesture.NONE);}
+            if(completed&&scene.partner()!=null){var l=CitySimulation.life(city,id);CitySimulation.put(city,id,l.withNeeds(l.needs().change(0,0,0,4,8,0),l.food(),l.last(),l.water(),l.energy()));}}
+    }
+    static void leave(ServerLevel city,UUID id){var scenes=SCENES.get(city);if(scenes!=null){var scene=scenes.get(id);if(scene!=null)finish(city,id,scene,false);}}
     static BlockPos cafe(BlockPos from){
         var local=CityProfessions.Category.FOOD.site().offset(8,0,14);
         return from.distSqr(local)<from.distSqr(NapoliMap.CAFE)?local:NapoliMap.CAFE;
@@ -49,12 +64,15 @@ final class CityNeighborhood {
     static boolean tick(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,NapoliHouseholds.Activity wanted){
         var scenes=SCENES.computeIfAbsent(city,k->new HashMap<>());var scene=scenes.get(c.id());long now=city.getGameTime();
         if(scene!=null){
-            if(now>=scene.until()||wanted==NapoliHouseholds.Activity.CARE||CityPublicOrder.jailed(city,c.id())){
-                if(scene.basket()!=null){var basket=city.getEntity(scene.basket());if(basket!=null)basket.discard();}
-                scenes.remove(c.id());npc.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);return false;
+            var partner=scene.partner()==null?null:city.getEntity(scene.partner());
+            var friend=scene.partner()==null?null:NapoliCivicLife.profile(city,scene.partner());
+            boolean together=partner instanceof NapoliResident other&&other.isAlive()&&friend!=null&&npc.distanceToSqr(other)<=36&&npc.hasLineOfSight(other)
+                    &&free(other,city,friend,CitySimulation.activity(city,friend,CitySimulation.life(city,friend.id()),NapoliBroadcast.time(city)));
+            if(now>=scene.until()||!free(npc,city,c,wanted)||scene.partner()!=null&&!together){
+                finish(city,c.id(),scene,now>=scene.until()&&together&&free(npc,city,c,wanted));return false;
             }
             if(scene.kind().equals("bar")||scene.kind().equals("chat")){
-                var partner=city.getEntity(scene.partner());if(partner!=null)npc.getLookControl().setLookAt(partner,30,30);
+                if(partner!=null)npc.getLookControl().setLookAt(partner,30,30);
                 npc.setItemSlot(EquipmentSlot.MAINHAND,scene.kind().equals("bar")?new ItemStack(Napuli.CAFE):ItemStack.EMPTY);npc.setActivity(NapoliHouseholds.Activity.SOCIAL);npc.getNavigation().stop();
                 if(scene.until()-now<=40&&partner instanceof NapoliResident other)say(city,other,scene.kind().equals("bar")?"Eh, certe giornate non si dimenticano. Prendiamoci un altro caffè.":"Grazie del pensiero! Ci vediamo domani.",18);
             }else{
@@ -65,21 +83,22 @@ final class CityNeighborhood {
                 }
             }return true;
         }
-        if(now<NEXT.computeIfAbsent(city,k->new HashMap<>()).getOrDefault(c.id(),0L)||wanted==NapoliHouseholds.Activity.WORK||wanted==NapoliHouseholds.Activity.CARE||wanted==NapoliHouseholds.Activity.SLEEP)return false;
+        if(now<NEXT.computeIfAbsent(city,k->new HashMap<>()).getOrDefault(c.id(),0L)||!free(npc,city,c,wanted))return false;
         long time=NapoliBroadcast.time(city),day=NapoliBroadcast.day(city);
         if(c.age(day)>=60&&time>=9000&&time<12500&&cafe(npc.blockPosition()).distToCenterSqr(npc.position())<20*20){
             for(var other:city.getEntitiesOfClass(NapoliResident.class,npc.getBoundingBox().inflate(4))){
-                var friend=NapoliCivicLife.profile(city,other.getUUID());if(friend==null||friend.id().equals(c.id())||friend.age(day)<60||scenes.containsKey(friend.id()))continue;
+                var friend=NapoliCivicLife.profile(city,other.getUUID());if(friend==null||friend.id().equals(c.id())||friend.age(day)<60||scenes.containsKey(friend.id())||now<NEXT.get(city).getOrDefault(friend.id(),0L)||!npc.hasLineOfSight(other)||!free(other,city,friend,CitySimulation.activity(city,friend,CitySimulation.life(city,friend.id()),time)))continue;
                 scenes.put(c.id(),new Scene("bar",friend.id(),now+240,null,null));scenes.put(friend.id(),new Scene("bar",c.id(),now+240,null,null));
                 NEXT.get(city).put(c.id(),now+3600);NEXT.get(city).put(friend.id(),now+3600);CitySimulation.encounter(city,c.id(),friend.id(),day);
                 say(city,npc,Math.floorMod(day+c.id().hashCode(),2)==0?"Ti ricordi quando qui passava il vecchio tram?":"Ieri il Napoli ci ha fatto soffrire fino alla fine!",18);return true;
             }
         }
-        if(wanted==NapoliHouseholds.Activity.SOCIAL){
+        if(wanted==NapoliHouseholds.Activity.SOCIAL||wanted==NapoliHouseholds.Activity.PLAY){
             for(var other:city.getEntitiesOfClass(NapoliResident.class,npc.getBoundingBox().inflate(3))){
-                var neighbor=NapoliCivicLife.profile(city,other.getUUID());if(neighbor==null||neighbor.id().equals(c.id())||scenes.containsKey(neighbor.id())||CitySimulation.activity(city,neighbor,CitySimulation.life(city,neighbor.id()),time)!=NapoliHouseholds.Activity.SOCIAL)continue;
+                var neighbor=NapoliCivicLife.profile(city,other.getUUID());if(neighbor==null||neighbor.id().equals(c.id())||scenes.containsKey(neighbor.id())||now<NEXT.get(city).getOrDefault(neighbor.id(),0L)||!npc.hasLineOfSight(other)||!free(other,city,neighbor,CitySimulation.activity(city,neighbor,CitySimulation.life(city,neighbor.id()),time))||(c.age(day)<18)!=(neighbor.age(day)<18))continue;
                 scenes.put(c.id(),new Scene("chat",neighbor.id(),now+240,null,null));scenes.put(neighbor.id(),new Scene("chat",c.id(),now+240,null,null));NEXT.get(city).put(c.id(),now+3600);NEXT.get(city).put(neighbor.id(),now+3600);CitySimulation.encounter(city,c.id(),neighbor.id(),day);
-                say(city,npc,city.isRaining()?"Vieni sotto, che ti bagni tutto!":"Come sta la famiglia? È un po' che non ci fermiamo a parlare.",14);return true;
+                npc.getLookControl().setLookAt(other,30,30);other.getLookControl().setLookAt(npc,30,30);npc.animate(CityGestures.Gesture.WAVE,40);other.animate(CityGestures.Gesture.HAPPY,50);
+                say(city,npc,city.isRaining()?"Vieni sotto, che ti bagni tutto!":c.age(day)<18?"Dopo i compiti ci troviamo in piazza?":CitySimulation.life(city,c.id()).relations().getOrDefault(neighbor.id().toString(),50)>=60?"Uè, "+neighbor.name()+"! Ti va di fermarti a parlare?":"Come sta la famiglia? È un po' che non ci fermiamo a parlare.",14);return true;
             }
         }
         var h=CityLivingHomes.find(c.property());
@@ -97,7 +116,7 @@ final class CityNeighborhood {
         ServerEntityEvents.ENTITY_LOAD.register((entity,city)->{if(entity.entityTags().contains("napuli_panaro")&&SCENES.getOrDefault(city,Map.of()).values().stream().noneMatch(s->entity.getUUID().equals(s.basket())))entity.discard();});
         ServerTickEvents.END_SERVER_TICK.register(server->{
             if(server.getTickCount()%100!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;long time=NapoliBroadcast.time(city);
-            var scenes=SCENES.get(city);if(scenes!=null)scenes.entrySet().removeIf(entry->{var scene=entry.getValue();if(scene.until()>city.getGameTime()&&city.getEntity(entry.getKey())!=null)return false;if(scene.basket()!=null){var basket=city.getEntity(scene.basket());if(basket!=null)basket.discard();}return true;});
+            var scenes=SCENES.get(city);if(scenes!=null)scenes.entrySet().removeIf(entry->{var scene=entry.getValue();if(city.getEntity(entry.getKey())!=null)return false;if(scene.basket()!=null){var basket=city.getEntity(scene.basket());if(basket!=null)basket.discard();}return true;});
             if(time<16500&&time>900)return;
             for(var p:city.players())if(p.isSprinting())for(var npc:city.getEntitiesOfClass(NapoliResident.class,p.getBoundingBox().inflate(10)))if(npc.isSleeping()){
                 var next=NEXT.computeIfAbsent(city,k->new HashMap<>());if(city.getGameTime()<next.getOrDefault(npc.getUUID(),0L))continue;

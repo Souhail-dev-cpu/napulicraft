@@ -56,7 +56,7 @@ final class CityRoutines {
     }
     static BlockPos localGoal(ServerLevel city,NapoliResident npc,BlockPos goal){
         if(!NapoliAtlas.ORIGINAL.contains(npc.getBlockX(),npc.getBlockZ())||!NapoliAtlas.ORIGINAL.contains(goal.getX(),goal.getZ()))return DistrictLife.localGoal(city,npc,goal);
-        var origin=CityLivingHomes.at(npc.blockPosition());if(origin!=null&&!origin.contains(goal))return origin.approach(1);
+        var origin=CityLivingHomes.at(npc.blockPosition());if(origin!=null&&!origin.contains(goal))return CityHomeStations.waypoint(npc,origin,origin.approach(1));
         for(var service:CityProfessions.Category.values())if(inside(service.site(),npc.blockPosition())&&!inside(service.site(),goal))return service.site().offset(8,0,13);
         if(city.hasChunkAt(goal)&&goal.distToCenterSqr(npc.position())<40*40){var direct=npc.getNavigation().createPath(goal,0);if(direct!=null&&direct.canReach())return goal;}
         final BlockPos requested=goal;

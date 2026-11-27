@@ -32,7 +32,15 @@ la cui provenienza viene salvata nel mondo. Il piccone non rimuove contenitori c
 blocchi indistruttibili o blocchi che richiedono un attrezzo superiore al ferro. Le porte di legno vengono aperte.
 Lo scavo rispetta la regola del server che consente o impedisce ai mob di danneggiare i blocchi.
 
-Durante l'apertura di una barricata rimangono valide le normali regole di fuga: dopo 20 secondi senza un nuovo avvistamento termina la ricerca. Gli agenti abbandonano uno scavo legato a una segnalazione ormai vecchia e proseguono la ricerca della zona.
+Durante l'apertura di una barricata rimangono valide le regole di fuga: occorrono **20 secondi consecutivi nascosti**, con la visuale interrotta e un riparo fisico vicino oppure un interno. La sola distanza su una strada aperta non fa avanzare il conto alla rovescia. Tornare allo scoperto o essere riavvistati azzera il tempo accumulato. Gli agenti abbandonano uno scavo legato a una segnalazione ormai vecchia e proseguono la ricerca della zona.
+
+## Moto e auto di pattuglia
+
+Per un sospetto distante almeno 24 blocchi, i primi due agenti assegnati possono usare rispettivamente una **moto** e un’**auto** sulle strade adatte. Gli altri colleghi mantengono la copertura a piedi. I conducenti partecipano alla stessa centrale radio, con avvistamenti fino a 96 blocchi; quando perdono la visuale raggiungono soltanto l’ultima posizione comunicata. Non ricevono le nuove coordinate del giocatore nascosto.
+
+I mezzi percorrono fisicamente la carreggiata e si fermano davanti a persone e ostacoli. Non entrano nelle case, non distruggono i muri e non possono arrestare un giocatore direttamente dal sedile: gli agenti scendono vicino alla destinazione e continuano a piedi. Anche un ostacolo persistente porta a scendere e cercare un percorso pedonale. Alla conclusione della ricerca il mezzo viene ritirato e l’agente riprende la pattuglia. Il limite `policeVehicleLimit` è separato da popolazione e mezzi privati: 12 predefiniti, regolabile da 0 a 32. Lo 0 disattiva i mezzi mantenendo la polizia a piedi.
+
+La simulazione non carica strade remote per inseguire il giocatore. Le auto e le moto della polizia non entrano nel garage personale né rilasciano ricevute di proprietà.
 
 Anche gli inseguimenti degli NPC restano attivi fra una decisione e l'altra: l'agente privilegia il sospetto visibile più vicino, si avvicina per arrestarlo e riprende la propria attività quando il caso termina. Le pattuglie chiamate con il 112 possono intervenire anche su questi incidenti.
 

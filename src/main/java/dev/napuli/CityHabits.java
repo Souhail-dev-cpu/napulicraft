@@ -14,12 +14,13 @@ final class CityHabits {
     static int cooking(ServerLevel city,UUID id){return Math.min(100,20+Math.floorMod(id.hashCode()*31,41)+city.getAttachedOrElse(PRACTICE,Map.of()).getOrDefault(id.toString(),0));}
     static void practice(ServerLevel city,UUID id){var all=new HashMap<>(city.getAttachedOrElse(PRACTICE,Map.of()));all.put(id.toString(),Math.min(40,all.getOrDefault(id.toString(),0)+1));city.setAttached(PRACTICE,Map.copyOf(all));}
     static boolean working(NapoliCivicLife.Citizen c,long time,long day){
+        if(CityNightlife.vendor(c))return time>=12000&&time<22500;
         long personal=time-offset(c.id());if(DistrictLife.resident(c)&&c.profession()==NapoliCivicLife.Job.BAKER){long local=Math.floorMod(personal,24000),weekday=Math.floorMod(day+Math.floorDiv(personal,24000),7);return local>=1800&&local<(weekday==6?6500:11000);}return c.profession()!=null&&CityProfessions.open(c.profession(),Math.floorMod(personal,24000),day+Math.floorDiv(personal,24000));
     }
     static UUID cook(ServerLevel city,NapoliCivicLife.Citizen person,long time){
         var agreement=CityRelationships.agreement(city,person);if(agreement!=null){var assigned=NapoliCivicLife.profile(city,UUID.fromString(agreement.cook()));if(assigned!=null&&!working(assigned,time,NapoliBroadcast.day(city))&&CitySimulation.life(city,assigned.id()).health()>=45)return assigned.id();}
         var census=NapoliCivicLife.census(city);if(census==null||person.property().isEmpty())return person.id();long day=NapoliBroadcast.day(city);
-        return census.people().stream().filter(c->c.property().equals(person.property())&&c.age(day)>=18&&CitySimulation.life(city,c.id()).health()>=45&&!working(c,time,day)&&!CityPublicOrder.jailed(city,c.id()))
+        return NapoliCivicLife.household(city,person.property()).stream().filter(c->c.age(day)>=18&&CitySimulation.life(city,c.id()).health()>=45&&!working(c,time,day)&&!CityPublicOrder.jailed(city,c.id()))
                 .max(Comparator.comparingInt((NapoliCivicLife.Citizen c)->cooking(city,c.id())+(int)Math.floorMod(day+c.id().hashCode(),3)*5).thenComparing(c->c.id().toString())).map(NapoliCivicLife.Citizen::id).orElse(person.id());
     }
     static NapoliHouseholds.Activity choose(ServerLevel city,NapoliCivicLife.Citizen c,CitySimulation.Life life,long time){
@@ -30,7 +31,10 @@ final class CityHabits {
         if(n.bladder()<15||n.hygiene()<12)return NapoliHouseholds.Activity.WASH;
         if(n.sleep()<15)return NapoliHouseholds.Activity.SLEEP;
         long clock=Math.floorMod(time-offset(c.id()),24000);
-        if((clock>=16500||clock<900)&&!CityProfessions.night(c.profession()))return NapoliHouseholds.Activity.SLEEP;
+        if(CityNightlife.nightWorker(c)&&!working(c,time,day)&&(clock>=22500||clock<8500))return NapoliHouseholds.Activity.SLEEP;
+        if(CityThieves.onProwl(city,c,life,time))return NapoliHouseholds.Activity.SOCIAL;
+        if(CityNightlife.outing(city,c,life,time))return NapoliHouseholds.Activity.SOCIAL;
+        if((clock>=16500||clock<900)&&!CityNightlife.nightWorker(c))return NapoliHouseholds.Activity.SLEEP;
         if(child&&age>=3&&clock>=2500&&clock<8000&&Math.floorMod(day,7)<5)return NapoliHouseholds.Activity.SCHOOL;
         if(!child&&CityRelationships.escorting(city,c,time))return NapoliHouseholds.Activity.SCHOOL;
         if(!child&&age<CityLifeConfig.settings.retirementAge&&working(c,time,day))return NapoliHouseholds.Activity.WORK;
@@ -57,6 +61,7 @@ final class CityHabits {
         if(n.sleep()<35)return "Sono stanco: oggi mi riposo e rinuncio a uscire.";
         if(n.bladder()<30||n.hygiene()<40)return "Prima devo passare dal bagno.";
         var activity=choose(city,c,l,NapoliBroadcast.time(city));
+        if(activity==NapoliHouseholds.Activity.SOCIAL&&CityNightlife.night(NapoliBroadcast.time(city))){String evening=CityNightlife.description(city,c);if(!evening.isEmpty())return evening;}
         return switch(activity){case WORK->"Ho il mio turno di lavoro.";case SCHOOL->"Mi aspettano a scuola.";case COOK->"Oggi tocca a me cucinare: ci siamo divisi le faccende.";case SHOP->"Devo comprare le provviste per casa.";case SLEEP->"È il mio momento di dormire.";case MATCH->"Mi rilasso guardando la televisione.";default->city.isRaining()?"Aspetto che passi la pioggia.":"Ho un po' di tempo per incontrare qualcuno.";};
     }
     private CityHabits(){}

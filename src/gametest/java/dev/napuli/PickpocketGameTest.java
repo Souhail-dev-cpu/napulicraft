@@ -47,7 +47,7 @@ public final class PickpocketGameTest {
             place(h, ps); var thief = ps.getFirst();
             var villager = net.minecraft.world.entity.EntityTypes.VILLAGER.create(h.getLevel(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
             if (villager == null) throw new AssertionError("The villager fixture must be created");
-            villager.snapTo(thief.getX() + 2, thief.getY(), thief.getZ(), 0, 0); villager.setNoAi(true); h.getLevel().addFreshEntity(villager);
+            villager.snapTo(thief.getX() + 2, thief.getY(), thief.getZ(), -90, 0);villager.setYHeadRot(-90); villager.setNoAi(true); h.getLevel().addFreshEntity(villager);
             try {
                 villager.getInventory().setItem(0, new ItemStack(Items.BREAD, 40));
                 h.assertTrue(UseEntityCallback.EVENT.invoker().interact(thief, thief.level(), InteractionHand.MAIN_HAND, villager, null) == InteractionResult.PASS
@@ -135,6 +135,7 @@ public final class PickpocketGameTest {
         HousingCapacityGameTest.withPlayers(h, 1, ps -> {
             place(h, ps); var thief = ps.getFirst();
             var npc = NapoliResident.spawn(h.getLevel(), NapoliResident.Role.TERESA, thief.blockPosition().east(2), 0); npc.setNoAi(true);
+            npc.setYRot(-90);npc.setYHeadRot(-90);
             try {
                 int before = count(npc);
                 h.assertTrue(UseEntityCallback.EVENT.invoker().interact(thief, thief.level(), InteractionHand.MAIN_HAND, npc, null) == InteractionResult.PASS
@@ -181,12 +182,39 @@ public final class PickpocketGameTest {
         h.succeed();
     }
 
+    @GameTest public void theftRequiresTheRearConeAndRechecksEveryRequest(GameTestHelper h){
+        HousingCapacityGameTest.withPlayers(h,2,ps->{place(h,ps);var thief=ps.getFirst();var victim=ps.getLast();var at=victim.position();victim.setYRot(0);victim.setYHeadRot(0);victim.getInventory().setItem(0,new ItemStack(Items.DIAMOND,10));
+            thief.setPos(at.x,at.y,at.z+2);h.assertTrue(!Pickpocket.open(thief,victim),"A victim cannot be robbed from the front");thief.setPos(at.x+2,at.y,at.z);h.assertTrue(!Pickpocket.open(thief,victim),"Standing beside the victim is insufficient");
+            thief.setPos(at.x,at.y,at.z-2);h.assertTrue(Pickpocket.open(thief,victim),"A nearby thief behind the victim can open the bag");var token=thief.getAttached(Pickpocket.OPEN).token();victim.setYHeadRot(180);h.assertTrue(!Pickpocket.take(thief,token,0)&&victim.getInventory().getItem(0).getCount()==10,"Turning around rejects an already-open screen and a forged take request");
+            victim.setYHeadRot(0);thief.setPos(at.x,at.y+2,at.z-1);h.assertTrue(!Pickpocket.take(thief,token,0),"A different floor cannot reach the pockets");thief.setPos(at.x,at.y,at.z-4);h.assertTrue(!Pickpocket.take(thief,token,0),"Being behind does not allow remote theft");h.assertTrue(Pickpocket.daily(victim,Pickpocket.inventory(victim)).stolen()==0,"Rejected angles and distances consume neither items nor allowance");
+            for(int yaw:new int[]{0,90,180,270}){victim.setYHeadRot(yaw);var back=net.minecraft.world.phys.Vec3.directionFromRotation(0,yaw).scale(-2).add(at);thief.setPos(back);h.assertTrue(Pickpocket.valid(thief,victim),"Rear detection works in every compass direction");}
+        });h.succeed();
+    }
+    @GameTest public void belongingsReflectProfessionAndVaryBetweenIndividuals(GameTestHelper h){
+        var city=h.getLevel();var census=city.removeAttached(NapoliCivicLife.CENSUS);var npc=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,h.absolutePos(new BlockPos(2,3,2)),0);npc.setNoAi(true);
+        try{var fisher=new NapoliCivicLife.Citizen(npc.getUUID(),"Pescatore",false,NapoliBroadcast.day(city)-210,100,NapoliCivicLife.Job.FISHER.ordinal(),"","public_0","",true);city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(0,List.of(fisher)));
+            var allowed=Set.of(Items.COD,Items.SALMON,Items.KELP,Items.STRING,Items.FISHING_ROD,Items.BOWL,Items.APPLE,Items.BREAD,Items.BAKED_POTATO,Items.LEATHER,Items.PAPER);h.assertTrue(NpcBelongings.create(npc).stream().allMatch(s->s.isEmpty()||allowed.contains(s.getItem())),"A fisher carries fishing belongings and ordinary personal items, rather than unrelated generic supplies");
+            var signatures=new HashSet<String>();for(int i=0;i<20;i++){var individual=NapoliResident.create(city,NapoliResident.Role.CIVIC_MAN,npc.blockPosition(),0);individual.setUUID(new UUID(3,i));city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(0,List.of(new NapoliCivicLife.Citizen(individual.getUUID(),"Altro pescatore",false,fisher.birth(),100,fisher.job(),"","public_0","",false))));signatures.add(NpcBelongings.create(individual).toString());}h.assertTrue(signatures.size()>10,"Individuals have distinct finite bags, not merely reordered identical inventories");var a=NpcBelongings.create(npc);var b=NpcBelongings.create(npc);h.assertTrue(a.toString().equals(b.toString()),"The same identity keeps its belongings stable");
+        }finally{npc.discard();if(census!=null)city.setAttached(NapoliCivicLife.CENSUS,census);}h.succeed();
+    }
+    @GameTest public void oldPocketMigrationPreservesDepletionAndTheConsumedDailyQuota(GameTestHelper h){
+        var city=h.getLevel();var store=city.getServer().overworld();var pockets=store.removeAttached(Pickpocket.POCKETS);var days=store.removeAttached(Pickpocket.DAYS);var npc=NapoliResident.spawn(city,NapoliResident.Role.PESCATORE,h.absolutePos(new BlockPos(2,3,2)),0);npc.setNoAi(true);
+        try{var old=new ArrayList<ItemStack>();old.add(new ItemStack(Items.WHEAT,3));while(old.size()<9)old.add(ItemStack.EMPTY);var ops=RegistryOps.create(JsonOps.INSTANCE,city.registryAccess());var json=ItemStack.OPTIONAL_CODEC.listOf().encodeStart(ops,old).getOrThrow();var restored=Pickpocket.Pocket.CODEC.parse(ops,json).getOrThrow();h.assertTrue(restored.version()==0,"Legacy inventory lists remain readable");store.setAttached(Pickpocket.POCKETS,Map.of(npc.getUUID().toString(),restored));Pickpocket.saveDaily(npc,new Pickpocket.Daily(Pickpocket.day(npc),4,List.of()));
+            var bag=Pickpocket.inventory(npc);h.assertTrue(bag.stream().limit(9).mapToInt(s->s.get().getCount()).sum()<=3&&Pickpocket.daily(npc,bag).stolen()==4,"Migration changes the theme without replenishing stolen units or the quota");
+            store.setAttached(Pickpocket.POCKETS,Map.of(npc.getUUID().toString(),new Pickpocket.Pocket(Collections.nCopies(9,ItemStack.EMPTY),0,"")));h.assertTrue(Pickpocket.inventory(npc).stream().limit(9).allMatch(s->s.get().isEmpty()),"An empty legacy bag remains empty");
+        }finally{npc.discard();store.removeAttached(Pickpocket.POCKETS);store.removeAttached(Pickpocket.DAYS);if(pockets!=null)store.setAttached(Pickpocket.POCKETS,pockets);if(days!=null)store.setAttached(Pickpocket.DAYS,days);}h.succeed();
+    }
+    @GameTest public void workingEquipmentIsNotARegeneratingPickpocketReward(GameTestHelper h){
+        HousingCapacityGameTest.withPlayers(h,1,ps->{place(h,ps);var thief=ps.getFirst();var npc=NapoliResident.spawn(h.getLevel(),NapoliResident.Role.CARABINIERE,thief.blockPosition().east(2),-90);npc.setNoAi(true);npc.setYHeadRot(-90);npc.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.DIAMOND_SWORD));
+            try{h.assertTrue(Pickpocket.open(thief,npc),"The actual pockets are reachable from behind");var bag=Pickpocket.inventory(npc);var daily=Pickpocket.daily(npc,bag);h.assertTrue(daily.choices().stream().allMatch(c->c.slot()<9)&&!Pickpocket.take(thief,thief.getAttached(Pickpocket.OPEN).token(),9),"Equipment supplied by work or police routines cannot be stolen through slot forgery");h.assertTrue(npc.getMainHandItem().is(Items.DIAMOND_SWORD),"The NPC retains the equipment it is using");}finally{npc.discard();}
+        });h.succeed();
+    }
     private static void place(GameTestHelper h, List<ServerPlayer> players) {
         var at = h.absolutePos(new BlockPos(1, 40, 1));
         for (int i = 0; i < players.size(); i++) {
             var p = players.get(i); p.getInventory().clearContent();
             for (var slot : EquipmentSlot.values()) if (p.canUseSlot(slot)) p.setItemSlot(slot, ItemStack.EMPTY);
-            p.snapTo(at.getX() + .5 + i, at.getY(), at.getZ() + .5, 0, 0);
+            p.snapTo(at.getX() + .5 + i, at.getY(), at.getZ() + .5, -90, 0);p.setYHeadRot(-90);
         }
     }
     private static int count(net.minecraft.world.entity.LivingEntity target) {

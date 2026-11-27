@@ -106,7 +106,7 @@ public final class NapoliStreet {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> {
             if(entity instanceof NapoliResident resident && entity.level() instanceof ServerLevel city) {
                 var existing=city.getAttachedOrElse(STAFF,java.util.Map.of());
-                if(existing.containsValue(resident.getUUID())) { var updated=new java.util.HashMap<>(existing);updated.values().removeIf(resident.getUUID()::equals);city.setAttached(STAFF,java.util.Map.copyOf(updated)); }
+                if(existing.containsValue(resident.getUUID())&&!CityResidentSafety.absent(city,resident.getUUID())) { var updated=new java.util.HashMap<>(existing);updated.values().removeIf(resident.getUUID()::equals);city.setAttached(STAFF,java.util.Map.copyOf(updated)); }
             }
             if (entity.getAttached(CREW) == null || !(entity.level() instanceof ServerLevel level)
                     || level.dimension() != NapoliMap.LEVEL) return;

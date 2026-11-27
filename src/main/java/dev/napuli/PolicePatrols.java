@@ -62,7 +62,7 @@ final class PolicePatrols {
         int limit=CityLifeConfig.settings.policePatrolLimit;
         for(var zone:activeZones)for(int slot=0;slot<PER_ZONE;slot++){
             if(count>=limit||created>=4)return;
-            if(city.getEntity(identity(zone,slot))!=null)continue;
+            if(city.getEntity(identity(zone,slot))!=null||CityResidentSafety.absent(city,identity(zone,slot)))continue;
             var at=street(city,zone.center().offset(slot*3,0,0),18);if(at==null)continue;
             if(!city.areEntitiesActuallyLoadedAndTicking(net.minecraft.world.level.ChunkPos.containing(at)))continue;
             var npc=NapoliResident.create(city,NapoliResident.Role.CARABINIERE,at,0);npc.setUUID(identity(zone,slot));npc.addTag(TAG);

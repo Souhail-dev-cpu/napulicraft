@@ -12,17 +12,20 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.*;
 
-/** Real census households and nearby workplaces for the expanded city, with the existing population cap. */
+/** Six real households per district; legacy addresses remain stable when new lots are assigned. */
 final class DistrictLife {
     record District(String id,String name,NapoliAtlas.Place landmark,List<NapoliMergellina.House> homes,NapoliMergellina.House business){}
     private static final class Layout {
         static final List<District> ALL=layout();
         static final List<NapoliMergellina.House> HOMES=ALL.stream().flatMap(d->d.homes().stream()).toList();
+        static final Map<String,District> BY_HOME=ALL.stream().flatMap(d->d.homes().stream().map(h->Map.entry(h.id(),d))).collect(java.util.stream.Collectors.toUnmodifiableMap(Map.Entry::getKey,Map.Entry::getValue));
     }
     static List<District> districts(){return Layout.ALL;}
     static List<NapoliMergellina.House> homes(){return Layout.HOMES;}
     static final AttachmentType<Set<String>> SETTLED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_households_settled"));
     static final AttachmentType<Set<String>> FITTED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_fitted_chunks"));
+    static final AttachmentType<Set<String>> EXTRA_FITTED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_extra_homes_v1"));
+    static boolean additional(NapoliMergellina.House h){return h.id().startsWith("atlas_home_")&&!h.id().endsWith("_0")&&!h.id().endsWith("_1");}
     private static List<District> layout(){
         var anchors=new LinkedHashMap<String,NapoliAtlas.Place>();for(var p:NapoliAtlas.PLACES)if(!p.original())anchors.putIfAbsent(p.district(),p);
         var used=new HashSet<String>();var result=new ArrayList<District>();
@@ -32,10 +35,21 @@ final class DistrictLife {
             var houses=new ArrayList<NapoliMergellina.House>();NapoliMergellina.House business=null;
             for(int i=0;i<3;i++){var p=candidates.get(i);used.add(p.getX()+"/"+p.getZ());var h=new NapoliMergellina.House((i==2?"atlas_shop_":"atlas_home_")+anchor.id()+"_"+i,(i==2?"Bottega di ":"Casa "+(i+1)+" · ")+anchor.district(),p.getX(),p.getZ(),0,Blocks.SMOOTH_SANDSTONE,22,24,3+Math.floorMod(Math.floorDiv(p.getX()-9,40)*31+Math.floorDiv(p.getZ()-9,40),3),1000+i);if(i==2)business=h;else houses.add(h);}
             result.add(new District(anchor.id(),anchor.district(),anchor,List.copyOf(houses),business));
-        }return List.copyOf(result);
+        }
+        // Allocate the extra lots only after ALL legacy lots, including shops, have been reserved.
+        // Inserting them in the first pass would move every subsequent district in existing saves.
+        for(int n=0;n<result.size();n++){
+            var d=result.get(n);var houses=new ArrayList<>(d.homes());var candidates=new ArrayList<BlockPos>();
+            for(int x=-2040;x<2030;x+=40)for(int z=-800;z<520;z+=40){int hx=Math.floorDiv(x,40)*40+9,hz=Math.floorDiv(z,40)*40+9;if(NapoliExpansion.houseAllowed(hx,hz)&&!used.contains(hx+"/"+hz))candidates.add(new BlockPos(hx,64,hz));}
+            candidates.sort(Comparator.comparingDouble(p->p.distSqr(d.landmark().arrival())));
+            if(candidates.size()<4)throw new IllegalStateException("No additional housing sites for "+d.id());
+            for(int i=0;i<4;i++){var p=candidates.get(i);used.add(p.getX()+"/"+p.getZ());int slot=i+3;houses.add(new NapoliMergellina.House("atlas_home_"+d.id()+"_"+slot,"Casa "+slot+" · "+d.name(),p.getX(),p.getZ(),0,Blocks.SMOOTH_SANDSTONE,22,24,3+Math.floorMod(Math.floorDiv(p.getX()-9,40)*31+Math.floorDiv(p.getZ()-9,40),3),1000+slot));}
+            result.set(n,new District(d.id(),d.name(),d.landmark(),List.copyOf(houses),d.business()));
+        }
+        return List.copyOf(result);
     }
     static boolean resident(NapoliCivicLife.Citizen c){return c!=null&&c.property().startsWith("atlas_home_");}
-    static District district(NapoliCivicLife.Citizen c){return resident(c)?districts().stream().filter(d->d.homes().stream().anyMatch(h->h.id().equals(c.property()))).findFirst().orElse(null):null;}
+    static District district(NapoliCivicLife.Citizen c){return c==null?null:Layout.BY_HOME.get(c.property());}
     static District byId(String id){return districts().stream().filter(d->d.id().equals(id)).findFirst().orElse(null);}
     static int floor(NapoliMergellina.House h){return h.id().startsWith("atlas_")?NapoliExpansion.legacyHeight(h.x()+11,h.z()+24)+1:64;}
     static UUID identity(District d,int slot){return UUID.nameUUIDFromBytes(("napuli:district:"+d.id()+":"+slot).getBytes(StandardCharsets.UTF_8));}
@@ -46,22 +60,26 @@ final class DistrictLife {
     static NapoliAtlas.Place square(District d){return d.landmark().id().equals("nisida")?NapoliAtlas.find("scienza"):d.landmark();}
     static BlockPos destination(ServerLevel city,NapoliCivicLife.Citizen c,NapoliHouseholds.Activity action){return switch(action){case WORK->CityOccupations.kind(c).equals("courier")||CityOccupations.kind(c).equals("cleaner")?CityOccupations.target(city,c):work(c);case SHOP->shop(c);case SCHOOL,CARE->service(city,c,action==NapoliHouseholds.Activity.SCHOOL);case SOCIAL->CityCharacter.leisure(city,c);case PLAY,REST->square(district(c)).arrival();default->NapoliCivicLife.home(c);};}
     static int seed(ServerLevel city){
-        var census=NapoliCivicLife.census(city);if(census==null)return 0;var people=new ArrayList<>(census.people());var settled=new HashSet<>(city.getAttachedOrElse(SETTLED,Set.of()));var owners=new HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));int added=0,target=0;long day=NapoliBroadcast.day(city);
-        for(int slot=0;slot<4;slot++)for(var d:districts()){
+        var census=NapoliCivicLife.census(city);if(census==null)return 0;var people=new ArrayList<>(census.people());var settled=new HashSet<>(city.getAttachedOrElse(SETTLED,Set.of()));var owners=new HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,Map.of()));var newcomers=new HashSet<UUID>();int added=0,target=0;long day=NapoliBroadcast.day(city);
+        for(int slot=0;slot<24;slot++)for(var d:districts()){
             if(target++>=CityLifeConfig.settings.districtPopulation)continue;var uuid=identity(d,slot);if(settled.contains(uuid.toString())||people.stream().anyMatch(c->c.id().equals(uuid)))continue;
-            if(people.size()>=CityLifeConfig.settings.maximumPopulation)continue;var h=d.homes().getFirst();if(CityProperty.playerBuiltInChunk(city,net.minecraft.world.level.ChunkPos.containing(h.inside())))continue;
-            int age=slot==0?34:slot==1?32:slot==2?12:8,rate=CityLifeConfig.settings.daysPerYear;boolean woman=(districts().indexOf(d)+slot)%2==0;
-            int job=slot==0?NapoliCivicLife.Job.BAKER.ordinal():slot==1?switch(districts().indexOf(d)%4){case 0->NapoliCivicLife.Job.TEACHER.ordinal();case 1->NapoliCivicLife.Job.DOCTOR.ordinal();case 2->NapoliCivicLife.Job.CLEANER.ordinal();default->NapoliCivicLife.Job.COURIER.ordinal();}:-1;
+            int member=slot%4,family=slot/4,base=family*4;
+            if(people.size()>=CityLifeConfig.settings.maximumPopulation)continue;var h=d.homes().get(family);if(CityProperty.playerBuiltInChunk(city,net.minecraft.world.level.ChunkPos.containing(h.inside())))continue;
+            if(owners.containsKey(h.id())&&!owners.get(h.id()).equals(identity(d,base)))continue;
+            int age=member==0?34+family*4:member==1?32+family*4:member==2?12:8,rate=CityLifeConfig.settings.daysPerYear;boolean woman=(districts().indexOf(d)+slot)%2==0;
+            int job=member==0?(family==0?NapoliCivicLife.Job.BAKER:switch(family){case 1->NapoliCivicLife.Job.CARPENTER;case 2->NapoliCivicLife.Job.MERCHANT;case 3->NapoliCivicLife.Job.GARDENER;case 4->NapoliCivicLife.Job.FISHER;default->NapoliCivicLife.Job.CARABINIERE;}).ordinal():member==1?switch((districts().indexOf(d)+family)%4){case 0->NapoliCivicLife.Job.TEACHER.ordinal();case 1->NapoliCivicLife.Job.DOCTOR.ordinal();case 2->NapoliCivicLife.Job.CLEANER.ordinal();default->NapoliCivicLife.Job.COURIER.ordinal();}:-1;
             String[] first=woman?new String[]{"Anna","Carmela","Rosa","Lucia","Teresa","Giulia"}:new String[]{"Antonio","Ciro","Gennaro","Salvatore","Marco","Luigi"};String[] last={"Esposito","Russo","Romano","Ferrara","De Luca","Marino","Greco","Rizzo"};int hash=Math.floorMod(uuid.hashCode(),10000);
-            var c=new NapoliCivicLife.Citizen(uuid,first[hash%first.length]+" "+last[(hash/7)%last.length],woman,day-(long)age*rate*(slot<2?1:2),slot<2?64:0,job,"",h.id(),slot<2?"":identity(d,0).toString(),false,slot<2?0:rate*2);people.add(c);settled.add(uuid.toString());if(slot==0)owners.putIfAbsent(h.id(),uuid);
-            var life=CitySimulation.fresh(uuid);CitySimulation.put(city,uuid,life.withNeeds(new CitySimulation.Needs(90,95,95,80,85,90),8,city.getGameTime(),0,0));CityJourneys.put(city,uuid,CityJourneys.plan(h.inside(),h.inside(),city.getGameTime(),95));added++;
+            var c=new NapoliCivicLife.Citizen(uuid,first[hash%first.length]+" "+last[(hash/7)%last.length],woman,day-(long)age*rate*(member<2?1:2),member<2?64:0,job,"",h.id(),member<2?"":identity(d,base).toString(),false,member<2?0:rate*2);people.add(c);settled.add(uuid.toString());if(member==0)owners.putIfAbsent(h.id(),uuid);
+            var life=CitySimulation.fresh(uuid);CitySimulation.put(city,uuid,life.withNeeds(new CitySimulation.Needs(90,95,95,80,85,90),8,city.getGameTime(),0,0));
+            if(member>=2)CitySimulation.parentage(city,uuid,identity(d,base),identity(d,base+1));
+            CityJourneys.put(city,uuid,CityJourneys.plan(h.inside(),h.inside(),city.getGameTime(),95));newcomers.add(uuid);added++;
         }
-        if(added>0){for(var d:districts()){UUID a=identity(d,0),b=identity(d,1);if(people.stream().anyMatch(c->c.id().equals(a))&&people.stream().anyMatch(c->c.id().equals(b)))for(int i=0;i<people.size();i++){var c=people.get(i);if(c.id().equals(a)||c.id().equals(b))people.set(i,c.withHousehold(c.id().equals(a)?b.toString():a.toString(),c.property(),c.balance()));}}
+        if(added>0){for(var d:districts())for(int family=0;family<6;family++){UUID a=identity(d,family*4),b=identity(d,family*4+1);if(people.stream().anyMatch(c->c.id().equals(a))&&people.stream().anyMatch(c->c.id().equals(b)))for(int i=0;i<people.size();i++){var c=people.get(i);if(newcomers.contains(c.id())&&(c.id().equals(a)||c.id().equals(b)))people.set(i,c.withHousehold(c.id().equals(a)?b.toString():a.toString(),c.property(),c.balance()));}}
             city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),List.copyOf(people)));city.setAttached(SETTLED,Set.copyOf(settled));city.setAttached(NapoliProperties.OWNERS,Map.copyOf(owners));}
         return added;
     }
     static boolean tick(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,NapoliHouseholds.Activity action){
-        if(!resident(c))return false;if(CityNetwork.commute(npc,city,destination(city,c,action)))return true;
+        if(!resident(c))return false;
         if(action==NapoliHouseholds.Activity.SHOP){var goal=shop(c);move(npc,city,goal);if(goal.distToCenterSqr(npc.position())<16)DistrictShops.shopResident(city,c);return true;}
         if(action==NapoliHouseholds.Activity.SCHOOL||action==NapoliHouseholds.Activity.CARE){if(provider(city,c,action==NapoliHouseholds.Activity.SCHOOL)==null)return false;var goal=service(city,c,action==NapoliHouseholds.Activity.SCHOOL);move(npc,city,goal);if(goal.distToCenterSqr(npc.position())<9){npc.getNavigation().stop();npc.setActivity(action==NapoliHouseholds.Activity.SCHOOL?NapoliHouseholds.Activity.STUDY:NapoliHouseholds.Activity.WAIT);npc.animate(action==NapoliHouseholds.Activity.SCHOOL?CityGestures.Gesture.WRITE:CityGestures.Gesture.SAD,50);if(action!=NapoliHouseholds.Activity.SCHOOL||c.age(NapoliBroadcast.day(city))<18)visit(city,c,40);}return true;}
         if(action==NapoliHouseholds.Activity.WORK){if(c.profession()==NapoliCivicLife.Job.BAKER)return CityOccupations.tick(npc,city,c);if(c.profession()==NapoliCivicLife.Job.CLEANER||c.profession()==NapoliCivicLife.Job.COURIER)return CityOccupations.tick(npc,city,c);var goal=work(c);move(npc,city,goal);if(goal.distToCenterSqr(npc.position())<9){npc.getNavigation().stop();npc.setActivity(action);npc.animate(c.profession()==NapoliCivicLife.Job.TEACHER?CityGestures.Gesture.TEACH:c.profession()==NapoliCivicLife.Job.DOCTOR?CityGestures.Gesture.EXAMINE:CityGestures.Gesture.WRITE,50);}return true;}
@@ -70,7 +88,7 @@ final class DistrictLife {
     }
     private static void move(NapoliResident npc,ServerLevel city,BlockPos goal){npc.setActivity(NapoliHouseholds.Activity.COMMUTE);if(npc.isSleeping())npc.stopSleeping();CityMovement.stand(npc);CityDomestic.move(npc,localGoal(city,npc,goal));}
     static BlockPos localGoal(ServerLevel city,NapoliResident npc,BlockPos goal){
-        for(var h:homes())if(h.contains(npc.blockPosition())&&!h.contains(goal))return h.approach(1);
+        for(var h:homes())if(h.contains(npc.blockPosition())&&!h.contains(goal))return CityHomeStations.waypoint(npc,h,h.approach(1));
         var direct=npc.getNavigation().createPath(goal,0);if(goal.distToCenterSqr(npc.position())<40*40&&direct!=null&&direct.canReach())return goal;
         // Follow the generated street grid and approach the destination's doorway from the frontage.
         var house=homes().stream().filter(h->h.contains(goal)).findFirst().orElse(null);if(house!=null&&house.entrance().distToCenterSqr(npc.position())<32*32)return house.approach(1);
@@ -87,13 +105,17 @@ final class DistrictLife {
         if(complete){var l=CitySimulation.life(city,c.id());if(school)CitySimulation.put(city,c.id(),l.career(l.health(),l.reputation(),l.experience()+1,l.rank(),l.absences(),CitySimulation.memory(l,"Lezione nel quartiere: "+provider(city,c,true).name())));else{CityOccupations.supply(city,"medicine",CityOccupations.supply(city,"medicine")-1);CitySimulation.put(city,c.id(),l.career(Math.min(100,l.health()+25),l.reputation(),l.experience(),l.rank(),l.absences(),CitySimulation.memory(l,"Visita da "+staff.name())));if(c.balance()>=2){CityOccupations.money(city,c.id(),-2);CityOccupations.money(city,staff.id(),2);}}}
     }
     static void fit(ServerLevel city,net.minecraft.world.level.chunk.LevelChunk chunk){
-        String key=chunk.getPos().x()+"/"+chunk.getPos().z();if(city.getAttachedOrElse(FITTED,Set.of()).contains(key)||NapoliExpansion.revision(chunk)<1||CityProperty.playerBuiltInChunk(city,chunk.getPos()))return;
-        for(var h:homes())if(h.x()>>4<=chunk.getPos().x()&&(h.x()+21)>>4>=chunk.getPos().x()&&h.z()>>4<=chunk.getPos().z()&&(h.z()+23)>>4>=chunk.getPos().z()){
+        String key=chunk.getPos().x()+"/"+chunk.getPos().z();boolean legacyDone=city.getAttachedOrElse(FITTED,Set.of()).contains(key);
+        if(legacyDone&&city.getAttachedOrElse(EXTRA_FITTED,Set.of()).contains(key)||NapoliExpansion.revision(chunk)<1||CityProperty.playerBuiltInChunk(city,chunk.getPos()))return;
+        var furnishing=homes().stream().filter(h->!legacyDone||additional(h)).toList();
+        for(var h:furnishing)if(h.x()>>4<=chunk.getPos().x()&&(h.x()+21)>>4>=chunk.getPos().x()&&h.z()>>4<=chunk.getPos().z()&&(h.z()+23)>>4>=chunk.getPos().z()){
             for(var point:CityLivingHomes.points(h)){var p=point.block();if(!net.minecraft.world.level.ChunkPos.containing(p).equals(chunk.getPos()))continue;Block b=switch(point.furniture()){case FRIDGE->Blocks.BARREL;case STOVE->Blocks.SMOKER;case SINK->Blocks.WATER_CAULDRON;case SHOWER->null;case TOILET->Blocks.CAULDRON;case SOFA->Blocks.OAK_STAIRS;case TV->CityBlocks.vanilla("black_concrete");case DESK,TABLE->Blocks.CRAFTING_TABLE;case WASHER->Blocks.IRON_BLOCK;case WARDROBE->Blocks.BARREL;case BED->null;};if(point.furniture()==CityLivingHomes.Furniture.SHOWER){if(!NapoliShower.isColumn(city,p.above()))NapoliShower.place(city,p);}else if(b!=null)city.setBlock(p,b.defaultBlockState(),2);else{var bed=CityBlocks.vanilla("white_bed").defaultBlockState().setValue(BedBlock.FACING,Direction.NORTH);city.setBlock(p,bed.setValue(BedBlock.PART,BedPart.FOOT),2);if(net.minecraft.world.level.ChunkPos.containing(p.north()).equals(chunk.getPos()))city.setBlock(p.north(),bed.setValue(BedBlock.PART,BedPart.HEAD),2);if(net.minecraft.world.level.ChunkPos.containing(p.east()).equals(chunk.getPos())){city.setBlock(p.east(),bed.setValue(BedBlock.PART,BedPart.FOOT),2);city.setBlock(p.east().north(),bed.setValue(BedBlock.PART,BedPart.HEAD),2);}}}
         }
-        for(var h:homes())for(int stage:new int[]{1,3}){var p=CityDomestic.point(h,stage).block();if(net.minecraft.world.level.ChunkPos.containing(p).equals(chunk.getPos())){city.setBlock(stage==3?p.below():p,(stage==3?Blocks.OAK_FENCE:Blocks.CRAFTING_TABLE).defaultBlockState(),2);if(stage==3)city.setBlock(p,Blocks.OAK_PRESSURE_PLATE.defaultBlockState(),2);}}
-        for(var h:homes()){var lamp=CityAtmosphere.lamp(h);if(net.minecraft.world.level.ChunkPos.containing(lamp).equals(chunk.getPos())&&city.isEmptyBlock(lamp))city.setBlock(lamp,Blocks.REDSTONE_LAMP.defaultBlockState(),2);}
-        DistrictShops.fit(city,chunk);var all=new HashSet<>(city.getAttachedOrElse(FITTED,Set.of()));all.add(key);city.setAttached(FITTED,Set.copyOf(all));
+        for(var h:furnishing)for(int stage:new int[]{1,3}){var p=CityDomestic.point(h,stage).block();if(net.minecraft.world.level.ChunkPos.containing(p).equals(chunk.getPos())){city.setBlock(stage==3?p.below():p,(stage==3?Blocks.OAK_FENCE:Blocks.CRAFTING_TABLE).defaultBlockState(),2);if(stage==3)city.setBlock(p,Blocks.OAK_PRESSURE_PLATE.defaultBlockState(),2);}}
+        for(var h:furnishing){var lamp=CityAtmosphere.lamp(h);if(net.minecraft.world.level.ChunkPos.containing(lamp).equals(chunk.getPos())&&city.isEmptyBlock(lamp))city.setBlock(lamp,Blocks.REDSTONE_LAMP.defaultBlockState(),2);}
+        if(legacyDone)for(var h:CityLivingHomes.inChunk(chunk.getPos()))if(additional(h)){CityArchitecture.fitAddedHome(city,chunk,h);NapoliHomeDecor.fitAddedHome(city,chunk,h);}
+        if(!legacyDone)DistrictShops.fit(city,chunk);var all=new HashSet<>(city.getAttachedOrElse(FITTED,Set.of()));all.add(key);city.setAttached(FITTED,Set.copyOf(all));
+        var extra=new HashSet<>(city.getAttachedOrElse(EXTRA_FITTED,Set.of()));extra.add(key);city.setAttached(EXTRA_FITTED,Set.copyOf(extra));
     }
     private static void retireDecorations(ServerLevel city){for(var place:NapoliAtlas.PLACES)if(!place.original())for(int slot=0;slot<2;slot++){var id=UUID.nameUUIDFromBytes(("napuli:atlas-walker:"+place.id()+"/"+slot).getBytes(StandardCharsets.UTF_8));var entity=city.getEntity(id);if(entity instanceof NapoliResident&&NapoliCivicLife.profile(city,id)==null)entity.discard();}}
     static void register(){ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%100!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;seed(city);retireDecorations(city);var census=NapoliCivicLife.census(city);if(census==null)return;for(var c:census.people())if(resident(c)&&city.getEntity(c.id())==null){var a=CitySimulation.activity(city,c,CitySimulation.life(city,c.id()),NapoliBroadcast.time(city));if(a==NapoliHouseholds.Activity.CARE||a==NapoliHouseholds.Activity.SCHOOL&&c.age(NapoliBroadcast.day(city))<18)visit(city,c,100);}for(var p:city.players())for(int x=(p.getBlockX()>>4)-2;x<=(p.getBlockX()>>4)+2;x++)for(int z=(p.getBlockZ()>>4)-2;z<=(p.getBlockZ()>>4)+2;z++){var chunk=city.getChunkSource().getChunkNow(x,z);if(chunk!=null){fit(city,chunk);NapoliFurniture.fit(city,chunk);CityArchitecture.fit(city,chunk);NapoliHomeDecor.fit(city,chunk);}}});}

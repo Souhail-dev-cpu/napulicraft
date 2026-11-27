@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import static dev.napuli.CityText.t;
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.napuli.*;
 import dev.napuli.client.music.SongsScreen;
 import java.io.ByteArrayInputStream;
@@ -32,7 +33,7 @@ final class InterfaceClientChecks {
             layouts(atlas);
             atlas.init(320, 240);
             check(!previous(atlas).active, "Previous page is disabled on the first page");
-            atlas.keyPressed(new KeyEvent(267, 0, 0));
+            atlas.keyPressed(new KeyEvent(InputConstants.KEY_PAGEDOWN, 0, 0));
             check(previous(atlas).active, "Page Down advances the atlas");
             atlas.mouseScrolled(100, 130, 0, 1);
             check(!previous(atlas).active, "The mouse wheel returns to the first page");
@@ -73,6 +74,24 @@ final class InterfaceClientChecks {
         };
         mc.gui.setScreen(screen);
         if (index == 2) press(screen, t("music.import").getString());
+    }
+
+    static void cityHub(Minecraft mc){
+        var screen=mc.gui.screen();bounds(screen);
+        press(screen,t("hub.category.money").getString());
+        check(buttons(screen).stream().anyMatch(b->b.getMessage().getString().equals(t("menu.wallet").getString())),"Money groups expose the actual server-provided wallet service");
+        check(buttons(screen).stream().noneMatch(b->b.getMessage().getString().equals(t("menu.work").getString())),"Category selection removes unrelated services");
+        screen.keyPressed(new KeyEvent(InputConstants.KEY_F,InputConstants.KEYCODE_F,InputConstants.MOD_CONTROL));
+        check(edit(screen).isFocused(),"Ctrl+F focuses the real search field");
+        edit(screen).setValue(t("menu.coop").getString());
+        check(buttons(screen).stream().anyMatch(b->b.getMessage().getString().equals(t("menu.coop").getString())),"Search finds services outside the selected category");
+        screen.keyPressed(new KeyEvent(InputConstants.KEY_ESCAPE,0,0));
+        check(edit(screen).getValue().isEmpty()&&mc.gui.screen()==screen,"Escape clears a focused search before closing the menu");
+        press(screen,t("hub.category.all").getString());bounds(screen);
+        press(screen,t("hub.category.featured").getString());
+        check(buttons(screen).stream().anyMatch(b->b.getMessage().getString().equals(t("menu.atlas").getString())),"The default shortcuts remain directly accessible");
+        screen.setFocused(null);
+        Napuli.LOGGER.info("[QOLTEST] City hub categories, global search, Ctrl+F and Escape passed");
     }
 
     private static void music(Minecraft mc, Screen parent) throws Exception {

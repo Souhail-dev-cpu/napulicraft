@@ -60,6 +60,7 @@ final class CitySimulation {
         for(var id:List.copyOf(people.keySet())) {
             // Earlier deaths in this batch may have changed this person's estate.
             var deceased=people.get(id);
+            if(CityResidentSafety.absent(city,id))continue;
             var l=life(city,deceased.id());
             if(l.health()>0&&deceased.age(day)<CityLifeConfig.settings.maximumAge)continue;
             var heirs=people.values().stream().filter(p->!p.id().equals(deceased.id())&&
@@ -126,6 +127,7 @@ final class CitySimulation {
         var states=new HashMap<>(city.getAttachedOrElse(LIFE,Map.of()));
         var shoppers=new ArrayList<UUID>();
         for(var person:census.people()) {
+            if(CityResidentSafety.absent(city,person.id()))continue;
             Life l=states.getOrDefault(person.id().toString(),fresh(person.id()));
             if(now-l.last()<CityLifeConfig.settings.needsIntervalTicks)continue;
             // Bounded elapsed steps; every resident is updated, without requesting any chunks.
@@ -174,7 +176,7 @@ final class CitySimulation {
     }
     static NapoliCivicLife.Citizen daily(ServerLevel city,NapoliCivicLife.Citizen c,long day,int wage) {
         Life l=life(city,c.id());
-        boolean scheduled=c.profession()!=null&&CityProfessions.open(c.profession(),CityProfessions.start(c.profession())+1,day-1);
+        boolean scheduled=CityNightlife.vendor(c)||c.profession()!=null&&CityProfessions.open(c.profession(),CityProfessions.start(c.profession())+1,day-1);
         boolean working=scheduled&&wage>0&&l.health()>=45&&l.needs().sleep()>10&&!CityPublicOrder.jailed(city,c.id());
         int performance=CityRoutines.performance(city,c.id(),day-1);
         int xp=l.experience()+(working&&performance>=3?1:0),absence=working?0:l.absences()+(scheduled?1:0);
@@ -206,6 +208,7 @@ final class CitySimulation {
         int age=c.age(NapoliBroadcast.day(city));npc.setCivicAge(age);
         if(npc.role().civic())npc.setCivicAppearance(c.profession()==NapoliCivicLife.Job.INFLUENCER?10:c.profession()==null?11:c.profession().category.ordinal());
         var l=life(city,c.id());var action=activity(city,c,l,NapoliBroadcast.time(city));npc.setActivity(action);
+        if(CityConversation.hold(npc,city,c,action))return;
         CityHomeUse.prepare(npc,city,action);
         if(!CityHomeUse.handles(action)&&action!=NapoliHouseholds.Activity.SOCIAL)CityMovement.stand(npc);
         if(distance>=128*128) {
@@ -213,6 +216,9 @@ final class CitySimulation {
         }
         if(distance>=80*80) {npc.getNavigation().stop();return;}
         if(CityTraces.carry(npc,city,c))return;
+        if(CityMobility.commute(npc,city,c,destination(city,c)))return;
+        if(CityNeighborhood.tick(npc,city,c,action))return;
+        if(CityNightlife.tick(npc,city,c,action))return;
         if(DistrictLife.tick(npc,city,c,action))return;
         if(CityOccupations.delivering(city,c)&&CityOccupations.tick(npc,city,c))return;
         if(CityPersonalGoals.move(npc,city,c))return;
@@ -232,7 +238,6 @@ final class CitySimulation {
             if(DomesticMeals.act(city,npc,house,l.food()))return;
         }
         if(CityHomeUse.tick(npc,city,c,house,action))return;
-        if(CityNeighborhood.tick(npc,city,c,action))return;
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=CityOccupations.workplace(c);
         else if(action==NapoliHouseholds.Activity.CARE)target=CityProfessions.Category.HEALTH.site().offset(8,0,7);
         else if(action==NapoliHouseholds.Activity.SCHOOL)target=CityServices.waiting(c,"school");

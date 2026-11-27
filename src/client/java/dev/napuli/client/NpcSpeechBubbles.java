@@ -50,6 +50,7 @@ public final class NpcSpeechBubbles {
         if (text.length() > 512) text = text.substring(0, 509) + "…";
         var message = Component.literal(text);
         var queue = LINES.computeIfAbsent(packet.speaker(), id -> new ArrayDeque<>());
+        if(packet.immediate())queue.clear();
         if (queue.stream().anyMatch(line -> line.message().equals(message))) return;
         var wrapped = client.font.split(message, WIDTH);
         int pages = Math.min(MAX_QUEUE - 1, (wrapped.size() + 5) / 6);
@@ -68,6 +69,7 @@ public final class NpcSpeechBubbles {
     public static boolean hasBubble(UUID speaker) {
         var queue = LINES.get(speaker);return queue != null && !queue.isEmpty() && queue.peekFirst().ends() > clock;
     }
+    public static boolean hasBubble(UUID speaker,Component message){var queue=LINES.get(speaker);return hasBubble(speaker)&&queue.peekFirst().message().getString().equals(message.getString());}
 
     static Bubble extract(NapoliResident npc, float partialTick) {
         var client = Minecraft.getInstance();var queue = LINES.get(npc.getUUID());

@@ -16,6 +16,12 @@ import net.minecraft.world.phys.Vec3;
 /** Low-frequency route decisions, server movement and bounded passenger capacity. */
 public final class CityVehicle extends PathfinderMob {
     private static final EntityDataAccessor<Integer> KIND=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> CITIZEN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> POLICE=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    public boolean policeVehicle(){return entityData.get(POLICE);}
+    void configurePolice(){entityData.set(POLICE,true);setNoAi(true);getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);}
+    boolean residentOwned(){return entityData.get(CITIZEN);}
+    void configureResident(){entityData.set(CITIZEN,true);getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);}
     private int stop,waypoint;
     private String lastStop="";
     private long lastStopAt;
@@ -32,8 +38,8 @@ public final class CityVehicle extends PathfinderMob {
     long networkTick;
     String networkKey(){return networkKey;}
     void configureNetwork(String key,int kind){networkKey=key;networkTick=level().getGameTime();entityData.set(KIND,kind);setNoGravity(true);getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.STEP_HEIGHT).setBaseValue(1.2);}
-    @Override public boolean shouldBeSaved(){return taxiId==null&&networkKey.isEmpty()&&super.shouldBeSaved();}
-    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return taxiId==null&&networkKey.isEmpty()&&super.saveAsPassenger(out);}
+    @Override public boolean shouldBeSaved(){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&taxiId==null&&networkKey.isEmpty()&&super.shouldBeSaved();}
+    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&taxiId==null&&networkKey.isEmpty()&&super.saveAsPassenger(out);}
     int remainingStop(){return stop;}
     boolean atStop(){return stop>0;}
     double distanceToStop(BlockPos target){
@@ -45,8 +51,9 @@ public final class CityVehicle extends PathfinderMob {
     }
     public CityVehicle(EntityType<? extends CityVehicle> type,Level level){super(type,level);setNoAi(true);setPersistenceRequired();}
     public int kind(){return entityData.get(KIND);}
+    @Override public boolean isPushable(){return !residentOwned()&&!policeVehicle()&&super.isPushable();}
     public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16).add(Attributes.FOLLOW_RANGE,48);}
-    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);}
+    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);b.define(CITIZEN,false);b.define(POLICE,false);}
     @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
     @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
     private List<Vec3> route(){
@@ -55,6 +62,8 @@ public final class CityVehicle extends PathfinderMob {
     }
     @Override public void tick(){
         super.tick();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
+        if(PoliceVehicles.drive(this,city))return;
+        if(CityMobility.drive(this,city))return;
         if(PhoneServices.tickTaxi(this,city))return;
         if(!networkKey.isEmpty()){CityNetwork.drive(this,city);return;}
         if(city.players().stream().noneMatch(p->p.distanceToSqr(this)<112*112)){setDeltaMovement(Vec3.ZERO);return;}
@@ -72,9 +81,10 @@ public final class CityVehicle extends PathfinderMob {
         setYRot((float)Math.toDegrees(Math.atan2(-motion.x,motion.z)));setYBodyRot(getYRot());setYHeadRot(getYRot());
         setDeltaMovement(motion);move(MoverType.SELF,motion);setDeltaMovement(Vec3.ZERO);
     }
-    @Override protected boolean canAddPassenger(Entity passenger){if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
+    @Override protected boolean canAddPassenger(Entity passenger){if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
     @Override protected InteractionResult mobInteract(Player p,InteractionHand hand){
         if(hand!=InteractionHand.MAIN_HAND||p.isShiftKeyDown())return InteractionResult.PASS;
+        if(CityMobility.managed(this)||PoliceVehicles.managed(this))return InteractionResult.PASS;
         if(taxiId!=null){if(p instanceof net.minecraft.server.level.ServerPlayer sp)PhoneServices.boardTaxi(sp,this);return InteractionResult.SUCCESS;}
         if(!networkKey.isEmpty()){if(p instanceof net.minecraft.server.level.ServerPlayer sp)CityNetwork.lineMenu(sp,networkKey.split("/")[0]);return InteractionResult.SUCCESS;}
         if(!level().isClientSide()&&canAddPassenger(p)&&p.startRiding(this)){
@@ -84,7 +94,7 @@ public final class CityVehicle extends PathfinderMob {
     }
     @Override protected void positionRider(Entity p,Entity.MoveFunction move){
         int seat=Math.max(0,getPassengers().indexOf(p));double yaw=Math.toRadians(getYRot()),along=.55-seat/2*.45,side=seat%2==0?-.35:.35;
-        move.accept(p,getX()-Math.sin(yaw)*along+Math.cos(yaw)*side,getY()+.35,getZ()+Math.cos(yaw)*along+Math.sin(yaw)*side);
+        move.accept(p,getX()-Math.sin(yaw)*along+Math.cos(yaw)*side,getY()+(p instanceof NapoliResident?residentOwned()||policeVehicle()?-.25:0:.35),getZ()+Math.cos(yaw)*along+Math.sin(yaw)*side);
     }
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(server->{

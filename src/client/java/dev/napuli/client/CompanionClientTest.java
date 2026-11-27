@@ -1,6 +1,7 @@
 package dev.napuli.client;
 
 import dev.napuli.Napuli;
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.stream.Stream;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.*;
@@ -34,8 +35,8 @@ final class CompanionClientTest {
                 mc.options.pauseOnLostFocus=false;
                 if(++ticks>3600)throw new AssertionError("Companion client test timed out at phase "+phase);
                 if(last!=phase){last=phase;age=0;Napuli.LOGGER.info("[QOLTEST] phase {}",phase);}age++;
-                if(phase==0&&age==30){mc.options.renderDistance().set(4);mc.options.simulationDistance().set(5);mc.getConnection().sendCommand("compagno");phase=1;}
-                else if(phase==1&&age>20&&mc.gui.screen() instanceof CompanionScreen){shot(mc,"qol-menu");check(press(mc,"Atlante e preferiti"),"The city hub opens the atlas");phase=2;}
+                if(phase==0&&age==30){mc.options.renderDistance().set(4);mc.options.simulationDistance().set(5);mc.mouseHandler.onMove(mc.getWindow().handle(),4,4,0,0);mc.getConnection().sendCommand("compagno");phase=1;}
+                else if(phase==1&&age>20&&mc.gui.screen() instanceof CompanionScreen){InterfaceClientChecks.cityHub(mc);shot(mc,"qol-menu");check(press(mc,"Atlante e preferiti"),"The city hub opens the atlas");phase=2;}
                 else if(phase==2&&age>15&&mc.gui.screen() instanceof CompanionScreen){search(mc,"vanvitelli");check(press(mc,"☆"),"A searched place can be added to favorites");phase=3;}
                 else if(phase==3&&age>20&&mc.gui.screen() instanceof CompanionScreen){check(button(mc,"★"),"The server returns the saved favorite");shot(mc,"qol-atlante");check(press(mc,"Piazza Vanvitelli"),"The place details can be opened");phase=4;}
                 else if(phase==4&&age>15&&mc.gui.screen() instanceof CompanionScreen){check(press(mc,"Segui a piedi"),"Walking navigation can be selected");phase=5;}
@@ -75,7 +76,17 @@ final class CompanionClientTest {
                 else if(phase==28&&age==30){server(mc,dev.napuli.CityConvenienceClientFixture::effects);}
                 else if(phase==28&&age>40&&dev.napuli.CityConvenienceClientFixture.effectsChecked){for(var label:new String[]{"Preset cittadino leggero","Riduci particelle","Riduci lampeggi","Riduci movimento","Riduci rumori"})check(option(mc,label),"Effect settings can be restored");check(mc.options.bobView().get()==previousBob&&mc.options.damageTiltStrength().get()==previousTilt&&mc.options.fovEffectScale().get()==previousFov&&mc.options.hideLightningFlash().get()==previousLightning&&mc.options.screenEffectScale().get()==previousScreen,"Disabling accessibility modes restores original camera preferences");InterfaceClientChecks.run(mc);InterfaceClientChecks.showPreview(mc,0);phase=29;}
                 else if(phase>=29&&phase<=33&&age>15){String[] names={"ui-lavoro","ui-musica","ui-importa","ui-calcio","ui-televisione"};shot(mc,names[phase-29]);if(phase<33)InterfaceClientChecks.showPreview(mc,phase-28);else{previewScale=mc.options.guiScale().get();mc.options.guiScale().set(3);mc.resizeGui();mc.getConnection().sendCommand("compagno");}phase++;}
-                else if(phase==34&&age>20&&mc.gui.screen() instanceof CompanionScreen){shot(mc,"ui-menu-compatto");mc.options.guiScale().set(previewScale);mc.resizeGui();Napuli.LOGGER.info("[QOLTEST] ALL PASSED: city flows, three languages, accessibility, four interface sizes, search, paging, music navigation and screen gallery");done=true;}
+                else if(phase==34&&age>20&&mc.gui.screen() instanceof CompanionScreen){search(mc,"");mc.gui.screen().setFocused(null);phase=35;}
+                else if(phase==35&&age>10&&mc.gui.screen() instanceof CompanionScreen){
+                    shot(mc,"ui-menu-compatto");var screen=mc.gui.screen();var field=descendants(screen).filter(EditBox.class::isInstance).map(EditBox.class::cast).findFirst().orElseThrow();
+                    var menuKey=new KeyEvent(InputConstants.getKey(CompanionScreen.OPEN.saveString()).getValue(),0,0);
+                    screen.setFocused(field);field.setValue("o");screen.keyPressed(menuKey);
+                    check(mc.gui.screen()==screen,"Typing the menu key in search does not close it");field.setValue("");screen.setFocused(null);
+                    screen.keyPressed(menuKey);check(mc.gui.screen()==null,"The configured menu key closes it when search is not focused");
+                    mc.options.guiScale().set(previewScale);mc.resizeGui();mc.getConnection().sendCommand("compagno");phase=36;
+                }
+                else if(phase==36&&age>20&&mc.gui.screen() instanceof CompanionScreen){search(mc,"");mc.gui.screen().setFocused(null);phase=37;}
+                else if(phase==37&&age>10&&mc.gui.screen() instanceof CompanionScreen){shot(mc,"ui-menu-finale");Napuli.LOGGER.info("[QOLTEST] ALL PASSED: city flows, three languages, accessibility, four interface sizes, categories, global search, keyboard shortcuts, music navigation and screen gallery");done=true;}
             }catch(Throwable e){failed=true;Napuli.LOGGER.error("[QOLTEST] FAILED",e);}
         });
     }

@@ -53,6 +53,7 @@ public final class Carabinieri {
 
 	private static final class Wanted {
 		int gravity; long lastSeen; int grip; Crime crime;
+        int hidden;boolean visible,covered;long nextSight;
 		BlockPos position; net.minecraft.world.phys.Vec3 velocity=net.minecraft.world.phys.Vec3.ZERO;
 		Wanted(Crime c, long now, BlockPos position) { crime = c; gravity = c.gravity; lastSeen = now; this.position=position.immutable(); }
 	}
@@ -92,8 +93,10 @@ public final class Carabinieri {
 			return InteractionResult.PASS;
 		});
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((victim, source, base, dealt, blocked) -> {
-			if (dealt > 0 && source.getEntity() instanceof ServerPlayer attacker && punishable(attacker, victim))
-				reportViolence(attacker, Crime.ASSAULT);
+			if (dealt > 0 && source.getEntity() instanceof ServerPlayer attacker && punishable(attacker, victim)) {
+                if(victim instanceof NapoliResident npc){CityResidentSafety.attacked(npc,attacker);if(carabinieri(attacker.level(),attacker.blockPosition(),32).stream().anyMatch(cc->cc.hasLineOfSight(attacker)&&cc.hasLineOfSight(npc)))denounce(attacker,Crime.ASSAULT,attacker.blockPosition());}
+                else reportViolence(attacker, Crime.ASSAULT);
+            }
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
 			if (source.getEntity() instanceof ServerPlayer attacker && punishable(attacker, victim))
@@ -114,6 +117,7 @@ public final class Carabinieri {
 		if (wanted == null) report(attacker, crime);
 		else {
 			wanted.lastSeen = attacker.level().getGameTime();
+            wanted.hidden=0;wanted.nextSight=0;
 			if (crime.gravity > wanted.gravity) {
 				wanted.gravity = crime.gravity;
 				wanted.crime = crime;
@@ -124,14 +128,21 @@ public final class Carabinieri {
 	}
 
 	public static boolean isWanted(ServerPlayer p) { return WANTED.containsKey(p.getUUID()); }
+    static void denounce(ServerPlayer player,Crime crime,BlockPos seen){
+        if(player.level().dimension()!=NapoliMap.LEVEL||isJailed(player)||player.isSpectator())return;
+        var existing=WANTED.get(player.getUUID());long now=player.level().getGameTime();
+        if(existing==null){WANTED.put(player.getUUID(),new Wanted(crime,now,seen));title(player,"napuli.cc.title","napuli.cc.called");siren(player.level(),player);}
+        else{existing.lastSeen=now;existing.position=seen.immutable();existing.velocity=net.minecraft.world.phys.Vec3.ZERO;existing.hidden=0;existing.nextSight=0;if(crime.gravity>existing.gravity){existing.gravity=crime.gravity;existing.crime=crime;NapoliNotice.show(player,Component.translatable("napuli.cc.worse"));}}
+        PoliceDispatch.invalidate(player.level());
+    }
 	static BlockPos lastKnown(ServerPlayer p){var w=WANTED.get(p.getUUID());return w==null?p.blockPosition():w.position;}
 
 	/** for the HUD: 0 = not wanted, else the gravity (stars) */
 	static int wantedStars(ServerPlayer p) { Wanted w = WANTED.get(p.getUUID()); return w == null ? 0 : w.gravity; }
-	/** seconds before the carabinieri give up (they lose you after 20 s out of sight) */
+	/** Remaining continuous seconds in cover; running in the open never advances this timer. */
 	static int wantedSecondsLeft(ServerPlayer p) {
 		Wanted w = WANTED.get(p.getUUID());
-		return w == null ? 0 : (int) Math.max(0, 20 - (p.level().getGameTime() - w.lastSeen) / 20);
+		return w == null ? 0 : (PoliceSearch.HIDE_TICKS-w.hidden+19)/20;
 	}
 	static int jailSecondsLeft(ServerPlayer p) {
 		Jail j = p.getAttached(JAIL);
@@ -168,7 +179,7 @@ public final class Carabinieri {
 		} else {
 			w.lastSeen = now;
 		}
-		w=WANTED.get(p.getUUID());w.position=p.blockPosition();w.velocity=p.getDeltaMovement();
+		w=WANTED.get(p.getUUID());w.position=p.blockPosition();w.velocity=p.getDeltaMovement();w.hidden=0;w.nextSight=0;
 		PoliceDispatch.invalidate(level);
 	}
 
@@ -227,21 +238,23 @@ public final class Carabinieri {
 	}
 
 	private static void chase(ServerLevel city, ServerPlayer p, Wanted w, long now) {
-		// Any actual sighting is shared by radio. Hidden movement never changes the search location.
-		if(carabinieri(city,p.blockPosition(),PoliceTactics.SIGHT_RANGE).stream().anyMatch(cc->cc.hasLineOfSight(p))){
-			w.lastSeen=now;w.position=p.blockPosition();w.velocity=p.getDeltaMovement();
-		}
+        // Sample sight together with cover, then share only confirmed sightings by radio.
+        if(now>=w.nextSight){var observers=carabinieri(city,p.blockPosition(),160).stream().filter(cc->!cc.isSleeping()&&!npcJailed(cc.getUUID())&&!CityPublicOrder.jailed(city,cc.getUUID())).toList();w.visible=observers.stream().anyMatch(cc->PoliceSearch.sees(cc,p));w.covered=!w.visible&&PoliceSearch.covered(p,observers,w.position);w.nextSight=now+5;
+            if(w.visible){w.lastSeen=now;w.position=p.blockPosition();w.velocity=p.getDeltaMovement();}
+        }
+        w.hidden=PoliceSearch.advance(w.hidden,w.visible,w.covered);
 		List<NapoliResident> near = PoliceDispatch.team(p);
 		boolean caught = false;
 		for (NapoliResident cc : near) {
 			if (!PoliceTactics.assignedTo(cc, p)) continue;
-			PoliceTactics.pursue(cc,p,now,w.position,w.velocity,w.lastSeen,PoliceDispatch.order(cc).role());
+            int role=PoliceDispatch.order(cc).role();
+            if(!PoliceVehicles.pursue(cc,p,w.position,w.lastSeen,role))PoliceTactics.pursue(cc,p,now,w.position,w.velocity,w.lastSeen,role);
             if (PoliceTactics.canGrab(cc, p)) caught = true;
 		}
-		if (now % 40 == 0) siren(city, p);
+        if(now%40==0){siren(city,p);p.sendOverlayMessage(Component.translatable(w.visible?"napuli.cc.search.visible":w.covered?"napuli.cc.search.hidden":"napuli.cc.search.cover",wantedSecondsLeft(p)));}
 		w.grip = caught ? w.grip + 1 : Math.max(0, w.grip - 2);
 		if (w.grip >= 25) { arrest(city, p, w); return; }
-		if (now - w.lastSeen > 20 * 20) {
+		if (w.hidden>=PoliceSearch.HIDE_TICKS) {
 			endPursuit(p);
 			title(p, "napuli.cc.lost.title", "napuli.cc.lost");
 		}
@@ -249,11 +262,13 @@ public final class Carabinieri {
 
 	static void endPursuit(ServerPlayer player) {
 		WANTED.remove(player.getUUID());
+        PoliceVehicles.finish(player);
 		PoliceDispatch.invalidate(player.level());
 	}
 
 	private static void arrest(ServerLevel city, ServerPlayer p, Wanted w) {
 		WANTED.remove(p.getUUID());
+        PoliceVehicles.finish(p);
 		PoliceDispatch.invalidate(city);
 		for (NapoliResident cc : carabinieri(city, p.blockPosition(), 36)) cc.getNavigation().stop();
 		NapoliNotice.show(p, Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));

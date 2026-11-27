@@ -264,7 +264,7 @@ final class NapoliCivicLife {
         for (Citizen c : people.values()) if (c.profession() != null) filled[c.job()]++;
         for (var entry : people.entrySet()) {
             Citizen c = entry.getValue();
-            if (c.age(day) < ADULT_AGE) continue;
+            if (c.age(day) < ADULT_AGE||CityResidentSafety.absent(city,c.id())) continue;
             int index = c.job();
             if (index < 0 && c.age(day)<CityLifeConfig.settings.retirementAge) {
                 for (Job job : Job.values()) if (filled[job.ordinal()] < 3 && CityProfessions.eligible(job,c,CitySimulation.life(city,c.id()),day)) {
@@ -357,11 +357,18 @@ final class NapoliCivicLife {
     }
 
     static Citizen profile(ServerLevel city, UUID id) {
-        Census data = census(city);
-        if (data == null) return null;
-        var index=PROFILE_INDEX.get(city);if(index==null||index.census()!=data){var people=new java.util.HashMap<UUID,Citizen>();for(var c:data.people())people.putIfAbsent(c.id(),c);index=new ProfileIndex(data,Map.copyOf(people));PROFILE_INDEX.put(city,index);}return index.people().get(id);
+        var index=index(city);return index==null?null:index.people().get(id);
     }
-    private record ProfileIndex(Census census,Map<UUID,Citizen> people){}
+    static List<Citizen> household(ServerLevel city,String home){var index=index(city);return index==null?List.of():index.homes().getOrDefault(home,List.of());}
+    private static ProfileIndex index(ServerLevel city){
+        Census data=census(city);if(data==null)return null;var index=PROFILE_INDEX.get(city);
+        if(index==null||index.census()!=data){var people=new java.util.HashMap<UUID,Citizen>();var groups=new java.util.HashMap<String,java.util.ArrayList<Citizen>>();
+            for(var c:data.people()){people.putIfAbsent(c.id(),c);groups.computeIfAbsent(c.property(),key->new java.util.ArrayList<>()).add(c);}
+            var homes=new java.util.HashMap<String,List<Citizen>>();groups.forEach((home,residents)->homes.put(home,List.copyOf(residents)));
+            index=new ProfileIndex(data,Map.copyOf(people),Map.copyOf(homes));PROFILE_INDEX.put(city,index);
+        }return index;
+    }
+    private record ProfileIndex(Census census,Map<UUID,Citizen> people,Map<String,List<Citizen>> homes){}
     private static final Map<ServerLevel,ProfileIndex> PROFILE_INDEX=new java.util.WeakHashMap<>();
 
     static BlockPos home(Citizen citizen) {
@@ -374,22 +381,34 @@ final class NapoliCivicLife {
         return new BlockPos(HOME_X + index, 64, HOME_Z);
     }
 
-    private static void materializeNearby(ServerLevel city) {
+    private static final Map<ServerLevel,Integer> ARRIVAL_CURSOR=new java.util.WeakHashMap<>();
+    static void materializeNearby(ServerLevel city) {
         Census before = census(city);
+        if(before==null||before.people().isEmpty()||city.players().isEmpty())return;
+        var viewers=city.players().stream().filter(p->!p.isSpectator()).toList();
+        if(viewers.isEmpty())return;
+        int loaded=0;var local=new java.util.HashMap<UUID,Integer>();
+        for(var entity:city.getAllEntities())if(entity instanceof NapoliResident npc&&profile(city,npc.getUUID())!=null){loaded++;for(var p:viewers)if(p.distanceToSqr(npc)<96*96)local.merge(p.getUUID(),1,Integer::sum);}
+        int budget=Math.min(8,CityLifeConfig.settings.visibleResidentsMaximum-loaded);
+        if(budget<=0)return;
         var updated = new ArrayList<>(before.people());
         var arrivals = new java.util.HashSet<BlockPos>();
         boolean changed = false;
-        for (int i = 0; i < updated.size(); i++) {
+        int start=Math.floorMod(ARRIVAL_CURSOR.getOrDefault(city,0),updated.size()),examined=0;
+        for (;examined<updated.size()&&budget>0;examined++) {
+            int i=(start+examined)%updated.size();
             Citizen c = updated.get(i);
-            if (c.spawned()) continue;
-            if(CityNetwork.inTransit(city,c.id()))continue;
+            if (c.spawned()||CityResidentSafety.absent(city,c.id())) continue;
+            if(CityNetwork.inTransit(city,c.id())||CityMobility.inTransit(city,c.id()))continue;
             BlockPos desired = CitySimulation.location(city,c);
             var targetHome=CityLivingHomes.at(desired);
             BlockPos approach = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.approach(1):desired;
+            if(!city.hasChunkAt(approach)||viewers.stream().noneMatch(p->approach.distToCenterSqr(p.position())<68*68&&local.getOrDefault(p.getUUID(),0)<CityLifeConfig.settings.visibleResidentsPerPlayer))continue;
             BlockPos spawn = CityJourneys.spawn(city,approach,arrivals);
             if (spawn==null||!NapoliResidentHomes.walkable(city, spawn)
                     || !HousingCapacity.canEnter(city,spawn,c.id())
-                    || city.players().stream().noneMatch(p -> spawn.distToCenterSqr(p.position()) < 64 * 64)) continue;
+                    || viewers.stream().noneMatch(p -> spawn.distToCenterSqr(p.position()) < 64 * 64)) continue;
+            if(viewers.stream().anyMatch(p->spawn.distToCenterSqr(p.position())<96*96&&local.getOrDefault(p.getUUID(),0)>=CityLifeConfig.settings.visibleResidentsPerPlayer))continue;
             if (city.getEntity(c.id()) == null) {
                 if(CityJourneys.known(city,c.id()))continue;
                 var npc = NapoliResident.create(city, c.profession()==Job.CARABINIERE ? NapoliResident.Role.CARABINIERE : c.woman() ? NapoliResident.Role.CIVIC_WOMAN : NapoliResident.Role.CIVIC_MAN, spawn, 0);
@@ -398,10 +417,13 @@ final class NapoliCivicLife {
                 npc.setCivicAge(c.age(before.day()));
                 if (!city.addFreshEntity(npc)) continue;
                 arrivals.add(spawn);
+                budget--;
+                for(var p:viewers)if(p.distanceToSqr(npc)<96*96)local.merge(p.getUUID(),1,Integer::sum);
             }
             updated.set(i, c.materialized());
             changed = true;
         }
+        ARRIVAL_CURSOR.put(city,(start+Math.max(1,examined))%updated.size());
         if (changed) city.setAttached(CENSUS, new Census(before.day(), List.copyOf(updated)));
     }
 

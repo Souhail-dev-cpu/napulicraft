@@ -33,6 +33,12 @@ public abstract class NapoliScreen extends Screen {
     protected void extractPanel(GuiGraphicsExtractor g, int mx, int my, float delta) {}
 
     @Override public final void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float delta) {
+        extractFrame(g, mx, my, delta);
+        extractPanel(g, mx, my, delta);
+        super.extractRenderState(g, mx, my, delta);
+    }
+
+    protected void extractFrame(GuiGraphicsExtractor g, int mx, int my, float delta) {
         g.fill(0, 0, width, height, 0xb309141c);
         g.fill(left + 3, top + 3, left + panelWidth + 3, bottom + 3, 0x60000000);
         g.fill(left, top, left + panelWidth, bottom, PANEL);
@@ -40,8 +46,6 @@ public abstract class NapoliScreen extends Screen {
         g.text(font, fit(font, title.getString(), panelWidth - 24), left + 12, top + 10, TEXT, false);
         g.text(font, fit(font, subtitle().getString(), panelWidth - 24), left + 12, top + 25, MUTED, false);
         g.fill(left + 10, bottom - 34, left + panelWidth - 10, bottom - 33, 0xff36515e);
-        extractPanel(g, mx, my, delta);
-        super.extractRenderState(g, mx, my, delta);
     }
 
     @Override public final void extractBackground(GuiGraphicsExtractor g, int mx, int my, float delta) {}

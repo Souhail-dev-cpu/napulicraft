@@ -12,7 +12,7 @@ public final class DistrictGameTest {
         var ids=new HashSet<String>();var sites=new HashSet<BlockPos>();
         for(var d:DistrictLife.districts()){
             h.assertTrue(!DistrictLife.square(d).id().equals("nisida"),"Daily social routines stay on the accessible mainland");
-            h.assertTrue(ids.add(d.id())&&d.homes().size()==2,"Every district has a stable identity and two residential lots");
+            h.assertTrue(ids.add(d.id())&&d.homes().size()==6,"Every district has a stable identity and six distinct residential lots");
             for(var home:java.util.stream.Stream.concat(d.homes().stream(),java.util.stream.Stream.of(d.business())).toList()){
                 h.assertTrue(sites.add(new BlockPos(home.x(),0,home.z()))&&NapoliExpansion.houseAllowed(home.x(),home.z()),"No overlapping or unbuildable assigned lot: "+home.id());
                 h.assertTrue(home.entrance().getY()==home.ground(),"Addresses follow the local hillside elevation");

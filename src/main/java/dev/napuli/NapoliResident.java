@@ -111,7 +111,10 @@ public final class NapoliResident extends PathfinderMob {
         goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
         goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(this, 1.05, true));
         goalSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
-        goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 9, 1));
+        goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 9, 1){
+            @Override public boolean canUse(){return super.canUse()&&lookAt!=null&&!Pickpocket.behind(lookAt,NapoliResident.this);}
+            @Override public boolean canContinueToUse(){return lookAt!=null&&!Pickpocket.behind(lookAt,NapoliResident.this)&&super.canContinueToUse();}
+        });
     }
 
     @Override
@@ -124,6 +127,7 @@ public final class NapoliResident extends PathfinderMob {
     }
 
     public Role role() { return Role.values()[entityData.get(ROLE)]; }
+    BlockPos returnPost(){return dayPost==null?blockPosition():dayPost;}
     @Override public boolean shouldBeSaved() { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.shouldBeSaved(); }
     @Override public boolean saveAsPassenger(ValueOutput out) { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.saveAsPassenger(out); }
 
@@ -192,10 +196,11 @@ public final class NapoliResident extends PathfinderMob {
         super.aiStep();
         if (level().isClientSide()) return;
         CityGestures.tick(this,(ServerLevel)level());
+        if(CityResidentSafety.react(this,(ServerLevel)level()))return;
         if (PhoneServices.tickActor(this, (ServerLevel)level())) return;
         if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
         if (role().spirit() && --spiritLife <= 0) discard();
-        if ((getVehicle() instanceof CityVehicle||CityMovement.isSeat(getVehicle())) && level() instanceof ServerLevel city && role().civic()) {
+        if ((getVehicle() instanceof CityVehicle||getVehicle() instanceof Motorino&&CityMobility.managed(getVehicle())||CityMovement.isSeat(getVehicle())) && level() instanceof ServerLevel city && role().civic()) {
             CitySimulation.tickEntity(this, city);
             return;
         }
@@ -204,6 +209,7 @@ public final class NapoliResident extends PathfinderMob {
         if (level() instanceof ServerLevel city) {
             if(CityPublicOrder.tickEntity(this,city))return;
             if(PolicePatrols.tick(this,city))return;
+            if(CityThieves.tick(this,city))return;
             if (role().civic() || NapoliCivicLife.profile(city,getUUID())!=null) { NapoliCivicLife.commute(this, city); return; }
             if (NapoliHouseholds.family(role())) { NapoliHouseholds.tick(this, city); return; }
             if (runResidentialSchedule(city)) return;
@@ -339,15 +345,17 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     public boolean hurtServer(ServerLevel level, net.minecraft.world.damagesource.DamageSource source, float amount) {
-        boolean hurt=(role().fighter() || role().civic() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
+        boolean hurt=(!role().spirit() || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
                 && super.hurtServer(level, source, amount);
         if(hurt&&source.getEntity() instanceof ServerPlayer p&&NapoliCivicLife.profile(level,getUUID())!=null)CitySocial.harm(level,getUUID(),p.getUUID());
         return hurt;
     }
+    @Override protected void dropAllDeathLoot(ServerLevel city,net.minecraft.world.damagesource.DamageSource source){if(!CityResidentSafety.human(this))super.dropAllDeathLoot(city,source);}
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && PhoneServices.interact(this, player)) return InteractionResult.SUCCESS;
+        if (hand == InteractionHand.MAIN_HAND && CityThieves.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role() == Role.CERTOSA_GUIDE || role() == Role.CERTOSA_RESTORER)) {
             if (player instanceof ServerPlayer visitor) NapoliCertosa.talk(visitor, this);
             return InteractionResult.SUCCESS;
@@ -355,7 +363,7 @@ public final class NapoliResident extends PathfinderMob {
         if (hand == InteractionHand.MAIN_HAND && FootballPractice.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && NapoliEmployment.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {
-            if (player instanceof ServerPlayer sp) NapoliCivicLife.describe(sp, this);
+            if (player instanceof ServerPlayer sp) CityConversation.talk(sp, getUUID(), "ciao");
             return InteractionResult.SUCCESS;
         }
         if (hand == InteractionHand.MAIN_HAND && NapoliHouseholds.family(role())) {

@@ -53,6 +53,7 @@ final class CityPublicOrder {
             npc.getNavigation().moveTo(suspect,1.3);
             if(PoliceTactics.canGrab(npc,suspect)){
                 var updated=new HashMap<>(cases);updated.put(suspect.getUUID().toString(),new Incident(state.offence(),state.wantedUntil(),now+1800,state.cell()));city.setAttached(INCIDENTS,Map.copyOf(updated));
+                CityThieves.recover(city,suspect.getUUID());
                 suspect.stopRiding();city.getChunkAt(state.cell());suspect.getNavigation().stop();suspect.snapTo(state.cell().getX()+.5,state.cell().getY(),state.cell().getZ()+.5,0,0);
                 for(var p:city.players())if(p.distanceToSqr(npc)<40*40)NpcSpeech.say(p,npc,Component.literal("Fermato "+suspect.getDisplayName().getString()+" per "+state.offence().toLowerCase(Locale.ROOT)+"."));
                 npc.removeAttached(NPC_TARGET);npc.getNavigation().stop();
@@ -62,12 +63,6 @@ final class CityPublicOrder {
         return active;
     }
     static void register(){
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity,source)->{
-            if(!(entity instanceof NapoliResident npc)||!(npc.level() instanceof ServerLevel city)||NapoliCivicLife.profile(city,npc.getUUID())==null)return;
-            var l=CitySimulation.life(city,npc.getUUID());CitySimulation.put(city,npc.getUUID(),l.career(0,l.reputation(),l.experience(),l.rank(),l.absences(),l.memories()));
-            var census=NapoliCivicLife.census(city);var people=new LinkedHashMap<UUID,NapoliCivicLife.Citizen>();for(var p:census.people())people.put(p.id(),p);
-            CitySimulation.inherit(city,people,NapoliBroadcast.day(city));city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),List.copyOf(people.values())));
-        });
         ServerTickEvents.END_SERVER_TICK.register(server->{
             if(server.getTickCount()%100!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;
             var cases=new HashMap<>(city.getAttachedOrElse(INCIDENTS,Map.of()));long now=city.getGameTime();
@@ -77,19 +72,6 @@ final class CityPublicOrder {
                     npc.getNavigation().stop();npc.snapTo(Carabinieri.RELEASE.getX()+.5,Carabinieri.RELEASE.getY(),Carabinieri.RELEASE.getZ()+.5,0,0);
                 }return expired;
             });city.setAttached(INCIDENTS,Map.copyOf(cases));
-            if(server.getTickCount()%1200!=0)return;
-            var census=NapoliCivicLife.census(city);if(census==null)return;
-            for(var actor:census.people()){
-                if(actor.age(NapoliBroadcast.day(city))<18||actor.balance()>5||CitySimulation.life(city,actor.id()).needs().hunger()>30||Math.floorMod(actor.id().hashCode()+NapoliBroadcast.day(city),16)!=0)continue;
-                if(!(city.getEntity(actor.id()) instanceof NapoliResident npc))continue;
-                var victims=city.getEntitiesOfClass(NapoliResident.class,npc.getBoundingBox().inflate(8),v->!v.getUUID().equals(actor.id())&&NapoliCivicLife.profile(city,v.getUUID())!=null);
-                if(victims.isEmpty())continue;
-                var victim=NapoliCivicLife.profile(city,victims.getFirst().getUUID());int stolen=Math.min(3,victim.balance());
-                if(stolen==0)continue;
-                city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(c->c.id().equals(actor.id())?c.withMoney(c.balance()+stolen,c.job()):c.id().equals(victim.id())?c.withMoney(c.balance()-stolen,c.job()):c).toList()));
-                var offences=new Offence[]{Offence.THEFT,Offence.ROBBERY,Offence.FRAUD,Offence.SMUGGLING};
-                report(city,actor.id(),offences[Math.floorMod(actor.id().hashCode(),offences.length)]);break;
-            }
         });
     }
     private CityPublicOrder(){}

@@ -640,7 +640,7 @@ pick.talk|Parla|Talk|Parla
 pick.taken|Oggetto rubato e aggiunto al tuo inventario.|Item stolen and added to your inventory.|Oggetto arrubbato e miso dint' 'o zaino tuo.
 pick.cannot_take|Oggetto non disponibile oppure inventario pieno.|Item unavailable or your inventory is full.|Oggetto nun disponibile o zaino chino.
 pick.victim|Ti è stato rubato: %s.|An item was stolen from you: %s.|T'hanno arrubbato: %s.
-pick.closed|Inventario chiuso: bersaglio non raggiungibile o giornata cambiata.|Inventory closed: target out of reach or a new day has started.|Inventario chiuso: bersaglio luntano o juorno cagnato.
+pick.closed|Inventario chiuso: resta vicino e alle spalle del bersaglio. Il giorno potrebbe essere cambiato.|Inventory closed: stay close behind your target. The day may have changed.|Inventario chiuso: sta vicino e arreto ô bersaglio. Pò essere cagnato 'o juorno.
 shop.drinks|Vini e liquori|Wines and liqueurs|Vine e licuore
 shop.drinks_info|Pagina %s/%s · Scorte locali e prezzi finali.|Page %s/%s · Local stock and final prices.|Pàggina %s/%s · Scorte d'a puteca e prezze finale.
 shop.drinks_status|Stato: %s|Status: %s|Stato: %s
@@ -823,3 +823,36 @@ phone.service.cancelled|Servizio annullato. La corsa già iniziata resta pagata.
 sleep.trespass|Dormire nei letti altrui senza permesso è violazione di domicilio: i carabinieri possono intervenire.|Sleeping in someone else's bed without permission is trespassing: the Carabinieri may respond.|Durmì dint'ô lietto 'e n'ato senza permesso è violazione 'e domicilio: ponno arrivà 'e carabiniere.
 work.need_batch|Per completare la mansione servono %s × %s.|This task requires %s × %s.|Pe' fernì 'a fatica servono %s × %s.
 work.delivery_progress|Consegne completate: %s / %s. Torna al deposito per il prossimo pacco.|Deliveries completed: %s / %s. Return to the depot for the next parcel.|Consegne fernute: %s / %s. Torna ô deposito p'o prossimo pacco.
+hub.welcome|Tutto quello che ti serve per vivere la città.|Everything you need for life in the city.|Tutto chello ca te serve pe campà dint’ ’a città.
+hub.welcome_short|Benvenuto|Welcome|Benvenuto
+hub.your_city|LA TUA CITTÀ|YOUR CITY|’A CITTÀ TOJA
+hub.keyboard|Tab · Naviga|Tab · Navigate|Tab · Scegli
+hub.keyboard_close|Esc · Chiudi|Esc · Close|Esc · Jesce
+hub.search_services|Cerca un servizio…|Find a service…|Cerca nu servizio…
+hub.search_places|Cerca nelle voci…|Search these entries…|Cerca dint’ ’e voce…
+hub.settings_section|Personalizza la tua esperienza|Make the city your own|Acconcia ’a città comme vuò tu
+hub.results|%s voci disponibili|%s available entries|%s voce dispunibbile
+hub.search_results|Risultati in tutti i servizi|Results from every service|Risultate ’e tutte ’e servizie
+hub.category.featured|Per te|For you|Pe tte
+hub.category.city|Città|City|Città
+hub.category.daily|Vita|Life|Vita
+hub.category.social|Amici|Social|Amice
+hub.category.money|Soldi|Money|Sorde
+hub.category.all|Tutto|All|Tutto
+hub.section.featured|Da dove vuoi cominciare?|Where would you like to start?|’A do’ vuò accumincià?
+hub.section.city|Esplora e muoviti in città|Explore and get around|Gira e scummoglia ’a città
+hub.section.daily|La tua vita quotidiana|Your everyday life|’A vita toja ’e tutt’ ’e juorne
+hub.section.social|La città è più bella insieme|The city is better together|’A città è cchiù bella nzieme
+hub.section.money|Il tuo denaro, sotto controllo|Keep track of your money|Tiene ’e sorde sott’uocchio
+hub.section.all|Tutti i servizi|All city services|Tutte ’e servizie
+night.warning|Qualcuno si avvicina alle tue tasche. Guardalo o allontanati per interrompere il tentativo.|Someone is reaching for your pockets. Face them or move away to interrupt the attempt.|Quaccheduno s’avvicina ’e sacche toje. Guardalo o alluntanate pe fermarlo.
+night.stolen|Ti hanno rubato %s €. Raggiungi il ladro e usa il tasto destro per recuperare il denaro; anche i Carabinieri possono recuperarlo.|You lost €%s to a pickpocket. Catch the thief and right-click to recover it; the Carabinieri can recover it too.|T’hanno arrubbato %s €. Arriva ô mariuolo e usa ’o tasto destro pe ripiglià ’e sorde; pure ’e Carabiniere te ponno aiutà.
+night.returned|Denaro recuperato: %s € restituiti al portafoglio.|Recovered money: €%s returned to your wallet.|Sorde recuperate: %s € turnate dint’ô portafoglio.
+night.caught|Va bene, basta! Il denaro torna al proprietario.|All right, enough! The money goes back to its owner.|Va buono, basta! ’E sorde tornano ô padrone.
+night.witness|Hai assistito a un borseggio: il sospetto è stato segnalato ai Carabinieri.|You witnessed a pickpocketing: the suspect has been reported to the Carabinieri.|Hê visto nu borseggio: ’o sospetto è stato signalato ’e Carabiniere.
+money.theft|Borseggio subito|Pickpocket theft|Borseggio subito
+money.recovered|Denaro recuperato|Recovered money|Sorde recuperate
+
+pick.behind|Per borseggiare devi avvicinarti alle spalle del bersaglio.|You must approach from behind to pickpocket someone.|Pe sfilà 'e tasche t'he avvicinà 'a dereto.
+safety.calling|Lasciami stare! Chiamo il 112 e ti denuncio!|Leave me alone! I'm calling 112 and reporting you!|Lassame stà! Chiammo 'o 112 e te denuncio!
+safety.reported|Ho avvisato i carabinieri e descritto chi mi ha aggredito!|I've called the carabinieri and described my attacker!|Aggio avvisato 'e carabiniere e descritto chi m'ha menato!

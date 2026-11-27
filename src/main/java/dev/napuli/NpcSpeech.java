@@ -13,20 +13,26 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 /** Dialogue is attached to its real speaker; ordinary game notices use NapoliNotice. */
-public record NpcSpeech(UUID speaker, Component message) implements CustomPacketPayload {
+public record NpcSpeech(UUID speaker, Component message, boolean immediate) implements CustomPacketPayload {
+    public NpcSpeech(UUID speaker,Component message){this(speaker,message,false);}
     public static final int RANGE = 32;
     public static final Type<NpcSpeech> TYPE = new Type<>(Napuli.id("npc_speech"));
     static final StreamCodec<RegistryFriendlyByteBuf, NpcSpeech> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC, NpcSpeech::speaker,
-            ComponentSerialization.STREAM_CODEC, NpcSpeech::message, NpcSpeech::new);
+            ComponentSerialization.STREAM_CODEC, NpcSpeech::message,
+            net.minecraft.network.codec.ByteBufCodecs.BOOL,NpcSpeech::immediate,NpcSpeech::new);
 
     static void register() { PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC); }
 
     public static boolean say(Player viewer, NapoliResident speaker, Component message) {
+        return send(viewer,speaker,message,false);
+    }
+    static boolean reply(ServerPlayer viewer,NapoliResident speaker,Component message){return send(viewer,speaker,message,true);}
+    private static boolean send(Player viewer,NapoliResident speaker,Component message,boolean immediate){
         if (!(viewer instanceof ServerPlayer player) || !speaker.isAlive() || player.level() != speaker.level()
                 || player.distanceToSqr(speaker) > RANGE * RANGE) return false;
         if (ServerPlayNetworking.canSend(player, TYPE))
-            ServerPlayNetworking.send(player, new NpcSpeech(speaker.getUUID(), message));
+            ServerPlayNetworking.send(player, new NpcSpeech(speaker.getUUID(), message,immediate));
         else player.sendOverlayMessage(Component.empty().append(speaker.getDisplayName()).append(": ").append(message));
         return true;
     }

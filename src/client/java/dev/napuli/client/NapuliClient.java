@@ -57,6 +57,11 @@ public class NapuliClient implements ClientModInitializer {
 		dev.napuli.LivingCityTest.register();
         dev.napuli.CityQualityClientTest.register();
         dev.napuli.HomeFurnitureClientTest.register();
+        dev.napuli.NpcLifeClientTest.register();
+        dev.napuli.NightlifeClientTest.register();
+        dev.napuli.MobilityClientTest.register();
+        dev.napuli.ResidentSafetyClientTest.register();
+        dev.napuli.PoliceVehicleClientTest.register();
 		dev.napuli.AtlasTest.register();
 		dev.napuli.DistrictClientTest.register();
 		dev.napuli.EntranceClientTest.register();
@@ -175,12 +180,13 @@ public class NapuliClient implements ClientModInitializer {
 		}
 	}
 
-	static class MotorinoRenderer extends MobRenderer<Motorino, LivingEntityRenderState, MotorinoModel> {
+	static class MotorinoRenderer extends MobRenderer<Motorino, MotorinoModel.State, MotorinoModel> {
 		static final Identifier TEX = Napuli.id("textures/entity/motorino.png");
 
 		MotorinoRenderer(EntityRendererProvider.Context ctx) { super(ctx, new MotorinoModel(ctx.bakeLayer(MotorinoModel.LAYER)), 0.5f); }
 
-		@Override public Identifier getTextureLocation(LivingEntityRenderState s) { return TEX; }
-		@Override public LivingEntityRenderState createRenderState() { return new LivingEntityRenderState(); }
+		@Override public Identifier getTextureLocation(MotorinoModel.State s) { return TEX; }
+        @Override public void extractRenderState(Motorino bike,MotorinoModel.State state,float delta){super.extractRenderState(bike,state,delta);state.police=bike.policeVehicle();}
+		@Override public MotorinoModel.State createRenderState() { return new MotorinoModel.State(); }
 	}
 }

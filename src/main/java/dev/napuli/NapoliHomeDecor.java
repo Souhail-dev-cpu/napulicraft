@@ -45,6 +45,8 @@ final class NapoliHomeDecor {
         chunk.setAttached(FITTED, true);
     }
 
+    static void fitAddedHome(ServerLevel level,LevelChunk chunk,NapoliMergellina.House house){new NapoliHomeDecor(level,chunk).furnish(house);}
+
     private void furnish(NapoliMergellina.House house) {
         approaches = new java.util.HashSet<>();
         for (var point : CityLivingHomes.points(house)) {

@@ -74,7 +74,7 @@ final class CitySocial {
     static NapoliCivicLife.Citizen nearby(ServerPlayer p,UUID id) {
         if(p.level().dimension()!=NapoliMap.LEVEL||!p.isAlive()||p.isSpectator()||Carabinieri.isJailed(p))return null;
         var entity=p.level().getEntity(id);
-        return entity instanceof NapoliResident&&entity.isAlive()&&entity.distanceToSqr(p)<=36?NapoliCivicLife.profile(p.level(),id):null;
+        return entity instanceof NapoliResident npc&&entity.isAlive()&&entity.distanceToSqr(p)<=36&&npc.hasLineOfSight(p)?NapoliCivicLife.profile(p.level(),id):null;
     }
     static void open(ServerPlayer p,NapoliCivicLife.Citizen c) {
         var b=meet(p.level(),c.id(),p.getUUID(),NapoliBroadcast.day(p.level()));

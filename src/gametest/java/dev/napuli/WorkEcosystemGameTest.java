@@ -27,7 +27,7 @@ public final class WorkEcosystemGameTest {
     @GameTest public void aConcurrentPublicBreakdownDoesNotStealAnExistingRepairOrItsMaterials(GameTestHelper h){var city=h.getLevel();var home=CityLivingHomes.PUBLIC_HOMES.getFirst();var pos=home.entrance().above(3);var id=UUID.randomUUID();
         var worker=new NapoliCivicLife.Citizen(id,"Artigiano",false,-200,100,NapoliCivicLife.Job.MECHANIC.ordinal(),"",home.id(),"",true);
         var homes=city.getAttached(CityTraces.ISSUES);var incidents=city.getAttached(CityWorkIncidents.ISSUES);var tasks=city.getAttached(CityOccupations.TASKS);var supplies=city.getAttached(CityOccupations.SUPPLIES);
-        try{city.removeAttached(CityWorkIncidents.ISSUES);city.setAttached(CityTraces.ISSUES,Map.of(pos.asLong()+"",new CityTraces.Issue(pos,home.id(),0,false)));
+        try{CityOccupations.supply(city,"parts",24);CityOccupations.supply(city,"planks",24);city.removeAttached(CityWorkIncidents.ISSUES);city.setAttached(CityTraces.ISSUES,Map.of(pos.asLong()+"",new CityTraces.Issue(pos,home.id(),0,false)));
             var task=new CityOccupations.Task("repair",1,40,2,pos.asLong()+"",0);CityOccupations.put(city,id,task);CityWorkIncidents.report(city,"M6",CityOccupations.workplace(worker).east(20));
             h.assertTrue(CityOccupations.target(city,worker).equals(home.approach(1)),"Reserved home materials keep their original destination when another service breaks");
             CityTraces.repair(city,pos);int parts=CityOccupations.supply(city,"parts"),boards=CityOccupations.supply(city,"planks");CityOccupations.repair(city,worker,task,400);
@@ -78,16 +78,19 @@ public final class WorkEcosystemGameTest {
         var custom=base.above();city.setBlock(custom,Blocks.EMERALD_BLOCK.defaultBlockState(),18);CityProperty.placed(city,custom);
         try{h.assertTrue(!WorkResources.grow(city,base)&&city.getBlockState(custom).is(Blocks.EMERALD_BLOCK),"Night growth skips the entire occupied tree rather than erasing construction");}
         finally{CityProperty.forget(city,custom);city.setBlock(custom,Blocks.AIR.defaultBlockState(),18);}h.succeed();}
-    @GameTest public void deliveredBoardsAndFoodEnterTheCitySupply(GameTestHelper h){var city=h.getLevel();int boards=CityOccupations.supply(city,"planks");WorkEconomy.delivery(city,NapoliEmployment.Contract.CARPENTER,4);
-        h.assertTrue(CityOccupations.supply(city,"planks")==boards+4,"Delivered boards are available to city trades");var before=CityEconomy.stock(city,"forno");WorkEconomy.delivery(city,NapoliEmployment.Contract.BAKER,1);
-        h.assertTrue(CityEconomy.stock(city,"forno").bread()==Math.min(192,before.bread()+1),"A baker's delivery replenishes actual food stock");h.succeed();}
-    @GameTest public void workTreesRegrowAtNightOnlyOnce(GameTestHelper h){var city=h.getLevel();var base=WorkResources.trees().getLast();var previous=city.getAttached(WorkResources.CUT);
+    @GameTest public void deliveredBoardsAndFoodEnterTheCitySupply(GameTestHelper h){var city=h.getLevel();var supplies=city.removeAttached(CityOccupations.SUPPLIES);var stocks=city.removeAttached(CityEconomy.STOCKS);
+        // This fixture owns its stock; another test may already have filled the bounded store.
+        try{CityOccupations.supply(city,"planks",24);WorkEconomy.delivery(city,NapoliEmployment.Contract.CARPENTER,4);
+            h.assertTrue(CityOccupations.supply(city,"planks")==28,"Delivered boards are available to city trades");var before=CityEconomy.stock(city,"forno");WorkEconomy.delivery(city,NapoliEmployment.Contract.BAKER,1);
+            h.assertTrue(CityEconomy.stock(city,"forno").bread()==Math.min(192,before.bread()+1),"A baker's delivery replenishes actual food stock");
+        }finally{if(supplies==null)city.removeAttached(CityOccupations.SUPPLIES);else city.setAttached(CityOccupations.SUPPLIES,supplies);if(stocks==null)city.removeAttached(CityEconomy.STOCKS);else city.setAttached(CityEconomy.STOCKS,stocks);}h.succeed();}
+    @GameTest public void workTreesRegrowAtNightOnlyOnce(GameTestHelper h){var city=h.getLevel();var base=WorkResources.trees().getLast();var previous=city.getAttached(WorkResources.CUT);var supplies=city.removeAttached(CityOccupations.SUPPLIES);
         for(var p:BlockPos.betweenClosed(base.offset(-2,0,-2),base.offset(2,5,2)))city.setBlock(p,Blocks.AIR.defaultBlockState(),18);
         int saplings=CityOccupations.supply(city,"saplings");city.setAttached(WorkResources.CUT,Map.of(base.asLong()+"",5L));
         try{WorkResources.regrow(city,5,12000);h.assertTrue(city.getBlockState(base).isAir(),"Trees remain cut during the working day");WorkResources.regrow(city,5,13000);
             h.assertTrue(city.getBlockState(base).is(Blocks.OAK_LOG)&&city.getBlockState(base.above(3)).is(Blocks.OAK_LOG),"The authored tree returns at night");
             WorkResources.regrow(city,5,14000);h.assertTrue(CityOccupations.supply(city,"saplings")==saplings+2,"A night restock is recorded once");}
-        finally{if(previous==null)city.removeAttached(WorkResources.CUT);else city.setAttached(WorkResources.CUT,previous);CityOccupations.supply(city,"saplings",saplings);}h.succeed();}
+        finally{if(previous==null)city.removeAttached(WorkResources.CUT);else city.setAttached(WorkResources.CUT,previous);if(supplies==null)city.removeAttached(CityOccupations.SUPPLIES);else city.setAttached(CityOccupations.SUPPLIES,supplies);}h.succeed();}
     @GameTest public void metroShaftsOpenAtBothPlatformsAndKeepPlayerChanges(GameTestHelper h){var city=h.getLevel();var stop=CityNetwork.stop("municipio");CityNetwork.ensureStation(city,stop);
         for(String id:List.of("M1","M6")){var line=CityNetwork.line(id);var exit=new BlockPos(stop.street().getX()+5,line.level()+1,stop.street().getZ()+4);
             h.assertTrue(city.isEmptyBlock(exit)&&city.isEmptyBlock(exit.above()),"The ladder has a two-block doorway onto "+id);

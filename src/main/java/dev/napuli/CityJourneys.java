@@ -54,6 +54,8 @@ final class CityJourneys {
         return new Journey(route,now,now+duration,to.immutable(),now);
     }
     static BlockPos position(ServerLevel city,NapoliCivicLife.Citizen c,BlockPos destination){
+        if(city.getEntity(c.id())==null&&CityMobility.inTransit(city,c.id()))return CityMobility.position(city,c.id());
+        if(city.getEntity(c.id())==null){var transit=CityNetwork.passengerPosition(city,c.id());if(transit!=null)return transit;}
         var previous=get(city,c.id());long now=city.getGameTime();
         if(city.getEntity(c.id()) instanceof NapoliResident npc){if(!npc.isNoAi())observe(city,npc,c,destination);return npc.blockPosition();}
         if(previous==null){previous=plan(NapoliCivicLife.home(c),destination,now,CitySimulation.life(city,c.id()).needs().sleep());put(city,c.id(),previous);}
@@ -61,16 +63,19 @@ final class CityJourneys {
         return sample(previous,now);
     }
     static boolean at(ServerLevel city,NapoliCivicLife.Citizen c,BlockPos target,double radius){
+        if(CityResidentSafety.absent(city,c.id()))return false;
+        if(CityMobility.inTransit(city,c.id())||CityNetwork.inTransit(city,c.id()))return false;
         var entity=city.getEntity(c.id());if(entity!=null)return entity.blockPosition().distSqr(target)<=radius*radius;
         var j=get(city,c.id());return (j==null?NapoliCivicLife.home(c):sample(j,city.getGameTime())).distSqr(target)<=radius*radius;
     }
     static void observe(ServerLevel city,NapoliResident npc,NapoliCivicLife.Citizen c,BlockPos destination){
+        if(CityMobility.inTransit(city,c.id())||CityNetwork.inTransit(city,c.id()))return;
         if(npc.isNoAi())return;var previous=get(city,c.id());var position=npc.blockPosition();
         if(position.equals(destination)&&previous!=null&&previous.destination().equals(destination)&&previous.route().stream().allMatch(position::equals))return;
         put(city,c.id(),plan(position,destination,city.getGameTime(),CitySimulation.life(city,c.id()).needs().sleep()));
     }
     static void unmaterialized(ServerLevel city,UUID id){var census=NapoliCivicLife.census(city);if(census==null)return;city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(c->c.id().equals(id)?new NapoliCivicLife.Citizen(c.id(),c.name(),c.woman(),c.birth(),c.balance(),c.job(),c.partner(),c.property(),c.parents(),false,c.childhoodDays()):c).toList()));}
-    static void withdraw(ServerLevel city,NapoliResident npc){var c=NapoliCivicLife.profile(city,npc.getUUID());if(c==null||npc.isNoAi())return;CityMovement.stand(npc);if(npc.isSleeping())npc.stopSleeping();observe(city,npc,c,CitySimulation.destination(city,c));CityMovement.release(city,c.id());unmaterialized(city,c.id());npc.discard();}
+    static void withdraw(ServerLevel city,NapoliResident npc){var c=NapoliCivicLife.profile(city,npc.getUUID());if(c==null||npc.isNoAi())return;if(CityMobility.virtualize(npc,city)||CityNetwork.virtualize(npc,city))return;CityMovement.stand(npc);if(npc.isSleeping())npc.stopSleeping();observe(city,npc,c,CitySimulation.destination(city,c));CityMovement.release(city,c.id());unmaterialized(city,c.id());npc.discard();}
     static boolean managed(NapoliResident npc){return !npc.isNoAi()&&npc.level() instanceof ServerLevel city&&NapoliCivicLife.profile(city,npc.getUUID())!=null;}
     static BlockPos spawn(ServerLevel city,BlockPos projected){return spawn(city,projected,Set.of());}
     static BlockPos spawn(ServerLevel city,BlockPos projected,Set<BlockPos> reserved){

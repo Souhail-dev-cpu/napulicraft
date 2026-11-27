@@ -9,6 +9,13 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
 public final class SpeechGameTest {
+    @GameTest public void directRepliesPreserveTheirPriorityAcrossTheNetwork(GameTestHelper h){
+        var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),h.getLevel().registryAccess());
+        try{var packet=new NpcSpeech(UUID.randomUUID(),Component.literal("A presto!"),true);NpcSpeech.CODEC.encode(buffer,packet);
+            h.assertTrue(NpcSpeech.CODEC.decode(buffer).equals(packet),"The client receives both the reply and the instruction to replace stale lines");
+            h.assertTrue(!new NpcSpeech(packet.speaker(),packet.message()).immediate(),"Ambient speech retains its ordinary ordered queue");
+        }finally{buffer.release();}h.succeed();
+    }
     @GameTest public void speechPacketPreservesSpeakerAndClientTranslation(GameTestHelper h){
         var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),h.getLevel().registryAccess());
         try{var packet=new NpcSpeech(UUID.randomUUID(),Component.translatable("napuli.street.meme_ritardo"));NpcSpeech.CODEC.encode(buffer,packet);var decoded=NpcSpeech.CODEC.decode(buffer);

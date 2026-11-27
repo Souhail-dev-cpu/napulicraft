@@ -54,6 +54,36 @@ loom {
             runDir '.gradle/home-furniture-client'
             programArgs '--width', '1280', '--height', '800'
         }
+        npcLifeTest {
+            client()
+            vmArg '-Dnapuli.npclifetest=true'
+            runDir '.gradle/npc-life-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
+        nightlifeTest {
+            client()
+            vmArg '-Dnapuli.nightlifetest=true'
+            runDir '.gradle/nightlife-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
+        mobilityTest {
+            client()
+            vmArg '-Dnapuli.mobilitytest=true'
+            runDir '.gradle/mobility-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
+        residentSafetyTest {
+            client()
+            vmArg '-Dnapuli.residentsafetytest=true'
+            runDir '.gradle/resident-safety-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
+        policeVehicleTest {
+            client()
+            vmArg '-Dnapuli.policevehicletest=true'
+            runDir '.gradle/police-vehicle-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
 		policeaitest {
 			client()
 			name "Napuli police navigation test"
@@ -351,6 +381,7 @@ tasks.named('runPhoneTest') {
 tasks.named('runQolTest') {
     dependsOn 'prepareQolTest'
     mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/qol-natives').asFile.absolutePath
     def log = layout.projectDirectory.file('.gradle/qol-client/logs/latest.log')
     doLast {
         if (!log.asFile.exists() || !log.asFile.text.contains('[QOLTEST] ALL PASSED'))
@@ -375,6 +406,7 @@ tasks.register('preparePickpocketTest') {
 tasks.named('runPickpocketTest') {
     dependsOn 'preparePickpocketTest'
     mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/pickpocket-natives').asFile.absolutePath
     def log = layout.projectDirectory.file('.gradle/pickpocket-client/logs/latest.log')
     doLast {
         if (!log.asFile.exists() || !log.asFile.text.contains('[PICKPOCKETTEST] ALL PASSED'))
@@ -413,6 +445,76 @@ tasks.register('prepareHomeFurnitureTest') {
         directory.mkdirs()
         new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:5\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
     }
+}
+tasks.register('prepareNpcLifeTest') {
+    def directory = layout.projectDirectory.dir('.gradle/npc-life-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:5\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.register('prepareNightlifeTest') {
+    def directory = layout.projectDirectory.dir('.gradle/nightlife-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:4\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runNightlifeTest') {
+    dependsOn 'prepareNightlifeTest'
+    mustRunAfter 'runGameTest', 'runNpcLifeTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/nightlife-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/nightlife-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[NIGHTLIFE] ALL PASSED')) throw new GradleException('Nightlife verification failed; see .gradle/nightlife-client/logs/latest.log') }
+}
+tasks.register('prepareMobilityTest') {
+    def directory = layout.projectDirectory.dir('.gradle/mobility-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:4\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runMobilityTest') {
+    dependsOn 'prepareMobilityTest'
+    mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/mobility-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/mobility-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[MOBILITY] ALL PASSED')) throw new GradleException('Mobility verification failed; see .gradle/mobility-client/logs/latest.log') }
+}
+tasks.register('prepareResidentSafetyTest') {
+    def directory = layout.projectDirectory.dir('.gradle/resident-safety-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:4\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runResidentSafetyTest') {
+    dependsOn 'prepareResidentSafetyTest'
+    mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/resident-safety-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/resident-safety-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[RESIDENTSAFETY] ALL PASSED')) throw new GradleException('Resident safety verification failed; see .gradle/resident-safety-client/logs/latest.log') }
+}
+tasks.register('preparePoliceVehicleTest') {
+    def directory = layout.projectDirectory.dir('.gradle/police-vehicle-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:4\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runPoliceVehicleTest') {
+    dependsOn 'preparePoliceVehicleTest'
+    mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/police-vehicle-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/police-vehicle-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[POLICEVEHICLE] ALL PASSED')) throw new GradleException('Police vehicle verification failed; see .gradle/police-vehicle-client/logs/latest.log') }
+}
+tasks.named('runNpcLifeTest') {
+    dependsOn 'prepareNpcLifeTest'
+    mustRunAfter 'runGameTest', 'runHomeFurnitureTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/npc-life-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/npc-life-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[NPCLIFE] ALL PASSED')) throw new GradleException('NPC life test failed; see .gradle/npc-life-client/logs/latest.log') }
 }
 tasks.named('runHomeFurnitureTest') {
     dependsOn 'prepareHomeFurnitureTest'

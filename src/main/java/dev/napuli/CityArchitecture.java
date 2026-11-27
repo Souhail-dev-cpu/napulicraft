@@ -35,6 +35,7 @@ final class CityArchitecture {
             var chunk=city.getChunkSource().getChunkNow(x,z);if(chunk!=null&&!CityProperty.playerBuiltInChunk(city,chunk.getPos()))new CityArchitecture(city,chunk).house(home);
         }
     }
+    static void fitAddedHome(ServerLevel city,LevelChunk chunk,NapoliMergellina.House home){new CityArchitecture(city,chunk).house(home);}
     private boolean ours(BlockPos p){return ChunkPos.containing(p).equals(chunk.getPos())&&!CityProperty.playerPlaced(city,p)&&chunk.getBlockEntity(p)==null;}
     private boolean facade(BlockState state){return state.is(Blocks.SMOOTH_SANDSTONE)||state.is(Blocks.CUT_SANDSTONE)||state.is(Blocks.TERRACOTTA)||state.is(Blocks.BRICKS)||state.is(Blocks.CALCITE)
             ||state.is(CityBlocks.vanilla("yellow_terracotta"))||state.is(CityBlocks.vanilla("pink_terracotta"))||state.is(CityBlocks.vanilla("white_terracotta"))||state.is(CityBlocks.vanilla("orange_terracotta"))

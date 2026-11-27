@@ -20,6 +20,7 @@ final class CityCharacter {
         return DistrictLife.districts().stream().min(Comparator.comparingDouble(d -> d.business().entrance().distSqr(NapoliCivicLife.home(c)))).orElseThrow();
     }
     static BlockPos leisure(ServerLevel city, NapoliCivicLife.Citizen c) {
+        if(CityNightlife.outing(city,c,CitySimulation.life(city,c.id()),NapoliBroadcast.time(city))||CityThieves.onProwl(city,c,CitySimulation.life(city,c.id()),NapoliBroadcast.time(city)))return CityNightlife.destination(city,c);
         var home = NapoliCivicLife.home(c); var tastes = tastes(c.id());
         var friend=companion(city,c);if(friend!=null){var actor=city.getEntity(friend.id());if(actor!=null&&actor.blockPosition().distSqr(home)<96*96)return actor.blockPosition().east(2); }
         if (DistrictLife.resident(c)) {
@@ -27,13 +28,26 @@ final class CityCharacter {
             var baker = NapoliCivicLife.profile(city,DistrictLife.identity(d,0));
             if (!tastes.quiet() && baker != null && CityHabits.working(baker,NapoliBroadcast.time(city),NapoliBroadcast.day(city)))
                 return d.business().approach(3);
-            if(tastes.quiet())return d.homes().getFirst().approach(4);
-            return DistrictLife.square(d).arrival().offset(tastes.company()-2,0,2);
+            if(tastes.quiet()){var own=CityLivingHomes.find(c.property());return own==null?home:own.approach(4);}
+            return meetingPoint(city,c,DistrictLife.square(d).arrival());
         }
         // Keep residents local; a preference never sends a Partenope resident across the map for coffee.
-        return CityNeighborhood.cafe(home).offset(tastes.quiet() ? -3 : tastes.company()-1,0,tastes.quiet()?3:0);
+        return meetingPoint(city,c,CityNeighborhood.cafe(home).offset(tastes.quiet()?-3:0,0,tastes.quiet()?3:0));
     }
-    static NapoliCivicLife.Citizen companion(ServerLevel city,NapoliCivicLife.Citizen c){var census=NapoliCivicLife.census(city);if(census==null)return null;var relations=CitySimulation.life(city,c.id()).relations();return census.people().stream().filter(other->!other.id().equals(c.id())&&relations.getOrDefault(other.id().toString(),0)>=60&&!CityHabits.working(other,NapoliBroadcast.time(city),NapoliBroadcast.day(city))).max(Comparator.comparingInt((NapoliCivicLife.Citizen other)->relations.get(other.id().toString())).thenComparing(other->other.id().toString())).orElse(null);}
+    static BlockPos meetingPoint(ServerLevel city,NapoliCivicLife.Citizen c,BlockPos center){
+        // Stable personal spacing: a crowd occupies a square rather than one identical destination.
+        int seed=Math.floorMod(c.id().hashCode(),49);var desired=center.offset((seed%7-3)*2,0,(seed/7-3)*2);
+        return city.hasChunkAt(desired)&&NapoliResidentHomes.walkable(city,desired)?desired:center;
+    }
+    static NapoliCivicLife.Citizen companion(ServerLevel city,NapoliCivicLife.Citizen c){
+        NapoliCivicLife.Citizen best=null;int score=59;long time=NapoliBroadcast.time(city),day=NapoliBroadcast.day(city);
+        for(var entry:CitySimulation.life(city,c.id()).relations().entrySet())if(entry.getValue()>=score&&entry.getKey().length()==36){
+            UUID id;try{id=UUID.fromString(entry.getKey());}catch(IllegalArgumentException invalid){continue;}
+            if(id.equals(c.id()))continue;var other=NapoliCivicLife.profile(city,id);
+            if(other!=null&&!CityHabits.working(other,time,day)&&(entry.getValue()>score||best==null||other.id().toString().compareTo(best.id().toString())>0)){best=other;score=entry.getValue();}
+        }
+        return best;
+    }
     static String describe(ServerLevel city, NapoliCivicLife.Citizen c) {
         var taste = tastes(c.id());
         String food = DistrictShops.products().stream().filter(p -> p.id().equals(taste.food())).findFirst().orElseThrow().name();

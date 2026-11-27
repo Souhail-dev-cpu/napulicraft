@@ -43,7 +43,12 @@
       "dev.napuli.PhoneServicesGameTest",
       "dev.napuli.PoliceCoordinationGameTest",
       "dev.napuli.CityQualityGameTest",
-      "dev.napuli.HomeFurnitureGameTest"
+      "dev.napuli.HomeFurnitureGameTest",
+      "dev.napuli.CityConversationGameTest",
+      "dev.napuli.NightlifeGameTest",
+      "dev.napuli.MobilityGameTest",
+      "dev.napuli.ResidentSafetyGameTest",
+      "dev.napuli.PoliceVehicleGameTest"
     ]
   },
   "depends": {

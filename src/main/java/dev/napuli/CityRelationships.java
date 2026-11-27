@@ -19,11 +19,13 @@ final class CityRelationships {
     static final AttachmentType<Map<String,Long>> STRAIN=AttachmentRegistry.<Map<String,Long>>builder().persistent(Codec.unboundedMap(Codec.STRING,Codec.LONG)).buildAndRegister(Napuli.id("couple_strain"));
     static final AttachmentType<Map<String,String>> ADDRESSES=AttachmentRegistry.<Map<String,String>>builder().persistent(Codec.unboundedMap(Codec.STRING,Codec.STRING)).buildAndRegister(Napuli.id("family_last_address"));
     static Agreement agreement(ServerLevel city,NapoliCivicLife.Citizen c){
-        if(c.property().isEmpty()||NapoliCivicLife.census(city)==null)return null;long day=NapoliBroadcast.day(city);var all=new HashMap<>(city.getAttachedOrElse(AGREEMENTS,Map.of()));var previous=all.get(c.property());if(previous!=null&&previous.day()==day)return previous;
-        var adults=NapoliCivicLife.census(city).people().stream().filter(p->p.property().equals(c.property())&&p.age(day)>=18&&CitySimulation.life(city,p.id()).health()>=45&&!CityPublicOrder.jailed(city,p.id())).sorted(Comparator.comparing(p->p.id().toString())).toList();if(adults.isEmpty())return null;
+        if(c.property().isEmpty()||NapoliCivicLife.census(city)==null)return null;long day=NapoliBroadcast.day(city);var saved=city.getAttachedOrElse(AGREEMENTS,Map.of());var previous=saved.get(c.property());if(previous!=null&&previous.day()==day)return previous;var all=new HashMap<>(saved);
+        var adults=NapoliCivicLife.household(city,c.property()).stream().filter(p->p.age(day)>=18&&CitySimulation.life(city,p.id()).health()>=45&&!CityPublicOrder.jailed(city,p.id())).sorted(Comparator.comparing(p->p.id().toString())).toList();if(adults.isEmpty())return null;
         var cook=adults.stream().filter(p->!CityHabits.working(p,11000,day)).max(Comparator.comparingInt((NapoliCivicLife.Citizen p)->CityHabits.cooking(city,p.id())).thenComparing(p->p.id().toString())).orElse(adults.getFirst());
         var other=adults.stream().filter(p->!p.id().equals(cook.id())).toList();var washer=other.isEmpty()?cook:other.get(Math.floorMod((int)day,other.size()));
-        var shopper=adults.stream().filter(p->!CityHabits.working(p,9700,day)).findFirst().orElse(washer);var carer=adults.stream().filter(p->!CityHabits.working(p,2500,day)).findFirst().orElse(washer);
+        var shopper=adults.stream().filter(p->!CityHabits.working(p,9700,day)).findFirst().orElse(washer);
+        var carer=adults.stream().filter(p->!CityNightlife.nightWorker(p)&&!CityHabits.working(p,2500,day)).findFirst()
+                .orElseGet(()->adults.stream().filter(p->!CityNightlife.nightWorker(p)).findFirst().orElse(washer));
         var result=new Agreement(day,cook.id().toString(),washer.id().toString(),shopper.id().toString(),carer.id().toString());all.put(c.property(),result);city.setAttached(AGREEMENTS,Map.copyOf(all));return result;
     }
     static void event(ServerLevel city,UUID person,String kind,String detail,long day,int days){

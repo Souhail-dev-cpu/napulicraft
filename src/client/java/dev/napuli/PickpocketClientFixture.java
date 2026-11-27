@@ -29,6 +29,7 @@ public final class PickpocketClientFixture {
         thief.setGameMode(GameType.CREATIVE); thief.getInventory().clearContent();
         thief.teleportTo(world, .5, 80, .5, Set.of(), -90, 0, true);
         npc = NapoliResident.spawn(world, NapoliResident.Role.TERESA, new BlockPos(2, 80, 0), 0); npc.setNoAi(true);
+        npc.setYRot(-90);npc.setYHeadRot(-90);
         npcId = npc.getUUID(); npcItems = count(npc);
         var server = world.getServer(); var profile = new GameProfile(UUID.randomUUID(), "PocketVictim");
         victim = new ServerPlayer(server, world, profile, ClientInformation.createDefault()); victimId = victim.getUUID();
@@ -41,7 +42,7 @@ public final class PickpocketClientFixture {
                 "The real NPC interaction transfers exactly five saved pocket items");
     }
     public static void prepareVictim(ServerPlayer thief) {
-        victim.teleportTo(thief.level(), .5, 80, 2.5, Set.of(), 180, 0, true);
+        victim.teleportTo(thief.level(), .5, 80, 2.5, Set.of(), 0, 0, true);victim.setYHeadRot(0);
         victim.getInventory().clearContent(); victim.getInventory().setItem(0, new ItemStack(Items.DIAMOND, 64));
         victim.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.EMERALD, 3));
         victim.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));

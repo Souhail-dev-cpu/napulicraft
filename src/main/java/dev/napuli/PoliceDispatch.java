@@ -34,7 +34,7 @@ final class PoliceDispatch {
         var frame=new Frame(now,orders,List.copyOf(officers));city.setAttached(FRAME,frame);return frame;
     }
     static boolean eligible(NapoliResident npc){return npc.role()==NapoliResident.Role.CARABINIERE&&npc.isAlive()&&!npc.isNoAi()
-            &&!npc.isPassenger()&&!Carabinieri.npcJailed(npc.getUUID())&&!CityPublicOrder.jailed((ServerLevel)npc.level(),npc.getUUID());}
+            &&(!npc.isPassenger()||PoliceVehicles.riding(npc))&&!Carabinieri.npcJailed(npc.getUUID())&&!CityPublicOrder.jailed((ServerLevel)npc.level(),npc.getUUID());}
     static Assignment order(NapoliResident npc){return frame((ServerLevel)npc.level()).orders().get(npc.getUUID());}
     static List<NapoliResident> team(ServerPlayer p){var frame=frame(p.level());return frame.officers().stream().filter(PoliceDispatch::eligible)
             .filter(n->{var a=frame.orders().get(n.getUUID());return a!=null&&a.suspect().equals(p.getUUID());})

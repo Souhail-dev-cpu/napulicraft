@@ -68,6 +68,8 @@ Per un'introduzione giocabile usa **`/inizio`**: conosci un vicino, scegli un la
 
 Premi **O** per aprire il menu cittadino; il tasto è modificabile nei controlli di Minecraft. Sono disponibili anche **`/compagno`** e **`/citta menu`**. Dal menu raggiungi casa, lavoro, portafoglio, botteghe, trasporti, ricettario, guida e inviti.
 
+Il menu usa schede con icone e colori distinti, una barra laterale sugli schermi ampi e navigazione compatta su quelli piccoli. **Per te** raccoglie sei scorciatoie; **Città**, **Vita**, **Amici**, **Soldi** e **Tutto** organizzano gli altri servizi. La ricerca attraversa tutte le categorie: **Ctrl+F** la mette a fuoco, **Invio** apre il risultato quando è unico ed **Esc** cancella prima una ricerca attiva. Il tasto del menu lo richiude quando non stai scrivendo. Preferenze, descrizioni, preferiti e navigazione restano disponibili anche con la GUI ingrandita.
+
 Durante il gioco la scorciatoia del menu ha precedenza sulla schermata amici di Minecraft, anch'essa assegnata a O. Il collegamento segue il tasto scelto nei controlli e si attiva quando non ci sono altre schermate aperte.
 
 Il menu mette in primo piano le attività quotidiane e dispone le schede su due colonne quando c'è spazio. La ricerca mantiene il testo durante il ridimensionamento; **×** la azzera. Scorri le pagine con la **rotella**, **Pag ↑ / Pag ↓** o le frecce in basso. **Indietro** risale alla sezione principale; dalle opzioni ritorni alla scheda aperta. I pulsanti ai limiti delle pagine sono disattivati e le ricerche senza risultati propongono un'azione per ripartire. Usa **Tab** e **Invio** per spostarti fra i controlli e attivarli.
@@ -98,14 +100,14 @@ Le nuove funzioni sono raggiungibili dallo stesso menu:
 
 Acquisti e prenotazioni spiegano il motivo di un rifiuto, per esempio denaro mancante, inventario pieno, bottega chiusa, fermata lontana o viaggio già prenotato.
 
-Il **tasto destro sugli NPC** apre dialoghi e servizi; **Shift + tasto destro su NPC o giocatori** apre il loro inventario per rubare. Il clic normale sui giocatori non apre l'inventario. L'interfaccia mostra tasche o zaino, barra rapida, mano secondaria e armatura. Puoi rubare soltanto **5 oggetti singoli scelti casualmente per bersaglio e giorno di gioco**: gli slot col bordo azzurro indicano le quantità ancora disponibili; gli altri rimangono consultabili. Ogni clic trasferisce un oggetto. Il limite è condiviso fra tutti i ladri e sopravvive a chiusura della schermata, disconnessione e riavvio; riaprire non cambia la selezione. Il nuovo giorno rinnova la scelta fra gli oggetti ancora presenti. Le tasche dei residenti sono conservate nel mondo. Inventario pieno, oggetto spostato, bersaglio lontano o non più disponibile impediscono il trasferimento. In città il furto può allertare i Carabinieri e danneggia la fiducia del cittadino. Anche il pulsante **Parla** nella schermata delle tasche permette di tornare a dialoghi, negozi e lavori.
+Il **tasto destro sugli NPC** apre dialoghi e servizi; **Shift + tasto destro su NPC o giocatori**, da vicino e alle loro spalle, apre il loro inventario per borseggiare. Il server ricontrolla posizione, direzione dello sguardo e distanza a ogni oggetto preso: se la vittima si gira o ti allontani, il furto viene impedito. Il clic normale sui giocatori non apre l'inventario. L'interfaccia mostra tasche o zaino, barra rapida, mano secondaria e armatura. Puoi rubare soltanto **5 oggetti singoli scelti casualmente per bersaglio e giorno di gioco**: gli slot col bordo azzurro indicano le quantità ancora disponibili; gli altri rimangono consultabili. Ogni clic trasferisce un oggetto. Il limite è condiviso fra tutti i ladri e sopravvive a chiusura della schermata, disconnessione e riavvio; riaprire non cambia la selezione. Il nuovo giorno rinnova la scelta fra gli oggetti ancora presenti. Le tasche dei residenti sono conservate nel mondo e contengono oggetti legati a mestiere, età e personaggio: per esempio pesce e attrezzi da pesca, legno per il falegname, ingredienti per il fornaio e documenti per gli impiegati. Anche persone dello stesso mestiere hanno contenuti diversi. Negli NPC gli oggetti equipaggiati restano consultabili e non si possono sottrarre. Tasche svuotate, cambi di lavoro e vecchi salvataggi non rigenerano gli oggetti già rubati. Inventario pieno, oggetto spostato, bersaglio lontano o non più disponibile impediscono il trasferimento. In città il furto può allertare i Carabinieri e danneggia la fiducia del cittadino. Anche il pulsante **Parla** nella schermata delle tasche permette di tornare a dialoghi, negozi e lavori.
 
 ## Funzionalità principali
 
 | Sistema | Contenuti |
 | --- | --- |
 | Città | Area di 4.096 × 1.360 blocchi, dieci volte l'area precedente; atlante con 50 mete, di cui 45 nuove |
-| Popolazione | 120 cittadini iniziali nel nucleo e fino a 76 aggiuntivi nell'espansione, secondo la configurazione |
+| Popolazione | 120 cittadini iniziali nel nucleo e fino a 456 aggiuntivi nell'espansione, secondo la configurazione |
 | Quartieri abitati | 19 quartieri dell'espansione con 38 case per le famiglie e 19 botteghe |
 | NPC | Identità persistenti, età, famiglie, bisogni, personalità, memoria, relazioni, gesti e routine |
 | Abitare | 35 immobili acquistabili o affittabili, mutui, bollette, chiavi, campanelli, ospiti e cene |
@@ -155,7 +157,13 @@ I cittadini appartengono a un'anagrafe gestita dal server. Ogni abitante conserv
 
 Vicino ai giocatori, l'abitante è un'entità che cammina, usa gli ambienti e svolge le proprie attività. Lontano dai giocatori continua attraverso i dati: posizione, viaggio, tempi, bisogni e progressi vengono conservati senza tenere caricata l'intera città. Quando torna visibile riprende dalla situazione registrata. L'identità viene mantenuta evitando di creare un secondo corpo dello stesso cittadino.
 
-La configurazione predefinita permette **196 residenti iniziali**: 120 nel nucleo cittadino e fino a 76 nei quartieri aggiuntivi, oltre ai personaggi specifici delle attività e della trama. Il totale effettivo dipende dal limite configurato e può cambiare con nascite e decessi.
+La configurazione predefinita permette **576 residenti iniziali**: 120 nel nucleo cittadino e fino a 456 nei quartieri aggiuntivi, oltre ai personaggi specifici delle attività e della trama. Ogni quartiere aggiuntivo ha sei case e sei famiglie di quattro persone. Gli indirizzi preesistenti restano stabili. Il totale effettivo dipende dal limite configurato e può cambiare con nascite e decessi.
+
+Di notte una parte degli adulti continua a passeggiare e incontrarsi vicino alle botteghe, con orari di rientro diversi, piccoli ritrovi e musica di strada. Stanchezza, salute e bisogni urgenti hanno la precedenza; i bambini mantengono i propri orari. Nei quartieri il commerciante del turno serale può servire dalle **18:00 alle 04:30**, quando è effettivamente al lavoro e restano scorte. Chi lavora di notte riposa di giorno; la gestione della scuola preferisce il genitore del turno diurno. Alcune finestre restano illuminate fino a tardi. Anche chi si trova ai piani superiori raggiunge la scala prima di uscire.
+
+Ci sono **otto borseggiatori** per impostazione predefinita, legati a identità persistenti del censimento. Agiscono in strada la sera e la notte: cercano una vittima, si avvicinano, tentano il furto per quattro secondi e fuggono. Guardarli, allontanarsi o una pattuglia visibile interrompono il tentativo. I testimoni e le vittime NPC possono segnalarli ai Carabinieri. Il furto riguarda soltanto il denaro, al massimo **8 €** per episodio; Creativa e Spettatore sono esenti. Il denaro viene conservato come refurtiva: raggiungere il ladro e usare il **tasto destro**, oppure il suo arresto, lo restituisce al proprietario. I rimborsi offline o con portafoglio pieno restano in sospeso senza duplicare o distruggere la somma. Ladri e vittime hanno tempi di attesa fra i tentativi.
+
+Gli abitanti lontani continuano a vivere nella simulazione senza caricare altre zone. Vicino ai giocatori arrivano al massimo otto residenti al secondo, con limiti predefiniti di 96 residenti fisici nei dintorni di ciascun giocatore e 256 complessivi. Questi limiti riguardano i residenti del censimento; pattuglie aggiuntive e personaggi delle attività sono separati. Gli incontri nelle piazze usano punti personali diversi. Le chiacchiere richiedono vicinanza e visibilità, coinvolgono anche i nuovi quartieri e cedono il passo a scuola, lavoro e bisogni urgenti.
 
 ### Bisogni, orari e spostamenti
 
@@ -183,9 +191,15 @@ I cittadini ricordano incontri in giorni diversi, acquisti, favori, aggressioni 
 
 Le conversazioni contestuali tengono conto di bisogni, turno, scorte e obiettivi. Un testimone può riferire dove ha visto una persona, indicando quando: la sua conoscenza deriva da avvistamenti effettivi. Le notizie passano fra persone vicine, con una fonte e una credibilità che diminuisce nei passaggi. `/quartiere voci` mostra ciò che è stato raccontato al giocatore.
 
+Il clic destro su un residente apre una conversazione con un campo **Scrivi una domanda**. Puoi chiedere «Come stai?», «Che lavoro fai?», «Parlami della tua famiglia», «Posso aiutarti?», «Dov'è la fermata?» o «Hai visto Ciro Romano?». **Raccontami di più** e domande come «Perché?» proseguono l'ultimo argomento. Ogni coppia cittadino/giocatore conserva il proprio argomento attraverso i salvataggi. Il pulsante **Servizi e favori** mantiene accessibili negozi e incarichi. Le frasi sono interpretate localmente in italiano con risposte legate alla simulazione; non serve un servizio di IA esterno.
+
+Puoi anche usare `/parla` per il vicino più prossimo, `/parla "Nome Cognome"` oppure `/parla "Nome Cognome" Come stai?`. I vecchi comandi con UUID restano validi. La conversazione richiede un cittadino vivo entro sei blocchi e senza pareti fra voi; chi dorme rimanda al mattino. Gli abitanti liberi si fermano brevemente e guardano l'interlocutore, senza abbandonare lavoro o cure. I ricordi degli avvistamenti vengono aggiornati a rotazione, così anche gli ultimi NPC caricati osservano i propri vicini. Un nome ambiguo richiede una scelta esplicita.
+
 Le preferenze personali restano legate all'identità: pietanza preferita, saluto, bottega abituale, ricerca di tranquillità e amici fidati influenzano dialoghi e tempo libero. Quando un acquisto è possibile, lo spuntino preferito consuma denaro e scorte reali; gli incontri con gli amici richiedono relazioni già costruite.
 
 Le battute compaiono in **nuvolette sopra la testa di chi parla**. Seguono il personaggio, si orientano verso la camera, vanno a capo e scompaiono automaticamente; i testi lunghi sono suddivisi in pagine. Le conversazioni raggiungono i destinatari vicini. Avvisi di sistema e menu mantengono le proprie interfacce.
+
+Le risposte dirette sostituiscono subito le vecchie battute dello stesso NPC, così la nuvoletta resta allineata alla domanda appena fatta. Le conversazioni ambientali mantengono la propria coda di lettura.
 
 ### Famiglie, relazioni e obiettivi
 
@@ -277,6 +291,10 @@ Bus, tram e metro hanno rispettivamente **8, 12 e 16 posti**. Le fermate disting
 Il biglietto costa **2 € di gioco**, si paga alla salita e vale 6.000 tick, includendo i cambi del viaggio. Se il mezzo è pieno non viene addebitato. Destinazione, pagamento e cambi restanti vengono salvati per riprendere dopo una riconnessione senza pagare nuovamente la stessa corsa.
 
 Usa `/trasporti`, il cartello della fermata o `/trasporti viaggia DESTINAZIONE` da una fermata vicina. Anche gli NPC usano la rete per i tragitti lunghi e percorrono a piedi l'ultimo tratto.
+
+Gli adulti hanno preferenze stabili fra **motorino, auto e trasporto pubblico**. Per andare al lavoro o raggiungere altre mete recuperano il proprio mezzo, guidano sulle strade, danno precedenza ai pedoni e parcheggiano prima di proseguire a piedi. Il carburante costa al residente 1 € per il motorino o 2 € per l'auto, addebitati solo dopo la salita. I minorenni usano i mezzi pubblici; con la pioggia anche chi preferisce il motorino cerca un collegamento pubblico. Nei vicoli del centro senza un itinerario stradale adatto gli NPC proseguono a piedi o usano la rete.
+
+Anche per gli NPC il biglietto pubblico costa 2 €, comprende i cambi e non viene pagato finché non c'è posto. I passeggeri fuori vista conservano il posto e il viaggio. Percorsi, destinazioni e parcheggi sono salvati; lontano dai giocatori i viaggi continuano senza caricare nuovi chunk. Il limite predefinito è di **24 veicoli privati NPC visibili**, configurabile separatamente dalla popolazione.
 
 `/problemi` mostra gli interventi pubblici. Un guasto ferma realmente la linea interessata; ripararlo richiede di raggiungere il punto e consegnare due lingotti di ferro. Il fondo lavori paga 20 € e il servizio riparte. Un intervento già concluso non può essere riscosso nuovamente.
 
@@ -383,7 +401,15 @@ I richiami di **Mammà**, la ciabatta volante e le scene sui motorini completano
 
 Furto, aggressione, spari, rapina, pizzo e vandalismo possono attivare segnalazioni e inseguimenti. Testimoni e carabinieri presenti influiscono sull'intervento. Il sistema opera nella dimensione di Napoli e può applicare multe o detenzione secondo il reato e la situazione del giocatore.
 
+Gli NPC umani possono essere colpiti e uccisi. Un civile aggredito cerca di allontanarsi e chiama il **112 dopo circa tre secondi**; la denuncia avvia la ricerca del responsabile a partire dal luogo dell’aggressione. Un carabiniere che assiste può intervenire subito. L’uccisione aggrava il reato.
+
+Un residente ucciso torna **nel giorno di gioco successivo**, conservando identità, famiglia, casa e portafoglio. I personaggi fissi tornano al proprio posto; i cittadini del censimento riprendono la simulazione e riappaiono quando si visita la loro zona. Il ritorno viene salvato anche fra riavvii, senza caricare aree lontane né riempire nuovamente le tasche. Durante l’assenza il cittadino non usa mobili, non lavora e non viene trattato come un’eredità definitiva.
+
 Gli agenti rivalutano il percorso, usano porte, scale e passaggi disponibili e devono raggiungere il sospetto con un contatto libero per arrestarlo. Se una barricata del giocatore impedisce l'inseguimento, possono usare un piccone di ferro per aprire un varco vicino, mostrando animazione, crepe e drop. Lo scavo rispetta la regola di danneggiamento dei blocchi da parte dei mob e i limiti dell'attrezzo; contenitori e strutture originali della città sono esclusi da questo comportamento.
+
+Per gli inseguimenti più lunghi sulle strade, i carabinieri possono salire su **moto e auto**, con mezzi riconoscibili e sirene. I conducenti restano nella squadra, ricevono gli avvistamenti via radio, rispettano ostacoli e pedoni e scendono per proseguire a piedi e arrestare il sospetto. Vicoli, interni e percorsi non adatti ai veicoli vengono affrontati a piedi. Sono attivi al massimo 12 mezzi di polizia, configurabili con `policeVehicleLimit`.
+
+Per seminarli devi **interrompere la visuale e restare nascosto per 20 secondi consecutivi**, dietro un riparo reale o in un interno. Correre lontano su una strada aperta non fa scadere la ricerca. Un nuovo avvistamento o il ritorno allo scoperto azzerano il conto alla rovescia. Gli agenti cercano attorno all’ultima posizione vista, senza conoscere i successivi spostamenti nascosti. Gli avvisi distinguono contatto visivo, esposizione e tempo ancora necessario al riparo.
 
 Distruggere muri o arredi originali delle case può costituire **vandalismo**. I blocchi piazzati dai giocatori sono tracciati separatamente: rimuoverli non equivale a danneggiare gli arredi originali. È presente anche `/colpo`, per tentativi di rapina presso i bersagli previsti, con attesa, ricompensa e conseguenze penali.
 
@@ -493,10 +519,19 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
 
 ```json
 {
+  "populationVersion": 1,
+  "nightVersion": 1,
+  "mobilityVersion": 2,
   "population": 120,
-  "maximumPopulation": 384,
-  "districtPopulation": 76,
+  "maximumPopulation": 1024,
+  "districtPopulation": 456,
+  "visibleResidentsPerPlayer": 96,
+  "visibleResidentsMaximum": 256,
   "policePatrolLimit": 32,
+  "nightActivityPercent": 40,
+  "nightThieves": 8,
+  "citizenVehicleLimit": 24,
+  "policeVehicleLimit": 12,
   "needsIntervalTicks": 600,
   "daysPerYear": 7,
   "retirementAge": 70,
@@ -519,9 +554,18 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
 | --- | --- |
 | `population` | Popolazione iniziale del nucleo cittadino |
 | `startingCash` | Saldo dei nuovi portafogli: 16 € per impostazione predefinita, regolabile fra 8 e 1000; i saldi già salvati sono conservati |
-| `maximumPopulation` | Tetto complessivo dei cittadini, regolabile fino a 512 |
-| `districtPopulation` | Limite delle aggiunte dei quartieri; i nuclei iniziali completi richiedono 76 posti |
+| `populationVersion` | Versione della migrazione della popolazione, gestita dalla mod |
+| `maximumPopulation` | Tetto complessivo dei cittadini, regolabile fino a 2048 |
+| `districtPopulation` | Limite delle aggiunte dei quartieri, da 0 a 456; sei famiglie per quartiere richiedono 456 posti |
+| `visibleResidentsPerPlayer` | Limite per nuovi arrivi fisici nei dintorni di un giocatore: 96 predefiniti, regolabile da 16 a 160 |
+| `visibleResidentsMaximum` | Limite complessivo per nuovi arrivi fisici: 256 predefiniti, regolabile fino a 512 |
 | `policePatrolLimit` | Agenti aggiuntivi di pattuglia attivi nelle aree caricate: 32 predefiniti, regolabili da 0 a 64; i carabinieri preesistenti e del censimento sono separati |
+| `nightVersion` | Versione della migrazione delle opzioni notturne, gestita dalla mod |
+| `nightActivityPercent` | Percentuale di adulti candidati alle uscite serali: 40 predefinita, regolabile da 0 a 80; salute e bisogni decidono l'uscita effettiva |
+| `nightThieves` | Borseggiatori del censimento: 8 predefiniti, regolabili da 0 a 24; 0 disattiva nuovi tentativi senza cancellare le restituzioni pendenti |
+| `mobilityVersion` | Versione delle opzioni di mobilità degli NPC, gestita dalla mod |
+| `citizenVehicleLimit` | Auto e motorini privati degli NPC presenti fisicamente: 24 predefiniti, da 0 a 64; 0 lascia attivi gli spostamenti a piedi e con la rete pubblica |
+| `policeVehicleLimit` | Mezzi di polizia durante gli inseguimenti: 12 predefiniti, da 0 a 32; 0 mantiene gli inseguimenti a piedi |
 | `needsIntervalTicks` | Intervallo di aggiornamento dei bisogni, normalmente 600 tick |
 | `daysPerYear` | Giorni Minecraft per un anno di età |
 | `retirementAge` / `maximumAge` | Soglie per pensionamento e fine del ciclo di vita |
@@ -529,7 +573,7 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
 
 Nel calendario, `napoliGoals` e `opponentGoals` a `-1` lasciano scegliere il risultato alla simulazione. Gli orari sono unità del giorno Minecraft. A 20 tick al secondo, 600 tick corrispondono a 30 secondi; su un server rallentato i tempi reali aumentano.
 
-Le configurazioni già presenti mantengono i propri valori. Un massimo di 160 con 120 cittadini esistenti consente al più 40 aggiunte nei quartieri; per tutte le famiglie iniziali serve spazio per almeno 196 residenti. Cambiare la scala dell'età conserva età e legami già registrati. Il server limita automaticamente i valori fuori intervallo.
+Il vecchio preset esatto `120 / 76 / 384` viene aggiornato automaticamente a `120 / 456 / 1024`, una sola volta. Le configurazioni personalizzate mantengono i propri valori. Un massimo di 160 con 120 cittadini esistenti consente al più 40 aggiunte nei quartieri; per tutte le nuove famiglie serve spazio per almeno 576 residenti. La migrazione conserva decessi, separazioni, indirizzi, proprietari e saldi già registrati. Cambiare la scala dell'età conserva età e legami. Il server limita automaticamente i valori fuori intervallo.
 
 ## Multiplayer e salvataggi
 
@@ -565,7 +609,7 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 `./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, economia, bacheche cooperative e scambi, ultimo motorino, preferenze degli effetti, ripristino della telecamera e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. La prova verifica anche quattro dimensioni dell’interfaccia (da 320 × 240 a 960 × 540), assenza di sovrapposizioni fra i controlli, ricerca senza accenti, recupero dai risultati vuoti, rotella, tastiera, conservazione del link e ritorno dalla schermata di importazione musicale. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
 
-`build` include i **GameTest del server**. La suite comprende **234 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove includono anche letti distinti, viaggi iniziali, porte e risorse condivise, attraversamenti, materiali validi, tappeti, balconi e conservazione delle modifiche alle case. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La suite comprende **281 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove includono anche letti distinti, viaggi iniziali, porte e risorse condivise, attraversamenti, materiali validi, tappeti, balconi e conservazione delle modifiche alle case. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 
@@ -573,6 +617,11 @@ Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) 
 | --- | --- |
 | `runGameTest` | Suite automatica del server |
 | `runHomeFurnitureTest` | Client grafico: camera al piano superiore, bagno, studio e due residenti su sedute diverse |
+| `runNpcLifeTest` | Client grafico: censimento ampliato, arrivi limitati, movimento autonomo, domande scritte e continuazione del dialogo |
+| `runNightlifeTest` | Client grafico: passanti dopo mezzanotte, avvicinamento e fuga dei ladri, arresto reale e restituzione del denaro a NPC e giocatore |
+| `runMobilityTest` | Client grafico: tragitti di lavoro in motorino e auto, guida e parcheggio, salita e discesa da bus, tram e metro, movimento e pagamento singolo |
+| `runResidentSafetyTest` | Client grafico: danni reali, chiamata della vittima, inseguimento, borseggio alle spalle, rifiuto dopo una rotazione e ritorno dello stesso NPC nel giorno successivo |
+| `runPoliceVehicleTest` | Client grafico: inseguimenti reali in moto e auto, discesa e arresto, fuga allo scoperto impedita, riparo fisico, ricerca senza tracciamento nascosto e ripresa della pattuglia |
 | `runCityQualityTest` | Client grafico: facciate, maioliche, arredi, accessi e stanze dei palazzi rialzati; cinque schermate in `.gradle/city-quality-client/screenshots` |
 | `runPickpocketTest` | Inventario di NPC e giocatori, furto di cinque unità, limite giornaliero, dialoghi e quattro dimensioni della GUI |
 | `runPhoneTest` | Cinque telefoni, hardware, chat privata, chiamate in entrata e uscita, voce, GPS, ricarica, foto e quattro dimensioni della GUI |

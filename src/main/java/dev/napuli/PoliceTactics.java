@@ -98,6 +98,7 @@ final class PoliceTactics {
     static boolean breaching(NapoliResident officer) { var chase = officer.getAttached(CHASE); return chase != null && chase.obstacle != null; }
     static boolean active(NapoliResident officer) { return officer.hasAttached(CHASE); }
     static boolean canGrab(NapoliResident officer, net.minecraft.world.entity.LivingEntity suspect) {
+        if(officer.isPassenger())return false;
         if (officer.distanceToSqr(suspect) >= 1.9 * 1.9 || !officer.hasLineOfSight(suspect)) return false;
         var hit = officer.level().clip(new ClipContext(officer.position().add(0, .6, 0), suspect.position().add(0, .6, 0),
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, officer));
@@ -194,6 +195,7 @@ final class PoliceTactics {
         stop(officer,false);
     }
     private static void stop(NapoliResident officer,boolean resume) {
+        if(resume)PoliceVehicles.requestStop(officer);
         var chase = officer.getAttached(CHASE);
         if (chase != null) {
             cancelMining(officer, chase);

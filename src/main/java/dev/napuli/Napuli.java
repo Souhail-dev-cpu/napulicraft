@@ -224,6 +224,9 @@ public class Napuli implements ModInitializer {
 		DistrictLife.register();
 		DistrictShops.register();
 		CityNetwork.register();
+		CityMobility.register();
+        PoliceVehicles.register();
+        CityResidentSafety.register();
 		NapoliAtlasGuide.register();
 		NapoliStreet.register();
 		NapoliLocalJobs.register();
@@ -260,6 +263,7 @@ public class Napuli implements ModInitializer {
 		CityArrivals.register();
 		CityAtmosphere.register();
 		CityNeighborhood.register();
+		CityNightlife.register();
 		CityCalendar.register();
 		NapoliEmployment.register();
 		NapoliShower.register();

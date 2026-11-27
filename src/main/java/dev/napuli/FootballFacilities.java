@@ -17,6 +17,8 @@ final class FootballFacilities {
 
     private FootballFacilities() {}
 
+    static BlockPos reception() { return CLERK; }
+
     static void build(ServerLevel city) {
         for (BlockPos pos : List.of(new BlockPos(365, 64, 3), new BlockPos(358, 64, 15),
                 new BlockPos(355, 64, 19), new BlockPos(356, 64, 17))) {
@@ -70,13 +72,50 @@ final class FootballFacilities {
             drillBlock(city, new BlockPos(x, 65, 40), x == 355 ? Blocks.POLISHED_ANDESITE : Blocks.TARGET);
         }
         drillBlock(city, new BlockPos(355, 66, 40), Blocks.TARGET);
-        drillBlock(city, new BlockPos(351, 64, 8), Blocks.SMOOTH_STONE_SLAB);
-        drillBlock(city, new BlockPos(350, 64, 8), Blocks.ANVIL);
-        drillBlock(city, new BlockPos(352, 64, 8), Blocks.ANVIL);
     }
 
     static void upgradePublicGym(ServerLevel city) {
         for (var machine : PublicGym.Machine.values()) drillBlock(city, machine.station, machine.block);
+    }
+
+    static void upgradeStrengthMachines(ServerLevel city) {
+        var chest = PublicGym.Machine.CHEST;
+        var legacy = chest.station;
+        var west = legacy.west();
+        var east = legacy.east();
+        boolean oldBench = (city.getBlockState(legacy).is(Blocks.SMOOTH_STONE_SLAB)
+                || city.getBlockState(legacy).is(chest.block))
+                && city.getBlockState(west).is(Blocks.ANVIL) && city.getBlockState(east).is(Blocks.ANVIL)
+                && !CityProperty.playerPlaced(city, legacy);
+        drillBlock(city, legacy, chest.block);
+        if (oldBench) {
+            if (!CityProperty.playerPlaced(city, west)) put(city, west, Blocks.AIR);
+            if (!CityProperty.playerPlaced(city, east)) put(city, east, Blocks.AIR);
+        }
+        var shoulder = PublicGym.Machine.SHOULDER;
+        drillBlock(city, shoulder.station, shoulder.block);
+    }
+
+    static void refinePublicGym(ServerLevel city) {
+        // Mark each exercise bay at floor level without changing the central aisle.
+        for (var machine : PublicGym.Machine.values()) {
+            var pos = machine.station.below();
+            if (CityProperty.playerPlaced(city, pos)) continue;
+            if (city.getBlockState(pos).is(block("gray_concrete")))
+                put(city, pos, block("cyan_terracotta"));
+        }
+
+        // Closed storage and a rest bench along the changing room walls.
+        for (int z = 18; z <= 20; z++) {
+            addGymFixture(city, new BlockPos(350, 64, z), Blocks.BARREL);
+            addGymFixture(city, new BlockPos(350, 65, z), Blocks.BARREL);
+        }
+        addGymFixture(city, new BlockPos(352, 64, 18), Blocks.SMOOTH_QUARTZ_SLAB);
+    }
+
+    private static void addGymFixture(ServerLevel city, BlockPos pos, Block block) {
+        if (city.getBlockState(pos).isAir() && !CityProperty.playerPlaced(city, pos))
+            put(city, pos, block);
     }
 
     private static void drillBlock(ServerLevel city, BlockPos pos, Block block) {
@@ -85,6 +124,39 @@ final class FootballFacilities {
         if (old.isAir() || old.is(Blocks.SAND) || old.is(Blocks.CALCITE) || old.is(Blocks.SMOOTH_STONE_SLAB)
                 || old.is(Blocks.POLISHED_ANDESITE) || old.is(block("red_terracotta"))) put(city, pos, block);
     }
+
+    static void installCanopies(ServerLevel city) {
+        var template=city.getStructureTemplateManager().get(Napuli.id("pensilina_fuorigrotta"));
+        if(template.isEmpty()) return;
+        var settings=new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+        for(var origin:List.of(new BlockPos(363,64,4),new BlockPos(352,64,17))) {
+            boolean changed=false;
+            for(var pos:BlockPos.betweenClosed(origin,origin.offset(4,4,2)))
+                if(CityProperty.playerPlaced(city,pos)){changed=true;break;}
+            if(changed)continue;
+            for(var material:List.of(Blocks.POLISHED_DEEPSLATE,Blocks.SMOOTH_QUARTZ_SLAB,block("blue_concrete"),Blocks.LANTERN))
+                for(var part:template.get().filterBlocks(origin,settings,material))
+                    if(city.isEmptyBlock(part.pos()))
+                        city.setBlock(part.pos(),part.state(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+        }
+    }
+
+
+    static void installGardenShelters(ServerLevel city) {
+        var template=city.getStructureTemplateManager().get(Napuli.id("gazebo_fuorigrotta"));
+        if(template.isEmpty())return;
+        var settings=new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+        for(var origin:List.of(new BlockPos(385,63,63),new BlockPos(410,63,63))) {
+            var parts=new java.util.ArrayList<net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo>();
+            for(var material:List.of(Blocks.STRIPPED_SPRUCE_LOG,Blocks.STONE_BRICKS,Blocks.SPRUCE_PLANKS,Blocks.SPRUCE_SLAB,Blocks.LANTERN))
+                parts.addAll(template.get().filterBlocks(origin,settings,material));
+            if(parts.stream().anyMatch(part->CityProperty.playerPlaced(city,part.pos())
+                    ||city.getBlockEntity(part.pos())!=null
+                    ||part.pos().getY()>origin.getY()&&!city.isEmptyBlock(part.pos())))continue;
+            for(var part:parts)city.setBlock(part.pos(),part.state(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+        }
+    }
+
 
     private static void pavilion(ServerLevel city, int x1, int z1, int x2, int z2, int roof,
                                  int door1, int door2) {

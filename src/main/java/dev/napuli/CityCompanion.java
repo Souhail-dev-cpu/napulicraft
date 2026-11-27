@@ -64,7 +64,9 @@ final class CityCompanion {
         var city=p.level().getServer().getLevel(NapoliMap.LEVEL);
         if(city!=null)for(var h:NapoliMergellina.PROPERTIES)if(p.getUUID().equals(NapoliProperties.owner(city,h))||CityHousingFinance.tenant(city,h.id(),p.getUUID()))
             all.add(new Destination("casa/"+h.id(),t("house.detail",h.address()),t("atlas.home"),h.entrance()));
-        var c=WorkCareer.selected(p);all.add(new Destination("lavoro",c==null?t("atlas.office"):t("work.career_name",c.nameLabel()),t("atlas.work"),c==null?NapoliEmployment.CLERK_POST:c.clock));
+        var c=WorkCareer.selected(p);
+        if(FootballEmployment.hasContract(p))all.add(new Destination("lavoro",FootballEmployment.summary(p),t("atlas.work"),FootballFacilities.reception()));
+        else all.add(new Destination("lavoro",c==null?t("atlas.office"):t("work.career_name",c.nameLabel()),t("atlas.work"),c==null?NapoliEmployment.CLERK_POST:c.clock));
         return List.copyOf(all);
     }
     static int atlas(ServerPlayer p,boolean only){
@@ -118,6 +120,7 @@ final class CityCompanion {
         };
     }
     static Component label(ServerPlayer p,NapoliFactions.Objective obj){
+        if(obj.key().equals(FootballEmployment.OBJECTIVE))return FootballEmployment.objectiveText(p);
         String mode=p.getAttachedOrElse(TRACK,"auto");
         if(mode.equals("lavoro"))return CompanionWork.summary(p);
         if(mode.equals("ricetta"))return CompanionRecipes.shoppingText(p);

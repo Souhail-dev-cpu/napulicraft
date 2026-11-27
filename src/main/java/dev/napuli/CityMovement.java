@@ -60,11 +60,15 @@ final class CityMovement {
     }
 
     static boolean sitAt(LivingEntity rider, BlockPos chair) {
+        return sitAt(rider, chair, .35, .5);
+    }
+
+    static boolean sitAt(LivingEntity rider, BlockPos chair, double height, double depth) {
         if (!(rider.level() instanceof ServerLevel city) || rider.isPassenger()) return false;
         var occupied = city.getEntitiesOfClass(ArmorStand.class, new AABB(chair).inflate(.1),
                 seat -> isSeat(seat) && !seat.getPassengers().isEmpty());
         if (!occupied.isEmpty()) return false;
-        var marker = new ArmorStand(city, chair.getX()+.5, chair.getY()+.35, chair.getZ()+.5);
+        var marker = new ArmorStand(city, chair.getX()+.5, chair.getY()+height, chair.getZ()+depth);
         marker.setInvisible(true);
         marker.setNoGravity(true);
 

@@ -138,12 +138,13 @@ final class HudClient {
 		// ---------------- the mission tracker
 		String title, line;
 		boolean employment = s.objective().startsWith("napuli.work.") || s.objective().startsWith("qol.work:");
+		boolean football = s.objective().equals("qol.work:football");
 		boolean jailed = s.jail() > 0;
 		if (jailed) {
 			title = t("hud.jailed").getString();
 			line = t("hud.release",s.jail()).getString();
 		} else {
-			title = Component.translatable(employment ? "napuli.hud.work" : "napuli.hud.route").getString();
+			title = Component.translatable(football ? "napuli.football.job.title" : employment ? "napuli.hud.work" : "napuli.hud.route").getString();
 			String objective = s.objective();
 			String key = objective.startsWith("napuli.local.") || objective.startsWith("napuli.work.") || objective.startsWith("napuli.guide.") ? objective : "napuli.hud.obj." + objective;
 			line = objective.startsWith("qol:") || objective.startsWith("qol.work:") ? objective.substring(objective.indexOf(':') + 1) : Component.translatable(key, s.cooldown()).getString();
@@ -152,7 +153,7 @@ final class HudClient {
 		var allLines = f.split(Component.literal(line), w - 6);
         int availableLines = Math.max(1, ((int)(g.guiHeight() / scale) - y - 52) / 10);
         var wrapped = allLines.subList(0, Math.min(allLines.size(), availableLines));
-		boolean shift = employment && !jailed;
+		boolean shift = employment && !football && !jailed;
 		int th = 14 + wrapped.size() * 10 + (shift ? 11 : 0) + (s.tx() != Hud.NO_TARGET && !jailed ? 12 : 0);
 				if (employment && !jailed) {
 			g.fill(x - 3, y - 3, x + w + 2, y + th + 2, 0x6605070c);

@@ -1,0 +1,6 @@
+{
+  "parent": "napuli:block/banca_frittura",
+  "textures": {
+    "surface": "minecraft:block/honey_block_top"
+  }
+}

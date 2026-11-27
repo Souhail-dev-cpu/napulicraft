@@ -46,10 +46,35 @@ public final class EntranceClientTest {
                 }
             });
             if(repaired&&settled==0)settled=tick;
-            if(settled>0&&tick>settled+60){checkFrame(mc);shot(mc,"entrance-saved-repaired");Napuli.LOGGER.info("[ENTRANCETEST] ALL PASSED: closed facade, working door, actual chunk unload/reload, old-save repair and preserved player block");done=true;}
+            if(settled>0&&tick>settled+60){checkFrame(mc);shot(mc,"entrance-saved-repaired");Napuli.LOGGER.info("[ENTRANCETEST] ALL PASSED: closed facade, working door, actual chunk unload/reload, old-save repair and preserved player block");server(mc,EntranceClientTest::checkCrimeAndPay);settled=-1;}
             if(tick>1200)throw new AssertionError("Saved doorway did not unload and repair in time");
         }catch(Throwable e){failed=true;Napuli.LOGGER.error("[ENTRANCETEST] FAILED",e);}
     });}
+    private static void checkCrimeAndPay(ServerPlayer p) {
+        p.setGameMode(GameType.SURVIVAL);
+        var city=p.level();
+        var attacker=city.damageSources().playerAttack(p);
+        var victim=NapoliResident.spawn(city,NapoliResident.Role.CIVIC_MAN,p.blockPosition().east(),0);
+        try {
+            check(victim.hurtServer(city,attacker,1)&&Carabinieri.wantedStars(p)==3,"Actual damage to a civilian is reported as assault");
+            check(victim.hurtServer(city,attacker,100)&&Carabinieri.wantedStars(p)==4,"Killing a civilian escalates the report");
+        } finally {
+            victim.discard();
+            Carabinieri.endPursuit(p);
+        }
+        long day=NapoliBroadcast.day(city);
+        p.setAttached(NapoliEmployment.WORK,new NapoliEmployment.Work(NapoliEmployment.Contract.CLEANER.id(),day,2,Long.MIN_VALUE));
+        p.setAttached(NapoliEmployment.HOURS,new NapoliEmployment.Timecard(day,300,0,0,0));
+        int before=NapoliStreet.cash(p);
+        var commands=city.getServer().getCommands();
+        commands.performPrefixedCommand(p.createCommandSourceStack(),"lavoro paga");
+        check(NapoliStreet.cash(p)==before+2,"Direct payroll pays the 18 worked minutes");
+        commands.performPrefixedCommand(p.createCommandSourceStack(),"lavoro paga");
+        check(NapoliStreet.cash(p)==before+2,"Direct payroll cannot be collected twice");
+        Napuli.LOGGER.info("[ENTRANCETEST] Assault, homicide and proportional payroll verified");
+        done=true;
+    }
+
     private static void view(ServerPlayer p){p.teleportTo(p.level(),door.getX()+.5,door.getY()+.1,door.getZ()+5.5,Set.of(),180,5,true);p.level().getChunkSource().move(p);}
     private static void checkFrame(Minecraft mc){for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2)check(mc.player.level().getBlockState(door.offset(dx,dy,0)).is(wall),"Client receives solid masonry around its door");}
     private static void server(Minecraft mc,Consumer<ServerPlayer> action){var s=mc.getSingleplayerServer();s.execute(()->{try{action.accept(s.getPlayerList().getPlayers().getFirst());}catch(Throwable e){failed=true;Napuli.LOGGER.error("[ENTRANCETEST] FAILED on server",e);}});}

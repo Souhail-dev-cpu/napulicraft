@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "lit=false": {
       "model": "napuli:block/banca_frittura"
+    },
+    "lit=true": {
+      "model": "napuli:block/banca_frittura_lit"
     }
   }
 }

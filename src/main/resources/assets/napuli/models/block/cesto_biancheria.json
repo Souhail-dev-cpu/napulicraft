@@ -4,7 +4,10 @@
     "particle": "minecraft:block/bamboo_mosaic",
     "weave": "minecraft:block/bamboo_mosaic",
     "white": "minecraft:block/white_wool",
-    "blue": "minecraft:block/blue_wool"
+    "blue": "minecraft:block/blue_wool",
+    "spruce_planks": "minecraft:block/spruce_planks",
+    "white_concrete": "minecraft:block/white_concrete",
+    "light_blue_wool": "minecraft:block/light_blue_wool"
   },
   "elements": [
     {
@@ -132,6 +135,102 @@
         },
         "west": {
           "texture": "#blue"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        1,
+        3
+      ],
+      "to": [
+        14,
+        1.4,
+        13
+      ],
+      "faces": {
+        "north": {
+          "texture": "#spruce_planks"
+        },
+        "south": {
+          "texture": "#spruce_planks"
+        },
+        "east": {
+          "texture": "#spruce_planks"
+        },
+        "west": {
+          "texture": "#spruce_planks"
+        },
+        "up": {
+          "texture": "#spruce_planks"
+        },
+        "down": {
+          "texture": "#spruce_planks"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        4.15,
+        5
+      ],
+      "to": [
+        11.5,
+        4.7,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#white_concrete"
+        },
+        "south": {
+          "texture": "#white_concrete"
+        },
+        "east": {
+          "texture": "#white_concrete"
+        },
+        "west": {
+          "texture": "#white_concrete"
+        },
+        "up": {
+          "texture": "#white_concrete"
+        },
+        "down": {
+          "texture": "#white_concrete"
+        }
+      }
+    },
+    {
+      "from": [
+        5.5,
+        4.65,
+        6
+      ],
+      "to": [
+        10.5,
+        5.6,
+        11
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light_blue_wool"
+        },
+        "south": {
+          "texture": "#light_blue_wool"
+        },
+        "east": {
+          "texture": "#light_blue_wool"
+        },
+        "west": {
+          "texture": "#light_blue_wool"
+        },
+        "up": {
+          "texture": "#light_blue_wool"
+        },
+        "down": {
+          "texture": "#light_blue_wool"
         }
       }
     }

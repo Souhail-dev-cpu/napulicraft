@@ -64,6 +64,50 @@ final class NapoliFishingHarbour {
         for (int x = -27; x <= -21; x++) put(level, x, 65, 49, x % 2 == 0 ? Blocks.GLASS_PANE : Blocks.SMOOTH_SANDSTONE);
     }
 
+    static void refitStore(ServerLevel level) {
+        var origin = new BlockPos(-28,63,49);
+        var settings = new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+        var template = level.getStructureTemplateManager().get(Napuli.id("pescheria_lungomare"));
+        if (template.isEmpty()) return;
+        for (var pos : BlockPos.betweenClosed(origin, origin.offset(8,7,6)))
+            if (CityProperty.playerPlaced(level,pos)) return;
+
+        var materials = java.util.List.of(Blocks.TUFF_BRICKS, Blocks.SMOOTH_SANDSTONE, Blocks.STRIPPED_SPRUCE_LOG,
+                Blocks.BRICKS, Blocks.BRICK_SLAB, Blocks.GLASS, Blocks.BARREL, Blocks.LANTERN,
+                BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("cyan_wool")),
+                BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("white_wool")),
+                NapoliKitchen.BLOCKS.get("banca_frittura"), NapoliKitchen.BLOCKS.get("tavolo_pizzaiolo"));
+        for (var material : materials)
+            for (var part : template.get().filterBlocks(origin, settings, material)) {
+                if (level.getBlockEntity(part.pos()) == null)
+                    level.setBlock(part.pos(),part.state(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+            }
+    }
+
+
+    static void refitBorgoStalls(ServerLevel level) {
+        var template = level.getStructureTemplateManager().get(Napuli.id("banco_borgo"));
+        if (template.isEmpty()) return;
+        var settings = new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+        var blue = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("blue_wool"));
+        var white = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("white_wool"));
+        String[] colors = {"blue_wool", "green_wool", "red_wool"};
+        for (int i = 0; i < colors.length; i++) {
+            var origin = new BlockPos(21 + i * 7,64,75);
+            boolean edited = false;
+            for (var pos : BlockPos.betweenClosed(origin,origin.offset(6,4,2)))
+                if (CityProperty.playerPlaced(level,pos)) { edited = true; break; }
+            if (edited) continue;
+            var accent = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(colors[i]));
+            for (var material : java.util.List.of(blue,white,Blocks.LANTERN,Blocks.STRIPPED_SPRUCE_LOG))
+                for (var part : template.get().filterBlocks(origin,settings,material))
+                    if (level.isEmptyBlock(part.pos()))
+                        level.setBlock(part.pos(),material==blue?accent.defaultBlockState():part.state(),
+                                Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+        }
+    }
+
+
     private static void refurbishBorgo(ServerLevel level) {
         Block cloth = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("white_wool"));
         String[] colors = {"blue_wool", "green_wool", "red_wool", "yellow_wool"};

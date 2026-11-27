@@ -11,7 +11,8 @@ import net.minecraft.world.entity.LivingEntity;
 
 public record FootballAction(int actor, int move, boolean left) implements CustomPacketPayload {
     public enum Move {
-        PASS(8), DRIVE(11), CURL(12), CHIP(11), ROULETTE(13), FEINT(10), SIDE_STEP(9);
+        PASS(8), DRIVE(11), CURL(12), CHIP(11), ROULETTE(13), FEINT(10), SIDE_STEP(9), BENCH_IDLE(25), BENCH_PRESS(16),
+        BENCH_STOP(1), CHEST_PRESS(16), SHOULDER_PRESS(16);
 
         public final int ticks;
         Move(int ticks) { this.ticks = ticks; }

@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -39,7 +39,7 @@ public final class Carabinieri {
 	private Carabinieri() {}
 
 	public enum Crime {
-		THEFT(1, 28), ROBBERY(3, 52), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32);
+		THEFT(1, 28), ROBBERY(3, 52), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), HOMICIDE(4, 72), CASCO(1, 20), VANDALISM(1, 32);
 		final int gravity, witnessRange;
 		Crime(int gravity, int witnessRange) { this.gravity = gravity; this.witnessRange = witnessRange; }
 		String id() { return name().toLowerCase(); }
@@ -89,14 +89,35 @@ public final class Carabinieri {
 				crime(p, Crime.THEFT);
 			return InteractionResult.PASS;
 		});
-		// hitting a carabiniere
-		AttackEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
-			if (player instanceof ServerPlayer p && entity instanceof NapoliResident npc && npc.role() == NapoliResident.Role.CARABINIERE) {
-				crime(p, Crime.ASSAULT);
-				p.sendOverlayMessage(Component.translatable("napuli.cc.assault"));
-			}
-			return InteractionResult.PASS;
+		ServerLivingEntityEvents.AFTER_DAMAGE.register((victim, source, base, dealt, blocked) -> {
+			if (dealt > 0 && source.getEntity() instanceof ServerPlayer attacker && punishable(attacker, victim))
+				reportViolence(attacker, Crime.ASSAULT);
 		});
+		ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
+			if (source.getEntity() instanceof ServerPlayer attacker && punishable(attacker, victim))
+				reportViolence(attacker, Crime.HOMICIDE);
+		});
+	}
+
+	private static boolean punishable(ServerPlayer attacker, net.minecraft.world.entity.LivingEntity victim) {
+		if (attacker == victim || attacker.level() != victim.level() || attacker.level().dimension() != NapoliMap.LEVEL
+				|| attacker.isSpectator() || isJailed(attacker)) return false;
+		return (victim instanceof ServerPlayer || victim instanceof NapoliResident
+				|| victim instanceof net.minecraft.world.entity.npc.villager.Villager)
+				&& !victim.entityTags().contains("napuli_practice_actor") && !FootballPractice.isPlaying(attacker);
+	}
+
+	private static void reportViolence(ServerPlayer attacker, Crime crime) {
+		var wanted = WANTED.get(attacker.getUUID());
+		if (wanted == null) report(attacker, crime);
+		else {
+			wanted.lastSeen = attacker.level().getGameTime();
+			if (crime.gravity > wanted.gravity) {
+				wanted.gravity = crime.gravity;
+				wanted.crime = crime;
+				NapoliNotice.show(attacker, Component.translatable("napuli.cc.worse"));
+			}
+		}
 	}
 
 	public static boolean isWanted(ServerPlayer p) { return WANTED.containsKey(p.getUUID()); }
@@ -212,9 +233,13 @@ public final class Carabinieri {
 		w.grip = caught ? w.grip + 1 : Math.max(0, w.grip - 2);
 		if (w.grip >= 25) { arrest(city, p, w); return; }
 		if (now - w.lastSeen > 20 * 20) {
-			WANTED.remove(p.getUUID());
+			endPursuit(p);
 			title(p, "napuli.cc.lost.title", "napuli.cc.lost");
 		}
+	}
+
+	static void endPursuit(ServerPlayer player) {
+		WANTED.remove(player.getUUID());
 	}
 
 	private static void arrest(ServerLevel city, ServerPlayer p, Wanted w) {

@@ -53,7 +53,7 @@ public final class FootballPractice {
     private static final AttachmentType<Career> CAREER = AttachmentRegistry.<Career>builder()
             .persistent(Career.CODEC).copyOnDeath().buildAndRegister(Napuli.id("football_career"));
 
-    private enum Position {
+    enum Position {
         ATTACCANTE(68, 65, 34, 51, 55), CENTROCAMPISTA(54, 62, 52, 52, 66), DIFENSORE(38, 52, 70, 69, 58);
 
         final int shooting, speed, defense, strength, stamina;
@@ -95,7 +95,20 @@ public final class FootballPractice {
     public static int fitness(ServerPlayer player) { return career(player).fitness(); }
 
     static boolean isPlaying(ServerPlayer p) { var game=GAMES.get(p.level());return game!=null&&game.controls(p); }
-    static void awardLeague(ServerPlayer p,int goals) {var c=career(p);p.setAttached(CAREER,new Career(c.matches()+1,c.goals()+goals,c.fitness(),c.trainingDay()));}
+    private static final AttachmentType<Integer> LEAGUE_PASSES = AttachmentRegistry.<Integer>builder()
+            .persistent(Codec.INT).copyOnDeath().buildAndRegister(Napuli.id("football_league_passes"));
+    private static final AttachmentType<Integer> LEAGUE_RECOVERIES = AttachmentRegistry.<Integer>builder()
+            .persistent(Codec.INT).copyOnDeath().buildAndRegister(Napuli.id("football_league_recoveries"));
+    static int careerMatches(ServerPlayer p) { return career(p).matches(); }
+    static int careerGoals(ServerPlayer p) { return career(p).goals(); }
+    static int leaguePasses(ServerPlayer p) { return p.getAttachedOrElse(LEAGUE_PASSES,0); }
+    static int leagueRecoveries(ServerPlayer p) { return p.getAttachedOrElse(LEAGUE_RECOVERIES,0); }
+    static void awardLeague(ServerPlayer p,int goals,int passes,int recoveries) {
+        var c=career(p);
+        p.setAttached(CAREER,new Career(c.matches()+1,c.goals()+goals,c.fitness(),c.trainingDay()));
+        p.setAttached(LEAGUE_PASSES,leaguePasses(p)+passes);
+        p.setAttached(LEAGUE_RECOVERIES,leagueRecoveries(p)+recoveries);
+    }
     static int startLeague(ServerPlayer p,CityLeague.Fixture fixture) {
         if(!arrive(p))return 0;var city=p.level();var game=GAMES.get(city);
         if(game!=null&&!game.leagueId.equals(fixture.id())){p.sendOverlayMessage(Component.literal("Il campo è occupato da un'altra partita."));return 0;}
@@ -316,7 +329,7 @@ public final class FootballPractice {
 
     private static Career career(ServerPlayer p) { return p.getAttachedOrElse(CAREER, Career.BEGINNER); }
 
-    private static Position position(ServerPlayer p) {
+    static Position position(ServerPlayer p) {
         return Position.valueOf(p.getAttachedOrElse(POSITION, Position.ATTACCANTE.name()));
     }
 
@@ -340,7 +353,7 @@ public final class FootballPractice {
         return true;
     }
 
-    private static Component roleLabel(ServerPlayer p) {
+    static Component roleLabel(ServerPlayer p) {
         return Component.translatable("napuli.football.position." + position(p).name().toLowerCase(java.util.Locale.ROOT));
     }
 
@@ -440,7 +453,7 @@ public final class FootballPractice {
     static final class Seat {
         final ServerPlayer player;
         double stamina;
-        int requestUntil, nextInterception, protectedUntil, nextFoul, goals, leagueTicks;
+        int requestUntil, nextInterception, protectedUntil, nextFoul, goals, completedPasses, recoveries, leagueTicks;
         Vec3 previous, movement = Vec3.ZERO;
         int dribbleStarted, dribbleEnds;
         float dribbleAngle;
@@ -469,6 +482,7 @@ public final class FootballPractice {
         Vec3 ball = spot(KICKOFF_SLOT).add(.55, 0, 0), velocity = Vec3.ZERO;
         int ticks, unattended, home, away, owner = -1, kicker = -1, pickupDelay, held;
         int passes, shots, interceptions;
+        boolean passInFlight;
         double playerKickDistance, playerKickHeight, curve;
 
         Game(ServerLevel city) {
@@ -487,8 +501,8 @@ public final class FootballPractice {
             marker.setPosRotInterpolationDuration(2);
             marker.setWidth(1);
             marker.setHeight(1);
-            marker.setShadowRadius(.32f);
-            marker.setPos(ball.x, ball.y + .44, ball.z);
+            marker.setShadowRadius(.23f);
+            marker.setPos(ball.x, ball.y + .33, ball.z);
             marker.addTag(BALL);
             marker.setNoGravity(true);
             marker.setPermanentlyInvulnerable(true);
@@ -505,7 +519,10 @@ public final class FootballPractice {
             npc.setCustomName(Component.literal(NAMES[slot]));
             npc.setCustomNameVisible(true);
             var shirt = new ItemStack(Items.LEATHER_CHESTPLATE);
-            shirt.set(DataComponents.DYED_COLOR, new DyedItemColor(slot % 5 == 0 ? 0xe1a538 : slot < 5 ? 0x319bdb : 0xf4eeee));
+            var fixture = leagueId.isEmpty() ? null : CityLeague.fixture(city, leagueId);
+            int color = fixture == null ? (slot < 5 ? 0x319bdb : 0xf4eeee)
+                    : CityLeague.color(slot < 5 ? fixture.home() : fixture.away());
+            shirt.set(DataComponents.DYED_COLOR, new DyedItemColor(slot % 5 == 0 ? 0xe1a538 : color));
             npc.setItemSlot(EquipmentSlot.CHEST, shirt);
             team[slot] = npc;
             motion[slot] = Vec3.ZERO;
@@ -532,7 +549,7 @@ public final class FootballPractice {
             if (slot < 0) return false;
             Vec3 at = position(slot);
             players[slot] = new Seat(p);
-            if(!leagueId.isEmpty()){var fixture=CityLeague.fixture(p.level(),leagueId);var saved=fixture==null?null:fixture.players().get(p.getUUID().toString());if(saved!=null){players[slot].goals=saved.goals();players[slot].leagueTicks=saved.ticks();}}
+            if(!leagueId.isEmpty()){var fixture=CityLeague.fixture(p.level(),leagueId);var saved=fixture==null?null:fixture.players().get(p.getUUID().toString());if(saved!=null){players[slot].goals=saved.goals();players[slot].completedPasses=saved.passes();players[slot].recoveries=saved.recoveries();players[slot].leagueTicks=saved.ticks();}}
             if (team[slot] != null) team[slot].discard();
             team[slot] = null;
             teleport(p, BlockPos.containing(at), slot < 5 ? -90 : 90);
@@ -611,6 +628,7 @@ public final class FootballPractice {
                 return 0;
             }
             interceptions++;
+            if(owner>=0||kicker>=0)seat.recoveries++;
             setOwner(slot);
             return 1;
         }
@@ -657,6 +675,7 @@ public final class FootballPractice {
                 }
                 if (target == null) { passes++; kick(facing, .64); }
                 else pass(target);
+                passInFlight = true;
             }
             return true;
         }
@@ -696,7 +715,7 @@ public final class FootballPractice {
             driveTeams();
             playBall();
             if (pickupDelay > 0) pickupDelay--;
-            marker.setPos(ball.x, ball.y + .44, ball.z);
+            marker.setPos(ball.x, ball.y + .33, ball.z);
             if (ticks % 20 == 0) hud(city);
             if (ticks % 5 == 0) {
                 for (int slot = 0; slot < players.length; slot++) {
@@ -721,7 +740,7 @@ public final class FootballPractice {
 
         private void saveLeague(ServerLevel city) {
             if(leagueId.isEmpty())return;var roster=new java.util.HashMap<String,CityLeague.Participant>();
-            for(int i=0;i<players.length;i++)if(players[i]!=null){var s=players[i];roster.put(s.player.getUUID().toString(),new CityLeague.Participant(i<5?0:5,s.leagueTicks,s.goals));}
+            for(int i=0;i<players.length;i++)if(players[i]!=null){var s=players[i];roster.put(s.player.getUUID().toString(),new CityLeague.Participant(i<5?0:5,s.leagueTicks,s.goals,s.completedPasses,s.recoveries));}
             CityLeague.progress(city,leagueId,home,away,ticks,roster);
         }
 
@@ -906,7 +925,12 @@ public final class FootballPractice {
                 if (distance < closest) { closest = distance; best = i; }
             }
             if (best >= 0) {
-                if (kicker >= 0 && (best < 5) != (kicker < 5)) interceptions++;
+                if (passInFlight && kicker >= 0 && kicker != best && players[kicker] != null
+                        && (best < 5) == (kicker < 5)) players[kicker].completedPasses++;
+                if (kicker >= 0 && (best < 5) != (kicker < 5)) {
+                    interceptions++;
+                    if(players[best]!=null)players[best].recoveries++;
+                }
                 setOwner(best);
             }
         }
@@ -993,6 +1017,7 @@ public final class FootballPractice {
         }
 
         private void kick(Vec3 direction, double speed) {
+            passInFlight = false;
             kicker = owner;
             owner = -1;
             held = 0;
@@ -1002,6 +1027,7 @@ public final class FootballPractice {
         }
 
         void setOwner(int next) {
+            passInFlight = false;
             owner = next;
             curve = 0;
             held = 0;

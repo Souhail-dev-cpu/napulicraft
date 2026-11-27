@@ -1,0 +1,7 @@
+{
+  "parent": "napuli:item/pallone",
+  "textures": {
+    "particle": "minecraft:block/orange_terracotta",
+    "panels": "minecraft:block/orange_terracotta"
+  }
+}

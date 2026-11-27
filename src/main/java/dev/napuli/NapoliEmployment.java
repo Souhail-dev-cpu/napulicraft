@@ -118,6 +118,7 @@ public final class NapoliEmployment {
         CommandRegistrationCallback.EVENT.register((dispatcher, context, kind) -> dispatcher.register(
                 Commands.literal("lavoro").executes(c -> status(c.getSource().getPlayerOrException()))
                     .then(Commands.literal("segui").executes(c -> trackOffice(c.getSource().getPlayerOrException())))
+                    .then(Commands.literal("paga").executes(c -> collectPay(c.getSource().getPlayerOrException(), true)))
                     .then(Commands.literal("scegli").then(Commands.argument("contratto", StringArgumentType.word())
                         .suggests((c, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(
                                 Arrays.stream(Contract.values()).map(Contract::id), builder))
@@ -125,6 +126,10 @@ public final class NapoliEmployment {
     }
 
     private static void menu(ServerPlayer p) {
+        if (FootballEmployment.hasContract(p)) {
+            CityLeague.menu(p);
+            return;
+        }
         if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, EmploymentOffers.TYPE)) {
             Work work = p.getAttached(WORK);
             var offers = Arrays.stream(Contract.values()).map(c ->
@@ -147,6 +152,10 @@ public final class NapoliEmployment {
 
     static int choose(ServerPlayer p, String id) {
         if (!eligible(p) || staffTarget(p.level(), CLERK_POST, CLERK).distToCenterSqr(p.position()) > 36 || find(id) == null) return 0;
+        if (FootballEmployment.hasContract(p)) {
+            NapoliNotice.show(p, FootballEmployment.summary(p));
+            return 0;
+        }
         long day = NapoliBroadcast.day(p.level());
         Work previous = p.getAttached(WORK);
         if (previous != null && previous.contract().equals(id)) return status(p);
@@ -164,6 +173,10 @@ public final class NapoliEmployment {
     static int work(ServerPlayer p, Contract contract, BlockPos sign) {
         if (!eligible(p)) return 0;
         Work state = p.getAttached(WORK);
+        if (FootballEmployment.hasContract(p) && (state == null || state.stage() != 2 || !sign.equals(contract.clock))) {
+            NapoliNotice.show(p, FootballEmployment.summary(p));
+            return 0;
+        }
         if (state == null || !state.contract().equals(contract.id())) { say(p, "desk"); return 0; }
         long day = NapoliBroadcast.day(p.level());
         long hour = NapoliBroadcast.time(p.level());
@@ -205,29 +218,52 @@ public final class NapoliEmployment {
             return status(p);
         }
         if (sign.equals(contract.clock) && stage == 2) {
-            Timecard card = p.getAttached(HOURS);
-            int ticks = card == null ? HOUR : timecard(p, state.day()).ticks();
-            int hours = ticks / HOUR;
-            boolean beforeClose = state.day() == day && hour < CLOSE;
-            if (hours == 0 && beforeClose) {
-                NapoliNotice.show(p, Component.translatable("napuli.work.hour_progress", timecard(p, state.day()).ticks() * 60 / HOUR));
-                return 0;
-            }
-            int pay = shiftPay(ticks, WorkCareer.hourly(p,contract), !beforeClose);
-            if(pay>0&&!NapoliStreet.canCredit(p,pay)){p.sendSystemMessage(CityText.t("wallet.full",NapoliStreet.MAX_CASH));return 0;}
-            if(pay>0&&!WorkEconomy.wage(p,pay)){p.sendSystemMessage(Component.literal("Il fondo lavori è temporaneamente insufficiente. Il compenso resta da riscuotere."));return 0;}
-            p.setAttached(WORK, new Work(state.contract(), day, 0, state.day()));
-            p.removeAttached(HOURS);
-            if(pay>0)WorkCareer.completed(p,contract,hours,pay);
-            if (!beforeClose && ticks % HOUR != 0)
-                NapoliNotice.show(p, Component.translatable("napuli.work.partial_pay", ticks * 60 / HOUR, pay));
-            else NapoliNotice.show(p, Component.translatable("napuli.work.hour_pay", hours, pay));
-            return 1;
+            return collectPay(p, false);
         }
         return status(p);
     }
 
+    private static int collectPay(ServerPlayer p, boolean proportional) {
+        if (!eligible(p)) return 0;
+        Work work = p.getAttached(WORK);
+        if (work == null || work.stage() != 2) {
+            if (FootballEmployment.hasContract(p) && CityLeague.claim(p) > 0) return 1;
+            return status(p);
+        }
+        Contract contract = find(work.contract());
+        if (contract == null) return 0;
+        long day = NapoliBroadcast.day(p.level());
+        boolean beforeClose = work.day() == day && NapoliBroadcast.time(p.level()) < CLOSE;
+        int ticks = p.getAttached(HOURS) == null ? HOUR : timecard(p, work.day()).ticks();
+        int hours = ticks / HOUR;
+        if (hours == 0 && beforeClose && !proportional) {
+            NapoliNotice.show(p, Component.translatable("napuli.work.hour_progress", ticks * 60 / HOUR));
+            return 0;
+        }
+        int pay = shiftPay(ticks, WorkCareer.hourly(p,contract), proportional || !beforeClose);
+        if (pay == 0 && beforeClose) return 0;
+        if (pay > 0 && !NapoliStreet.canCredit(p, pay)) {
+            NapoliNotice.show(p, CityText.t("wallet.full", NapoliStreet.MAX_CASH));
+            return 0;
+        }
+        if (pay > 0 && !WorkEconomy.wage(p,pay)) {
+            NapoliNotice.show(p, Component.literal("Il fondo lavori è temporaneamente insufficiente. Il compenso resta da riscuotere."));
+            return 0;
+        }
+        p.setAttached(WORK, new Work(work.contract(), day, 0, work.day()));
+        p.removeAttached(HOURS);
+        if (pay > 0) WorkCareer.completed(p,contract,hours,pay);
+        if ((proportional || !beforeClose) && ticks % HOUR != 0)
+            NapoliNotice.show(p, Component.translatable("napuli.work.partial_pay", ticks * 60 / HOUR, pay));
+        else NapoliNotice.show(p, Component.translatable("napuli.work.hour_pay", hours, pay));
+        return 1;
+    }
+
     static int status(ServerPlayer p) {
+        if (eligible(p) && FootballEmployment.hasContract(p)) {
+            NapoliNotice.show(p, FootballEmployment.summary(p));
+            return 1;
+        }
         Work state = p.getAttached(WORK);
         if (!eligible(p) || state == null) { say(p, "desk"); return 1; }
         Contract contract = find(state.contract());
@@ -249,21 +285,25 @@ public final class NapoliEmployment {
 
     private static int trackOffice(ServerPlayer p) {
         if (!eligible(p)) return 0;
+        if (FootballEmployment.hasContract(p)) return CityLeague.menu(p);
         boolean active = office(p) == null;
         p.setAttached(TRACK_OFFICE, active);
         say(p, active ? "visit" : "untrack");
         return 1;
     }
 
-    static boolean trackingOffice(ServerPlayer player) { return eligible(player) && player.getAttachedOrElse(TRACK_OFFICE, false); }
+    static void footballSigned(ServerPlayer player) { player.removeAttached(TRACK_OFFICE); }
+
+    static boolean trackingOffice(ServerPlayer player) { return eligible(player) && !FootballEmployment.hasContract(player) && player.getAttachedOrElse(TRACK_OFFICE, false); }
 
     static NapoliFactions.Objective office(ServerPlayer player) {
-        if (!eligible(player) || !player.getAttachedOrElse(TRACK_OFFICE, player.getAttached(WORK) == null)) return null;
+        if (!eligible(player) || FootballEmployment.hasContract(player) || !player.getAttachedOrElse(TRACK_OFFICE, player.getAttached(WORK) == null)) return null;
         return new NapoliFactions.Objective("napuli.work.visit", staffTarget(player.level(), CLERK_POST, CLERK));
     }
 
     static NapoliFactions.Objective objective(ServerPlayer player) {
         if (!eligible(player)) return null;
+        if (FootballEmployment.hasContract(player)) return FootballEmployment.objective(player);
         Work state = player.getAttached(WORK);
         long day = NapoliBroadcast.day(player.level());
         if (state == null || state.paid() >= day) return null;
@@ -398,6 +438,7 @@ public final class NapoliEmployment {
     }
 
     private static void sweep(ServerPlayer p, BlockPos pos) {
+        if (FootballEmployment.hasContract(p)) return;
         if (!eligible(p) || pos.distToCenterSqr(p.position()) > 25) return;
         long day = NapoliBroadcast.day(p.level()), hour = NapoliBroadcast.time(p.level());
         Work work = p.getAttached(WORK);
@@ -423,6 +464,7 @@ public final class NapoliEmployment {
     }
 
     private static void updateHours(ServerPlayer p, ServerLevel city) {
+        if (FootballEmployment.hasContract(p)) return;
         Work work = p.getAttached(WORK);
         long day = NapoliBroadcast.day(city), hour = NapoliBroadcast.time(city);
         if (!eligible(p) || work == null || work.stage() == 0 || work.day() != day || hour < OPEN || hour >= CLOSE) return;

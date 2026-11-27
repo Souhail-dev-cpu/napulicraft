@@ -1,1 +1,6 @@
-{"parent":"minecraft:block/block","textures":{"particle":"minecraft:block/smooth_stone","body":"minecraft:block/smooth_stone","nozzle":"minecraft:block/light_blue_terracotta","light":"minecraft:block/emerald_block"},"elements":[{"from":[1,0,1],"to":[15,1,15],"faces":{"up":{"texture":"#body"},"down":{"texture":"#body"},"north":{"texture":"#body"},"south":{"texture":"#body"},"east":{"texture":"#body"},"west":{"texture":"#body"}}},{"from":[2,1,2],"to":[14,1.5,14],"faces":{"up":{"texture":"#nozzle"},"down":{"texture":"#nozzle"},"north":{"texture":"#nozzle"},"south":{"texture":"#nozzle"},"east":{"texture":"#nozzle"},"west":{"texture":"#nozzle"}}},{"from":[5,1.5,3],"to":[11,2,6],"faces":{"up":{"texture":"#light"},"down":{"texture":"#light"},"north":{"texture":"#light"},"south":{"texture":"#light"},"east":{"texture":"#light"},"west":{"texture":"#light"}}}]}
+{
+  "parent": "napuli:block/bilancia",
+  "textures": {
+    "indicator": "minecraft:block/lime_concrete"
+  }
+}

@@ -20,7 +20,8 @@ public final class FootballActionClient {
             var moves = FootballAction.Move.values();
             if (packet.move() >= 0 && packet.move() < moves.length) {
                 syncLevel(context.client().level);
-                ACTIVE.put(packet.actor(), new Playing(moves[packet.move()], packet.left(), tick));
+                if (moves[packet.move()] == FootballAction.Move.BENCH_STOP) ACTIVE.remove(packet.actor());
+                else ACTIVE.put(packet.actor(), new Playing(moves[packet.move()], packet.left(), tick));
             }
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -36,6 +37,11 @@ public final class FootballActionClient {
         ACTIVE.clear();
     }
 
+    public static boolean bench(int id) {
+        var pose = ACTIVE.get(id);
+        return pose != null && (pose.move == FootballAction.Move.BENCH_IDLE || pose.move == FootballAction.Move.BENCH_PRESS);
+    }
+
     public static boolean active(int id) { return ACTIVE.containsKey(id); }
 
     public static boolean pose(HumanoidModel<?> model, int id, float age) {
@@ -44,6 +50,27 @@ public final class FootballActionClient {
         float phase = Math.clamp((tick - active.start + age % 1) / active.move.ticks, 0, 1);
         float energy = (float) Math.sin(Math.PI * phase);
         float side = active.left ? -1 : 1;
+        if (bench(id)) {
+            float extension = active.move == FootballAction.Move.BENCH_PRESS ? energy : 0;
+            model.body.xRot = 0;
+            model.head.xRot = 0;
+            model.head.yRot = 0;
+            model.leftLeg.xRot = .08f;
+            model.rightLeg.xRot = .08f;
+            model.leftArm.xRot = -1.12f - extension * .48f;
+            model.rightArm.xRot = model.leftArm.xRot;
+            model.leftArm.zRot = -.38f + extension * .18f;
+            model.rightArm.zRot = -model.leftArm.zRot;
+            return true;
+        }
+        if (active.move == FootballAction.Move.CHEST_PRESS || active.move == FootballAction.Move.SHOULDER_PRESS) {
+            boolean overhead = active.move == FootballAction.Move.SHOULDER_PRESS;
+            model.leftArm.xRot = overhead ? -1.45f - energy * 1.55f : -.65f - energy * .92f;
+            model.rightArm.xRot = model.leftArm.xRot;
+            model.leftArm.zRot = -.54f + energy * .28f;
+            model.rightArm.zRot = -model.leftArm.zRot;
+            return true;
+        }
         if (active.move == FootballAction.Move.ROULETTE || active.move == FootballAction.Move.FEINT
                 || active.move == FootballAction.Move.SIDE_STEP) {
             float turn = active.move == FootballAction.Move.ROULETTE ? side * phase * (float) (Math.PI * 2) : side * energy * .55f;

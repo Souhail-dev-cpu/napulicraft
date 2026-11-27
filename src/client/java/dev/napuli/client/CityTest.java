@@ -348,6 +348,7 @@ final class CityTest {
     private static volatile boolean bankCheckPending, bankCheckFinished;
     private static int waitingTrainingTicks;
     private static volatile boolean trainingCheckPending, trainingCheckFinished;
+    private static int chestPressXpBefore;
 
     private static void football(Minecraft mc, int step) {
         if (step >= 66 && step < 127 && !footballPickerUsed) {
@@ -527,7 +528,7 @@ final class CityTest {
                 league.ifPresent(b->b.onPress(new KeyEvent(257,0,0)));
             }
             case 595 -> {
-                assertTrue(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,"The league button opens the server calendar and standings");
+                assertTrue(mc.gui.screen() instanceof CompanionScreen && mc.gui.screen().getTitle().getString().contains("Giorno"),"The league button opens the calendar with the current day");
                 AutoTest.shot(mc,"fuorigrotta-campionato");
                 if (mc.gui.screen() != null) mc.gui.setScreen(null);
                 mc.player.connection.sendCommand("calcio gioca ospiti");
@@ -578,19 +579,22 @@ final class CityTest {
                             p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "colpo");
                             assertTrue(dev.napuli.NapoliStreet.cash(p) == expected,
                                     "bank cooldown blocks immediate repeat payout");
+                            dev.napuli.WorkCareerClientTest.endHeistScenario(p);
                             bankCheckFinished = true;
                         } finally { bankCheckPending = false; }
                     });
                 }
             }
             case 742 -> server(mc, p -> {
-                view(p, 354.5, 64, 9.5, -90, 0);
+                view(p,354.5,64,9.5,-90,0);
                 var bike = new net.minecraft.core.BlockPos(355, 64, 8);
                 var blockRegistry = net.minecraft.core.registries.BuiltInRegistries.BLOCK;
                 for (var machine : java.util.Map.of(bike, "cyclette",
                         new net.minecraft.core.BlockPos(355,64,11), "vogatore",
                         new net.minecraft.core.BlockPos(351,64,11), "panca_pesi",
-                        new net.minecraft.core.BlockPos(350,64,7), "stepper").entrySet()) {
+                        new net.minecraft.core.BlockPos(350,64,7), "stepper",
+                        new net.minecraft.core.BlockPos(351,64,8), "chest_press",
+                        new net.minecraft.core.BlockPos(354,64,7), "shoulder_press").entrySet()) {
                     assertTrue(p.level().getBlockState(machine.getKey()).is(blockRegistry.getValue(Napuli.id(machine.getValue()))),
                             "Public gym installs " + machine.getValue());
                 }
@@ -606,9 +610,89 @@ final class CityTest {
                 assertTrue(dev.napuli.PublicGym.sessions(p) == 1 && !p.isPassenger(),
                         "Pedalling with the real client completes and records the public workout");
                 assertTrue(dev.napuli.FootballPractice.pace(p) == 65 && dev.napuli.FootballGym.progressXp(p, "pace") == 25,
-                        "Public exercise leaves football ratings alone");
+                        "Pedalling does not grant pace XP");
+                assertTrue(dev.napuli.FootballGym.progressXp(p, "stamina") > 0,
+                        "Completing a set on the exercise bike grants stamina XP");
             });
-            case 880 -> { Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed); mc.stop(); }
+            case 880, 1040, 1180 -> server(mc, p -> {
+                view(p, 352.5, 64, 11.5, 180, 0);
+                var bench = new net.minecraft.core.BlockPos(351, 64, 11);
+                assertTrue(dev.napuli.PublicGym.unlockedLoad(p, bench) == 10, "Bench load starts at 10 kg");
+                var hit = new net.minecraft.world.phys.BlockHitResult(
+                        net.minecraft.world.phys.Vec3.atCenterOf(bench), net.minecraft.core.Direction.EAST, bench, false);
+                p.level().getBlockState(bench).useWithoutItem(p.level(), p, hit);
+                assertTrue(p.isPassenger(), "The public bench supports the player during the set");
+            });
+            case 894 -> {
+                assertTrue(FootballActionClient.bench(mc.player.getId()), "The reclining bench pose is synchronized");
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+
+            }
+            case 898 -> AutoTest.shot(mc, "fuorigrotta-panca-piana");
+            case 900, 923, 946, 969, 992,
+                    1060, 1083, 1106, 1129, 1152,
+                    1200, 1223, 1246, 1269, 1292 -> mc.options.keyJump.setDown(true);
+            case 903, 926, 949, 972, 995,
+                    1063, 1086, 1109, 1132, 1155,
+                    1203, 1226, 1249, 1272, 1295 -> mc.options.keyJump.setDown(false);
+            case 1025 -> server(mc, p -> assertTrue(dev.napuli.PublicGym.sessions(p) == 2 && !p.isPassenger(),
+                    "Five timed bench presses complete without clicking again"));
+            case 1325 -> server(mc, p -> assertTrue(dev.napuli.PublicGym.unlockedLoad(
+                    p, new net.minecraft.core.BlockPos(351, 64, 11)) == 10, "Three same-day sets do not unlock a heavier bench load"));
+            case 1350 -> {
+                mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+                mc.player.connection.sendCommand("basket");
+            }
+            case 1375 -> server(mc, p -> {
+                assertTrue(p.position().distanceToSqr(new net.minecraft.world.phys.Vec3(452.5,64,30.5))<1,
+                        "Basket opens at the new Fuorigrotta free-throw line");
+                assertTrue(p.level().getBlockState(new net.minecraft.core.BlockPos(459,67,30)).is(net.minecraft.world.level.block.Blocks.IRON_BLOCK),
+                        "The new court has a built basket support");
+                view(p, 452.5, 64, 30.5, -90, -31);
+            });
+            case 1380 -> mc.player.connection.sendCommand("basket tira");
+            case 1405 -> {
+                assertTrue(mc.gui.toastManager().getToast(NapoliNoticeToast.class,
+                        Component.literal("Canestro · 1/1 · /basket tira")) != null,
+                        "A shot that descends through the basket scores");
+                AutoTest.shot(mc,"fuorigrotta-basket");
+                mc.player.connection.sendCommand("atletica");
+            }
+            case 1425 -> server(mc, p -> assertTrue(p.blockPosition().getX()==354&&p.blockPosition().getZ()==19,
+                    "Athletics opens on the Fuorigrotta running lane"));
+            case 1445 -> server(mc,p->{
+                dev.napuli.Carabinieri.release(p);
+                view(p,365.5,64,1.5,180,0);
+                p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(),"calcio quartiere partenope");
+            });
+            case 1455 -> mc.player.connection.sendCommand("compagno obiettivo lavoro");
+            case 1485 -> {
+                var hud = HudClient.state();
+                assertTrue(hud!=null&&hud.objective().equals("qol.work:football")
+                        &&HudClient.companionText().getString().contains("Partenope"), "The signed club replaces the shift in the client HUD");
+                AutoTest.shot(mc,"fuorigrotta-contratto-calciatore");
+            }
+            case 1490 -> server(mc, dev.napuli.WorkCareerClientTest::verifyFootballPay);
+            case 1500 -> server(mc,p->{
+                chestPressXpBefore=dev.napuli.WorkCareerClientTest.strengthTrainingTotal(p);
+                view(p,352.5,64,8.5,180,0);
+                var chest=new net.minecraft.core.BlockPos(351,64,8);
+                var hit=new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(chest),
+                        net.minecraft.core.Direction.EAST,chest,false);
+                p.level().getBlockState(chest).useWithoutItem(p.level(),p,hit);
+                assertTrue(p.isPassenger()&&p.getVehicle().getY()>=64.5,"The larger chest press seats the player at its cushion height");
+            });
+            case 1510 -> mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+            case 1516 -> AutoTest.shot(mc,"fuorigrotta-chest-press");
+            case 1520, 1543, 1566, 1589, 1612 -> mc.options.keyJump.setDown(true);
+            case 1523, 1546, 1569, 1592, 1615 -> mc.options.keyJump.setDown(false);
+            case 1640 -> server(mc,p->assertTrue(dev.napuli.WorkCareerClientTest.strengthTrainingTotal(p)>chestPressXpBefore&&!p.isPassenger(),
+                    "Chest press completes and grants strength XP"));
+            case 1660 -> {
+                mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+                Napuli.LOGGER.info("[FOOTBALLTEST] completed, failed={}", failed);
+                mc.stop();
+            }
             default -> {}
         }
     }

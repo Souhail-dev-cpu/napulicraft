@@ -1,8 +1,123 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "minecraft:block/block",
   "textures": {
-    "bottom": "minecraft:block/dark_oak_planks",
-    "top": "napuli:block/banca_caffe_top",
-    "side": "napuli:block/banca_caffe_side"
-  }
+    "particle": "minecraft:block/dark_oak_planks",
+    "body": "minecraft:block/dark_oak_planks",
+    "polished_andesite": "minecraft:block/polished_andesite",
+    "light_gray_concrete": "minecraft:block/light_gray_concrete",
+    "red_terracotta": "minecraft:block/red_terracotta",
+    "black_concrete": "minecraft:block/black_concrete",
+    "iron_block": "minecraft:block/iron_block",
+    "smooth_quartz": "minecraft:block/quartz_block_bottom"
+  },
+  "elements": [
+    {
+      "from": [1, 0, 1],
+      "to": [15, 10, 15],
+      "faces": {
+        "up": { "texture": "#body" },
+        "down": { "texture": "#body" },
+        "north": { "texture": "#body" },
+        "south": { "texture": "#body" },
+        "east": { "texture": "#body" },
+        "west": { "texture": "#body" }
+      }
+    },
+    {
+      "from": [0, 10, 0],
+      "to": [16, 11, 16],
+      "faces": {
+        "up": { "texture": "#polished_andesite" },
+        "down": { "texture": "#polished_andesite" },
+        "north": { "texture": "#polished_andesite" },
+        "south": { "texture": "#polished_andesite" },
+        "east": { "texture": "#polished_andesite" },
+        "west": { "texture": "#polished_andesite" }
+      }
+    },
+    {
+      "from": [2, 11, 6],
+      "to": [12, 11.75, 13.5],
+      "faces": {
+        "up": { "texture": "#light_gray_concrete" },
+        "down": { "texture": "#light_gray_concrete" },
+        "north": { "texture": "#light_gray_concrete" },
+        "south": { "texture": "#light_gray_concrete" },
+        "east": { "texture": "#light_gray_concrete" },
+        "west": { "texture": "#light_gray_concrete" }
+      }
+    },
+    {
+      "from": [2, 11.75, 8],
+      "to": [12, 16, 13.5],
+      "faces": {
+        "up": { "texture": "#red_terracotta" },
+        "down": { "texture": "#red_terracotta" },
+        "north": { "texture": "#red_terracotta" },
+        "south": { "texture": "#red_terracotta" },
+        "east": { "texture": "#red_terracotta" },
+        "west": { "texture": "#red_terracotta" }
+      }
+    },
+    {
+      "from": [2.3, 14.2, 6.8],
+      "to": [11.7, 15.5, 8],
+      "faces": {
+        "up": { "texture": "#light_gray_concrete" },
+        "down": { "texture": "#light_gray_concrete" },
+        "north": { "texture": "#light_gray_concrete" },
+        "south": { "texture": "#light_gray_concrete" },
+        "east": { "texture": "#light_gray_concrete" },
+        "west": { "texture": "#light_gray_concrete" }
+      }
+    },
+    {
+      "from": [4, 13.2, 7.1],
+      "to": [8, 14.2, 8],
+      "faces": {
+        "up": { "texture": "#black_concrete" },
+        "down": { "texture": "#black_concrete" },
+        "north": { "texture": "#black_concrete" },
+        "south": { "texture": "#black_concrete" },
+        "east": { "texture": "#black_concrete" },
+        "west": { "texture": "#black_concrete" }
+      }
+    },
+    {
+      "from": [6, 12.5, 7],
+      "to": [6.8, 13.2, 8],
+      "faces": {
+        "up": { "texture": "#iron_block" },
+        "down": { "texture": "#iron_block" },
+        "north": { "texture": "#iron_block" },
+        "south": { "texture": "#iron_block" },
+        "east": { "texture": "#iron_block" },
+        "west": { "texture": "#iron_block" }
+      }
+    },
+    {
+      "from": [6, 11.75, 6.8],
+      "to": [7.5, 12.55, 8],
+      "faces": {
+        "up": { "texture": "#smooth_quartz" },
+        "down": { "texture": "#smooth_quartz" },
+        "north": { "texture": "#smooth_quartz" },
+        "south": { "texture": "#smooth_quartz" },
+        "east": { "texture": "#smooth_quartz" },
+        "west": { "texture": "#smooth_quartz" }
+      }
+    },
+    {
+      "from": [12.5, 11, 10.5],
+      "to": [15, 15, 14],
+      "faces": {
+        "up": { "texture": "#black_concrete" },
+        "down": { "texture": "#black_concrete" },
+        "north": { "texture": "#black_concrete" },
+        "south": { "texture": "#black_concrete" },
+        "east": { "texture": "#black_concrete" },
+        "west": { "texture": "#black_concrete" }
+      }
+    }
+  ]
 }

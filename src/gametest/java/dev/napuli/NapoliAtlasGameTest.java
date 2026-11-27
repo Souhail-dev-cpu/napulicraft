@@ -9,6 +9,26 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 
 public final class NapoliAtlasGameTest {
+    @GameTest public void generatedEntranceRepairsAMissingDoorHalf(GameTestHelper h) {
+        var city=h.getLevel();
+        var pos=h.absolutePos(new net.minecraft.core.BlockPos(2,3,2));
+        city.setBlockAndUpdate(pos.below(),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+        city.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        city.setBlockAndUpdate(pos.above(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        NapoliExpansion.ensureDoor(city,pos,net.minecraft.core.Direction.SOUTH);
+        var lower=city.getBlockState(pos);
+        var upper=city.getBlockState(pos.above());
+        var half=net.minecraft.world.level.block.DoorBlock.HALF;
+        var upperHalf=net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER;
+        h.assertTrue(lower.is(net.minecraft.world.level.block.Blocks.OAK_DOOR)&&upper.getValue(half)==upperHalf,
+                "A generated entrance gains both door halves");
+        city.setBlock(pos.above(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2|16);
+        NapoliExpansion.ensureDoor(city,pos,net.minecraft.core.Direction.SOUTH);
+        h.assertTrue(city.getBlockState(pos.above()).is(net.minecraft.world.level.block.Blocks.OAK_DOOR),
+                "Repeating the repair restores a missing half");
+        h.succeed();
+    }
+
     @GameTest public void oldHouseFrontageGetsConnectedWindowsAndAWalkableThreshold(GameTestHelper helper) {
         var level = helper.getLevel();
         var house = DistrictLife.districts().getLast().homes().getLast();

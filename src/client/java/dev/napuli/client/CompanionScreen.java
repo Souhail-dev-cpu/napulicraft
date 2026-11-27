@@ -73,22 +73,14 @@ public final class CompanionScreen extends NapoliScreen {
     @Override protected void init() {
         rowWidgets.clear();
         layout(560, height - 16);
-        int navWidth = (panelWidth - 32) / 4;
-        String[] keys = {"menu", "atlas", "favorites", "options"};
-        String[] commands = {"compagno", "compagno atlante", "compagno preferiti", ""};
-        for (int i = 0; i < 4; i++) {
-            final int index = i;
-            var nav = button(left + 10 + i * (navWidth + 4), top + 42, navWidth, t("screen." + keys[i]), () -> {
-                if (index == 3) minecraft.gui.setScreen(new CompanionScreen(this)); else command(commands[index]);
-            });
-            boolean selected = options ? i == 3 : i == 0 && board.page().equals("menu") || i == 1 && board.page().equals("atlante") || i == 2 && board.page().equals("preferiti");
-            if (selected) markSelected(nav);
-        }
+        String[] league = leagueRoute();
+        if (league.length == 3) leagueNavigation(league);
+        else mainNavigation();
         contentTop = top + (options ? 70 : 96);
         rowHeight = options ? 26 : height < 280 ? 30 : 44;
         columns = !options && board.page().equals("menu") && panelWidth >= 440 ? 2 : 1;
         rows = Math.max(1, (bottom - 36 - contentTop) / rowHeight);
-        if (!options) {
+        if (!options && league.length == 0) {
             search = new EditBox(font, left + 10, top + 69, panelWidth - 48, 20, Component.translatable("napuli.companion.search"));
             search.setMaxLength(96); search.setValue(query); search.setHint(Component.translatable("napuli.companion.search"));
             search.setResponder(value -> { query = value; page = 0; refreshRows(); });
@@ -104,6 +96,42 @@ public final class CompanionScreen extends NapoliScreen {
         if (hasBack) button(left + panelWidth - 146, bottom - 26, 66, t("screen.back"), this::back);
         button(left + panelWidth - 76, bottom - 26, 66, t("close"), this::onClose);
         if (options) settings(); else refreshRows();
+    }
+
+    private void mainNavigation() {
+        int navWidth = (panelWidth - 32) / 4;
+        String[] keys = {"menu", "atlas", "favorites", "options"};
+        String[] commands = {"compagno", "compagno atlante", "compagno preferiti", ""};
+        for (int i = 0; i < 4; i++) {
+            final int index = i;
+            var nav = button(left + 10 + i * (navWidth + 4), top + 42, navWidth, t("screen." + keys[i]), () -> {
+                if (index == 3) minecraft.gui.setScreen(new CompanionScreen(this)); else command(commands[index]);
+            });
+            boolean selected = options ? i == 3 : i == 0 && board.page().equals("menu") || i == 1 && board.page().equals("atlante") || i == 2 && board.page().equals("preferiti");
+            if (selected) markSelected(nav);
+        }
+    }
+
+    private String[] leagueRoute() {
+        return !options && board.page().startsWith("campionato/") ? board.page().split("/") : new String[0];
+    }
+
+    private void leagueNavigation(String[] route) {
+        String[] sections = {"Calendario", "Classifica", "Contratti"};
+        int sectionWidth = (panelWidth - 28) / sections.length;
+        for (int i = 0; i < sections.length; i++) {
+            String name = sections[i], id = name.toLowerCase(java.util.Locale.ROOT);
+            var tab = button(left + 10 + i * (sectionWidth + 4), top + 42, sectionWidth, Component.literal(name),
+                    () -> command("calcio campionato " + route[1] + " " + id));
+            if (route[2].equals(id)) markSelected(tab);
+        }
+        int divisionWidth = (panelWidth - 32) / 4;
+        for (int i = 0; i < 4; i++) {
+            String division = String.valueOf((char) ('D' - i));
+            var tab = button(left + 10 + i * (divisionWidth + 4), top + 69, divisionWidth, Component.literal("Serie " + division),
+                    () -> command("calcio campionato " + division + " " + route[2]));
+            if (route[1].equals(division)) markSelected(tab);
+        }
     }
 
     private void back() {
@@ -150,7 +178,10 @@ public final class CompanionScreen extends NapoliScreen {
     private void refreshRows() {
         for (var widget : rowWidgets) removeWidget(widget);
         rowWidgets.clear();
-        visible = board.entries().stream().filter(e -> CompanionBoard.matches(e, query)).toList();
+        boolean league = leagueRoute().length == 3;
+        visible = board.entries().stream().filter(e -> league
+                ? !e.command().startsWith("calcio campionato ") || e.title().getString().equals("Scegli il tuo club")
+                : CompanionBoard.matches(e, query)).toList();
         page = Math.clamp(page, 0, pageCount() - 1);
         int cellWidth = (panelWidth - 20 - (columns - 1) * 6) / columns;
         for (int i = page * pageSize(); i < Math.min(visible.size(), (page + 1) * pageSize()); i++) {

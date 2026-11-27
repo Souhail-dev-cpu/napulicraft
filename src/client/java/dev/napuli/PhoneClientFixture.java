@@ -15,6 +15,7 @@ import net.minecraft.world.level.GameType;
 public final class PhoneClientFixture {
     public static volatile boolean ready;
     public static UUID peerId;
+    public static String peerNumber;
     public static final String PEER="PhonePeer";
     private static ServerPlayer peer;
     private static EmbeddedChannel channel;
@@ -25,7 +26,7 @@ public final class PhoneClientFixture {
         p.getInventory().setItem(5,new ItemStack(Phones.CHARGER));Phones.account(p);
         var server=p.level().getServer();var profile=new GameProfile(UUID.randomUUID(),PEER);peerId=profile.id();peer=new ServerPlayer(server,p.level(),profile,ClientInformation.createDefault());
         var connection=new Connection(PacketFlow.SERVERBOUND);channel=new EmbeddedChannel(connection);server.getPlayerList().placeNewPlayer(connection,peer,CommonListenerCookie.createInitial(profile,false));
-        peer.setGameMode(GameType.CREATIVE);peer.getInventory().clearContent();peer.getInventory().setItem(0,new ItemStack(Phones.ITEMS.get(PhoneModel.IQOO_16)));Phones.account(peer);ready=true;
+        peer.setGameMode(GameType.CREATIVE);peer.getInventory().clearContent();peer.getInventory().setItem(0,new ItemStack(Phones.ITEMS.get(PhoneModel.IQOO_16)));peerNumber=Phones.account(peer).number();ready=true;
     }
     public static void model(ServerPlayer p,int index){Phones.open(p,PhoneModel.values()[index]);}
     public static void reply(ServerPlayer p){check(Phones.mail(p).size()==1&&Phones.mail(peer).size()==1,"The actual client message reaches both saved mailboxes");check(Phones.message(peer,p.getUUID(),"Ricevuto, ci vediamo a Piazza Dante."),"The other player can reply");}

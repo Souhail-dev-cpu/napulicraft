@@ -77,7 +77,7 @@ final class WorkCareer {
         }
         city.setAttached(STATIONS,Map.copyOf(all));
     }
-    static NapoliEmployment.Contract selected(ServerPlayer p){var state=p.getAttached(NapoliEmployment.WORK);return state==null?null:NapoliEmployment.find(state.contract());}
+    static NapoliEmployment.Contract selected(ServerPlayer p){var state=p.getAttached(NapoliEmployment.WORK);return state==null||FootballEmployment.hasContract(p)?null:NapoliEmployment.find(state.contract());}
     static boolean near(ServerPlayer p,NapoliEmployment.Contract c){return p.level().dimension()==NapoliMap.LEVEL&&p.isAlive()&&!p.isSpectator()&&!Carabinieri.isJailed(p)&&p.level().getAttachedOrElse(STATIONS,Map.of()).containsKey(c.id())&&p.level().getBlockState(station(p.level(),c)).is(Blocks.SMITHING_TABLE)&&station(p.level(),c).distToCenterSqr(p.position())<=36;}
     static int promote(ServerPlayer p){var c=selected(p);return c==null||!near(p,c)?0:promoteAt(p,c);}
     static int promoteAt(ServerPlayer p,NapoliEmployment.Contract c){var a=get(p,c);if(a.rank()>=3)return 0;int next=a.rank()+1,cost=next*20;

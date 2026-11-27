@@ -63,22 +63,9 @@ final class NapoliHygiene {
                 if (player instanceof ServerPlayer p) wash(p, pos, Math.max(value(p), Math.min(70, value(p) + 30)));
                 return InteractionResult.SUCCESS;
             }
-            if (NapoliShower.isColumn(level, pos) || NapoliShower.isColumn(level, pos.above())) {
-                for (var house : DistrictLife.homes()) {
-                    var tray = CityLivingHomes.use(house, CityLivingHomes.Furniture.SHOWER).block();
-                    if (!pos.equals(tray) && !pos.equals(tray.above())) continue;
-                    if (player instanceof ServerPlayer p) {
-                        if (HomePermissions.allows(p, house, HomePermissions.Capability.APPLIANCES)) { wash(p, pos, 100); soakHair(p); }
-                        else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
-                    }
-                    return InteractionResult.SUCCESS;
-                }
-            }
-            for (var house : NapoliMergellina.PROPERTIES) if (pos.equals(shower(house)) || (pos.equals(shower(house).above()) && NapoliShower.isColumn(level, pos))) {
-                if (player instanceof ServerPlayer p) {
-                    if (HomePermissions.allows(p, house, HomePermissions.Capability.APPLIANCES)) { wash(p, pos, 100); soakHair(p); }
-                    else p.sendOverlayMessage(Component.translatable("napuli.property.private"));
-                }
+            BlockPos tray = NapoliShower.isColumn(level, pos) ? pos.below() : pos;
+            if (NapoliShower.matches(level, tray, pos)) {
+                if (player instanceof ServerPlayer p && HomeFixtureBlock.access(p, tray)) NapoliShower.toggle(p.level(), tray);
                 return InteractionResult.SUCCESS;
             }
             return InteractionResult.PASS;

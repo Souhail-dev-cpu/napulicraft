@@ -269,6 +269,21 @@ final class NapoliCentro {
 		sign(-62, 64, z0 + 2, "SPACCANAPOLI", "←  →", "'a strada ca", "spacca Napule");
 	}
 
+	static void repairResidentialDoors(ServerLevel city) {
+		int i=0;
+		for(int x=-18;x<=66;x+=8){
+			if(x+7>=-7&&x<=7)continue;
+			if(i++%3==2)NapoliExpansion.ensureDoor(city,new BlockPos(x+3,64,SPACCA_Z+3),Direction.NORTH);
+		}
+		for(int x=-56;x<=66;x+=8){
+			if((x+7>=-7&&x<=7)||(x+7>=SGA_X-9&&x<=SGA_X+9))continue;
+			if(i++%3==2)NapoliExpansion.ensureDoor(city,new BlockPos(x+3,64,SPACCA_Z-3),Direction.SOUTH);
+		}
+		i=40;
+		for(int x=10;x<=62;x+=8)
+			if(i++%3==2)NapoliExpansion.ensureDoor(city,new BlockPos(x+3,64,-101),Direction.SOUTH);
+	}
+
 	private Block laundry(int x) {
 		Block[] c = {block("white_wool"), block("light_blue_wool"), block("pink_wool"), block("yellow_wool"), block("red_wool")};
 		return c[Math.floorMod(x * 7, c.length)];
@@ -303,6 +318,7 @@ final class NapoliCentro {
 					.setValue(BlockStateProperties.HALF, Half.TOP).setValue(BlockStateProperties.HORIZONTAL_FACING, north ? Direction.NORTH : Direction.SOUTH));
 		} else {
 			fill(mid, 64, front, mid, 65, front, Blocks.AIR);
+			NapoliExpansion.ensureDoor(world,new BlockPos(mid,64,front),north?Direction.SOUTH:Direction.NORTH);
 			put(mid + 1, 65, front + dir, Blocks.POTTED_RED_TULIP);
 		}
 		hang(mid, 65 + 3, front - dir);

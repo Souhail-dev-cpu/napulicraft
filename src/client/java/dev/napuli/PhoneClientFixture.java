@@ -44,7 +44,7 @@ public final class PhoneClientFixture {
         p.teleportTo(p.level(),-347.5,64,20.5,Set.of(),0,0,true);NapoliStreet.credit(p,100-NapoliStreet.cash(p));serviceWallet=NapoliStreet.cash(p);servicesReady=true;
     }
     public static void awaitPizza(ServerPlayer p){
-        var order=p.getAttached(PhoneServices.PIZZA);check(order!=null,"The phone button creates a pizza order");
+        var order=p.getAttached(PhoneServices.PIZZA);check(order!=null,"The phone button creates a pizza order: alive="+p.isAlive()+", available="+Phones.available(p)+", jailed="+Carabinieri.isJailed(p)+", airplane="+p.getAttachedOrElse(Phones.AIRPLANE,false)+", position="+p.blockPosition()+", dimension="+p.level().dimension()+", session="+p.hasAttached(Phones.SESSION));
         check(NapoliStreet.cash(p)==serviceWallet,"Ordering a pizza does not charge before delivery");
         if(p.level().getOverworldClockTime()<order.due())return;
         var entity=p.level().getEntity(order.id());

@@ -151,9 +151,11 @@ for item in all_items:
     art.append(item_id+'\t'+item.get('shape','ingredient')+'\t'+str(sum(ord(c) for c in item_id)))
 for block in catalogue['blocks']:
     item_id = block['id']
-    write(ASSETS / 'blockstates' / (item_id+'.json'), {'variants':{'':{'model':local('block/'+item_id)}}})
-    write(ASSETS / 'models/block' / (item_id+'.json'), {'parent':'minecraft:block/cube_bottom_top','textures':{
-        'bottom':vanilla('block/'+block['texture']), 'top':local('block/'+item_id+'_top'), 'side':local('block/'+item_id+'_side')}})
+    # Preserve the manually modelled stations and their heated blockstates.
+    if item_id not in {'tavolo_pizzaiolo', 'forno_legna_portatile', 'banca_frittura', 'banca_caffe'}:
+        write(ASSETS / 'blockstates' / (item_id+'.json'), {'variants':{'':{'model':local('block/'+item_id)}}})
+        write(ASSETS / 'models/block' / (item_id+'.json'), {'parent':'minecraft:block/cube_bottom_top','textures':{
+            'bottom':vanilla('block/'+block['texture']), 'top':local('block/'+item_id+'_top'), 'side':local('block/'+item_id+'_side')}})
     write(ASSETS / 'items' / (item_id+'.json'), {'model':{'type':'minecraft:model','model':local('block/'+item_id)}})
     write(DATA / 'loot_table/blocks' / (item_id+'.json'), {'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':local(item_id)}],
         'conditions':[{'condition':'minecraft:survives_explosion'}]}]})

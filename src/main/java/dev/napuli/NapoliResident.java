@@ -30,7 +30,8 @@ public final class NapoliResident extends PathfinderMob {
         NONNA, PARCHEGGIATORE, TIFOSO, SCUGNIZZO, PRESEPAIO, PIZZAIOLO,
         GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER,
         BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE,
-        FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN, EMPLOYMENT_CLERK, SHIFT_LEAD, SHIFT_WORKER, FOOTBALL_CLERK, FOOTBALL_COACH;
+        FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN, EMPLOYMENT_CLERK, SHIFT_LEAD, SHIFT_WORKER, FOOTBALL_CLERK, FOOTBALL_COACH,
+        CERTOSA_GUIDE, CERTOSA_RESTORER;
 
         boolean civic() { return this == CIVIC_WOMAN || this == CIVIC_MAN; }
 
@@ -44,7 +45,7 @@ public final class NapoliResident extends PathfinderMob {
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN || this == EMPLOYMENT_CLERK; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN || this == EMPLOYMENT_CLERK || this == CERTOSA_GUIDE; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return civic() ? 12 : this == PASSERBY ? 18 : this == SHIFT_LEAD || this == SHIFT_WORKER ? 3 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }
@@ -287,7 +288,7 @@ public final class NapoliResident extends PathfinderMob {
             case CARABINIERE -> 12;
             case VENDOR, TAILOR, PORTER, PRESEPAIO, PIZZAIOLO, PEPPE_FETISH -> 3;
             case NONNA -> 2;
-            case BUCATO, CUSTODE_TUNNEL, MUSICISTA -> 0;
+            case BUCATO, CUSTODE_TUNNEL, MUSICISTA, CERTOSA_GUIDE, CERTOSA_RESTORER -> 0;
             case TURISTA, PESCATORE, CARTOMANTE, MERCATANTE, GUARDIANO_PRESEPE -> 2;
             case PARCHEGGIATORE -> 5;
             case TIFOSO, SCUGNIZZO -> 10;
@@ -347,6 +348,10 @@ public final class NapoliResident extends PathfinderMob {
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand == InteractionHand.MAIN_HAND && PhoneServices.interact(this, player)) return InteractionResult.SUCCESS;
+        if (hand == InteractionHand.MAIN_HAND && (role() == Role.CERTOSA_GUIDE || role() == Role.CERTOSA_RESTORER)) {
+            if (player instanceof ServerPlayer visitor) NapoliCertosa.talk(visitor, this);
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && FootballPractice.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && NapoliEmployment.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {

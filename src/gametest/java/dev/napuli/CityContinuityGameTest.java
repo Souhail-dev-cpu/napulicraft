@@ -6,6 +6,21 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.core.BlockPos;
 
 public final class CityContinuityGameTest {
+    @GameTest public void footballContractSetsTheMainJobAndRates(GameTestHelper h){
+        HousingCapacityGameTest.withPlayers(h,1,players->{
+            var p=players.getFirst();
+            var previous=new NapoliEmployment.Work(NapoliEmployment.Contract.CLEANER.id(),1,2,Long.MIN_VALUE);
+            p.setAttached(NapoliEmployment.WORK,previous);
+            h.assertTrue(WorkCareer.selected(p)==NapoliEmployment.Contract.CLEANER,"The old job starts out active");
+            p.setAttached(CityLeague.MEMBER,new CityLeague.Member("partenope",1));
+            h.assertTrue(FootballEmployment.hasContract(p)&&WorkCareer.selected(p)==null,"Existing club members already have the football job");
+            h.assertTrue(previous.equals(p.getAttached(NapoliEmployment.WORK)),"Previous work remains available for settlement");
+            h.assertTrue(FootballEmployment.terms("napoli").appearancePay>FootballEmployment.terms("partenope").appearancePay,
+                    "Contract levels pay different rates");
+        });
+        h.succeed();
+    }
+
     @GameTest public void pedestriansCanPlanARouteAcrossTramRails(GameTestHelper h){
         var city=h.getLevel();var start=h.absolutePos(new BlockPos(1,2,1));var end=start.east(5);
         for(var p:BlockPos.betweenClosed(start.offset(-1,-1,-1),end.offset(1,-1,1)))city.setBlock(p,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),2);
@@ -104,11 +119,25 @@ public final class CityContinuityGameTest {
         var city=h.getLevel();var old=city.removeAttached(CityLeague.SEASON);
         try{
             var s=CityLeague.schedule(3,20);city.setAttached(CityLeague.SEASON,s);
-            h.assertTrue(s.fixtures().size()==6&&s.fixtures().stream().map(f->Set.of(f.home(),f.away())).distinct().count()==6,"Every pair of neighborhoods meets exactly once");
+            h.assertTrue(s.fixtures().size()==33&&s.fixtures().stream().map(f->Set.of(f.home(),f.away())).distinct().count()==33,
+                    "Each division plays a round robin, with no repeated pairing");
+            h.assertTrue(s.fixtures().stream().allMatch(f->FootballDivisions.division(f.home())==FootballDivisions.division(f.away()))
+                    && FootballDivisions.division("napoli")==FootballDivisions.Division.A,"Divisions are isolated and Napoli plays in Serie A");
+            var serieC=FootballDivisions.Division.C;
+            h.assertTrue(!serieC.qualifies(FootballPractice.Position.ATTACCANTE,58,4,2,16,6)
+                    && !serieC.qualifies(FootballPractice.Position.ATTACCANTE,59,3,2,16,6)
+                    && !serieC.qualifies(FootballPractice.Position.ATTACCANTE,59,4,0,16,6)
+                    && serieC.qualifies(FootballPractice.Position.ATTACCANTE,59,4,2,0,0),
+                    "Attackers need overall, appearances and goals");
+            h.assertTrue(serieC.qualifies(FootballPractice.Position.CENTROCAMPISTA,59,4,0,16,0)
+                    && !serieC.qualifies(FootballPractice.Position.CENTROCAMPISTA,59,4,9,15,6)
+                    && serieC.qualifies(FootballPractice.Position.DIFENSORE,59,4,0,0,6)
+                    && !serieC.qualifies(FootballPractice.Position.DIFENSORE,59,4,9,16,5),
+                    "Midfielders and defenders qualify on their own match contributions");
             var f=CityLeague.begin(city,s.fixtures().getFirst());String player=UUID.randomUUID().toString();
-            CityLeague.progress(city,f.id(),2,1,1200,Map.of(player,new CityLeague.Participant(0,800,1)));
+            CityLeague.progress(city,f.id(),2,1,1200,Map.of(player,new CityLeague.Participant(0,800,1,4,3)));
             CityLeague.progress(city,f.id(),2,1,1000,Map.of(player,new CityLeague.Participant(0,600,0)));
-            var resumed=CityLeague.fixture(city,f.id());h.assertTrue(resumed.elapsed()==1200&&resumed.players().get(player).ticks()==800&&resumed.players().get(player).goals()==1,"An older checkpoint cannot erase earned participation");
+            var resumed=CityLeague.fixture(city,f.id());h.assertTrue(resumed.elapsed()==1200&&resumed.players().get(player).ticks()==800&&resumed.players().get(player).goals()==1&&resumed.players().get(player).passes()==4&&resumed.players().get(player).recoveries()==3,"An older checkpoint cannot erase earned participation, passes or recoveries");
             CityLeague.complete(city,f.id());h.assertTrue(CityLeague.standings(CityLeague.season(city).fixtures()).stream().allMatch(r->r.played()==0),"A suspended match does not enter the standings");
             CityLeague.progress(city,f.id(),2,1,3000,Map.of());CityLeague.complete(city,f.id());CityLeague.complete(city,f.id());
             var row=CityLeague.standings(CityLeague.season(city).fixtures()).stream().filter(r->r.team().equals(f.home())).findFirst().orElseThrow();h.assertTrue(row.points()==3&&row.played()==1&&row.goals()==2,"One win counts once");

@@ -49,10 +49,11 @@ public final class Hud {
 			if (!ServerPlayNetworking.canSend(p, State.TYPE)) continue;
 			var obj = NapoliFactions.objective(p);
 			var underground = NapoliMap.undergroundObjective(p);
+			var football = FootballEmployment.objective(p);
 			if (underground != null) obj = underground;
 			else if (NapoliEmployment.trackingOffice(p)) obj = NapoliEmployment.office(p);
 			else if (obj.key().equals("none") || obj.key().equals("cooldown")) {
-				var local = NapoliLocalJobs.objective(p);
+				var local = football != null ? football : NapoliLocalJobs.objective(p);
 				if (local != null) obj = local;
 				else {
 					var work = NapoliEmployment.objective(p);
@@ -64,7 +65,7 @@ public final class Hud {
 				}
 			}
             var intro = CityOnboarding.objective(p);
-            if(intro!=null&&underground==null&&!NapoliEmployment.trackingOffice(p)&&(NapoliFactions.objective(p).key().equals("none")||NapoliFactions.objective(p).key().equals("cooldown")))obj=intro;
+            if(intro!=null&&underground==null&&football==null&&!NapoliEmployment.trackingOffice(p)&&(NapoliFactions.objective(p).key().equals("none")||NapoliFactions.objective(p).key().equals("cooldown")))obj=intro;
             obj = CityCompanion.objective(p, obj);
             var label = CityCompanion.label(p,obj);
             if (p.level().dimension()==NapoliMap.LEVEL && obj.target()!=null && !p.isPassenger()) {

@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "lit=false": {
       "model": "napuli:block/forno_legna_portatile"
+    },
+    "lit=true": {
+      "model": "napuli:block/forno_legna_portatile_lit"
     }
   }
 }

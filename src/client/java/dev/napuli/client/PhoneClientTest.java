@@ -40,7 +40,8 @@ final class PhoneClientTest {
                     case 1->{if(screen!=null&&age>10){layouts(screen);shot(mc,"telefono-"+PhoneModel.values()[model].id+"-home");press(screen,"phone.about");phase=2;}}
                     case 2->{if(screen!=null&&screen.app().equals("about")&&age>8){layouts(screen);shot(mc,"telefono-"+PhoneModel.values()[model].id+"-hardware");press(screen,"phone.home");if(++model<5){int next=model;server(mc,p->PhoneClientFixture.model(p,next));phase=3;}else{press(screen,"phone.messages");phase=4;}}}
                     case 3->{if(screen!=null&&screen.snapshot().model()==model&&age>10){shot(mc,"telefono-"+PhoneModel.values()[model].id+"-home");press(screen,"phone.about");phase=2;}}
-                    case 4->{if(screen!=null&&age>8){pressLabel(screen,"+");edit(screen).setValue(PhoneClientFixture.peerNumber);press(screen,"phone.save_write");phase=5;}}
+                    case 4->{if(screen!=null&&age>8){pressLabel(screen,"+");phase=32;}}
+                    case 32->{if(screen!=null&&screen.app().equals("compose")&&age>6){edit(screen).setValue(PhoneClientFixture.peerNumber);press(screen,"phone.save_write");phase=5;}}
                     case 5->{if(screen!=null&&screen.app().equals("thread")&&age>6){edit(screen).setValue("Ciao da Napoli!");press(screen,"phone.send");phase=6;}}
                     case 6->{if(screen!=null&&screen.snapshot().messages().size()==1){server(mc,PhoneClientFixture::reply);phase=7;}}
                     case 7->{if(screen!=null&&screen.snapshot().messages().size()==2&&age>8){layouts(screen);shot(mc,"telefono-chat");press(screen,"phone.call");phase=8;}}

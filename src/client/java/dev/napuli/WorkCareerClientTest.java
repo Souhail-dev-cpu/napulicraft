@@ -16,6 +16,33 @@ import net.minecraft.world.level.levelgen.presets.WorldPresets;
 
 /** Acknowledged native interactions remain reliable while the server is generating distant chunks. */
 public final class WorkCareerClientTest {
+    public static void endHeistScenario(ServerPlayer p) {
+        Carabinieri.release(p);
+        Carabinieri.endPursuit(p);
+    }
+
+    public static int strengthTrainingTotal(ServerPlayer p) {
+        return FootballPractice.rating(p,"strength")*100 + FootballGym.progressXp(p,"strength");
+    }
+
+    public static void verifyFootballPay(ServerPlayer p) {
+        var city = p.level();
+        var original = CityLeague.season(city);
+        var season = CityLeague.schedule(101,NapoliBroadcast.day(city));
+        try {
+            city.setAttached(CityLeague.SEASON,season);
+            var fixture=CityLeague.begin(city,season.fixtures().getFirst());
+            CityLeague.progress(city,fixture.id(),0,1,3000,Map.of(p.getUUID().toString(),new CityLeague.Participant(0,600,0)));
+            CityLeague.complete(city,fixture.id());
+            int before=NapoliStreet.cash(p);
+            check(CityLeague.claim(p)==15&&NapoliStreet.cash(p)==before+15,"A loss still pays the Serie D wage and result bonus");
+            check(CityLeague.claim(p)==0&&NapoliStreet.cash(p)==before+15,"A settled football match cannot be paid twice");
+            Napuli.LOGGER.info("[FOOTBALLTEST] Contract wage and single settlement verified");
+        } finally {
+            city.setAttached(CityLeague.SEASON,original);
+        }
+    }
+
     private static int titles,ticks,age,last=-1;
     private static boolean starting,attacking;
     private static volatile boolean ready,failed,done,checking;

@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  * the Carabinieri caserma with two cells, and the new girls. Runs once per world, also on cities built before.
  */
 final class NapoliInteriors {
-	static final int VERSION_NOW = 37;
+	static final int VERSION_NOW = 57;
 	private static final AttachmentType<Integer> VERSION = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT).buildAndRegister(Napuli.id("napoli_version"));
 	static final BlockPos PIZZERIA = new BlockPos(-64, 64, -20);
@@ -99,6 +99,35 @@ final class NapoliInteriors {
 		if (v < 35) NapoliInteriorLayout.repairPalaceLights(world);
 		if (v < 36) FootballFacilities.upgradeGym(world);
 		if (v < 37) FootballFacilities.upgradePublicGym(world);
+		if (v < 38) FootballFacilities.refinePublicGym(world);
+		if (v < 39) FootballFacilities.upgradeStrengthMachines(world);
+		if (v < 40) FootballSports.build(world);
+		if (v < 41) {
+			for (var h : NapoliMergellina.allHouses())
+				NapoliExpansion.ensureDoor(world,h.entrance().north(),net.minecraft.core.Direction.SOUTH);
+			for (var h : CityLivingHomes.PUBLIC_HOMES)
+				NapoliExpansion.ensureDoor(world,h.entrance().north(),net.minecraft.core.Direction.SOUTH);
+			NapoliCentro.repairResidentialDoors(world);
+		}
+		if (v < 42) NapoliFishingHarbour.refitStore(world);
+		if (v < 43) NapoliFishingHarbour.refitBorgoStalls(world);
+		if (v < 44) FootballFacilities.installCanopies(world);
+		if (v < 45) NapoliDistrict.installCivicLamps(world);
+		if (v < 46) FootballFacilities.installGardenShelters(world);
+		if (v < 47) NapoliEmploymentMap.refitOffice(world);
+		if (v < 48) NapoliExpansion.refitRegisteredHomes(world);
+		if (v < 49) NapoliMonumentInteriors.refit(world);
+		if (v < 50) NapoliTheatreQuarter.upgrade(world);
+		if (v < 51) NapoliCastleCathedral.upgrade(world);
+		if (v < 52) NapoliOvoMuseum.upgrade(world);
+		if (v < 53) NapoliCertosa.upgrade(world);
+		if (v < 54) NapoliCertosa.refitGarden(world);
+		if (v < 55) NapoliCertosa.refitArcades(world);
+		if (v < 56) {
+			NapoliResidentialFinish.historic(world);
+			NapoliMonumentInteriors.refitRoyalPalace(world);
+		}
+		if (v < 57) NapoliCapodimonteSanita.upgrade(world);
 		world.setAttached(VERSION, VERSION_NOW);
 	}
 

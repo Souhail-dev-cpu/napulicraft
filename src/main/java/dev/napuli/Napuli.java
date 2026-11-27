@@ -234,6 +234,7 @@ public class Napuli implements ModInitializer {
 		NapoliBroadcast.register();
 		FootballPractice.register();
 		CityLeague.register();
+		FootballSports.register();
 		CityHeists.register();
 		NapoliCivicLife.register();
 		CitySimulation.register();
@@ -262,6 +263,7 @@ public class Napuli implements ModInitializer {
 		NapoliEmployment.register();
 		NapoliShower.register();
 		NapoliFurniture.register();
+		NapoliCertosa.register();
 		PublicGym.register();
 		NapoliHygiene.register();
 		CityLivingHomes.register();

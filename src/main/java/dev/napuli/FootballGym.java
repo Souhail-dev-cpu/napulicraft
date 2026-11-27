@@ -30,7 +30,6 @@ import net.minecraft.world.phys.Vec3;
 public final class FootballGym {
     private static final int SESSION_TICKS = 1200;
     private static final int XP_PER_POINT = 100;
-    private static final BlockPos BENCH = new BlockPos(351, 64, 8);
     private static final BlockPos FIRING_LINE = new BlockPos(355, 64, 37);
     private static final List<BlockPos> TARGETS = List.of(new BlockPos(353, 65, 40),
             new BlockPos(357, 65, 40), new BlockPos(355, 66, 40));
@@ -40,7 +39,7 @@ public final class FootballGym {
         ENDURANCE("resistenza", "stamina", List.of(lane(354, 26), lane(354, 35), lane(354, 26),
                 lane(354, 19), lane(354, 26), lane(354, 35)), 90),
         AGILITY("slalom", "defense", List.of(lane(353, 22), lane(356, 26), lane(353, 30), lane(356, 34)), 30),
-        STRENGTH("forza", "strength", java.util.Collections.nCopies(4, BENCH), 48),
+        STRENGTH("forza", "strength", List.of(), 0),
         ACCURACY("mira", "shooting", List.of(TARGETS.get(0), TARGETS.get(2), TARGETS.get(1), TARGETS.get(2)), 18);
 
         final String id, rating;
@@ -54,7 +53,7 @@ public final class FootballGym {
         }
         boolean movement() { return this != STRENGTH && this != ACCURACY; }
         BlockPos start() {
-            if (this == STRENGTH) return BENCH.south();
+            if (this == STRENGTH) return PublicGym.Machine.CHEST.station.east();
             if (this == ACCURACY) return FIRING_LINE;
             return FootballGround.START_RUN;
         }
@@ -139,6 +138,7 @@ public final class FootballGym {
         BlockPos start = drill.start();
         player.teleportTo(player.level(), start.getX() + .5, start.getY(), start.getZ() + .5,
                 java.util.Set.of(), drill == Drill.STRENGTH ? 180 : 0, 0, true);
+        if (drill == Drill.STRENGTH) return PublicGym.startCoachedStrength(player);
         long now = player.level().getGameTime();
         player.setAttached(ATTACHMENTS.session, new Session(drill, 0, now, now, player.position()));
         NapoliNotice.show(player, Component.translatable("napuli.gym." + drill.id + ".tip"));
@@ -176,7 +176,7 @@ public final class FootballGym {
     static void clear(ServerPlayer player) { player.removeAttached(ATTACHMENTS.session); }
 
     private static void advance(ServerPlayer p, Session s, long now) {
-        int delay = s.drill == Drill.STRENGTH ? 12 : s.drill == Drill.ACCURACY ? 6 : 3;
+        int delay = s.drill == Drill.ACCURACY ? 6 : 3;
         int next = s.step + 1;
         if (now - s.last < delay || next == s.drill.checkpoints.size() && now - s.started < s.drill.minimumTicks) return;
         CityEffects.sound(p.level(),null, p.blockPosition(), SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, .45f, 1.4f);
@@ -186,16 +186,33 @@ public final class FootballGym {
             return;
         }
         clear(p);
-        int before = FootballPractice.rating(p, s.drill.rating);
-        int earned = p.isCreative() ? 0 : earnXp(p, s.drill.rating);
-        int after = FootballPractice.rating(p, s.drill.rating);
+        completeDrill(p, s.drill);
+    }
+
+    static Component completeMachine(ServerPlayer p, String rating) {
+        int before = FootballPractice.rating(p, rating);
+        int earned = earnXp(p, rating);
+        var stat = Component.translatable("napuli.gym.stat." + rating);
+        if (earned == 0) {
+            return Component.translatable("napuli.gym.at_cap", stat);
+        } else if (FootballPractice.rating(p, rating) > before) {
+            return Component.translatable("napuli.gym.level_up", stat, before + 1);
+        } else {
+            return Component.translatable("napuli.gym.machine_xp", stat, earned, progressXp(p, rating), XP_PER_POINT);
+        }
+    }
+
+    private static void completeDrill(ServerPlayer p, Drill drill) {
+        int before = FootballPractice.rating(p, drill.rating);
+        int earned = p.isCreative() ? 0 : earnXp(p, drill.rating);
+        int after = FootballPractice.rating(p, drill.rating);
         if (earned == 0) {
             p.sendOverlayMessage(Component.translatable("napuli.gym.complete_practice"));
         } else if (after > before) {
-            p.sendOverlayMessage(Component.translatable("napuli.gym.level_up", s.drill.label(), after));
+            p.sendOverlayMessage(Component.translatable("napuli.gym.level_up", drill.label(), after));
         } else {
             p.sendOverlayMessage(Component.translatable("napuli.gym.xp_earned", earned,
-                    progressXp(p, s.drill.rating), XP_PER_POINT));
+                    progressXp(p, drill.rating), XP_PER_POINT));
         }
     }
 

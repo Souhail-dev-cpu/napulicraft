@@ -1,4 +1,5 @@
 {
+  "display": { "fixed": { "scale": [0.72, 0.72, 0.72] } },
   "textures": { "particle": "napuli:item/pallone", "panels": "napuli:item/pallone" },
   "elements": [
     {"from":[5,1,6],"to":[11,3,10],"faces":{"north":{"texture":"#panels"},"south":{"texture":"#panels"},"east":{"texture":"#panels"},"west":{"texture":"#panels"},"up":{"texture":"#panels"},"down":{"texture":"#panels"}}},

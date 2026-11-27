@@ -360,6 +360,22 @@ public final class NapoliDistrict {
 	}
 
 	// ================================================================ the prison
+    static void installCivicLamps(ServerLevel city) {
+        var template=city.getStructureTemplateManager().get(Napuli.id("lampione_civico"));
+        if(template.isEmpty())return;
+        var settings=new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+        for(var origin:java.util.List.of(new BlockPos(130,64,5),new BlockPos(140,64,5))) {
+            var support=origin.offset(1,-1,0);
+            if(!city.getBlockState(support).isFaceSturdy(city,support,Direction.UP))continue;
+            var blocks=new java.util.ArrayList<net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo>();
+            for(var material:java.util.List.of(Blocks.POLISHED_DEEPSLATE,Blocks.DEEPSLATE_BRICK_WALL,Blocks.POLISHED_DEEPSLATE_SLAB,Blocks.LANTERN))
+                blocks.addAll(template.get().filterBlocks(origin,settings,material));
+            if(blocks.stream().anyMatch(p->CityProperty.playerPlaced(city,p.pos())||!city.isEmptyBlock(p.pos())))continue;
+            for(var part:blocks)city.setBlock(part.pos(),part.state(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+        }
+    }
+
+
 	private void carcere() {
 		int x1 = 122, x2 = 152, z1 = 9, z2 = 54;
 		// perimeter wall with a walkway and four towers

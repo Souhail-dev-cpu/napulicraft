@@ -157,7 +157,8 @@ final class NapoliMergellina {
             for (int y = 65; y <= 66; y++) put(level, x + dx, y, z + 11, Blocks.GLASS_PANE);
             put(level, x + dx, 64, z + 12, Blocks.FLOWER_POT);
         }
-        fill(level, x + 5, 64, z + 11, x + 5, 66, z + 11, Blocks.AIR);
+        fill(level, x + 5, 64, z + 11, x + 5, 65, z + 11, Blocks.AIR);
+        NapoliExpansion.ensureDoor(level,h.entrance().north(),Direction.SOUTH);
         put(level, x + 5, 66, z + 8, Blocks.LANTERN);
         put(level, x + 2, 64, z + 3, Blocks.BARREL);
         put(level, x + 8, 64, z + 3, Blocks.CRAFTING_TABLE);

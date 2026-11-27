@@ -9,6 +9,26 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 
 public final class NapoliAtlasGameTest {
+    @GameTest public void generatedEntranceRepairsAMissingDoorHalf(GameTestHelper h) {
+        var city=h.getLevel();
+        var pos=h.absolutePos(new net.minecraft.core.BlockPos(2,3,2));
+        city.setBlockAndUpdate(pos.below(),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+        city.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        city.setBlockAndUpdate(pos.above(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        NapoliExpansion.ensureDoor(city,pos,net.minecraft.core.Direction.SOUTH);
+        var lower=city.getBlockState(pos);
+        var upper=city.getBlockState(pos.above());
+        var half=net.minecraft.world.level.block.DoorBlock.HALF;
+        var upperHalf=net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER;
+        h.assertTrue(lower.is(net.minecraft.world.level.block.Blocks.OAK_DOOR)&&upper.getValue(half)==upperHalf,
+                "A generated entrance gains both door halves");
+        city.setBlock(pos.above(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2|16);
+        NapoliExpansion.ensureDoor(city,pos,net.minecraft.core.Direction.SOUTH);
+        h.assertTrue(city.getBlockState(pos.above()).is(net.minecraft.world.level.block.Blocks.OAK_DOOR),
+                "Repeating the repair restores a missing half");
+        h.succeed();
+    }
+
     @GameTest public void oldHouseFrontageGetsConnectedWindowsAndAWalkableThreshold(GameTestHelper helper) {
         var level = helper.getLevel();
         var house = DistrictLife.districts().getLast().homes().getLast();
@@ -110,7 +130,8 @@ public final class NapoliAtlasGameTest {
     }
     @GameTest public void allDestinationsAreConnectedToTheExistingTown(GameTestHelper h){
         var reached=new HashSet<String>();reached.add("plebiscito");boolean changed;do{changed=false;for(var r:NapoliAtlas.ROADS){h.assertTrue(NapoliAtlas.find(r.from())!=null&&NapoliAtlas.find(r.to())!=null,"Named connections have real endpoints");if(reached.contains(r.from()))changed|=reached.add(r.to());if(reached.contains(r.to()))changed|=reached.add(r.from());}}while(changed);
-        h.assertTrue(reached.size()==NapoliAtlas.PLACES.size(),"Every destination is reachable through the street network");h.succeed();
+        var missing=NapoliAtlas.PLACES.stream().map(NapoliAtlas.Place::id).filter(id->!reached.contains(id)).toList();
+        h.assertTrue(missing.isEmpty(),"Every destination is reachable through the street network; disconnected: "+missing);h.succeed();
     }
     @GameTest public void hillsCoastAndNeighborhoodsFollowNaplesOrientation(GameTestHelper h){
         h.assertTrue(NapoliAtlas.find("maradona").x()<NapoliAtlas.find("mergellina").x()&&NapoliAtlas.find("direzionale").x()>NapoliAtlas.find("garibaldi").x(),"Fuorigrotta is west, Centro Direzionale east of Centrale");

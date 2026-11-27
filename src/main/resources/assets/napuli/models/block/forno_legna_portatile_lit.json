@@ -1,0 +1,6 @@
+{
+  "parent": "napuli:block/forno_legna_portatile",
+  "textures": {
+    "surface": "minecraft:block/magma"
+  }
+}

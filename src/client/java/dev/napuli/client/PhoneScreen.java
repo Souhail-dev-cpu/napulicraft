@@ -102,7 +102,7 @@ final class PhoneScreen extends Screen {
             case "home"->{
                 String[] icons={"gps","contacts","photos","notes","calculator","settings","about","share"};
                 for(int i=0;i<icons.length;i++){String id=icons[i];icon(27+i%4*51,268+i/4*68,id,()->go(id));}
-                icon(39,428,"calls",()->go("calls"));icon(103,428,"messages",()->go("messages"));icon(167,428,"camera",()->go("camera"));
+                icon(39,422,"calls",()->go("calls"));icon(103,422,"messages",()->go("messages"));icon(167,422,"camera",()->go("camera"));
                 tap(208,35,21,22,t("phone.notifications"),()->go("notifications"),0,false);
                 tap(22,169,204,73,t("phone.mycard"),()->go("mycard"),0,false);
                 if(state.call()!=null)tap(67,37,126,19,t("phone.active_call",state.call().name()),()->go("calls"),0,false);

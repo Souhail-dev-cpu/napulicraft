@@ -15,15 +15,18 @@ public final class NapoliAtlas {
     public enum Kind { SQUARE, PARK, PALACE, CHURCH, CLOISTER, CASTLE, MUSEUM, CATACOMBS, STATION, TOWERS, STADIUM, EXHIBITION, SCIENCE, PIER, RUINS, SEASIDE }
     public record Place(String id,String name,String district,Kind kind,int x,int z,int radius,boolean original) {
         public int approachZ(){if(kind==Kind.PIER)return z-radius+4;int az=z+radius+4;return !original&&NapoliExpansion.water(x,az)?z-radius-4:az;}
-        public BlockPos arrival(){if(id.equals("mergellina"))return new BlockPos(-285,64,52);if(id.equals("castel_ovo"))return new BlockPos(0,64,68);if(id.equals("municipio"))return new BlockPos(215,64,3);int az=approachZ();return new BlockPos(x,kind==Kind.PIER?66:NapoliExpansion.height(x,az)+1,az);}
+        public BlockPos arrival(){if(id.equals("mergellina"))return new BlockPos(-285,64,52);if(id.equals("castel_ovo"))return new BlockPos(0,64,68);if(id.equals("castel_nuovo"))return NapoliMunicipio.CASTLE.west(2);if(id.equals("municipio"))return new BlockPos(215,64,3);if(id.equals("teatro_san_carlo"))return NapoliTheatreQuarter.FORECOURT;if(id.equals("galleria_umberto"))return NapoliDistrict.GALLERIA.south(NapoliDistrict.ARM+4);int az=approachZ();return new BlockPos(x,kind==Kind.PIER?66:NapoliExpansion.height(x,az)+1,az);}
         public boolean near(int px,int pz,int padding){return Math.abs(px-x)<=radius+padding&&Math.abs(pz-z)<=radius+padding;}
     }
     private static Place p(String id,String name,String district,Kind kind,int x,int z,int radius){return new Place(id,name,district,kind,x,z,radius,false);}
     public static final List<Place> PLACES=List.of(
         new Place("plebiscito","Piazza del Plebiscito","San Ferdinando",Kind.SQUARE,0,26,20,true),
+        new Place("teatro_san_carlo","Teatro San Carlo","San Ferdinando",Kind.PALACE,99,-102,15,true),
+        new Place("galleria_umberto","Galleria Umberto I","San Ferdinando",Kind.SQUARE,NapoliDistrict.GX,NapoliDistrict.GZ,NapoliDistrict.ARM,true),
         new Place("dante","Piazza Dante","Avvocata",Kind.SQUARE,0,-181,22,true),
         p("duomo","Duomo di Napoli","San Lorenzo",Kind.CHURCH,375,-310,30),
         new Place("municipio","Piazza Municipio","Porto",Kind.SQUARE,215,3,20,true),
+        new Place("castel_nuovo","Castel Nuovo · Maschio Angioino","Porto",Kind.CASTLE,243,35,19,true),
         new Place("castel_ovo","Castel dell’Ovo","San Ferdinando",Kind.CASTLE,0,98,20,true),
         new Place("mergellina","Mergellina · nucleo esistente","Chiaia",Kind.SEASIDE,-285,49,15,true),
         p("vanvitelli","Piazza Vanvitelli","Vomero",Kind.SQUARE,-790,-300,26),
@@ -74,6 +77,9 @@ public final class NapoliAtlas {
     public record Road(String name,String from,String to){}
     public static final List<Road> ROADS=List.of(
         new Road("Via Toledo","dante","plebiscito"),
+        new Road("Via San Carlo","plebiscito","teatro_san_carlo"),
+        new Road("Galleria Umberto I","teatro_san_carlo","galleria_umberto"),
+        new Road("Largo Castello","municipio","castel_nuovo"),
         new Road("Via Partenope","plebiscito","castel_ovo"),
         new Road("Via Caracciolo","castel_ovo","mergellina"),
         new Road("Piazza Sannazaro / Mergellina","mergellina","sannazaro"),

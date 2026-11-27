@@ -47,6 +47,33 @@ final class NapoliEmploymentMap {
         markAddressesAndJobs(level);
     }
 
+    static void refitOffice(ServerLevel level) {
+        var template=level.getStructureTemplateManager().get(Napuli.id("ingresso_mergellina"));
+        var origin=new BlockPos(-120,64,40);
+        if(template.isPresent()){
+            var settings=new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings();
+            for(var material:java.util.List.of(Blocks.TUFF_BRICKS,Blocks.SMOOTH_SANDSTONE,Blocks.CUT_SANDSTONE,Blocks.DARK_PRISMARINE_SLAB,Blocks.LANTERN))
+                for(var part:template.get().filterBlocks(origin,settings,material)){
+                    var pos=part.pos();
+                    var old=level.getBlockState(pos);
+                    if(!CityProperty.playerPlaced(level,pos)&&level.getBlockEntity(pos)==null
+                            &&(old.isAir()||pos.getY()==68&&pos.getZ()==40&&old.is(Blocks.DARK_PRISMARINE_SLAB)))
+                        level.setBlock(pos,part.state(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);
+                }
+        }
+        for(int x:new int[]{-122,-113}) for(int z:new int[]{31,32,35,36}) for(int y=65;y<=66;y++)
+            replaceFacade(level,new BlockPos(x,y,z),Blocks.CUT_SANDSTONE,Blocks.GLASS);
+        for(var pos:BlockPos.betweenClosed(-122,69,28,-113,69,39))
+            if(pos.getX()==-122||pos.getX()==-113||pos.getZ()==28||pos.getZ()==39)
+                replaceFacade(level,pos,Blocks.BRICK_SLAB,Blocks.BRICKS);
+    }
+
+    private static void replaceFacade(ServerLevel level,BlockPos pos,Block old,Block replacement) {
+        if(!CityProperty.playerPlaced(level,pos)&&level.getBlockState(pos).is(old))
+            put(level,pos,replacement);
+    }
+
+
     static void markAddressesAndJobs(ServerLevel level) {
         for (NapoliMergellina.House h : NapoliMergellina.allHouses()) {
             BlockPos facade = new BlockPos(h.x() + 3, 65, h.z() + 12);

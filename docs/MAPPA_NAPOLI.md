@@ -107,3 +107,41 @@ non ricostruisce gli edifici e viene applicata una sola volta a ogni settore.
 Il task ./gradlew runEntranceTest verifica sul client porte aperte e chiuse, un vero scaricamento e
 ricaricamento dei chunk, la riparazione del vecchio vano e la conservazione di un blocco del giocatore.
 Le schermate entrance-*.png sono nella cartella run-autotest/screenshots.
+
+## Ricostruzione degli edifici dell’Atlante
+
+La mappa mantiene l’ingombro e le coordinate dei luoghi già visitabili. Le fotografie e le
+planimetrie guidano le forme e la scelta degli interni, adattati alla scala del gioco.
+
+| Luogo | Ambito del rifacimento |
+| --- | --- |
+| Palazzo Reale e basilica di San Francesco di Paola | Sala del Trono, cornice della facciata del Palazzo, altare della basilica |
+| Teatro San Carlo e Galleria Umberto I | Sala del teatro e percorso della galleria |
+| Castel Nuovo, Duomo e Castel dell’Ovo | Ambienti monumentali, sale, ingressi |
+| MANN | Percorso nelle sale del museo |
+| Certosa di San Martino | Chiostro, giardino, portico e sale presepiali |
+| Reggia di Capodimonte | Facciata, sala delle porcellane e tre cortili |
+| Santa Maria della Sanità e Porta Capuana | Basilica, campanile e arco |
+| Real Albergo dei Poveri | Facciata, scalone e atrio |
+| Pietrarsa | Padiglione A e padiglioni B–G, con i rispettivi allestimenti e percorsi tra gli ingressi |
+| Castel Sant’Elmo | Rampa di accesso, Piazza d’Armi e galleria del Novecento |
+| Villa Floridiana | Villa e sale espositive del Museo Duca di Martina |
+| Palazzo Donn’Anna | Accesso dalla strada, loggia in tufo e ambiente ispirato al salone teatrale |
+| Mostra d’Oltremare | Portico e sala del Teatro Mediterraneo |
+| Napoli Centrale | Pensiline, fronte d’ingresso e atrio a cassettoni |
+| Stadio Diego Armando Maradona | Copertura delle tribune, corsie di accesso e pista d’atletica |
+| Città della Scienza | Fronte di Corporea, isole espositive e sala del planetario |
+
+Gli edifici e gli ambienti coperti ancora da rivedere comprendono il Centro Direzionale, la basilica del Carmine, le chiese di
+Pianura e Ponticelli, Marechiaro, le Catacombe di San Gennaro, il Cimitero delle Fontanelle e le
+altre strutture della Mostra d’Oltremare. Piazze, parchi, approdi e rovine richiedono verifiche dei
+percorsi e del paesaggio specifiche per luogo.
+
+- [Guida e planimetria di Pietrarsa, Fondazione FS](https://www.fsitaliane.it/content/dam/fsitaliane/Documents/old-media-ed-eventi/comunicati-stampa-e-news/archivio-2/Guida_Museo_Pietrarsa_24mar2017.pdf)
+- [Castel Sant’Elmo e Museo Novecento a Napoli, Ministero della Cultura](https://cultura.gov.it/luogo/castel-sant-elmo-e-museo-del-novecento-a-napoli)
+- [Villa Floridiana, Musei nazionali del Vomero](https://museinazionalivomero.cultura.gov.it/)
+- [Palazzo Donn’Anna, Comune di Napoli](https://napoliforme.comune.napoli.it/pois/-/poi/Palazzo-Donn%E2%80%99Anna)
+- [Teatro Mediterraneo, Mostra d’Oltremare](https://mostradoltremare.it/teatro-mediterraneo/)
+- [Napoli Centrale, Censimento delle architetture contemporanee](https://censimentoarchitetturecontemporanee.cultura.gov.it/scheda-opera?id=3869)
+- [Stadio Maradona, planimetrie del Comune di Napoli](https://static-www.comune.napoli.it/wp-content/uploads/2026/02/Maradona-prog-preliminare-sintesi_compressed-1.pdf)
+- [Città della Scienza, mappa del complesso](https://static-www.cittadellascienza.it/wp-content/uploads/2025/03/MAPPA_Citta_della_Scienza_2024-2025.pdf)

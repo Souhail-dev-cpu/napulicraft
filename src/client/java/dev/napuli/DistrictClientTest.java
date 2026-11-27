@@ -24,7 +24,14 @@ public final class DistrictClientTest {
     private static final boolean LEGACY_CERTOSA = Boolean.getBoolean("napuli.legacyCertosa");
     private static final boolean LEGACY_RESIDENCES = Boolean.getBoolean("napuli.legacyResidences");
     private static final boolean LEGACY_CAPODIMONTE_SANITA = Boolean.getBoolean("napuli.legacyCapodimonteSanita");
+    private static final boolean LEGACY_COURTYARDS = Boolean.getBoolean("napuli.legacyCourtyards");
+    private static final boolean LEGACY_ALBERGO_PIETRARSA = Boolean.getBoolean("napuli.legacyAlbergoPietrarsa");
+    private static final boolean LEGACY_MUSEUMS = Boolean.getBoolean("napuli.legacyMuseums");
+    private static final boolean LEGACY_LANDMARK_WALK = Boolean.getBoolean("napuli.legacyLandmarkWalk");
+    private static final boolean LEGACY_CIVIC_SITES = Boolean.getBoolean("napuli.legacyCivicSites");
+    private static int walkStage, walkTicks;
     private static int legacyLoadTicks;
+    private static int museumScene, museumReadyTicks;
     private static boolean legacyBackupAccepted;
     private static int titles,tick;private static boolean starting;private static volatile boolean ready,failed,done,boarded,arrived;private static String shop;private static int palaceAt;
     public static void register(){if(!Boolean.getBoolean("napuli.districttest"))return;ClientTickEvents.END_CLIENT_TICK.register(mc->{
@@ -225,6 +232,11 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (LEGACY_CIVIC_SITES) { legacyCivicSites(mc); return; }
+        if (LEGACY_LANDMARK_WALK) { legacyLandmarkWalk(mc); return; }
+        if (LEGACY_MUSEUMS) { legacyMuseums(mc); return; }
+        if (LEGACY_ALBERGO_PIETRARSA) { legacyAlbergoPietrarsa(mc); return; }
+        if (LEGACY_COURTYARDS) { legacyCourtyards(mc); return; }
         if (LEGACY_CAPODIMONTE_SANITA) { legacyCapodimonteSanita(mc); return; }
         if (LEGACY_RESIDENCES) { legacyResidences(mc); return; }
         if (LEGACY_CERTOSA) { legacyCertosa(mc); return; }
@@ -424,6 +436,300 @@ public final class DistrictClientTest {
         for (int x = -75; x <= -57; x++) {
             var aisle = new net.minecraft.core.BlockPos(x, 64, 26);
             check(city.isEmptyBlock(aisle) && city.isEmptyBlock(aisle.above()), "The basilica's central aisle stays clear at " + aisle);
+        }
+    }
+
+    private static void legacyCivicSites(Minecraft mc) {
+        var station = NapoliCentraleMaradonaScienza.centrale();
+        var stadium = NapoliCentraleMaradonaScienza.maradona();
+        var science = NapoliCentraleMaradonaScienza.scienza();
+        if (++tick == 30) server(mc, p -> p.setGameMode(GameType.CREATIVE));
+        if (tick == 90) server(mc, p -> {
+            var city = p.level();
+            check(city.getBlockState(station.offset(38, 4, 29)).is(Blocks.QUARTZ_PILLAR), "The station canopy has support");
+            check(city.getBlockState(station.offset(42, 11, 7)).is(Blocks.SMOOTH_QUARTZ), "The station has a coffered hall");
+            for (int z = 2; z <= 39; z++)
+                check(city.isEmptyBlock(station.offset(45, 1, z)) && city.isEmptyBlock(station.offset(45, 2, z)),
+                        "The main passage to the station hall is open");
+            check(city.getBlockState(stadium.offset(76, 0, 114)).is(NapoliMonumentInteriors.material("light_blue_concrete")),
+                    "The track is blue and outside the football pitch");
+            check(city.getBlockState(stadium.offset(76, 0, 76)).is(Blocks.CALCITE), "The center line remains in place");
+            check(!city.isEmptyBlock(stadium.offset(76, 20, 136)), "The grandstand has a roof");
+            check(city.isEmptyBlock(stadium.offset(76, 2, 139)), "The southern stadium tunnel remains open");
+            check(city.getBlockState(science.offset(49, 1, 22)).is(Blocks.DARK_OAK_STAIRS), "The planetarium has seating");
+            check(city.getBlockState(science.offset(54, 22, 37)).is(NapoliMonumentInteriors.material("light_gray_concrete")),
+                    "The lower dome closes the gap between its courses");
+            check(city.getBlockState(science.offset(9, 1, 13)).is(Blocks.SMOOTH_QUARTZ), "Corporea has exhibit plinths");
+            for (int z = 23; z <= 35; z++)
+                check(city.isEmptyBlock(science.offset(54, 1, z)) && city.isEmptyBlock(science.offset(54, 2, z)),
+                        "The planetarium center aisle is open");
+            p.teleportTo(city, station.getX()+45.5, station.getY()+1, station.getZ()+47.5, Set.of(), 180, -8, true);
+        });
+        if (tick < 90) return;
+        if (tick > 3200) {
+            Napuli.LOGGER.error("[DISTRICTTEST] Civic camera did not finish loading scene {} at {}", museumScene, mc.player.blockPosition());
+            failed = true;
+            return;
+        }
+        switch (museumScene) {
+            case 0 -> {
+                if (!museumViewReady(mc, station.offset(45, 1, 47), station.offset(38, 4, 29), station.offset(52, 4, 29))) return;
+                shot(mc, "napoli-centrale-pensiline-legacy");
+                server(mc, p -> p.teleportTo(p.level(), station.getX()+45.5, station.getY()+1, station.getZ()+20.5, Set.of(), 180, -14, true));
+            }
+            case 1 -> {
+                if (!museumViewReady(mc, station.offset(45, 1, 20), station.offset(38, 4, 6), station.offset(52, 4, 6))) return;
+                shot(mc, "napoli-centrale-atrio-legacy");
+                server(mc, p -> {
+                    p.getAbilities().flying = true;
+                    p.onUpdateAbilities();
+                    p.teleportTo(p.level(), stadium.getX()+76.5, stadium.getY()+56, stadium.getZ()+136.5, Set.of(), 180, 49, true);
+                });
+            }
+            case 2 -> {
+                if (!museumViewReady(mc, stadium.offset(76, 56, 136), stadium.offset(25, 19, 42), stadium.offset(126, 19, 45))) return;
+                shot(mc, "stadio-maradona-copertura-legacy");
+                server(mc, p -> p.teleportTo(p.level(), science.getX()+39.5, science.getY()+8, science.getZ()+62.5,
+                        Set.of(), 180, -5, true));
+            }
+            case 3 -> {
+                if (!museumViewReady(mc, science.offset(39, 8, 62), science.offset(17, 8, 39), science.offset(63, 8, 39))) return;
+                shot(mc, "citta-della-scienza-corporea-legacy");
+                server(mc, p -> p.teleportTo(p.level(), science.getX()+54.5, science.getY()+3, science.getZ()+33.5, Set.of(), 180, 0, true));
+            }
+            case 4 -> {
+                if (!museumViewReady(mc, science.offset(54, 3, 33), science.offset(49, 1, 22), science.offset(59, 3, 15))) return;
+                shot(mc, "citta-della-scienza-planetario-legacy");
+                Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Centrale, Maradona and Corporea on an existing save");
+                done = true;
+            }
+            default -> {}
+        }
+        museumScene++;
+        museumReadyTicks = 0;
+    }
+
+    private static void legacyLandmarkWalk(Minecraft mc) {
+        boolean palace = walkStage >= 3;
+        var site = NapoliAtlas.find(palace ? "donnanna" : "santelmo");
+        var arrival = site.arrival();
+        int endZ = palace ? site.z() + 17 : site.z() + 2;
+        int endY = NapoliExpansion.height(site.x(), site.z()) + (palace ? 1 : 10);
+        if (++walkTicks > 700) {
+            mc.options.keyUp.setDown(false);
+            Napuli.LOGGER.error("[DISTRICTTEST] Walk timed out at stage {} and {}", walkStage, mc.player.blockPosition());
+            failed = true;
+            return;
+        }
+        switch (walkStage % 3) {
+            case 0 -> {
+                if (walkTicks < 70) return;
+                server(mc, p -> {
+                    p.setGameMode(GameType.ADVENTURE);
+                    var surface = NapoliLandmarkAccess.approach(p.level(), site);
+                    p.teleportTo(p.level(), surface.getX()+.5, surface.getY(), surface.getZ()+.5, Set.of(), 180, 0, true);
+                });
+            }
+            case 1 -> {
+                if (Math.abs(mc.player.getX() - arrival.getX() - .5) > 1
+                        || Math.abs(mc.player.getZ() - arrival.getZ() - .5) > 1 || !mc.player.onGround()) return;
+                mc.options.keyUp.setDown(true);
+            }
+            case 2 -> {
+                mc.options.keyUp.setDown(true);
+                if (mc.player.getZ() > endZ + .85 || mc.player.getY() + .05 < endY) return;
+                mc.options.keyUp.setDown(false);
+                shot(mc, palace ? "donnanna-arrivo-a-piedi-legacy" : "santelmo-arrivo-a-piedi-legacy");
+                if (palace) {
+                    Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Walked from both Atlas arrivals on an existing save");
+                    done = true;
+                }
+            }
+            default -> throw new IllegalStateException();
+        }
+        walkStage++;
+        walkTicks = 0;
+    }
+
+    private static void legacyMuseums(Minecraft mc) {
+        var villa = NapoliAtlasLandmarks.floridiana();
+        var fort = NapoliAtlasLandmarks.santelmo();
+        var palace = NapoliAtlasLandmarks.donnanna();
+        var theatre = NapoliAtlasLandmarks.mostra();
+        var wings = PietrarsaMuseumCampus.WINGS;
+        var campus = NapoliAlbergoPietrarsa.pietrarsa();
+        var g = wings.getLast().origin();
+        if (++tick == 90) server(mc, p -> {
+            var city = p.level();
+            var exhibits = java.util.List.of(Blocks.POLISHED_BLACKSTONE, Blocks.POLISHED_BLACKSTONE,
+                    Blocks.POLISHED_BLACKSTONE, NapoliMonumentInteriors.material("black_concrete"), Blocks.ANVIL, Blocks.LECTERN);
+            var offsets = java.util.List.of(new net.minecraft.core.BlockPos(5, 2, 5), new net.minecraft.core.BlockPos(5, 2, 5),
+                    new net.minecraft.core.BlockPos(6, 2, 5), new net.minecraft.core.BlockPos(8, 4, 1),
+                    new net.minecraft.core.BlockPos(4, 2, 5), new net.minecraft.core.BlockPos(21, 2, 3));
+            for (int i = 0; i < wings.size(); i++) {
+                var wing = wings.get(i);
+                var entrance = wing.entrance();
+                check(city.isEmptyBlock(entrance) && city.isEmptyBlock(entrance.above())
+                        && city.getBlockState(entrance.below()).is(Blocks.POLISHED_ANDESITE),
+                        "Pietrarsa " + wing.letter() + " has a walkable entrance");
+                check(city.getBlockState(wing.origin().offset(offsets.get(i))).is(exhibits.get(i)),
+                        "Pietrarsa " + wing.letter() + " has its own exhibit");
+            }
+            check(city.getBlockState(villa.offset(3, 2, 3)).is(Blocks.DECORATED_POT), "The Floridiana has an exhibit gallery");
+            check(city.getBlockState(fort.offset(13, 1, 16)).is(Blocks.POLISHED_TUFF_STAIRS), "The castle gallery is accessible from the parade ground");
+            check(city.getBlockState(palace.offset(26, 2, 15)).is(Blocks.DARK_OAK_PLANKS), "Donn'Anna has an interior stage");
+            check(city.getBlockState(theatre.offset(11, 6, 29)).is(Blocks.QUARTZ_PILLAR)
+                    && city.getBlockState(theatre.offset(19, 1, 14)).is(Blocks.CRIMSON_STAIRS), "The Mostra has the theater portico and seating");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, campus.getX()+45.5, campus.getY()+44, campus.getZ()+8.5, Set.of(), 180, 51, true);
+        });
+        if (tick < 90) return;
+        if (tick > 3200) {
+            Napuli.LOGGER.error("[DISTRICTTEST] Museum camera did not finish loading scene {}", museumScene);
+            failed = true;
+            return;
+        }
+        switch (museumScene) {
+            case 0 -> {
+                if (!museumViewReady(mc, campus.offset(45, 44, 8), campus.offset(12, 3, -12), g.offset(15, 3, 1))) return;
+                shot(mc, "pietrarsa-padiglioni-nord-legacy");
+                server(mc, p -> p.teleportTo(p.level(), g.getX()+13.5, g.getY()+2, g.getZ()+14.5, Set.of(), 180, 0, true));
+            }
+            case 1 -> {
+                if (!museumViewReady(mc, g.offset(13, 2, 14), g.offset(8, 3, 5), g.offset(21, 2, 3))) return;
+                shot(mc, "pietrarsa-trecentotreni-legacy");
+                server(mc, p -> p.teleportTo(p.level(), villa.getX()+10.5, villa.getY()+2, villa.getZ()+24.5, Set.of(), 180, 0, true));
+            }
+            case 2 -> {
+                if (!museumViewReady(mc, villa.offset(10, 2, 24), villa.offset(2, 3, 16), villa.offset(18, 3, 16))) return;
+                shot(mc, "atlante-floridiana-legacy");
+                server(mc, p -> p.teleportTo(p.level(), theatre.getX()+38.5, theatre.getY()+2, theatre.getZ()+26.5, Set.of(), 180, 0, true));
+            }
+            case 3 -> {
+                if (!museumViewReady(mc, theatre.offset(38, 2, 26), theatre.offset(19, 3, 6), theatre.offset(56, 3, 6))) return;
+                shot(mc, "atlante-teatro-mediterraneo-legacy");
+                Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Six Pietrarsa wings and four atlas landmarks");
+                done = true;
+            }
+            default -> {}
+        }
+        museumScene++;
+        museumReadyTicks = 0;
+    }
+
+    private static boolean museumViewReady(Minecraft mc, net.minecraft.core.BlockPos camera, net.minecraft.core.BlockPos... points) {
+        if (mc.player.blockPosition().distManhattan(camera) > 2) {
+            museumReadyTicks = 0;
+            return false;
+        }
+        for (var point : points) {
+            if (!mc.level.getChunkSource().hasChunk(point.getX() >> 4, point.getZ() >> 4)) {
+                museumReadyTicks = 0;
+                return false;
+            }
+        }
+        return ++museumReadyTicks >= 40;
+    }
+
+    private static void legacyAlbergoPietrarsa(Minecraft mc) {
+        var palace = NapoliAlbergoPietrarsa.albergo();
+        var museum = NapoliAlbergoPietrarsa.pietrarsa();
+        if (++tick == 90) server(mc, p -> {
+            var city = p.level();
+            for (int side : new int[]{-1, 1}) for (int step = 0; step < 3; step++) {
+                var stair = palace.offset(48 + side * (8 - step), step + 1, 44);
+                check(city.getBlockState(stair).is(Blocks.SMOOTH_SANDSTONE_STAIRS) && city.isEmptyBlock(stair.above()),
+                        "Both stair flights reach the entry terrace");
+            }
+            for (int z = 38; z <= 42; z++) {
+                var walk = palace.offset(48, Math.min(z - 37, 3) + 1, z);
+                check(city.isEmptyBlock(walk) && city.isEmptyBlock(walk.above()), "The stairwell stays open into the atrium");
+            }
+            check(city.getBlockState(palace.offset(48, 0, 28)).is(Blocks.SMOOTH_STONE), "The palace atrium has the new stone floor");
+            check(city.isEmptyBlock(museum.offset(43, 22, 13)), "Pietrarsa loses the low flat roof");
+            check(city.getBlockState(museum.offset(43, 32, 16)).is(NapoliMonumentInteriors.material("light_gray_stained_glass")),
+                    "A skylight tops the pitched roof");
+            check(city.getBlockState(museum.offset(18, 2, 19)).is(Blocks.POLISHED_DEEPSLATE),
+                    "The hall contains a modeled locomotive");
+            check(!city.getBlockState(museum.offset(18, 5, 17)).is(Blocks.CAMPFIRE), "The old smoke source is removed");
+            for (int z = 9; z <= 42; z++)
+                check(city.isEmptyBlock(museum.offset(43, 1, z)), "The exhibition has a clear center aisle");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, palace.getX()+48.5, palace.getY()+7, palace.getZ()+67.5, Set.of(), 180, -4, true);
+        });
+        if (tick == 260) {
+            shot(mc, "albergo-facciata-legacy");
+            server(mc, p -> p.teleportTo(p.level(), palace.getX()+48.5, palace.getY()+2, palace.getZ()+34.5, Set.of(), 180, -6, true));
+        }
+        if (tick == 365) {
+            shot(mc, "albergo-atrio-legacy");
+            server(mc, p -> p.teleportTo(p.level(), museum.getX()+55.5, museum.getY()+12, museum.getZ()+64.5, Set.of(), 155, -7, true));
+        }
+        if (tick == 510) {
+            shot(mc, "pietrarsa-pannello-esterno-legacy");
+            server(mc, p -> p.teleportTo(p.level(), museum.getX()+40.5, museum.getY()+3.5, museum.getZ()+10.5, Set.of(), 25, -10, true));
+        }
+        if (tick == 615) {
+            shot(mc, "pietrarsa-sala-vaporiere-legacy");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Albergo and Pietrarsa on an existing save");
+            done = true;
+        }
+    }
+
+    private static void legacyCourtyards(Minecraft mc) {
+        var palace = NapoliCapodimonteSanita.capodimonte();
+        var tower = NapoliHistoricCourtyards.campanile();
+        var gate = NapoliHistoricCourtyards.capuana();
+        if (++tick == 90) server(mc, p -> {
+            var city = p.level();
+            for (int x : new int[]{7, 34, 61}) {
+                var court = palace.offset(x, 0, 2);
+                check(city.isEmptyBlock(court.offset(8, 24, 5)) && city.isEmptyBlock(court.offset(8, 9, 5)),
+                        "Each court is open to the sky");
+                check(city.getBlockState(court.offset(8, 0, 5)).is(Blocks.STONE_BRICKS), "Each courtyard is paved");
+                check(city.isEmptyBlock(court.offset(8, 1, 9)) && city.isEmptyBlock(court.offset(8, 2, 9)),
+                        "The ground-floor arcade can be entered");
+            }
+            for (int x = 15; x <= 69; x++) {
+                var walk = palace.offset(x, 1, 7);
+                check(city.isEmptyBlock(walk) && city.isEmptyBlock(walk.above()), "The lateral porticoes link all three courts");
+            }
+            check(city.getBlockState(palace.offset(17, 11, 15)).is(Blocks.DECORATED_POT), "The adjacent porcelain gallery survives");
+            check(city.getBlockState(tower.offset(6, 28, 6)).is(Blocks.BELL), "The belfry has a usable bell");
+            for (int y = 1; y <= 22; y++) {
+                var rung = tower.offset(3, y, 6);
+                check(city.getBlockState(rung).is(Blocks.LADDER) && city.getBlockState(rung.west()).isSolidRender(),
+                        "The internal ladder is supported all the way to the belfry");
+            }
+            check(city.isEmptyBlock(tower.offset(6, 1, 10)), "The tower has a clear doorway");
+            check(city.getBlockState(gate.offset(8, 14, 4)).is(Blocks.SMOOTH_QUARTZ), "The central span has a marble arch");
+            for (int z = 0; z <= 8; z++)
+                check(city.isEmptyBlock(gate.offset(8, 1, z)), "The route through Porta Capuana is clear");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, palace.getX()+42.5, palace.getY()+3, palace.getZ()+10.5, Set.of(), 180, -25, true);
+        });
+        if (tick == 165) {
+            shot(mc, "capodimonte-cortile-legacy");
+            server(mc, p -> p.teleportTo(p.level(), palace.getX()+42.5, palace.getY()+49, palace.getZ()+51.5, Set.of(), 180, 48, true));
+        }
+        if (tick == 230) {
+            shot(mc, "capodimonte-tre-cortili-legacy");
+            server(mc, p -> p.teleportTo(p.level(), tower.getX()+18.5, tower.getY()+24, tower.getZ()+28.5, Set.of(), 155, -2, true));
+        }
+        if (tick == 305) {
+            shot(mc, "sanita-campanile-legacy");
+            server(mc, p -> p.teleportTo(p.level(), gate.getX()+8.5, gate.getY()+5, gate.getZ()+30.5, Set.of(), 180, -8, true));
+        }
+        if (tick == 385) {
+            shot(mc, "porta-capuana-legacy");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Courtyards, Sanita tower and Porta Capuana on an existing save");
+            done = true;
         }
     }
 

@@ -238,11 +238,11 @@ public class Motorino extends Mob {
 	@Override
 	protected void positionRider(Entity passenger, Entity.MoveFunction move) {
 		int i = this.getPassengers().indexOf(passenger);
-		double alongSeat = 0.11 - Math.max(0, i) * 0.46;
+		double alongSeat = 0.125 - Math.max(0, i) * 0.52;
 		double yaw = Math.toRadians(this.getYRot());
 		double x = this.getX() - Math.sin(yaw) * alongSeat;
 		double z = this.getZ() + Math.cos(yaw) * alongSeat;
-		move.accept(passenger, x, this.getY() + 0.30, z);
+		move.accept(passenger, x, this.getY() + 0.38, z);
 	}
 
 	@Override

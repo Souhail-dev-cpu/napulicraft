@@ -63,6 +63,7 @@ public class NapuliClient implements ClientModInitializer {
         dev.napuli.ResidentSafetyClientTest.register();
         dev.napuli.PoliceVehicleClientTest.register();
         dev.napuli.VehicleTheftClientTest.register();
+        dev.napuli.VehicleInteriorClientTest.register();
 		dev.napuli.AtlasTest.register();
 		dev.napuli.DistrictClientTest.register();
 		dev.napuli.EntranceClientTest.register();

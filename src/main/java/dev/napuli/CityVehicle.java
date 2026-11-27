@@ -1,6 +1,6 @@
 package dev.napuli;
 
-import java.util.List;
+import java.util.*;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -19,6 +19,60 @@ public final class CityVehicle extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> CITIZEN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> POLICE=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> STOLEN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> CABIN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> DOORS=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> TAXI=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    private record Place(int seat,boolean standing,double z,boolean jump){}
+    private final Map<UUID,Place> places=new HashMap<>();
+    private int doorTicks;
+    private float doorProgress,previousDoorProgress;
+    public boolean taxi(){return entityData.get(TAXI);}
+    public float doorOpening(float delta){return net.minecraft.util.Mth.lerp(delta,previousDoorProgress,doorProgress);}
+    public boolean standing(Entity passenger){var place=places.get(passenger.getUUID());return place!=null&&place.standing();}
+    public Vec3 passengerLocation(Entity passenger){
+        var layout=VehicleCabin.layout(kind());var place=places.get(passenger.getUUID());
+        int index=Math.max(0,getPassengers().indexOf(passenger));
+        if(place!=null&&place.standing())return new Vec3(0,layout.floor(),place.z());
+        // The taxi passenger sits behind the cab driver's cockpit.
+        return layout.seat(taxi()?2:place==null?index:place.seat());
+    }
+    @Override protected EntityDimensions getDefaultDimensions(Pose pose){var layout=VehicleCabin.layout(entityData==null?0:kind());return EntityDimensions.scalable(layout.width(),layout.height());}
+    @Override protected net.minecraft.world.phys.AABB makeBoundingBox(Vec3 at){
+        var l=VehicleCabin.layout(entityData==null?0:kind());double a=Math.toRadians(getYRot()),s=Math.abs(Math.sin(a)),c=Math.abs(Math.cos(a));
+        double x=(c*l.width()+s*l.length())/2,z=(s*l.width()+c*l.length())/2;
+        return new net.minecraft.world.phys.AABB(at.x-x,at.y,at.z-z,at.x+x,at.y+l.height(),at.z+z);
+    }
+    @Override public void setYRot(float yaw){super.setYRot(yaw);if(entityData!=null)setBoundingBox(makeBoundingBox(position()));}
+    @Override public void onSyncedDataUpdated(EntityDataAccessor<?> key){
+        super.onSyncedDataUpdated(key);if(KIND.equals(key))refreshDimensions();
+        if(CABIN.equals(key)&&level().isClientSide()){
+            places.clear();for(String row:entityData.get(CABIN).split(";")){if(row.isEmpty())continue;String[] fields=row.split(",");
+                try{if(fields.length==4)places.put(UUID.fromString(fields[0]),new Place(Integer.parseInt(fields[1]),Boolean.parseBoolean(fields[2]),Integer.parseInt(fields[3])/100.0,false));}catch(IllegalArgumentException ignored){}
+            }
+        }
+    }
+    private void syncCabin(){var value=new StringBuilder();for(var p:getPassengers()){var at=places.get(p.getUUID());if(at!=null)value.append(p.getUUID()).append(',').append(at.seat()).append(',').append(at.standing()).append(',').append(Math.round(at.z()*100)).append(';');}entityData.set(CABIN,value.toString());}
+    @Override protected void addPassenger(Entity p){super.addPassenger(p);if(level().isClientSide())return;int seat=0;while(seat<VehicleCabin.layout(kind()).seats().size()){int candidate=seat;if(places.values().stream().noneMatch(v->v.seat()==candidate))break;seat++;}places.put(p.getUUID(),new Place(seat,false,VehicleCabin.layout(kind()).seat(seat).z,false));doorTicks=35;syncCabin();if(kind()>0&&p instanceof net.minecraft.server.level.ServerPlayer player)player.sendOverlayMessage(Component.literal("Spazio: alzati/siediti · W/S: corridoio · Shift: scendi"));}
+    @Override protected void removePassenger(Entity p){super.removePassenger(p);if(!level().isClientSide()){places.remove(p.getUUID());doorTicks=35;if(kind()==0&&!getPassengers().isEmpty()){var driver=getFirstPassenger();var old=places.get(driver.getUUID());if(old!=null&&old.seat()!=0){var occupied=places.entrySet().stream().filter(e->e.getValue().seat()==0).findFirst().orElse(null);if(occupied!=null)places.put(occupied.getKey(),new Place(old.seat(),false,0,false));places.put(driver.getUUID(),new Place(0,false,0,false));}}syncCabin();}}
+    private void tickCabin(){
+        previousDoorProgress=doorProgress;doorProgress=net.minecraft.util.Mth.clamp(doorProgress+(entityData.get(DOORS)?.12f:-.12f),0,1);
+        if(level().isClientSide())return;
+        if(doorTicks>0)doorTicks--;boolean stopped=position().subtract(getPosition(0)).horizontalDistanceSqr()<.0025;
+        boolean station=atStop();if(!networkKey.isEmpty()){var parts=networkKey.split("/");var line=CityNetwork.line(parts[0]);station=line!=null&&!CityNetwork.position((ServerLevel)level(),line,Integer.parseInt(parts[1])).stop().isEmpty();}
+        entityData.set(DOORS,stopped&&(doorTicks>0||kind()>0&&station));
+        if(kind()==0)return;boolean changed=false;var layout=VehicleCabin.layout(kind());
+        for(var entity:getPassengers())if(entity instanceof net.minecraft.server.level.ServerPlayer player){
+            var old=places.get(player.getUUID());if(old==null)continue;var input=player.getLastClientInput();boolean stand=old.standing();double z=old.z();int seat=old.seat();
+            if(input.jump()&&!old.jump()){
+                if(stand){stand=false;double distance=Double.MAX_VALUE;for(int i=0;i<layout.seats().size();i++){int candidate=i;boolean used=places.entrySet().stream().anyMatch(e->!e.getKey().equals(player.getUUID())&&e.getValue().seat()==candidate);double d=Math.abs(layout.seat(i).z-z);if(!used&&d<distance){distance=d;seat=i;}}}
+                else for(double offset:new double[]{0,.75,-.75,1.5,-1.5,2.25,-2.25,3,-3,3.75,-3.75}){double candidate=Math.clamp(layout.seat(seat).z+offset,-layout.aisleEnd(),layout.aisleEnd());if(places.entrySet().stream().noneMatch(e->!e.getKey().equals(player.getUUID())&&e.getValue().standing()&&Math.abs(e.getValue().z()-candidate)<.65)){stand=true;z=candidate;break;}}
+            }
+            if(stand){double step=(input.forward()?1:0)-(input.backward()?1:0);double proposed=Math.clamp(z+step*.1,-layout.aisleEnd(),layout.aisleEnd());
+                if(places.entrySet().stream().noneMatch(e->!e.getKey().equals(player.getUUID())&&e.getValue().standing()&&Math.abs(e.getValue().z()-proposed)<.65))z=proposed;
+            }
+            var value=new Place(seat,stand,z,input.jump());places.put(player.getUUID(),value);changed|=stand!=old.standing()||seat!=old.seat()||Math.abs(z-old.z())>.001;
+        }if(changed)syncCabin();
+    }
     public boolean stolenVehicle(){return entityData.get(STOLEN);}
     void setStolenVehicle(boolean value){entityData.set(STOLEN,value);}
     public boolean policeVehicle(){return entityData.get(POLICE);}
@@ -33,7 +87,7 @@ public final class CityVehicle extends PathfinderMob {
     java.util.UUID taxiId(){return taxiId;}
     java.util.UUID taxiOwner(){return taxiOwner;}
     void configureTaxi(java.util.UUID id,java.util.UUID owner){
-        taxiId=id;taxiOwner=owner;setNoAi(false);
+        taxiId=id;taxiOwner=owner;entityData.set(TAXI,true);setNoAi(false);
         getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(.42);
         getAttribute(Attributes.FOLLOW_RANGE).setBaseValue(64);
         getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);
@@ -56,15 +110,15 @@ public final class CityVehicle extends PathfinderMob {
     public int kind(){return entityData.get(KIND);}
     @Override public boolean isPushable(){return !residentOwned()&&!policeVehicle()&&super.isPushable();}
     public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16).add(Attributes.FOLLOW_RANGE,48);}
-    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);b.define(CITIZEN,false);b.define(POLICE,false);b.define(STOLEN,false);}
+    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);b.define(CITIZEN,false);b.define(POLICE,false);b.define(STOLEN,false);b.define(CABIN,"");b.define(DOORS,false);b.define(TAXI,false);}
     @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putBoolean("npc_vehicle_stolen",stolenVehicle());out.putBoolean("npc_vehicle_police",policeVehicle());out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
-    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(STOLEN,in.getBooleanOr("npc_vehicle_stolen",false));entityData.set(POLICE,in.getBooleanOr("npc_vehicle_police",false));entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
+    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(STOLEN,in.getBooleanOr("npc_vehicle_stolen",false));entityData.set(POLICE,in.getBooleanOr("npc_vehicle_police",false));entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,3));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
     private List<Vec3> route(){
         if(kind()==2)return List.of(new Vec3(-345,64,-185),new Vec3(-345,64,190));
         return List.of(new Vec3(-341,64,-184),new Vec3(-341,64,199),new Vec3(-337,64,199),new Vec3(-337,64,-184));
     }
     @Override public void tick(){
-        super.tick();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
+        super.tick();tickCabin();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
         if(VehicleTheft.tick(this,city))return;
         if(PoliceVehicles.drive(this,city))return;
         if(CityMobility.drive(this,city))return;
@@ -85,7 +139,7 @@ public final class CityVehicle extends PathfinderMob {
         setYRot((float)Math.toDegrees(Math.atan2(-motion.x,motion.z)));setYBodyRot(getYRot());setYHeadRot(getYRot());
         setDeltaMovement(motion);move(MoverType.SELF,motion);setDeltaMovement(Vec3.ZERO);
     }
-    @Override protected boolean canAddPassenger(Entity passenger){if(VehicleTheft.taken(this))return passenger instanceof Player&&getPassengers().isEmpty();if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
+    @Override protected boolean canAddPassenger(Entity passenger){if(VehicleTheft.taken(this))return passenger instanceof Player&&getPassengers().size()<VehicleCabin.layout(kind()).seats().size();if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();return getPassengers().size()<VehicleCabin.layout(kind()).seats().size();}
     @Override protected InteractionResult mobInteract(Player p,InteractionHand hand){
         if(VehicleTheft.eligible(this))return VehicleTheft.interact(p,this,hand);
         if(hand!=InteractionHand.MAIN_HAND||p.isShiftKeyDown())return InteractionResult.PASS;
@@ -102,8 +156,14 @@ public final class CityVehicle extends PathfinderMob {
     @Override protected Vec3 getRiddenInput(Player driver,Vec3 input){return new Vec3(0,0,driver.zza<0?driver.zza*.3:driver.zza);}
     @Override protected float getRiddenSpeed(Player driver){return .42f;}
     @Override protected void positionRider(Entity p,Entity.MoveFunction move){
-        int seat=Math.max(0,getPassengers().indexOf(p));double yaw=Math.toRadians(getYRot()),along=.55-seat/2*.45,side=seat%2==0?-.35:.35;
-        move.accept(p,getX()-Math.sin(yaw)*along+Math.cos(yaw)*side,getY()+(p instanceof NapoliResident?residentOwned()||policeVehicle()?-.25:0:.35),getZ()+Math.cos(yaw)*along+Math.sin(yaw)*side);
+        var at=VehicleCabin.world(position(),getYRot(),passengerLocation(p));move.accept(p,at.x,at.y,at.z);if(p instanceof NapoliResident npc){npc.setYBodyRot(getYRot());npc.setYHeadRot(getYRot());}
+    }
+    @Override public Vec3 getDismountLocationForPassenger(LivingEntity p){
+        var cabin=VehicleCabin.layout(kind());
+        for(int side:new int[]{1,-1})for(double along:new double[]{passengerLocation(p).z(),0,-cabin.length()/2.0-.8}){
+            var at=VehicleCabin.world(position(),getYRot(),new Vec3(side*(cabin.width()/2+.8),0,along));var base=BlockPos.containing(at);
+            for(int dy:new int[]{0,1,-1,-2}){var pos=base.offset(0,dy,0);if(!level().hasChunkAt(pos)||!level().getBlockState(pos.below()).isSolid())continue;var feet=Vec3.atBottomCenterOf(pos);if(level().noCollision(p,p.getDimensions(Pose.STANDING).makeBoundingBox(feet)))return feet;}
+        }return super.getDismountLocationForPassenger(p);
     }
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(server->{

@@ -94,15 +94,20 @@ public final class WorkEcosystemGameTest {
     @GameTest public void metroShaftsOpenAtBothPlatformsAndKeepPlayerChanges(GameTestHelper h){var city=h.getLevel();var stop=CityNetwork.stop("municipio");CityNetwork.ensureStation(city,stop);
         for(String id:List.of("M1","M6")){var line=CityNetwork.line(id);var exit=new BlockPos(stop.street().getX()+5,line.level()+1,stop.street().getZ()+4);
             h.assertTrue(city.isEmptyBlock(exit)&&city.isEmptyBlock(exit.above()),"The ladder has a two-block doorway onto "+id);
-            h.assertTrue(CityAccessibility.connected(city,stop.entrance(),stop.boarding(line)),"The street is physically linked to platform "+id);
+            h.assertTrue(CityAccessibility.connected(city,stop.entrance(),stop.boarding(line)),"The street is physically linked to platform "+id+metroDiagnostic(city,stop,line));
         }
         var custom=new BlockPos(stop.street().getX()+5,11,stop.street().getZ()+4);var chunk=city.getChunkAt(custom);city.setBlock(custom,Blocks.GLASS.defaultBlockState(),18);CityProperty.placed(city,custom);chunk.removeAttached(CityRailway.SHAFT_EXITS);
         try{CityRailway.repairExits(city,chunk);h.assertTrue(city.getBlockState(custom).is(Blocks.GLASS),"An existing player's glass is not removed by the exit migration");}
         finally{CityProperty.forget(city,custom);city.setBlock(custom,Blocks.AIR.defaultBlockState(),18);}h.succeed();}
     @GameTest public void waterfrontMetroHasAUsableStreetEntranceAndSign(GameTestHelper h){var city=h.getLevel();var stop=CityNetwork.stop("sannazaro");CityNetwork.ensureStation(city,stop);
         h.assertTrue(CityAccessibility.walkable(city,stop.entrance()),"The coast promenade cannot seal the ladder entrance from above");
-        h.assertTrue(CityAccessibility.connected(city,stop.entrance(),stop.boarding(CityNetwork.line("M6"))),"The raised promenade connects physically to the underground platform");
+        h.assertTrue(CityAccessibility.connected(city,stop.entrance(),stop.boarding(CityNetwork.line("M6"))),"The raised promenade connects physically to the underground platform"+metroDiagnostic(city,stop,CityNetwork.line("M6")));
         h.assertTrue(city.getBlockEntity(stop.sign()) instanceof net.minecraft.world.level.block.entity.SignBlockEntity,"The updated stop has its actual clickable sign at the advertised location");h.succeed();}
+    private static String metroDiagnostic(net.minecraft.server.level.ServerLevel city,CityNetwork.Stop stop,CityNetwork.Line line){
+        if(CityAccessibility.connected(city,stop.entrance(),stop.boarding(line)))return "";var result=new StringBuilder(" entrance=").append(stop.entrance()).append(" boarding=").append(stop.boarding(line)).append(" walkable=").append(CityAccessibility.walkable(city,stop.boarding(line)));
+        int x=stop.street().getX()+5,z=stop.street().getZ()+5;for(int y=line.level();y<=stop.entrance().getY()+1;y++){var at=new BlockPos(x,y,z);var state=city.getBlockState(at);if(!state.is(Blocks.LADDER))result.append(" ").append(y).append(":").append(state.getBlock());}
+        var b=stop.boarding(line);for(int dz=-2;dz<=5;dz++)result.append(" corridor ").append(dz).append(":").append(city.getBlockState(new BlockPos(x,line.level()+1,stop.street().getZ()+dz)).getBlock());return result.toString();
+    }
     @GameTest public void pierApproachUsesTheDeckInsteadOfTheGroundUnderneath(GameTestHelper h){var city=h.getLevel();var place=NapoliAtlas.find("pontile");
         for(int x=(place.x()-8)>>4;x<=(place.x()+8)>>4;x++)for(int z=(place.z()-place.radius()-4)>>4;z<=(place.z()+place.radius())>>4;z++)NapoliExpansion.generate(city,city.getChunk(x,z));
         var from=new BlockPos(place.x()+2,64,place.z()-place.radius()-3);var to=new BlockPos(place.x()+2,CityStreets.walkingHeight(place.x()+2,42)+1,42);

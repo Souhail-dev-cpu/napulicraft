@@ -36,7 +36,7 @@ final class VehicleTheft {
     }
     static boolean take(ServerPlayer player,Entity vehicle){
         if(!valid(player,vehicle))return false;var city=player.level();var occupants=List.copyOf(vehicle.getPassengers());
-        if(occupants.stream().anyMatch(p->p instanceof Player)){player.sendOverlayMessage(CityText.t("vehicle.theft.occupied"));return false;}
+        if(occupants.stream().anyMatch(p->p instanceof Player)){if(taken(vehicle)&&vehicle instanceof CityVehicle&&player.startRiding(vehicle,false,false))return true;player.sendOverlayMessage(CityText.t("vehicle.theft.occupied"));return false;}
         var movement=vehicle.position().subtract(vehicle.getPosition(0));if(!occupants.isEmpty()&&(vehicle.tickCount>0&&movement.horizontalDistanceSqr()>.23*.23||vehicle.getDeltaMovement().horizontalDistanceSqr()>.23*.23)){player.sendOverlayMessage(CityText.t("vehicle.theft.moving"));return false;}
         var exits=new LinkedHashMap<NapoliResident,BlockPos>();var reserved=new HashSet<BlockPos>();
         for(var actor:occupants){if(!(actor instanceof NapoliResident npc))return false;var at=exit(city,vehicle,reserved);if(at==null){player.sendOverlayMessage(CityText.t("vehicle.theft.no_exit"));return false;}exits.put(npc,at);reserved.add(at);}
@@ -69,7 +69,7 @@ final class VehicleTheft {
     private static void remember(ServerLevel city,Entity vehicle,Stolen state){var world=city.getServer().overworld();var all=new HashMap<>(world.getAttachedOrElse(MISSING,Map.of()));var snapshot=new Missing(vehicle.getUUID(),city.dimension().identifier().toString(),vehicle.blockPosition().immutable());if(snapshot.equals(all.get(state.owner().toString())))return;all.put(state.owner().toString(),snapshot);world.setAttached(MISSING,Map.copyOf(all));}
     static boolean tick(Entity vehicle,ServerLevel city){
         if(!taken(vehicle))return false;if(!vehicle.isAlive())return true;var state=vehicle.getAttached(STOLEN);if(state==null)return true;
-        if(vehicle.getFirstPassenger() instanceof ServerPlayer player&&player.getUUID().equals(state.driver())){if(!state.witnessed()&&city.getGameTime()-state.boarded()<=40&&(vehicle.tickCount%5==0))report(player,vehicle,List.of());}
+        if(vehicle.getFirstPassenger() instanceof ServerPlayer player){if(!player.getUUID().equals(state.driver())){state=new Stolen(state.owner(),player.getUUID(),city.getGameTime(),false,false);vehicle.setAttached(STOLEN,state);}if(!state.witnessed()&&city.getGameTime()-state.boarded()<=40&&(vehicle.tickCount%5==0))report(player,vehicle,List.of());}
         else vehicle.setDeltaMovement(new Vec3(0,vehicle.getDeltaMovement().y,0));if(vehicle.tickCount%100==0)remember(city,vehicle,state);return true;
     }
     static void register(){

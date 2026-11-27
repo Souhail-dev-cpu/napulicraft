@@ -57,9 +57,9 @@ public class Napuli implements ModInitializer {
 	public static final EntityType<MunacielloGigante> GIGANTE = entity("munaciello_gigante",
 			EntityType.Builder.<MunacielloGigante>of(MunacielloGigante::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.74f).clientTrackingRange(16));
 	public static final EntityType<Motorino> MOTORINO = entity("motorino",
-			EntityType.Builder.<Motorino>of(Motorino::new, MobCategory.MISC).sized(1.05f, 1.5f).eyeHeight(0.9f).clientTrackingRange(10));
+			EntityType.Builder.<Motorino>of(Motorino::new, MobCategory.MISC).sized(1.18f, 1.65f).eyeHeight(1f).clientTrackingRange(10));
 	public static final EntityType<CityVehicle> CITY_VEHICLE = entity("city_vehicle",
-			EntityType.Builder.<CityVehicle>of(CityVehicle::new,MobCategory.MISC).sized(2.2f,1.5f).clientTrackingRange(12));
+			EntityType.Builder.<CityVehicle>of(CityVehicle::new,MobCategory.MISC).sized(2.15f,1.95f).clientTrackingRange(14));
 	public static final EntityType<Ciabatta> CIABATTA = entity("ciabatta",
 			EntityType.Builder.<Ciabatta>of(Ciabatta::new, MobCategory.MISC).noLootTable().sized(0.25f, 0.25f).clientTrackingRange(4).updateInterval(10));
 

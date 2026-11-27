@@ -41,6 +41,13 @@ public class MotorinoModel extends EntityModel<MotorinoModel.State> {
         box(root, "tail_light", 108, 8, -2.5f, 11, 19, 5, 2, 1);
         box(root, "grab_rail", 72, 54, -4, 6, 18, 8, 3, 2);
         box(root, "exhaust", 72, 62, 5, 15, 6, 2, 3, 13);
+        box(root, "left_mirror_stem", 40, 0, -8, -4, -12, 1, 5, 1);
+        box(root, "right_mirror_stem", 40, 0, 7, -4, -12, 1, 5, 1);
+        box(root, "left_mirror", 108, 0, -10, -5, -13, 4, 2, 1);
+        box(root, "right_mirror", 108, 0, 6, -5, -13, 4, 2, 1);
+        box(root, "front_fender", 76, 0, -3, 15, -17, 6, 1, 10);
+        box(root, "rear_fender", 54, 18, -3, 15, 9, 6, 1, 10);
+        box(root, "plate", 108, 0, -3, 14, 20, 6, 3, 1);
         box(root, "beacon", 54, 18, -2, -2, 15, 4, 4, 4);
         return LayerDefinition.create(mesh, 128, 128);
     }
@@ -57,6 +64,8 @@ public class MotorinoModel extends EntityModel<MotorinoModel.State> {
     @Override
     public void setupAnim(State state) {
         super.setupAnim(state);
+        root.xScale=root.yScale=root.zScale=1.12f;
+        root.y=24*(1-1.12f);
         var beacon=root.getChild("beacon");beacon.visible=state.police;beacon.yScale=1+(float)Math.sin(state.ageInTicks*.6)*.15f;
         float spin = state.walkAnimationPos * 1.4f;
         frontWheel.xRot = spin;

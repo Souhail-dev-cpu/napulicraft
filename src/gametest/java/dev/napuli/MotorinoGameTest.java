@@ -64,7 +64,7 @@ public class MotorinoGameTest {
                     double along = (player.getX() - bike.getX()) * -Math.sin(radians)
                             + (player.getZ() - bike.getZ()) * Math.cos(radians);
                     check(helper, along < previous, "Driver, middle and rear stay ordered at yaw " + yaw);
-                    check(helper, Math.abs(player.getY() - bike.getY() - 0.30) < 0.001, "Seat height");
+                    check(helper, Math.abs(player.getY() - bike.getY() - 0.38) < 0.001, "Seat height matches the enlarged scooter cushion");
                     previous = along;
                 }
             }

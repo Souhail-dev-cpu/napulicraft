@@ -226,6 +226,7 @@ public class Napuli implements ModInitializer {
 		CityNetwork.register();
 		CityMobility.register();
         PoliceVehicles.register();
+        VehicleTheft.register();
         CityResidentSafety.register();
 		NapoliAtlasGuide.register();
 		NapoliStreet.register();

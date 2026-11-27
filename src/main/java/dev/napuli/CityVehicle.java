@@ -18,6 +18,9 @@ public final class CityVehicle extends PathfinderMob {
     private static final EntityDataAccessor<Integer> KIND=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> CITIZEN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> POLICE=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> STOLEN=SynchedEntityData.defineId(CityVehicle.class,EntityDataSerializers.BOOLEAN);
+    public boolean stolenVehicle(){return entityData.get(STOLEN);}
+    void setStolenVehicle(boolean value){entityData.set(STOLEN,value);}
     public boolean policeVehicle(){return entityData.get(POLICE);}
     void configurePolice(){entityData.set(POLICE,true);setNoAi(true);getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);}
     boolean residentOwned(){return entityData.get(CITIZEN);}
@@ -38,8 +41,8 @@ public final class CityVehicle extends PathfinderMob {
     long networkTick;
     String networkKey(){return networkKey;}
     void configureNetwork(String key,int kind){networkKey=key;networkTick=level().getGameTime();entityData.set(KIND,kind);setNoGravity(true);getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.STEP_HEIGHT).setBaseValue(1.2);}
-    @Override public boolean shouldBeSaved(){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&taxiId==null&&networkKey.isEmpty()&&super.shouldBeSaved();}
-    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&taxiId==null&&networkKey.isEmpty()&&super.saveAsPassenger(out);}
+    @Override public boolean shouldBeSaved(){return (VehicleTheft.taken(this)||!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&(VehicleTheft.taken(this)||!CityMobility.managed(this))&&taxiId==null&&networkKey.isEmpty()&&super.shouldBeSaved();}
+    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (VehicleTheft.taken(this)||!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&(VehicleTheft.taken(this)||!CityMobility.managed(this))&&taxiId==null&&networkKey.isEmpty()&&super.saveAsPassenger(out);}
     int remainingStop(){return stop;}
     boolean atStop(){return stop>0;}
     double distanceToStop(BlockPos target){
@@ -53,15 +56,16 @@ public final class CityVehicle extends PathfinderMob {
     public int kind(){return entityData.get(KIND);}
     @Override public boolean isPushable(){return !residentOwned()&&!policeVehicle()&&super.isPushable();}
     public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16).add(Attributes.FOLLOW_RANGE,48);}
-    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);b.define(CITIZEN,false);b.define(POLICE,false);}
-    @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
-    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
+    @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);b.define(CITIZEN,false);b.define(POLICE,false);b.define(STOLEN,false);}
+    @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putBoolean("npc_vehicle_stolen",stolenVehicle());out.putBoolean("npc_vehicle_police",policeVehicle());out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
+    @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(STOLEN,in.getBooleanOr("npc_vehicle_stolen",false));entityData.set(POLICE,in.getBooleanOr("npc_vehicle_police",false));entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
     private List<Vec3> route(){
         if(kind()==2)return List.of(new Vec3(-345,64,-185),new Vec3(-345,64,190));
         return List.of(new Vec3(-341,64,-184),new Vec3(-341,64,199),new Vec3(-337,64,199),new Vec3(-337,64,-184));
     }
     @Override public void tick(){
         super.tick();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
+        if(VehicleTheft.tick(this,city))return;
         if(PoliceVehicles.drive(this,city))return;
         if(CityMobility.drive(this,city))return;
         if(PhoneServices.tickTaxi(this,city))return;
@@ -81,8 +85,9 @@ public final class CityVehicle extends PathfinderMob {
         setYRot((float)Math.toDegrees(Math.atan2(-motion.x,motion.z)));setYBodyRot(getYRot());setYHeadRot(getYRot());
         setDeltaMovement(motion);move(MoverType.SELF,motion);setDeltaMovement(Vec3.ZERO);
     }
-    @Override protected boolean canAddPassenger(Entity passenger){if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
+    @Override protected boolean canAddPassenger(Entity passenger){if(VehicleTheft.taken(this))return passenger instanceof Player&&getPassengers().isEmpty();if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
     @Override protected InteractionResult mobInteract(Player p,InteractionHand hand){
+        if(VehicleTheft.eligible(this))return VehicleTheft.interact(p,this,hand);
         if(hand!=InteractionHand.MAIN_HAND||p.isShiftKeyDown())return InteractionResult.PASS;
         if(CityMobility.managed(this)||PoliceVehicles.managed(this))return InteractionResult.PASS;
         if(taxiId!=null){if(p instanceof net.minecraft.server.level.ServerPlayer sp)PhoneServices.boardTaxi(sp,this);return InteractionResult.SUCCESS;}
@@ -92,6 +97,10 @@ public final class CityVehicle extends PathfinderMob {
         }
         return InteractionResult.SUCCESS;
     }
+    @Override public LivingEntity getControllingPassenger(){return stolenVehicle()&&getFirstPassenger() instanceof Player p?p:null;}
+    @Override protected void tickRidden(Player driver,Vec3 input){super.tickRidden(driver,input);setRot(driver.getYRot(),driver.getXRot()*.25f);yRotO=yBodyRot=yHeadRot=getYRot();}
+    @Override protected Vec3 getRiddenInput(Player driver,Vec3 input){return new Vec3(0,0,driver.zza<0?driver.zza*.3:driver.zza);}
+    @Override protected float getRiddenSpeed(Player driver){return .42f;}
     @Override protected void positionRider(Entity p,Entity.MoveFunction move){
         int seat=Math.max(0,getPassengers().indexOf(p));double yaw=Math.toRadians(getYRot()),along=.55-seat/2*.45,side=seat%2==0?-.35:.35;
         move.accept(p,getX()-Math.sin(yaw)*along+Math.cos(yaw)*side,getY()+(p instanceof NapoliResident?residentOwned()||policeVehicle()?-.25:0:.35),getZ()+Math.cos(yaw)*along+Math.sin(yaw)*side);

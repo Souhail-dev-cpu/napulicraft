@@ -32,6 +32,7 @@ final class CityMobility {
     static boolean managed(Entity vehicle){return vehicle!=null&&(vehicle.entityTags().contains(TAG)||vehicle instanceof Motorino m&&m.residentOwned()||vehicle instanceof CityVehicle c&&c.residentOwned());}
     static boolean mayBoard(Entity vehicle,Entity actor){return vehicle.level().isClientSide()?actor instanceof NapoliResident:actor.getUUID().equals(vehicle.getAttached(DRIVER));}
     static UUID identity(UUID owner){return UUID.nameUUIDFromBytes(("napuli:personal_vehicle:"+owner).getBytes(StandardCharsets.UTF_8));}
+    static UUID owner(Entity vehicle){return vehicle.getAttached(DRIVER);}
     static String preference(NapoliCivicLife.Citizen c,long day){
         if(c.age(day)<18||c.profession()!=null&&c.profession().category==CityProfessions.Category.SECURITY)return "public";
         int n=Math.floorMod(c.id().hashCode(),10);return n<3?"scooter":n<5?"car":"public";
@@ -70,13 +71,14 @@ final class CityMobility {
         return List.copyOf(points);
     }
     private static CityJourneys.Journey journey(List<BlockPos> points,long now,String kind){return new CityJourneys.Journey(points,now,now+Math.max(1,(long)Math.ceil(CityJourneys.length(points)/speed(kind))),points.getLast(),now);}
-    private static int count(ServerLevel city){int n=0;for(var entity:city.getAllEntities())if(managed(entity))n++;return n;}
+    private static int count(ServerLevel city){int n=0;for(var entity:city.getAllEntities())if(managed(entity)&&!VehicleTheft.taken(entity))n++;return n;}
     private static boolean street(ServerLevel city,BlockPos p){return city.hasChunkAt(p)&&NapoliResidentHomes.walkable(city,p)&&CityLivingHomes.at(p)==null&&!CityProperty.home(city,p);}
     private static BlockPos exit(ServerLevel city,BlockPos at){
         for(int[] d:new int[][]{{-2,0},{2,0},{0,-2},{0,2},{-3,0},{3,0},{0,-3},{0,3}}){var p=at.offset(d[0],0,d[1]);if(!street(city,p))continue;var free=CityJourneys.spawn(city,p);if(free!=null&&street(city,free))return free;}
         return null;
     }
     static boolean commute(NapoliResident npc,ServerLevel city,NapoliCivicLife.Citizen c,BlockPos goal){
+        if(VehicleTheft.missing(city,c.id()))return CityNetwork.commute(npc,city,goal);
         var current=ride(city,c.id());
         if(current!=null){if(!managed(npc.getVehicle())){putRide(city,c.id(),null);npc.setAttached(WALK,city.getGameTime()+200);return false;}npc.setActivity(NapoliHouseholds.Activity.COMMUTE);if(current.goal().distSqr(goal)>32*32)finish(city,npc.getVehicle(),current);return true;}
         if(city.getAttachedOrElse(CityNetwork.NPC,Map.of()).containsKey(c.id().toString()))return CityNetwork.commute(npc,city,goal);
@@ -98,7 +100,7 @@ final class CityMobility {
         CityOccupations.money(city,c.id(),-cost);WorkEconomy.revenue(city,cost);CityMovement.release(city,c.id());npc.setActivity(NapoliHouseholds.Activity.COMMUTE);return true;
     }
     static Entity create(ServerLevel city,NapoliCivicLife.Citizen c,String kind,BlockPos at){
-        if(CityJourneys.known(city,identity(c.id()))||!city.hasChunkAt(at))return null;
+        if(VehicleTheft.missing(city,c.id())||CityJourneys.known(city,identity(c.id()))||!city.hasChunkAt(at))return null;
         var entity=kind.equals("scooter")?Napuli.MOTORINO.create(city,EntitySpawnReason.EVENT):Napuli.CITY_VEHICLE.create(city,EntitySpawnReason.EVENT);if(entity==null)return null;
         entity.setUUID(identity(c.id()));entity.addTag(TAG);entity.setAttached(DRIVER,c.id());entity.setPos(Vec3.atBottomCenterOf(at));if(entity instanceof Motorino bike)bike.configureResident();else if(entity instanceof CityVehicle car){car.configureResident();car.setNoAi(true);}
         entity.setCustomName(Component.literal((kind.equals("scooter")?"Motorino di ":"Auto di ")+c.name()));
@@ -106,6 +108,7 @@ final class CityMobility {
         return city.addFreshEntity(entity)?entity:null;
     }
     static boolean drive(Entity vehicle,ServerLevel city){
+        if(VehicleTheft.taken(vehicle))return false;
         if(!managed(vehicle))return false;UUID id=vehicle.getAttached(DRIVER);if(id==null){vehicle.discard();return true;}var r=ride(city,id);
         if(city.players().stream().noneMatch(p->p.distanceToSqr(vehicle)<112*112)){virtualize(vehicle,city);return true;}
         if(r==null){vehicle.setDeltaMovement(Vec3.ZERO);return true;}
@@ -130,6 +133,7 @@ final class CityMobility {
     }
     static boolean virtualize(NapoliResident npc,ServerLevel city){if(!managed(npc.getVehicle()))return false;virtualize(npc.getVehicle(),city);return true;}
     private static void virtualize(Entity vehicle,ServerLevel city){
+        if(VehicleTheft.taken(vehicle))return;
         if(vehicle.getAttachedOrElse(LEAVING,false))return;vehicle.setAttached(LEAVING,true);UUID id=vehicle.getAttached(DRIVER);if(id==null){vehicle.discard();return;}var r=ride(city,id);
         if(r!=null){var points=new ArrayList<BlockPos>();points.add(vehicle.blockPosition());points.addAll(r.road().route().subList(Math.min(r.next(),r.road().route().size()-1),r.road().route().size()));putRide(city,id,new Ride(r.kind(),journey(List.copyOf(points),city.getGameTime(),r.kind()),1,r.goal()));}
         for(var passenger:List.copyOf(vehicle.getPassengers()))if(passenger instanceof NapoliResident npc){npc.stopRiding();CityJourneys.unmaterialized(city,npc.getUUID());npc.discard();}
@@ -161,8 +165,8 @@ final class CityMobility {
     static void markMaterialized(ServerLevel city,UUID id){var census=NapoliCivicLife.census(city);if(census!=null)city.setAttached(NapoliCivicLife.CENSUS,new NapoliCivicLife.Census(census.day(),census.people().stream().map(c->c.id().equals(id)?c.materialized():c).toList()));}
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(s->{var city=s.getLevel(NapoliMap.LEVEL);if(city==null)return;var pending=UNLOADING.remove(city);if(pending!=null)for(var entity:pending)virtualize(entity,city);if(s.getTickCount()%20==0)tick(city);});
-        ServerEntityEvents.ENTITY_UNLOAD.register((entity,city)->{if(managed(entity)&&!entity.getAttachedOrElse(LEAVING,false)&&(entity.getRemovalReason()==null||!entity.getRemovalReason().shouldDestroy()))UNLOADING.computeIfAbsent(city,k->new HashSet<>()).add(entity);});
-        ServerEntityEvents.ENTITY_LOAD.register((entity,city)->{if(managed(entity)&&entity.getAttached(DRIVER)==null)UNLOADING.computeIfAbsent(city,k->new HashSet<>()).add(entity);});
+        ServerEntityEvents.ENTITY_UNLOAD.register((entity,city)->{if(managed(entity)&&!VehicleTheft.taken(entity)&&!entity.getAttachedOrElse(LEAVING,false)&&(entity.getRemovalReason()==null||!entity.getRemovalReason().shouldDestroy()))UNLOADING.computeIfAbsent(city,k->new HashSet<>()).add(entity);});
+        ServerEntityEvents.ENTITY_LOAD.register((entity,city)->{if(managed(entity)&&!VehicleTheft.taken(entity)&&entity.getAttached(DRIVER)==null)UNLOADING.computeIfAbsent(city,k->new HashSet<>()).add(entity);});
         ServerLifecycleEvents.SERVER_STOPPING.register(server->{var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;var vehicles=new ArrayList<Entity>();for(var e:city.getAllEntities())if(managed(e))vehicles.add(e);for(var e:vehicles)virtualize(e,city);});
         ServerLifecycleEvents.SERVER_STOPPED.register(server->UNLOADING.clear());
     }

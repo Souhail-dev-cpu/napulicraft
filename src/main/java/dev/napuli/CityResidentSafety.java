@@ -19,21 +19,28 @@ final class CityResidentSafety {
     record Return(long day,BlockPos at,CompoundTag actor,boolean citizen,boolean patrol){
         static final Codec<Return> CODEC=RecordCodecBuilder.create(i->i.group(Codec.LONG.fieldOf("day").forGetter(Return::day),BlockPos.CODEC.fieldOf("at").forGetter(Return::at),CompoundTag.CODEC.fieldOf("actor").forGetter(Return::actor),Codec.BOOL.fieldOf("citizen").forGetter(Return::citizen),Codec.BOOL.fieldOf("patrol").forGetter(Return::patrol)).apply(i,Return::new));
     }
-    record Complaint(UUID attacker,BlockPos seen,long callAt,long until,boolean reported){
-        static final Codec<Complaint> CODEC=RecordCodecBuilder.create(i->i.group(UUIDUtil.CODEC.fieldOf("attacker").forGetter(Complaint::attacker),BlockPos.CODEC.fieldOf("seen").forGetter(Complaint::seen),Codec.LONG.fieldOf("callAt").forGetter(Complaint::callAt),Codec.LONG.fieldOf("until").forGetter(Complaint::until),Codec.BOOL.fieldOf("reported").forGetter(Complaint::reported)).apply(i,Complaint::new));
+    record Complaint(UUID attacker,BlockPos seen,long callAt,long until,boolean reported,String crime){
+        Complaint(UUID attacker,BlockPos seen,long callAt,long until,boolean reported){this(attacker,seen,callAt,until,reported,"ASSAULT");}
+        static final Codec<Complaint> CODEC=RecordCodecBuilder.create(i->i.group(UUIDUtil.CODEC.fieldOf("attacker").forGetter(Complaint::attacker),BlockPos.CODEC.fieldOf("seen").forGetter(Complaint::seen),Codec.LONG.fieldOf("callAt").forGetter(Complaint::callAt),Codec.LONG.fieldOf("until").forGetter(Complaint::until),Codec.BOOL.fieldOf("reported").forGetter(Complaint::reported),Codec.STRING.optionalFieldOf("crime","ASSAULT").forGetter(Complaint::crime)).apply(i,Complaint::new));
     }
     static final AttachmentType<Map<String,Return>> RETURNS=AttachmentRegistry.<Map<String,Return>>builder().persistent(Codec.unboundedMap(Codec.STRING,Return.CODEC)).buildAndRegister(Napuli.id("resident_returns"));
     static final AttachmentType<Map<String,Complaint>> CALLS=AttachmentRegistry.<Map<String,Complaint>>builder().persistent(Codec.unboundedMap(Codec.STRING,Complaint.CODEC)).buildAndRegister(Napuli.id("resident_complaints"));
     static boolean human(NapoliResident npc){return !npc.role().spirit()&&!npc.entityTags().contains("napuli_practice_actor");}
     static boolean absent(ServerLevel city,UUID id){return city.getAttachedOrElse(RETURNS,Map.of()).containsKey(id.toString());}
     static void attacked(NapoliResident npc,ServerPlayer attacker){
+        complain(npc,attacker,Carabinieri.Crime.ASSAULT,attacker.blockPosition(),false);
+    }
+    static void complain(NapoliResident npc,ServerPlayer attacker,Carabinieri.Crime crime,BlockPos seen,boolean theft){
         var city=(ServerLevel)npc.level();if(!human(npc)||!npc.isAlive()||city.dimension()!=NapoliMap.LEVEL)return;
         long now=city.getGameTime();var all=new HashMap<>(city.getAttachedOrElse(CALLS,Map.of()));var old=all.get(npc.getUUID().toString());
-        if(old!=null&&old.until()>now&&old.attacker().equals(attacker.getUUID())&&(!old.reported()||Carabinieri.isWanted(attacker)))return;
-        all.put(npc.getUUID().toString(),new Complaint(attacker.getUUID(),attacker.blockPosition().immutable(),now+(npc.role()==NapoliResident.Role.CARABINIERE?0:60),now+600,false));city.setAttached(CALLS,Map.copyOf(all));
+        boolean same=old!=null&&old.until()>now&&old.attacker().equals(attacker.getUUID());
+        if(same&&offence(old).gravity>=crime.gravity&&(!old.reported()||Carabinieri.isWanted(attacker)))return;
+        long due=now+(npc.role()==NapoliResident.Role.CARABINIERE?0:60);if(same&&!old.reported())due=Math.min(due,old.callAt());
+        all.put(npc.getUUID().toString(),new Complaint(attacker.getUUID(),seen.immutable(),due,now+600,false,crime.name()));city.setAttached(CALLS,Map.copyOf(all));
         CityNeighborhood.leave(city,npc.getUUID());CityMovement.stand(npc);if(npc.isSleeping())npc.stopSleeping();
-        for(var viewer:city.players())if(viewer.distanceToSqr(npc)<24*24)NpcSpeech.reply(viewer,npc,CityText.t("safety.calling"));
+        for(var viewer:city.players())if(viewer.distanceToSqr(npc)<24*24)NpcSpeech.reply(viewer,npc,CityText.t(theft?"vehicle.theft.calling":"safety.calling"));
     }
+    private static Carabinieri.Crime offence(Complaint c){try{return Carabinieri.Crime.valueOf(c.crime());}catch(IllegalArgumentException invalid){return Carabinieri.Crime.ASSAULT;}}
     static boolean react(NapoliResident npc,ServerLevel city){
         var call=city.getAttachedOrElse(CALLS,Map.of()).get(npc.getUUID().toString());if(call==null||city.getGameTime()>=call.until()||npc.role()==NapoliResident.Role.CARABINIERE||npc.role().fighter())return false;
         if(npc.isNoAi()||npc.isPassenger())return false;
@@ -59,8 +66,8 @@ final class CityResidentSafety {
             var c=e.getValue();if(c.until()<=now||absent(city,UUID.fromString(e.getKey()))){calls.remove(e.getKey());changed=true;continue;}
             if(c.reported()||now<c.callAt())continue;var player=city.getServer().getPlayerList().getPlayer(c.attacker());
             if(player==null||player.level()!=city||player.isSpectator()||Carabinieri.isJailed(player))continue;
-            Carabinieri.denounce(player,Carabinieri.Crime.ASSAULT,c.seen());calls.put(e.getKey(),new Complaint(c.attacker(),c.seen(),c.callAt(),c.until(),true));changed=true;
-            if(city.getEntity(UUID.fromString(e.getKey())) instanceof NapoliResident npc)for(var viewer:city.players())if(viewer.distanceToSqr(npc)<24*24)NpcSpeech.reply(viewer,npc,CityText.t("safety.reported"));
+            Carabinieri.denounce(player,offence(c),c.seen());calls.put(e.getKey(),new Complaint(c.attacker(),c.seen(),c.callAt(),c.until(),true,c.crime()));changed=true;
+            if(city.getEntity(UUID.fromString(e.getKey())) instanceof NapoliResident npc)for(var viewer:city.players())if(viewer.distanceToSqr(npc)<24*24)NpcSpeech.reply(viewer,npc,CityText.t(offence(c)==Carabinieri.Crime.ASSAULT?"safety.reported":"vehicle.theft.reported"));
         }if(changed)city.setAttached(CALLS,Map.copyOf(calls));
         var pending=new HashMap<>(city.getAttachedOrElse(RETURNS,Map.of()));changed=false;int restored=0;
         for(var e:List.copyOf(pending.entrySet())){

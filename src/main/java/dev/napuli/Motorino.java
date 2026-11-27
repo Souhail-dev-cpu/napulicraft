@@ -29,12 +29,15 @@ import net.minecraft.world.phys.Vec3;
 public class Motorino extends Mob {
     private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> CITIZEN=net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
     private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> POLICE=net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> STOLEN=net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    public boolean stolenVehicle(){return entityData.get(STOLEN);}
+    void setStolenVehicle(boolean value){entityData.set(STOLEN,value);}
     public boolean policeVehicle(){return entityData.get(POLICE);}
     void configurePolice(){entityData.set(POLICE,true);setNoAi(true);getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);}
     boolean residentOwned(){return entityData.get(CITIZEN);}
     void configureResident(){entityData.set(CITIZEN,true);setNoAi(true);}
-    @Override public boolean shouldBeSaved(){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&super.shouldBeSaved();}
-    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&!CityMobility.managed(this)&&super.saveAsPassenger(out);}
+    @Override public boolean shouldBeSaved(){return (VehicleTheft.taken(this)||!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&(VehicleTheft.taken(this)||!CityMobility.managed(this))&&super.shouldBeSaved();}
+    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return (VehicleTheft.taken(this)||!PoliceVehicles.managed(this)||PoliceVehicles.saved(this))&&(VehicleTheft.taken(this)||!CityMobility.managed(this))&&super.saveAsPassenger(out);}
 	public static final int MAX_PASSENGERS = 3;
 	private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> STATION =
 			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
@@ -69,6 +72,7 @@ public class Motorino extends Mob {
 		b.define(PARADE, false);
 		b.define(CITIZEN,false);
         b.define(POLICE,false);
+        b.define(STOLEN,false);
 	}
 
 	/** every rider wears something on the head */
@@ -81,6 +85,7 @@ public class Motorino extends Mob {
 	@Override
 	protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
 		super.addAdditionalSaveData(out);
+        out.putBoolean("npc_vehicle_stolen",stolenVehicle());out.putBoolean("npc_vehicle_police",policeVehicle());
 		out.putInt("napuli_parade_ticks", paradeTicks);
 		out.putInt("napuli_station", station());
 		out.putInt("napuli_last_station", lastStation);
@@ -89,6 +94,7 @@ public class Motorino extends Mob {
 	@Override
 	protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
 		super.readAdditionalSaveData(in);
+        entityData.set(STOLEN,in.getBooleanOr("npc_vehicle_stolen",false));entityData.set(POLICE,in.getBooleanOr("npc_vehicle_police",false));
 		paradeTicks = in.getIntOr("napuli_parade_ticks", 0);
 		entityData.set(PARADE, paradeTicks > 0);
 		lastStation = in.getIntOr("napuli_last_station", 0);
@@ -98,6 +104,7 @@ public class Motorino extends Mob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
+        if(level() instanceof ServerLevel city&&VehicleTheft.tick(this,city))return;
         if(level() instanceof ServerLevel city&&PoliceVehicles.drive(this,city))return;
 		if(level() instanceof ServerLevel city&&CityMobility.drive(this,city))return;
 		if (!level().isClientSide() && !inParade() && tickCount % 20 == 0 && !ScooterGarage.observe(this, getFirstPassenger() instanceof ServerPlayer p ? p : null)) return;
@@ -149,6 +156,7 @@ public class Motorino extends Mob {
 
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if(VehicleTheft.eligible(this))return VehicleTheft.interact(player,this,hand);
 		if(CityMobility.managed(this)||PoliceVehicles.managed(this))return InteractionResult.PASS;
 		if (inParade()) return InteractionResult.PASS;
 		if (player instanceof ServerPlayer p && !ScooterGarage.observe(this,p)) return InteractionResult.FAIL;
@@ -178,6 +186,7 @@ public class Motorino extends Mob {
 
 	@Override
 	protected boolean canAddPassenger(Entity passenger) {
+        if(VehicleTheft.taken(this))return passenger instanceof Player&&getPassengers().isEmpty();
         if(PoliceVehicles.managed(this))return getPassengers().isEmpty()&&PoliceVehicles.mayBoard(this,passenger);
 		if(CityMobility.managed(this))return getPassengers().isEmpty()&&CityMobility.mayBoard(this,passenger);
 		return getPassengers().size() < MAX_PASSENGERS && (!inParade() || !(passenger instanceof Player));

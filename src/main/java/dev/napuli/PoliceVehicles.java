@@ -25,6 +25,8 @@ final class PoliceVehicles {
     static boolean managed(Entity vehicle){return vehicle!=null&&(vehicle.entityTags().contains(TAG)||vehicle instanceof Motorino m&&m.policeVehicle()||vehicle instanceof CityVehicle c&&c.policeVehicle());}
     static boolean riding(Entity officer){return managed(officer.getVehicle());}
     static UUID identity(UUID officer){return UUID.nameUUIDFromBytes(("napuli:police_vehicle:"+officer).getBytes(StandardCharsets.UTF_8));}
+    static UUID owner(Entity vehicle){return vehicle.getAttached(DRIVER);}
+    static void taken(Entity vehicle){vehicle.removeAttached(DRIVE);var queue=RETIRING.get((ServerLevel)vehicle.level());if(queue!=null)queue.remove(vehicle);}
     static boolean mayBoard(Entity vehicle,Entity passenger){return passenger instanceof NapoliResident npc&&npc.role()==NapoliResident.Role.CARABINIERE&&(vehicle.level().isClientSide()||passenger.getUUID().equals(vehicle.getAttached(DRIVER)));}
     private static NapoliResident driver(Entity vehicle){var id=vehicle.getAttached(DRIVER);var actor=id==null?null:((ServerLevel)vehicle.level()).getEntity(id);if(actor instanceof NapoliResident npc)return npc;return vehicle.getPassengers().stream().filter(p->p instanceof NapoliResident).map(p->(NapoliResident)p).findFirst().orElse(null);}
     static boolean saved(Entity vehicle){return vehicle.getAttachedOrElse(LEGACY,false);}
@@ -41,7 +43,7 @@ final class PoliceVehicles {
         else{if(NapoliAtlas.ORIGINAL.contains(from.getX(),from.getZ())||NapoliAtlas.ORIGINAL.contains(goal.getX(),goal.getZ()))return List.of();streets=CityRoutes.between(from,goal);if(streets.size()<2||streets.getFirst().distSqr(from)>26*26||streets.getLast().distSqr(goal)>80*80)return List.of();}
         var points=new ArrayList<>(CityMobility.route(streets,from));if(points.size()>3){var a=Vec3.atBottomCenterOf(points.get(1));var edge=Vec3.atBottomCenterOf(points.get(2)).subtract(a);double t=Vec3.atBottomCenterOf(from).subtract(a).dot(edge)/Math.max(.01,edge.lengthSqr());if(t>0&&t<1)points.remove(1);}return List.copyOf(points);
     }
-    private static int count(ServerLevel city){int n=0;for(var e:city.getAllEntities())if(managed(e))n++;return n;}
+    private static int count(ServerLevel city){int n=0;for(var e:city.getAllEntities())if(managed(e)&&!VehicleTheft.taken(e))n++;return n;}
     static boolean pursue(NapoliResident officer,ServerPlayer suspect,BlockPos known,long observed,int role){
         var city=(ServerLevel)officer.level();long now=city.getGameTime();
         if(riding(officer)){var vehicle=officer.getVehicle();var d=vehicle.getAttached(DRIVE);if(d==null||!d.suspect.equals(suspect.getUUID())){requestStop(officer);return true;}d.goal=known.immutable();d.observed=observed;return true;}
@@ -53,7 +55,7 @@ final class PoliceVehicles {
     }
     static void course(Entity vehicle,ServerPlayer suspect,BlockPos known,long observed,List<BlockPos> route){var d=new Drive(suspect.getUUID(),known.immutable(),observed,route);d.repath=vehicle.level().getGameTime()+20;vehicle.setAttached(DRIVE,d);}
     static Entity create(ServerLevel city,NapoliResident officer,String mode){
-        if(CityJourneys.known(city,identity(officer.getUUID()))||!city.areEntitiesActuallyLoadedAndTicking(net.minecraft.world.level.ChunkPos.containing(officer.blockPosition())))return null;
+        if(VehicleTheft.missing(city,officer.getUUID())||CityJourneys.known(city,identity(officer.getUUID()))||!city.areEntitiesActuallyLoadedAndTicking(net.minecraft.world.level.ChunkPos.containing(officer.blockPosition())))return null;
         var vehicle=mode.equals("scooter")?Napuli.MOTORINO.create(city,EntitySpawnReason.EVENT):Napuli.CITY_VEHICLE.create(city,EntitySpawnReason.EVENT);if(vehicle==null)return null;
         vehicle.setUUID(identity(officer.getUUID()));vehicle.addTag(TAG);vehicle.setAttached(DRIVER,officer.getUUID());vehicle.setPos(officer.position());
         vehicle.setAttached(LEGACY,!PolicePatrols.managed(officer)&&NapoliCivicLife.profile(city,officer.getUUID())==null);
@@ -63,6 +65,7 @@ final class PoliceVehicles {
         return city.addFreshEntity(vehicle)?vehicle:null;
     }
     static boolean drive(Entity vehicle,ServerLevel city){
+        if(VehicleTheft.taken(vehicle))return false;
         if(!managed(vehicle))return false;var npc=driver(vehicle);var d=vehicle.getAttached(DRIVE);long now=city.getGameTime();
         var suspect=d==null?null:city.getServer().getPlayerList().getPlayer(d.suspect);
         if(npc==null||!npc.isAlive()||npc.getVehicle()!=vehicle||d==null||suspect==null||suspect.level()!=city||!suspect.isAlive()||!Carabinieri.isWanted(suspect)||Carabinieri.isJailed(suspect)||city.players().stream().noneMatch(p->p.distanceToSqr(vehicle)<128*128)){release(vehicle,city);return true;}
@@ -83,10 +86,11 @@ final class PoliceVehicles {
         return null;
     }
     private static void release(Entity vehicle,ServerLevel city){
+        if(VehicleTheft.taken(vehicle))return;
         var npc=driver(vehicle);if(npc!=null&&npc.getVehicle()==vehicle){var at=exit(city,vehicle,npc);if(at==null)return;npc.stopRiding();npc.snapTo(at.getX()+.5,at.getY(),at.getZ()+.5,npc.getYRot(),0);npc.setAttached(REST,city.getGameTime()+160);npc.getNavigation().stop();if(npc.isAlive()&&!npc.isRemoved())npc.resumePatrol();}
         vehicle.discard();PoliceDispatch.invalidate(city);
     }
-    static void requestStop(NapoliResident officer){if(riding(officer))RETIRING.computeIfAbsent((ServerLevel)officer.level(),k->new HashSet<>()).add(officer.getVehicle());}
+    static void requestStop(NapoliResident officer){if(riding(officer)&&!VehicleTheft.taken(officer.getVehicle()))RETIRING.computeIfAbsent((ServerLevel)officer.level(),k->new HashSet<>()).add(officer.getVehicle());}
     static void finish(ServerPlayer suspect){var city=suspect.level();var all=new ArrayList<Entity>();for(var e:city.getAllEntities())if(managed(e)&&e.getAttached(DRIVE)!=null&&e.getAttached(DRIVE).suspect.equals(suspect.getUUID()))all.add(e);for(var e:all)release(e,city);}
     static void register(){
         ServerTickEvents.END_SERVER_TICK.register(server->{for(var city:server.getAllLevels()){var pending=RETIRING.remove(city);if(pending!=null)for(var e:pending)release(e,city);}});

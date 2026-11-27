@@ -84,6 +84,12 @@ loom {
             runDir '.gradle/police-vehicle-client'
             programArgs '--width', '1280', '--height', '800'
         }
+        vehicleTheftTest {
+            client()
+            vmArg '-Dnapuli.vehiclethefttest=true'
+            runDir '.gradle/vehicle-theft-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
 		policeaitest {
 			client()
 			name "Napuli police navigation test"
@@ -508,6 +514,20 @@ tasks.named('runPoliceVehicleTest') {
     jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/police-vehicle-natives').asFile.absolutePath
     def log = layout.projectDirectory.file('.gradle/police-vehicle-client/logs/latest.log').asFile
     doLast { if (!log.exists() || !log.text.contains('[POLICEVEHICLE] ALL PASSED')) throw new GradleException('Police vehicle verification failed; see .gradle/police-vehicle-client/logs/latest.log') }
+}
+tasks.register('prepareVehicleTheftTest') {
+    def directory = layout.projectDirectory.dir('.gradle/vehicle-theft-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:4\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runVehicleTheftTest') {
+    dependsOn 'prepareVehicleTheftTest'
+    mustRunAfter 'runGameTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/vehicle-theft-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/vehicle-theft-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[VEHICLETHEFT] ALL PASSED')) throw new GradleException('Vehicle theft verification failed; see .gradle/vehicle-theft-client/logs/latest.log') }
 }
 tasks.named('runNpcLifeTest') {
     dependsOn 'prepareNpcLifeTest'

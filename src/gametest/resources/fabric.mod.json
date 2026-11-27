@@ -48,7 +48,8 @@
       "dev.napuli.NightlifeGameTest",
       "dev.napuli.MobilityGameTest",
       "dev.napuli.ResidentSafetyGameTest",
-      "dev.napuli.PoliceVehicleGameTest"
+      "dev.napuli.PoliceVehicleGameTest",
+      "dev.napuli.VehicleTheftGameTest"
     ]
   },
   "depends": {

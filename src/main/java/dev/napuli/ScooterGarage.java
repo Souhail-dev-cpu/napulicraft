@@ -27,7 +27,7 @@ final class ScooterGarage {
     static void put(ServerLevel level,Bike bike){var all=new HashMap<>(registry(level).getAttachedOrElse(BIKES,Map.of()));all.put(bike.id().toString(),bike);registry(level).setAttached(BIKES,Map.copyOf(all));}
     static String dimension(ServerLevel level){return level.dimension().identifier().toString();}
     static boolean observe(Motorino m,ServerPlayer driver){
-        if(m.inParade()||!(m.level() instanceof ServerLevel level))return true;
+        if(m.inParade()||VehicleTheft.taken(m)||CityMobility.managed(m)||PoliceVehicles.managed(m)||!(m.level() instanceof ServerLevel level))return true;
         var owner=m.getAttached(OWNER);if(owner==null){if(driver==null)return true;owner=driver.getUUID();m.setAttached(OWNER,owner);}
         var old=get(level,m.getUUID());int generation=m.getAttachedOrElse(GENERATION,0);
         if(old!=null&&(old.stored()||old.generation()!=generation||!old.owner().equals(owner))){m.discard();return false;}

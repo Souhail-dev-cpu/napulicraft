@@ -65,11 +65,11 @@ final class NapoliFishingHarbour {
     }
 
     private static void refurbishBorgo(ServerLevel level) {
-        Block cloth = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace("white_wool"));
+        Block cloth = CityBlocks.vanilla("white_wool");
         String[] colors = {"blue_wool", "green_wool", "red_wool", "yellow_wool"};
         for (int i = 0; i < colors.length; i++) {
             int start = 19 + i * 7;
-            Block stripe = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(colors[i]));
+            Block stripe = CityBlocks.vanilla(colors[i]);
             for (int dx = 1; dx <= 5; dx++) for (int z = 80; z <= 81; z++) {
                 BlockPos pos = new BlockPos(start + dx, 67, z);
                 if (level.getBlockState(pos).isAir()) put(level, start + dx, 67, z, dx % 2 == 0 ? cloth : stripe);

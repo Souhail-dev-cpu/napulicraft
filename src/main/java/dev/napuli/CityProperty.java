@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,9 +29,21 @@ public final class CityProperty {
     private static final AttachmentType<List<Home>> EXTRA_HOMES = AttachmentRegistry.<List<Home>>builder()
             .persistent(Home.CODEC.listOf()).buildAndRegister(Napuli.id("city_home_bounds"));
     private static final List<Home> CATALOGUE = catalogue();
+    private record HomeIndex(List<Home> extra,Map<Long,List<Home>> buckets){}
+    private static final AttachmentType<HomeIndex> INDEX=AttachmentRegistry.create(Napuli.id("city_home_index"));
     private CityProperty() {}
 
     static void register() {
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player,level,hand,hit)->{
+            if(player instanceof ServerPlayer p && level.dimension()==NapoliMap.LEVEL && !p.isCreative() && !p.isSpectator()
+                    && level.getBlockState(hit.getBlockPos()).getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                    && !sleepAllowed(p,hit.getBlockPos())){
+                Carabinieri.crime(p,Carabinieri.Crime.TRESPASS);
+                NapoliNotice.show(p,CityText.t("sleep.trespass"));
+                return net.minecraft.world.InteractionResult.FAIL;
+            }
+            return net.minecraft.world.InteractionResult.PASS;
+        });
         PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
             if (!(level instanceof ServerLevel serverLevel) || level.dimension() != NapoliMap.LEVEL) return;
             boolean damagedProperty = isVandalism(serverLevel, pos, state);
@@ -38,6 +51,18 @@ public final class CityProperty {
             if (damagedProperty && player instanceof ServerPlayer serverPlayer && !player.isCreative() && !player.isSpectator())
                 Carabinieri.crime(serverPlayer, Carabinieri.Crime.VANDALISM);
         });
+    }
+
+    static boolean sleepAllowed(ServerPlayer player,BlockPos bed){
+        if(player.level().dimension()!=NapoliMap.LEVEL)return true;
+        return sleepAllowed(player.level(),player.getUUID(),bed,player.hasAttached(NapoliEmployment.WORK));
+    }
+    static boolean sleepAllowed(ServerLevel city,java.util.UUID player,BlockPos bed,boolean employed){
+        for(var home:CityLivingHomes.all())if(home.contains(bed))
+            return HomePermissions.allows(city,home,player,HomePermissions.Capability.APPLIANCES);
+        // Legacy houses are not all in the ownership catalogue, but are still private homes.
+        if(NapoliWestQuarter.WORKER_HOME.contains(bed))return employed;
+        return !home(city,bed);
     }
 
     public static void placed(ServerLevel level, BlockPos pos) {
@@ -66,8 +91,15 @@ public final class CityProperty {
         return !broken.isAir() && !playerPlaced(level, pos) && home(level, pos);
     }
     static boolean home(ServerLevel level, BlockPos pos) {
-        for (Home home : CATALOGUE) if (home.contains(pos)) return true;
-        for (Home home : level.getAttachedOrElse(EXTRA_HOMES, List.of())) if (home.contains(pos)) return true;
+        var extra=level.getAttachedOrElse(EXTRA_HOMES,List.of());var index=level.getAttached(INDEX);
+        if(index==null||index.extra()!=extra){
+            var buckets=new HashMap<Long,java.util.ArrayList<Home>>();
+            for(var home:homes(level))for(int x=home.min().getX()>>4;x<=home.max().getX()>>4;x++)for(int z=home.min().getZ()>>4;z<=home.max().getZ()>>4;z++)
+                buckets.computeIfAbsent(new net.minecraft.world.level.ChunkPos(x,z).pack(),key->new java.util.ArrayList<>()).add(home);
+            var immutable=new HashMap<Long,List<Home>>();buckets.forEach((key,value)->immutable.put(key,List.copyOf(value)));
+            index=new HomeIndex(extra,Map.copyOf(immutable));level.setAttached(INDEX,index);
+        }
+        for(var home:index.buckets().getOrDefault(net.minecraft.world.level.ChunkPos.containing(pos).pack(),List.of()))if(home.contains(pos))return true;
         return false;
     }
     static List<Home> homes(ServerLevel level) {
@@ -88,6 +120,7 @@ public final class CityProperty {
         homes.addAll(level.getAttachedOrElse(EXTRA_HOMES, List.of()));
         return homes;
     }
+    static List<Home> classicHomes(){return CATALOGUE;}
 
     private static void classic(List<Home> homes, int x, int z, int index) {
         homes.add(new Home(new BlockPos(x, 63, z), new BlockPos(x + 10, 64 + 12 + Math.floorMod(index, 4) * 3, z + 11)));

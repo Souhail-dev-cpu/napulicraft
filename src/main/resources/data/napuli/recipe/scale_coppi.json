@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "C  ",
+    "CC ",
+    "CCC"
+  ],
+  "key": {
+    "C": "napuli:coppi_napoletani"
+  },
+  "result": {
+    "id": "napuli:scale_coppi",
+    "count": 4
+  }
+}

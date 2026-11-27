@@ -64,7 +64,9 @@ public final class WorkEcosystemGameTest {
         h.assertTrue(WorkResources.target(p,c)!=null,"Without boards the job points toward actual timber");p.getInventory().add(new ItemStack(Items.OAK_LOG));
         h.assertTrue(WorkResources.target(p,c).equals(WorkResources.bench().south()),"A harvested log changes the target to processing");move(p,WorkResources.bench().south());
         h.assertTrue(WorkResources.processPickup(p)==1&&WorkResources.count(p,Items.OAK_LOG)==0&&WorkResources.count(p,Items.OAK_PLANKS)==4,"One real log becomes four boards");
-        h.assertTrue(WorkResources.target(p,c)==null,"With boards available the ordinary delivery objective resumes");
+        h.assertTrue(WorkResources.target(p,c)!=null,"One log is only part of the required batch");
+        p.getInventory().add(new ItemStack(Items.OAK_PLANKS,12));
+        h.assertTrue(WorkResources.target(p,c)==null,"With all sixteen boards available the delivery objective resumes");
     });h.succeed();}
     @GameTest public void parcelCollectionIsOwnedAndCannotBeRepeatedForFree(GameTestHelper h){inCity(h,players->{var p=players.getFirst();var c=NapoliEmployment.Contract.COURIER;select(p,c);move(p,WorkResources.DEPOT.south());
         h.assertTrue(WorkResources.processPickup(p)==1&&WorkResources.hasParcel(p,c),"A working courier can collect today's package at the depot");

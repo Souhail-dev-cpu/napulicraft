@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "napuli:intonaco_ocra",
+    "napuli:intonaco_corallo",
+    "napuli:maiolica_napoletana",
+    "napuli:coppi_napoletani",
+    "napuli:lastre_coppi",
+    "napuli:scale_coppi"
+  ]
+}

@@ -30,7 +30,7 @@ final class CityTraces {
     static final AttachmentType<Map<String,Issue>> ISSUES=AttachmentRegistry.<Map<String,Issue>>builder().persistent(Codec.unboundedMap(Codec.STRING,Issue.CODEC)).buildAndRegister(Napuli.id("neighborhood_repairs"));
     static void fixtures(ServerLevel city){
         for(var category:List.of(CityProfessions.Category.FOOD,CityProfessions.Category.TRADE))for(int x=3;x<=5;x++)for(int z=2;z<=3;z++){var pos=category.site().offset(x,0,z);if(city.isEmptyBlock(pos)&&!CityProperty.playerPlaced(city,pos))city.setBlock(pos,Blocks.OAK_PLANKS.defaultBlockState(),2);}
-        for(var h:CityLivingHomes.all())if(!h.id().startsWith("atlas_"))for(int i=-1;i<=1;i++){var p=h.entrance().east(i).above(4);if(city.isEmptyBlock(p)&&!CityProperty.playerPlaced(city,p))city.setBlock(p,BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("iron_chain")).defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS,net.minecraft.core.Direction.Axis.X),2);}
+        for(var h:CityLivingHomes.all())if(!h.id().startsWith("atlas_"))for(int i=-1;i<=1;i++){var p=h.entrance().east(i).above(4);if(city.isEmptyBlock(p)&&!CityProperty.playerPlaced(city,p))city.setBlock(p,CityBlocks.vanilla("iron_chain").defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS,net.minecraft.core.Direction.Axis.X),2);}
     }
     static Home home(ServerLevel city,String id){return city.getAttachedOrElse(HOMES,Map.of()).getOrDefault(id,Home.fresh());}
     static void put(ServerLevel city,String id,Home h){var all=new HashMap<>(city.getAttachedOrElse(HOMES,Map.of()));all.put(id,h);city.setAttached(HOMES,Map.copyOf(all));}

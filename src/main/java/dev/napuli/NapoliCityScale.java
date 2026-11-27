@@ -99,7 +99,7 @@ final class NapoliCityScale {
         for (BlockPos p : BlockPos.betweenClosed(x, 64, z, endX, roof, endZ + 1))
             if (!level.getBlockState(p).isAir()) return;
 
-        Block facade = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(colour));
+        Block facade = CityBlocks.vanilla(colour);
         rectangle(x, 63, z, endX, endZ, Blocks.SPRUCE_PLANKS);
         for (int y = 64; y <= roof; y++) {
             int floor = (y - 64) % 5;

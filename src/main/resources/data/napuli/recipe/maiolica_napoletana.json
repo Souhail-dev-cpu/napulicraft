@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "BW",
+    "WB"
+  ],
+  "key": {
+    "B": "minecraft:blue_dye",
+    "W": "minecraft:terracotta"
+  },
+  "result": {
+    "id": "napuli:maiolica_napoletana",
+    "count": 4
+  }
+}

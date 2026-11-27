@@ -39,7 +39,7 @@ public final class Carabinieri {
 	private Carabinieri() {}
 
 	public enum Crime {
-		THEFT(1, 28), ROBBERY(3, 52), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32);
+		THEFT(1, 28), ROBBERY(3, 52), PIZZO(2, 40), SHOOTING(2, 56), ASSAULT(3, 64), CASCO(1, 20), VANDALISM(1, 32), TRESPASS(1, 32);
 		final int gravity, witnessRange;
 		Crime(int gravity, int witnessRange) { this.gravity = gravity; this.witnessRange = witnessRange; }
 		String id() { return name().toLowerCase(); }
@@ -49,12 +49,12 @@ public final class Carabinieri {
 	static final BlockPos PIAZZA = new BlockPos(0, 64, 22);
 	static final java.util.List<BlockPos> CELLS = NapoliDistrict.CELLS;
 	static final BlockPos RELEASE = NapoliDistrict.PRISON_GATE;
-	static final int PATROL = 4;
 	static final int JAIL_SECONDS = 90, FINE = 15;
 
 	private static final class Wanted {
 		int gravity; long lastSeen; int grip; Crime crime;
-		Wanted(Crime c, long now) { crime = c; gravity = c.gravity; lastSeen = now; }
+		BlockPos position; net.minecraft.world.phys.Vec3 velocity=net.minecraft.world.phys.Vec3.ZERO;
+		Wanted(Crime c, long now, BlockPos position) { crime = c; gravity = c.gravity; lastSeen = now; this.position=position.immutable(); }
 	}
 	private record Jail(long until, GameType previous, BlockPos cell) {
 		static final Codec<Jail> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -71,9 +71,11 @@ public final class Carabinieri {
 	private static int nextCell;
 
 	public static void register() {
-		CityProperty.register();
+		PolicePatrols.register();
+		PoliceDispatch.register();
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{WANTED.clear();JAILED_NPC.clear();});
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
-			if (entity instanceof NapoliResident npc && npc.role() == NapoliResident.Role.CARABINIERE) PoliceTactics.stop(npc);
+			if (entity instanceof NapoliResident npc && npc.role() == NapoliResident.Role.CARABINIERE) PoliceTactics.unload(npc);
 		});
 		// no zombies, skeletons, creepers, phantoms... in the city: dark rooms in palaces and churches spawned them.
 		// Only our own creatures (Munaciello, the giant) may haunt Naples.
@@ -100,6 +102,7 @@ public final class Carabinieri {
 	}
 
 	public static boolean isWanted(ServerPlayer p) { return WANTED.containsKey(p.getUUID()); }
+	static BlockPos lastKnown(ServerPlayer p){var w=WANTED.get(p.getUUID());return w==null?p.blockPosition():w.position;}
 
 	/** for the HUD: 0 = not wanted, else the gravity (stars) */
 	static int wantedStars(ServerPlayer p) { Wanted w = WANTED.get(p.getUUID()); return w == null ? 0 : w.gravity; }
@@ -116,8 +119,8 @@ public final class Carabinieri {
 	/** is this carabiniere busy chasing someone (then he doesn't wander around) */
 	static boolean chasing(ServerLevel level, NapoliResident cc) {
 		if (PoliceTactics.active(cc)) return true;
-		for (ServerPlayer p : level.players())
-			if (WANTED.containsKey(p.getUUID()) && p.distanceToSqr(cc) < PoliceTactics.RANGE * PoliceTactics.RANGE) return true;
+		var order=PoliceDispatch.order(cc);
+		if(order!=null)for(var p:level.players())if(p.getUUID().equals(order.suspect())&&isWanted(p)&&p.isAlive()&&!p.isSpectator()&&!isJailed(p))return true;
 		return false;
 	}
 	public static boolean isJailed(ServerPlayer p) { return p.hasAttached(JAIL); }
@@ -131,7 +134,7 @@ public final class Carabinieri {
 		if (!seen && !called) return;
 		Wanted w = WANTED.get(p.getUUID());
 		if (w == null) {
-			WANTED.put(p.getUUID(), new Wanted(c, now));
+			WANTED.put(p.getUUID(), new Wanted(c, now,p.blockPosition()));
 			title(p, "napuli.cc.title", seen ? "napuli.cc.seen." + c.id() : "napuli.cc.called");
 			siren(level, p);
 			if (called) reinforcements(level, p);
@@ -143,6 +146,8 @@ public final class Carabinieri {
 		} else {
 			w.lastSeen = now;
 		}
+		w=WANTED.get(p.getUUID());w.position=p.blockPosition();w.velocity=p.getDeltaMovement();
+		PoliceDispatch.invalidate(level);
 	}
 
 	static List<NapoliResident> carabinieri(ServerLevel level, BlockPos around, double range) {
@@ -158,7 +163,8 @@ public final class Carabinieri {
 	}
 
 	private static void reinforcements(ServerLevel level, ServerPlayer p) {
-		for (int i = 0; i < 2; i++) {
+		int nearby=(int)carabinieri(level,p.blockPosition(),PoliceTactics.RANGE).stream().filter(PoliceDispatch::eligible).count();
+		for (int i = nearby; i < 2; i++) {
 			BlockPos at = Spawner.groundNear(level, p, 22, 30);
 			if (at != null) NapoliResident.spawn(level, NapoliResident.Role.CARABINIERE, at, 0);
 		}
@@ -175,20 +181,20 @@ public final class Carabinieri {
 			Jail j = p.getAttached(JAIL);
 			if (j != null && p.isAlive()) serve(city, p, j, now);
 		}
+		boolean removed=WANTED.keySet().removeIf(id -> server.getPlayerList().getPlayer(id) == null
+				|| server.getPlayerList().getPlayer(id).level() != city || !server.getPlayerList().getPlayer(id).isAlive());
+		if(removed)PoliceDispatch.invalidate(city);
 		for (ServerPlayer p : List.copyOf(city.players())) {
 			if (isJailed(p)) continue;
 			Wanted w = WANTED.get(p.getUUID());
 			if (w != null) chase(city, p, w, now);
 		}
-		// players who left the city stop being wanted (they got away), jail time keeps counting if they log out
-		WANTED.keySet().removeIf(id -> server.getPlayerList().getPlayer(id) == null
-				|| server.getPlayerList().getPlayer(id).level() != city);
 		for (var entity : city.getAllEntities()) if (entity instanceof NapoliResident cc && cc.role() == NapoliResident.Role.CARABINIERE) {
 			boolean pursuing = false;
 			for (ServerPlayer player : city.players()) if (WANTED.containsKey(player.getUUID()) && PoliceTactics.assignedTo(cc, player)) { pursuing = true; break; }
 			if (!pursuing) PoliceTactics.stop(cc);
 		}
-		if (now % 100 == 0 && !city.players().isEmpty()) keepPatrol(city);
+		if (now % 100 == 0) {PolicePatrols.maintain(city);PoliceDispatch.invalidate(city);}
 		if (now % 20 == 0) helmetCheck(city);
 		if (now % 100 == 0) JAILED_NPC.entrySet().removeIf(e -> {
 			if (now < e.getValue()) return false;
@@ -199,13 +205,15 @@ public final class Carabinieri {
 	}
 
 	private static void chase(ServerLevel city, ServerPlayer p, Wanted w, long now) {
-		List<NapoliResident> near = carabinieri(city, p.blockPosition(), PoliceTactics.RANGE);
+		// Any actual sighting is shared by radio. Hidden movement never changes the search location.
+		if(carabinieri(city,p.blockPosition(),PoliceTactics.SIGHT_RANGE).stream().anyMatch(cc->cc.hasLineOfSight(p))){
+			w.lastSeen=now;w.position=p.blockPosition();w.velocity=p.getDeltaMovement();
+		}
+		List<NapoliResident> near = PoliceDispatch.team(p);
 		boolean caught = false;
 		for (NapoliResident cc : near) {
 			if (!PoliceTactics.assignedTo(cc, p)) continue;
-			PoliceTactics.pursue(cc, p, now);
-			boolean visible = cc.hasLineOfSight(p);
-			if (visible || PoliceTactics.breaching(cc)) w.lastSeen = now;
+			PoliceTactics.pursue(cc,p,now,w.position,w.velocity,w.lastSeen,PoliceDispatch.order(cc).role());
             if (PoliceTactics.canGrab(cc, p)) caught = true;
 		}
 		if (now % 40 == 0) siren(city, p);
@@ -213,12 +221,14 @@ public final class Carabinieri {
 		if (w.grip >= 25) { arrest(city, p, w); return; }
 		if (now - w.lastSeen > 20 * 20) {
 			WANTED.remove(p.getUUID());
+			PoliceDispatch.invalidate(city);
 			title(p, "napuli.cc.lost.title", "napuli.cc.lost");
 		}
 	}
 
 	private static void arrest(ServerLevel city, ServerPlayer p, Wanted w) {
 		WANTED.remove(p.getUUID());
+		PoliceDispatch.invalidate(city);
 		for (NapoliResident cc : carabinieri(city, p.blockPosition(), 36)) cc.getNavigation().stop();
 		NapoliNotice.show(p, Component.translatable("napuli.cc.reason", Component.translatable("napuli.cc.crime." + w.crime.id())));
 		if (w.gravity <= 1 && NapoliStreet.cash(p) >= FINE) {
@@ -250,6 +260,7 @@ public final class Carabinieri {
 		if (!imprison(city, p, JAIL_SECONDS)) return false;
 		WANTED.remove(p.getUUID());
 		title(p, "napuli.cc.jail.title", "napuli.tax.evasion");
+		PoliceDispatch.invalidate(city);
 		NapoliNotice.show(p, Component.translatable("napuli.tax.jailed", JAIL_SECONDS));
 		return true;
 	}
@@ -277,16 +288,6 @@ public final class Carabinieri {
 		title(p, "napuli.cc.free.title", "napuli.cc.free");
 	}
 
-	/** keep a few patrols around: two at the caserma, two in the piazza */
-	private static void keepPatrol(ServerLevel city) {
-		int have = city.getEntities(Napuli.RESIDENT, r -> r.role() == NapoliResident.Role.CARABINIERE).size();
-		for (int i = have; i < PATROL; i++) {
-			BlockPos base = i % 2 == 0 ? POST : PIAZZA;
-			if (!city.isLoaded(base)) continue;
-			NapoliResident.spawn(city, NapoliResident.Role.CARABINIERE, base.offset(i, 0, 0), 180);
-		}
-	}
-
 	/** for /napuli libera: out of the cell now */
 	public static boolean release(ServerPlayer p) {
 		Jail j = p.getAttached(JAIL);
@@ -299,7 +300,8 @@ public final class Carabinieri {
 	/** for /napuli carabinieri: get yourself reported */
 	public static void report(ServerPlayer p, Crime c) {
 		long now = p.level().getGameTime();
-		WANTED.put(p.getUUID(), new Wanted(c, now));
+		WANTED.put(p.getUUID(), new Wanted(c, now,p.blockPosition()));
+		PoliceDispatch.invalidate(p.level());
 		title(p, "napuli.cc.title", "napuli.cc.seen." + c.id());
 		if (p.level() instanceof ServerLevel level) { siren(level, p); reinforcements(level, p); }
 	}

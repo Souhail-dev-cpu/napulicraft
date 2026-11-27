@@ -47,8 +47,7 @@ final class CityDomestic {
         var city=(ServerLevel)npc.level();if(!city.hasChunkAt(target))return;
         if(!CityMovement.beforeMove(npc,target))return;
         if(target.distToCenterSqr(npc.position())<=2){npc.getNavigation().stop();return;}
-        var path=npc.getNavigation().createPath(target,0);
-        if(path!=null&&path.canReach())npc.getNavigation().moveTo(path,CityGestures.pace(npc));else npc.getNavigation().stop();
+        if(npc.getNavigation() instanceof ResidentNavigation navigation)navigation.moveSmart(target,CityGestures.pace(npc));
     }
     private static void barrel(ServerLevel city,BlockPos pos,boolean open){
         var state=city.getBlockState(pos);if(state.hasProperty(BarrelBlock.OPEN)&&state.getValue(BarrelBlock.OPEN)!=open)city.setBlock(pos,state.setValue(BarrelBlock.OPEN,open),2);

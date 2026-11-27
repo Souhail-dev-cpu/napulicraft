@@ -171,7 +171,7 @@ public final class NapoliExpansion {
     private static boolean clearLanding(int x,int z){for(var p:NapoliAtlas.PLACES)if(p.x()>=x-3&&p.x()<=x+25&&p.approachZ()>=z-3&&p.approachZ()<=z+29)return false;return true;}
     static boolean houseAllowed(int x,int z){return writable(x-4,z-4)&&writable(x+27,z+29)&&!water(x,z)&&!water(x+22,z+24)&&!nearPlace(x+11,z+12,15)&&!nearRoad(x+11,z+12,22)&&clearLanding(x,z)&&Math.abs(z-coast(x))>30&&Math.abs(legacyHeight(x,z)-legacyHeight(x+22,z+24))<12;}
     private static Block facade(int value){return switch(Math.floorMod(value,5)){case 0->Blocks.TERRACOTTA;case 1->block("yellow_terracotta");case 2->block("pink_terracotta");case 3->Blocks.BRICKS;default->Blocks.SMOOTH_SANDSTONE;};}
-    private static Block block(String id){return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(id));}
+    private static Block block(String id){return CityBlocks.vanilla(id);}
 
     /** Repairs only the old doorway template in the supplied loaded chunk, once per save. */
     static int repairEntrances(ServerLevel city,LevelChunk chunk){
@@ -184,8 +184,11 @@ public final class NapoliExpansion {
                     if(houseAllowed(x,z))changed+=repairEntrance(city,chunk,new BlockPos(x+11,legacyHeight(x+11,z+24)+1,z+23),facade(gx+gz),true);
                 }
         }
-        for(var h:CityLivingHomes.all())if(!h.id().startsWith("atlas_")&&h.style()>=0)
-            changed+=repairEntrance(city,chunk,h.entrance().north(),h.wall(),false);
+        for(var h:CityLivingHomes.inChunk(cp))if(!h.id().startsWith("atlas_")&&h.style()>=0){
+            var door=h.entrance().north();if(!ChunkPos.containing(door).equals(cp))continue;
+            var wall=chunk.getBlockState(door.above(3)).getBlock();
+            if(wall==h.wall()||wall==CityMaterials.facade(h.id().hashCode()))changed+=repairEntrance(city,chunk,door,wall,false);
+        }
         ((AttachmentTarget)chunk).setAttached(ENTRANCES_FIXED,true);
         return changed;
     }
@@ -234,6 +237,7 @@ public final class NapoliExpansion {
                 upgradeInteriors(city,chunk);
                 repairFrontages(city,chunk);
                 DistrictLife.fit(city,chunk);
+                CityArchitecture.fit(city,chunk);
                 CityRailway.fit(city,chunk);
                 WorkResources.fit(city,chunk);
                 CityPlayerImprovements.parking(city,chunk);

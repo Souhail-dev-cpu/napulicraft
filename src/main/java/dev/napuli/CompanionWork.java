@@ -13,8 +13,8 @@ final class CompanionWork {
         var card=NapoliEmployment.timecard(p,work.day());int ticks=Math.max(0,card.ticks());
         var objective=NapoliEmployment.objective(p);var next=objective==null?t("work.choose"):Component.translatable(objective.key());
         if(work.stage()==1&&work.day()==NapoliBroadcast.day(p.level())&&c.supplies!=null)
-            next=next.copy().append(" · ").append(t("recipe.count",c.supplies.getDefaultInstance().getHoverName(),Math.min(1,WorkResources.count(p,c.supplies)),1));
-        return t("work.summary",next,ticks/1000,(ticks%1000)*60/1000,ticks/1000*WorkCareer.hourly(p,c));
+            next=next.copy().append(" · ").append(t("recipe.count",c.supplies.getDefaultInstance().getHoverName(),Math.min(c.quantity(),WorkResources.count(p,c.supplies)),c.quantity()));
+        return t("work.summary",next,ticks/1000,(ticks%1000)*60/1000,NapoliEmployment.shiftPay(ticks,WorkCareer.hourly(p,c),true));
     }
     static int menu(ServerPlayer p){
         var entries=new ArrayList<CompanionBoard.Entry>();var c=WorkCareer.selected(p);

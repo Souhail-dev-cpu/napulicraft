@@ -122,7 +122,7 @@ final class FootballFacilities {
     }
 
     private static Block block(String name) {
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(name));
+        return CityBlocks.vanilla(name);
     }
 
     private static void fill(ServerLevel level, int x1, int y1, int z1, int x2, int y2, int z2, Block block) {

@@ -20,11 +20,20 @@ public final class CityVehicle extends PathfinderMob {
     private String lastStop="";
     private long lastStopAt;
     private String networkKey="";
+    private java.util.UUID taxiId,taxiOwner;
+    java.util.UUID taxiId(){return taxiId;}
+    java.util.UUID taxiOwner(){return taxiOwner;}
+    void configureTaxi(java.util.UUID id,java.util.UUID owner){
+        taxiId=id;taxiOwner=owner;setNoAi(false);
+        getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(.42);
+        getAttribute(Attributes.FOLLOW_RANGE).setBaseValue(64);
+        getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.2);
+    }
     long networkTick;
     String networkKey(){return networkKey;}
     void configureNetwork(String key,int kind){networkKey=key;networkTick=level().getGameTime();entityData.set(KIND,kind);setNoGravity(true);getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.STEP_HEIGHT).setBaseValue(1.2);}
-    @Override public boolean shouldBeSaved(){return networkKey.isEmpty()&&super.shouldBeSaved();}
-    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return networkKey.isEmpty()&&super.saveAsPassenger(out);}
+    @Override public boolean shouldBeSaved(){return taxiId==null&&networkKey.isEmpty()&&super.shouldBeSaved();}
+    @Override public boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput out){return taxiId==null&&networkKey.isEmpty()&&super.saveAsPassenger(out);}
     int remainingStop(){return stop;}
     boolean atStop(){return stop>0;}
     double distanceToStop(BlockPos target){
@@ -36,7 +45,7 @@ public final class CityVehicle extends PathfinderMob {
     }
     public CityVehicle(EntityType<? extends CityVehicle> type,Level level){super(type,level);setNoAi(true);setPersistenceRequired();}
     public int kind(){return entityData.get(KIND);}
-    public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16);}
+    public static AttributeSupplier.Builder attributes(){return createMobAttributes().add(Attributes.MAX_HEALTH,100).add(Attributes.MOVEMENT_SPEED,.16).add(Attributes.FOLLOW_RANGE,48);}
     @Override protected void defineSynchedData(SynchedEntityData.Builder b){super.defineSynchedData(b);b.define(KIND,0);}
     @Override protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out){super.addAdditionalSaveData(out);out.putInt("city_kind",kind());out.putInt("city_waypoint",waypoint);out.putInt("city_stop",stop);out.putString("city_last_stop",lastStop);out.putLong("city_last_stop_at",lastStopAt);}
     @Override protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in){super.readAdditionalSaveData(in);entityData.set(KIND,Math.clamp(in.getIntOr("city_kind",0),0,2));waypoint=in.getIntOr("city_waypoint",0);stop=in.getIntOr("city_stop",0);lastStop=in.getStringOr("city_last_stop","");lastStopAt=in.getLongOr("city_last_stop_at",0);}
@@ -46,6 +55,7 @@ public final class CityVehicle extends PathfinderMob {
     }
     @Override public void tick(){
         super.tick();if(level().isClientSide()||!(level() instanceof ServerLevel city))return;
+        if(PhoneServices.tickTaxi(this,city))return;
         if(!networkKey.isEmpty()){CityNetwork.drive(this,city);return;}
         if(city.players().stream().noneMatch(p->p.distanceToSqr(this)<112*112)){setDeltaMovement(Vec3.ZERO);return;}
         if(stop>0){stop--;setDeltaMovement(Vec3.ZERO);return;}
@@ -62,9 +72,10 @@ public final class CityVehicle extends PathfinderMob {
         setYRot((float)Math.toDegrees(Math.atan2(-motion.x,motion.z)));setYBodyRot(getYRot());setYHeadRot(getYRot());
         setDeltaMovement(motion);move(MoverType.SELF,motion);setDeltaMovement(Vec3.ZERO);
     }
-    @Override protected boolean canAddPassenger(Entity passenger){var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
+    @Override protected boolean canAddPassenger(Entity passenger){if(taxiId!=null)return passenger.getUUID().equals(taxiOwner)&&getPassengers().isEmpty();var line=networkKey.isEmpty()?null:CityNetwork.line(networkKey.split("/")[0]);return getPassengers().size()<(line==null?kind()==0?2:8:line.capacity());}
     @Override protected InteractionResult mobInteract(Player p,InteractionHand hand){
         if(hand!=InteractionHand.MAIN_HAND||p.isShiftKeyDown())return InteractionResult.PASS;
+        if(taxiId!=null){if(p instanceof net.minecraft.server.level.ServerPlayer sp)PhoneServices.boardTaxi(sp,this);return InteractionResult.SUCCESS;}
         if(!networkKey.isEmpty()){if(p instanceof net.minecraft.server.level.ServerPlayer sp)CityNetwork.lineMenu(sp,networkKey.split("/")[0]);return InteractionResult.SUCCESS;}
         if(!level().isClientSide()&&canAddPassenger(p)&&p.startRiding(this)){
             stop=60;if(p instanceof net.minecraft.server.level.ServerPlayer sp)NapoliNotice.show(sp, Component.literal("Trasporto urbano automatico. Shift per scendere."));

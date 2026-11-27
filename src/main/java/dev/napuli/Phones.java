@@ -109,7 +109,9 @@ public final class Phones {
         if(!available(p)){send(p,false,t("phone.unavailable"));return;}
         switch(request.operation()){
             case "message" -> message(p,resolve(p,request.target()),request.text());
-            case "call" -> dial(p,resolve(p,request.target()));
+            case "call" -> {if(!PhoneServices.dial(p,request.target()))dial(p,resolve(p,request.target()));}
+            case "taxi" -> PhoneServices.bookTaxi(p,request.target());
+            case "cancel_service" -> PhoneServices.cancel(p,request.target());
             case "answer" -> answer(p,request.target());
             case "share" -> {try{PhoneBook.share(p,UUID.fromString(request.target()));}catch(IllegalArgumentException ignored){}}
             case "accept_contact" -> PhoneBook.accept(p,request.target(),true);
@@ -211,6 +213,7 @@ public final class Phones {
         }
     }
     static void register(){
+        PhoneServices.register();
         PhoneBook.register();
         for(var m:PhoneModel.values()){
             var key=ResourceKey.create(Registries.ITEM,Napuli.id(m.id));

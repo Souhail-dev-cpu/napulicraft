@@ -41,6 +41,13 @@ loom {
 			vmArg "-Dnapuli.livingcitytest=true"
 			runDir "run-autotest"
 		}
+        cityQualityTest {
+            client()
+            name 'Napoli homes and materials quality verification'
+            vmArg '-Dnapuli.cityqualitytest=true'
+            runDir '.gradle/city-quality-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
 		policeaitest {
 			client()
 			name "Napuli police navigation test"
@@ -369,11 +376,29 @@ tasks.named('runPickpocketTest') {
     }
 }
 tasks.named('runLivingCityTest') {
+    mustRunAfter 'runGameTest'
 	doLast {
 		if (!taxTestLog.asFile.exists() || !taxTestLog.asFile.text.contains('[LIVINGCITYTEST] ALL PASSED')) {
 			throw new GradleException('Living city integration test failed; see run-autotest/logs/latest.log')
 		}
 	}
+}
+
+tasks.register('prepareCityQualityTest') {
+    def directory = layout.projectDirectory.dir('.gradle/city-quality-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:5\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runCityQualityTest') {
+    dependsOn 'prepareCityQualityTest'
+    mustRunAfter 'runGameTest', 'runLivingCityTest'
+    def log = layout.projectDirectory.file('.gradle/city-quality-client/logs/latest.log').asFile
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/city-quality-natives').asFile.absolutePath
+    doLast {
+        if (!log.exists() || !log.text.contains('[CITYQUALITY] ALL PASSED')) throw new GradleException('City quality verification failed; see .gradle/city-quality-client/logs/latest.log')
+    }
 }
 tasks.named('runAtlasTest') {
 	mustRunAfter 'runLivingCityTest', 'runFootballTest'

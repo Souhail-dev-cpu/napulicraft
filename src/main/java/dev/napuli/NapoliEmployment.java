@@ -61,6 +61,7 @@ public final class NapoliEmployment {
 
         String id() { return name().toLowerCase(Locale.ROOT); }
         Component nameLabel() { return Component.translatable(job.key()); }
+        int quantity() { return switch(this){case CARPENTER->16;case BAKER,GARDENER->4;case MERCHANT->12;case FISHER,PORTER,COURIER->3;case CLEANER->40;}; }
     }
 
     record Work(String contract, long day, int stage, long paid) {
@@ -76,7 +77,10 @@ public final class NapoliEmployment {
 
     private static final int HOUR = 1000;
     public static final int OPEN = 2500, CLOSE = 10500;
-    private static final int PATCHES = 4, SWEEPS = 3;
+    private static final int PATCHES = 8, SWEEPS = 5;
+    static final AttachmentType<Integer> PROGRESS = AttachmentRegistry.<Integer>builder().persistent(Codec.intRange(0,1000000))
+            .copyOnDeath().buildAndRegister(Napuli.id("work_deliveries"));
+    static int progress(ServerPlayer p){return p.getAttachedOrElse(PROGRESS,0);}
     private static final String SUPERVISOR = "napuli_supervisor_";
     private static final String ASSISTANT = "napuli_workmate_";
 
@@ -173,35 +177,36 @@ public final class NapoliEmployment {
         if (stage != 2 && (hour < OPEN || hour >= CLOSE)) { say(p, "closed"); return 0; }
         if (sign.equals(contract.clock) && stage == 0) {
             if (!WorkCareer.begin(p,contract)) return 0;
-            p.setAttached(HOURS, new Timecard(day, 0, 0, -HOUR, -HOUR));
+            p.setAttached(HOURS, new Timecard(day, 0, 0, p.level().getGameTime(), -HOUR));
+            p.setAttached(PROGRESS,0);
             p.setAttached(WORK, new Work(state.contract(), day, 1, state.paid()));
             say(p, "started");
             if (contract == Contract.CLEANER) say(p, "sweep_help");
             return status(p);
         }
-        if (sign.equals(contract.task) && state.day() == day && hour >= OPEN && hour < CLOSE && stage == 1
+        if (sign.equals(contract.task) && state.day() == day && hour >= OPEN && hour < CLOSE && stage >= 1
                 && contract != Contract.CLEANER) {
             if ((contract==Contract.PORTER||contract==Contract.COURIER)&&!WorkResources.consumeParcel(p,contract)) { p.sendSystemMessage(Component.literal("Ritira prima il pacco al deposito seguendo la freccia."));return 0; }
             if (contract.supplies != null) {
-                boolean found = false;
-                for (int i = 0; i < 36; i++) if (p.getInventory().getItem(i).is(contract.supplies)) {
-                    p.getInventory().removeItem(i, 1);
-                    found = true;
-                    break;
-                }
-                if (!found) {
-                    NapoliNotice.show(p, Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
+                if (WorkResources.count(p,contract.supplies)<contract.quantity()) {
+                    NapoliNotice.show(p, CityText.t("work.need_batch",contract.quantity(),contract.supplies.getDefaultInstance().getHoverName()));
                     return 0;
                 }
+                int left=contract.quantity();
+                for(int i=0;i<p.getInventory().getContainerSize()&&left>0;i++)if(p.getInventory().getItem(i).is(contract.supplies)){
+                    int amount=Math.min(left,p.getInventory().getItem(i).getCount());p.getInventory().removeItem(i,amount);left-=amount;
+                }
             }
-            if(stage==2)return status(p);
-            WorkEconomy.delivery(p.level(),contract,1);
+            int done=Math.min(1000000,progress(p)+1);p.setAttached(PROGRESS,done);
+            boolean complete=contract.supplies!=null||done>=contract.quantity();
+            WorkEconomy.delivery(p.level(),contract,contract.supplies==null?1:contract.quantity());
             CityEffects.particles(p.level(),net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
                     sign.getX() + .5, sign.getY() + 1, sign.getZ() + .5, 8, .35, .2, .35, .02);
-            p.setAttached(WORK, new Work(state.contract(), day, 2, state.paid()));
+            p.setAttached(WORK, new Work(state.contract(), day, complete?2:1, state.paid()));
             Timecard card = timecard(p, day);
             p.setAttached(HOURS, new Timecard(day, card.ticks(), card.sweeps(), p.level().getGameTime(), card.lastSweep()));
-            say(p, "done_task");
+            if(complete)say(p, "done_task");
+            else NapoliNotice.show(p,CityText.t("work.delivery_progress",done,contract.quantity()));
             return status(p);
         }
         if (sign.equals(contract.clock) && stage == 2) {
@@ -221,6 +226,7 @@ public final class NapoliEmployment {
             if(pay>0)WorkCareer.completed(p,contract,hours,pay);
             if (!beforeClose && ticks % HOUR != 0)
                 NapoliNotice.show(p, Component.translatable("napuli.work.partial_pay", ticks * 60 / HOUR, pay));
+            else if(ticks%HOUR!=0)NapoliNotice.show(p,Component.translatable("napuli.work.partial_pay",ticks*60/HOUR,pay));
             else NapoliNotice.show(p, Component.translatable("napuli.work.hour_pay", hours, pay));
             return 1;
         }
@@ -237,13 +243,13 @@ public final class NapoliEmployment {
         if (state.day() == NapoliBroadcast.day(p.level()) && state.stage() > 0) {
             int ticks = timecard(p, state.day()).ticks();
             NapoliNotice.show(p, Component.translatable("napuli.work.hours_status", ticks / HOUR, ticks % HOUR * 60 / HOUR,
-                    ticks / HOUR * WorkCareer.hourly(p,contract)));
+                    shiftPay(ticks,WorkCareer.hourly(p,contract),true)));
         }
         var target = objective.target();
         NapoliNotice.show(p, Component.translatable("napuli.work.status", contract.nameLabel(),
                 Component.translatable(objective.key()), target.getX(), target.getY(), target.getZ()));
         if (state.day() == NapoliBroadcast.day(p.level()) && state.stage() == 1 && contract.supplies != null)
-            NapoliNotice.show(p, Component.translatable("napuli.work.need", contract.supplies.getDefaultInstance().getHoverName()));
+            NapoliNotice.show(p, CityText.t("work.need_batch",contract.quantity(),contract.supplies.getDefaultInstance().getHoverName()));
         return 1;
     }
 
@@ -435,21 +441,21 @@ public final class NapoliEmployment {
         Timecard card = timecard(p, day);
         long now = city.getGameTime();
         if (contract == Contract.CLEANER && work.stage() == 1) {
-            BlockPos dirt = patch(card.sweeps() / SWEEPS);
+            BlockPos dirt = patch(card.sweeps() % (PATCHES*SWEEPS) / SWEEPS);
             CityEffects.particles(city,p, ParticleTypes.DUST_PLUME, false, false,
                     dirt.getX() + .5, dirt.getY() + 1.02, dirt.getZ() + .5, 3, .21, .01, .21, .004);
         }
-        if (card.ticks() >= CLOSE - OPEN || work.stage() == 1
-                && (card.action() < 0 || now - card.action() > 2L * HOUR)) return;
+        if (card.ticks() >= CLOSE - OPEN || card.action() < 0 || now - card.action() > 2L * HOUR) return;
         int ticks = card.ticks() + 10;
         p.setAttached(HOURS, new Timecard(day, ticks, card.sweeps(), card.action(), card.lastSweep()));
         if (ticks % HOUR == 0)
-            NapoliNotice.show(p, Component.translatable("napuli.work.hour_logged", ticks / HOUR, ticks / HOUR * contract.job.wage));
+            NapoliNotice.show(p, Component.translatable("napuli.work.hour_logged", ticks / HOUR, shiftPay(ticks,WorkCareer.hourly(p,contract),true)));
     }
 
     static int shiftPay(int ticks, int wage, boolean includePartialHour) {
         if (ticks <= 0) return 0;
-        return includePartialHour ? Math.max(1, ticks * wage / HOUR) : ticks / HOUR * wage;
+        if(!includePartialHour&&ticks<HOUR)return 0;
+        return Math.max(1, ticks * wage / HOUR);
     }
 
     static Contract find(String id) {
@@ -457,7 +463,7 @@ public final class NapoliEmployment {
     }
 
     static void recordActivity(ServerPlayer p) {
-        var work=p.getAttached(WORK);if(work==null||work.stage()!=1||work.day()!=NapoliBroadcast.day(p.level()))return;
+        var work=p.getAttached(WORK);if(work==null||work.stage()<1||work.day()!=NapoliBroadcast.day(p.level()))return;
         var card=timecard(p,work.day());p.setAttached(HOURS,new Timecard(card.day(),card.ticks(),card.sweeps(),p.level().getGameTime(),card.lastSweep()));
     }
 

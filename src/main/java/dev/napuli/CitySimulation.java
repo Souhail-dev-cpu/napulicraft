@@ -237,8 +237,12 @@ final class CitySimulation {
             if(action==NapoliHouseholds.Activity.SLEEP&&age<NapoliCivicLife.ADULT_AGE)point=CityLivingHomes.points(house).stream().filter(p->p.room()==CityLivingHomes.Room.CHILD_BEDROOM).findFirst().orElse(point);
             target=point.stand();
             if(action==NapoliHouseholds.Activity.SLEEP) {
-                BlockPos bed=point.block().east(c.woman()?1:0);
-                if(!npc.isSleeping()&&city.hasChunkAt(bed)&&city.getBlockState(bed).getBlock() instanceof BedBlock&&npc.blockPosition().distSqr(bed)<9)npc.startSleeping(bed);
+                BlockPos bed=CityBeds.choose(npc,city,house,point.block().east(c.woman()?1:0));
+                if(bed==null){target=CityLivingHomes.use(house,CityLivingHomes.Furniture.SOFA).stand();npc.setActivity(NapoliHouseholds.Activity.REST);}
+                else{
+                    target=bed.relative(city.getBlockState(bed).getValue(BedBlock.FACING).getOpposite());
+                    if(!npc.isSleeping()&&npc.blockPosition().distSqr(bed)<9)npc.startSleeping(bed);
+                }
             }
             if(action==NapoliHouseholds.Activity.MATCH) {
                 var tv=CityLivingHomes.use(house,CityLivingHomes.Furniture.TV).block();

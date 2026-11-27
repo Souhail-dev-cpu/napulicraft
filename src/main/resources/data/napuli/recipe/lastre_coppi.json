@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "CCC"
+  ],
+  "key": {
+    "C": "napuli:coppi_napoletani"
+  },
+  "result": {
+    "id": "napuli:lastre_coppi",
+    "count": 6
+  }
+}

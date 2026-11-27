@@ -130,6 +130,7 @@ public class Napuli implements ModInitializer {
 						.setEquipSound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_TURTLE).setAsset(net.minecraft.resources.ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, id("casco"))).build()));
 		CityLifeConfig.load();
 		NapoliKitchen.register();
+		CityMaterials.register();
 		Radio.register();
 		Hud.register();
 		NapoliNotice.register();
@@ -142,6 +143,7 @@ public class Napuli implements ModInitializer {
 		CityRailway.register();
 		CityStreets.register();
         NapoliHomeDecor.register();
+        CityArchitecture.register();
         NapoliFootballLink.register();
 		MUNACIELLO_EGG = item("munaciello_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(MUNACIELLO));
 		GIGANTE_EGG = item("munaciello_gigante_spawn_egg", net.minecraft.world.item.SpawnEggItem::new, new Item.Properties().spawnEgg(GIGANTE));
@@ -157,6 +159,7 @@ public class Napuli implements ModInitializer {
 					Phones.ITEMS.values().forEach(out::accept);
 					out.accept(Phones.CHARGER);
 					out.accept(NapoliFurniture.WORKTOP);
+					CityMaterials.ALL.forEach(out::accept);
 					for (var machine : PublicGym.Machine.values()) out.accept(machine.block);
 					out.accept(NapoliFurniture.SINK);
 					out.accept(NapoliFurniture.LAMP);
@@ -224,6 +227,8 @@ public class Napuli implements ModInitializer {
 		NapoliAtlasGuide.register();
 		NapoliStreet.register();
 		NapoliLocalJobs.register();
+		// Detect illegal use of beds before the property access handler rejects the interaction.
+		CityProperty.register();
 		NapoliProperties.register();
 		HouseGuests.register();
 		NapoliBroadcast.register();

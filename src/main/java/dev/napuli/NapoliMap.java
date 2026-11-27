@@ -576,7 +576,7 @@ public final class NapoliMap {
     }
 
     private static Block block(String name) {
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(name));
+        return CityBlocks.vanilla(name);
     }
 
     private void put(int x, int y, int z, Block block) {

@@ -19,7 +19,7 @@ public final class WorkCareerClientTest {
     private static int titles,ticks,age,last=-1;
     private static boolean starting,attacking;
     private static volatile boolean ready,failed,done,checking;
-    private static volatile int phase;
+    private static volatile int phase,harvested;
     private static BlockPos tree,workshop;
     private static int wallet;
     public static void register(){if(!Boolean.getBoolean("napuli.worktest"))return;ClientTickEvents.END_CLIENT_TICK.register(mc->{
@@ -46,20 +46,24 @@ public final class WorkCareerClientTest {
             if(ticks>6000)throw new AssertionError("The acknowledged work cycle timed out at phase "+phase);
             if(phase==0){
                 if(mc.level.getBlockState(tree).is(Blocks.OAK_LOG)&&Math.abs(mc.player.getX()-tree.getX()-.5)<3&&Math.abs(mc.player.getZ()-tree.getZ()-.5)<4&&age>30){shot(mc,"lavoro-raccolta");phase=1;}
-            }else if(phase==1||phase==2){
-                var at=phase==1?tree:tree.above();
+            }else if(phase==1){
+                var at=tree.above(harvested);
                 if(!attacking||age%20==0){mc.gameMode.startDestroyBlock(at,Direction.SOUTH);attacking=true;}
                 mc.gameMode.continueDestroyBlock(at,Direction.SOUTH);
-                if(age%10==0)server(mc,p->{if(p.level().getBlockState(at).isAir())phase++;});
+                if(age%10==0)server(mc,p->{if(at.equals(tree.above(harvested))&&p.level().getBlockState(at).isAir()){harvested++;attacking=false;if(harvested==4)phase=3;}});
             }else if(phase==3){
-                mc.player.setYRot(180);
-                double distance=Math.hypot(mc.player.getX()-tree.getX()-.5,mc.player.getZ()-tree.getZ()-.5);
-                mc.options.keyUp.setDown(distance>1.1);mc.options.keyJump.setDown(distance>1.1);
-                if(age%10==0)server(mc,p->{if(WorkResources.count(p,Items.OAK_LOG)>0){Napuli.LOGGER.info("[WORKTEST] Actual timber picked up");move(p,WorkResources.bench().south(),0,0);phase=4;}});
+                mc.options.keyUp.setDown(false);mc.options.keyJump.setDown(false);
+                if(age%20==0)server(mc,p->{
+                    if(WorkResources.count(p,Items.OAK_LOG)>=4){Napuli.LOGGER.info("[WORKTEST] Four actual logs picked up");move(p,WorkResources.bench().south(),0,0);phase=4;return;}
+                    // Drops can land on the sloping ground or canopy. Visit the actual drop,
+                    // then let vanilla pickup collect it; never inject timber into the inventory.
+                    p.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(tree).inflate(8),e->e.getItem().is(Items.OAK_LOG))
+                            .stream().min(Comparator.comparingDouble(e->e.distanceToSqr(p))).ifPresent(e->p.teleportTo(p.level(),e.getX(),e.getY(),e.getZ(),Set.of(),180,0,true));
+                });
             }else if(phase==4){
                 mc.options.keyUp.setDown(false);mc.options.keyJump.setDown(false);
                 if(age%30==0)mc.player.connection.sendCommand("lavoro risorse");
-                if(age%10==0)server(mc,p->{if(WorkResources.count(p,Items.OAK_PLANKS)>=4){
+                if(age%10==0)server(mc,p->{if(WorkResources.count(p,Items.OAK_PLANKS)>=16){
                     check(WorkResources.target(p,NapoliEmployment.Contract.CARPENTER)==null,"The pointer advances to delivery after processing real timber");
                     var c=NapoliEmployment.Contract.CARPENTER;move(p,c.task,0,0);
                     check(NapoliEmployment.work(p,c,c.task)==1&&p.getAttached(NapoliEmployment.WORK).stage()==2,"The actual boards enter the city supply");phase=5;

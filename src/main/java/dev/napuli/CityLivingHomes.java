@@ -18,12 +18,30 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 final class CityLivingHomes {
     static final List<NapoliMergellina.House> PUBLIC_HOMES = java.util.stream.IntStream.range(0,28)
             .mapToObj(i->new NapoliMergellina.House("public_"+i,"Corte dei residenti "+(i+1),-534+i%7*27,70+i/7*35,0,Blocks.SMOOTH_SANDSTONE,17,18,2,100+i)).toList();
-    private static final class Catalogue {static final List<NapoliMergellina.House> ALL=java.util.stream.Stream.concat(java.util.stream.Stream.concat(NapoliMergellina.PROPERTIES.stream(),PUBLIC_HOMES.stream()),DistrictLife.homes().stream()).toList();}
+    private static final class Catalogue {
+        static final List<NapoliMergellina.House> ALL=java.util.stream.Stream.concat(java.util.stream.Stream.concat(NapoliMergellina.PROPERTIES.stream(),PUBLIC_HOMES.stream()),DistrictLife.homes().stream()).toList();
+        static final java.util.Map<String,NapoliMergellina.House> IDS=ALL.stream().collect(java.util.stream.Collectors.toUnmodifiableMap(NapoliMergellina.House::id,h->h));
+    }
     static List<NapoliMergellina.House> all() { return Catalogue.ALL; }
+    private static final java.util.Map<NapoliMergellina.House,List<UsePoint>> POINTS=new java.util.concurrent.ConcurrentHashMap<>();
+    private static final class Index {
+        static final java.util.Map<Long,List<NapoliMergellina.House>> CHUNKS=index();
+        private static java.util.Map<Long,List<NapoliMergellina.House>> index(){
+            var result=new java.util.HashMap<Long,java.util.ArrayList<NapoliMergellina.House>>();
+            for(var h:all())for(int x=(h.x()-1)>>4;x<=(h.x()+h.width())>>4;x++)for(int z=(h.z()-1)>>4;z<=(h.z()+h.depth()+1)>>4;z++)
+                result.computeIfAbsent(new net.minecraft.world.level.ChunkPos(x,z).pack(),k->new java.util.ArrayList<>()).add(h);
+            var immutable=new java.util.HashMap<Long,List<NapoliMergellina.House>>();result.forEach((key,value)->immutable.put(key,List.copyOf(value)));return java.util.Map.copyOf(immutable);
+        }
+    }
+    static List<NapoliMergellina.House> inChunk(net.minecraft.world.level.ChunkPos chunk){return Index.CHUNKS.getOrDefault(chunk.pack(),List.of());}
+    static NapoliMergellina.House at(BlockPos position){for(var house:inChunk(net.minecraft.world.level.ChunkPos.containing(position)))if(house.contains(position))return house;return null;}
     enum Room { KITCHEN, BATHROOM, LIVING, DOUBLE_BEDROOM, CHILD_BEDROOM, STUDY, LAUNDRY, BALCONY }
     enum Furniture { STOVE, FRIDGE, SINK, SHOWER, TOILET, SOFA, TV, BED, WARDROBE, DESK, WASHER, TABLE }
     record UsePoint(Room room, Furniture furniture, BlockPos block, BlockPos stand) {}
     static List<UsePoint> points(NapoliMergellina.House h) {
+        return POINTS.computeIfAbsent(h,CityLivingHomes::createPoints);
+    }
+    private static List<UsePoint> createPoints(NapoliMergellina.House h) {
         boolean expanded=h.id().startsWith("atlas_");int x = h.x(), z = h.z(), upstairs = expanded?64:h.style() >= 0 ? 69 : 68;
         var points=List.of(point(Room.KITCHEN, Furniture.STOVE, x+3,64,z+2, x+3,64,z+3),
                 point(Room.KITCHEN,Furniture.FRIDGE,x+2,64,z+2,x+3,64,z+3),
@@ -37,7 +55,7 @@ final class CityLivingHomes {
                 point(Room.CHILD_BEDROOM,Furniture.BED,x+7,upstairs,z+4,x+7,upstairs,z+5),
                 point(Room.STUDY,Furniture.DESK,x+7,upstairs,z+8,x+7,upstairs,z+7),
                 point(Room.LAUNDRY,Furniture.WASHER,x+7,64,z+8,x+7,64,z+7));
-        if(!expanded)return points;return points.stream().map(p->{int dx=p.furniture()==Furniture.BED?9:p.furniture()==Furniture.WARDROBE?10:p.furniture()==Furniture.DESK?5:0,dz=p.furniture()==Furniture.BED?3:p.furniture()==Furniture.DESK?5:0;return new UsePoint(p.room(),p.furniture(),p.block().offset(dx,h.ground()-64,dz),p.stand().offset(dx,h.ground()-64,dz+(p.furniture()==Furniture.SHOWER?1:0)));}).toList();
+        if(!expanded)return points.stream().map(p->new UsePoint(p.room(),p.furniture(),p.block().offset(0,h.ground()-64,0),p.stand().offset(0,h.ground()-64,0))).toList();return points.stream().map(p->{int dx=p.furniture()==Furniture.BED?9:p.furniture()==Furniture.WARDROBE?10:p.furniture()==Furniture.DESK?5:0,dz=p.furniture()==Furniture.BED?3:p.furniture()==Furniture.DESK?5:0;return new UsePoint(p.room(),p.furniture(),p.block().offset(dx,h.ground()-64,dz),p.stand().offset(dx,h.ground()-64,dz+(p.furniture()==Furniture.SHOWER?1:0)));}).toList();
     }
     private static UsePoint point(Room r,Furniture f,int x,int y,int z,int sx,int sy,int sz) {
         return new UsePoint(r,f,new BlockPos(x,y,z),new BlockPos(sx,sy,sz));
@@ -46,7 +64,7 @@ final class CityLivingHomes {
         return points(h).stream().filter(p -> p.furniture()==f).findFirst().orElseThrow();
     }
     static NapoliMergellina.House find(String id) {
-        return all().stream().filter(h -> h.id().equals(id)).findFirst().orElse(null);
+        return Catalogue.IDS.get(id);
     }
     static void build(ServerLevel city) {
         // New lots do not overlap any existing home, landmark or player property.
@@ -68,50 +86,51 @@ final class CityLivingHomes {
         NapoliEmploymentMap.sign(city,new BlockPos(-337,64,44),"RIONE PARTENOPE","35 case / famiglie","Segui la strada");
     }
     static void buildHouse(ServerLevel city, NapoliMergellina.House h) {
-        int x=h.x(), z=h.z(), w=h.width(), d=h.depth(), roof=64+h.floors()*5;
-        fill(city,x,63,z,x+w-1,63,z+d-1,Blocks.SPRUCE_PLANKS);
-        for (int y=64;y<=roof;y++) for (int bx=x;bx<x+w;bx++) for (int bz=z;bz<z+d;bz++) {
+        int x=h.x(), z=h.z(), w=h.width(), d=h.depth(), g=h.ground(), roof=g+h.floors()*5;
+        fill(city,x,(g-1),z,x+w-1,(g-1),z+d-1,Blocks.SPRUCE_PLANKS);
+        for (int y=g;y<=roof;y++) for (int bx=x;bx<x+w;bx++) for (int bz=z;bz<z+d;bz++) {
             boolean wall=bx==x||bx==x+w-1||bz==z||bz==z+d-1;
             Block b=y==roof? (h.style()%2==0?Blocks.BRICK_SLAB:Blocks.SMOOTH_STONE_SLAB)
-                    : (y-64)%5==4?Blocks.SPRUCE_PLANKS:wall?h.wall():Blocks.AIR;
-            if (wall && y<roof && (y-64)%5>=1 && (y-64)%5<=2 && (bx-x+bz-z+h.style())%4==1) b=Blocks.GLASS;
+                    : (y-g)%5==4?Blocks.SPRUCE_PLANKS:wall?h.wall():Blocks.AIR;
+            if (wall && y<roof && (y-g)%5>=1 && (y-g)%5<=2 && (bx-x+bz-z+h.style())%4==1) b=Blocks.GLASS;
             put(city,new BlockPos(bx,y,bz),b);
         }
-        put(city,new BlockPos(x+w/2,66,z+d-1),h.wall());
+        put(city,new BlockPos(x+w/2,(g+2),z+d-1),h.wall());
         var door=Blocks.OAK_DOOR.defaultBlockState().setValue(net.minecraft.world.level.block.DoorBlock.FACING,Direction.SOUTH);
-        city.setBlock(new BlockPos(x+w/2,64,z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER),2);
-        city.setBlock(new BlockPos(x+w/2,65,z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER),2);
-        for (int y=64;y<roof;y++) city.setBlock(new BlockPos(x+1,y,z+1),Blocks.LADDER.defaultBlockState()
+        city.setBlock(new BlockPos(x+w/2,g,z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER),2);
+        city.setBlock(new BlockPos(x+w/2,(g+1),z+d-1),door.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER),2);
+        for (int y=g;y<roof;y++) city.setBlock(new BlockPos(x+1,y,z+1),Blocks.LADDER.defaultBlockState()
                 .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING,Direction.SOUTH),Block.UPDATE_CLIENTS);
         // Partition bathroom, the two bedrooms and a study without blocking the hall.
-        fill(city,x+6,64,z+1,x+6,67,z+5,Blocks.CALCITE);
-        put(city,new BlockPos(x+6,64,z+4),Blocks.AIR); put(city,new BlockPos(x+6,65,z+4),Blocks.AIR);
-        fill(city,x+6,64,z+6,x+6,67,z+11,Blocks.CALCITE);
-        put(city,new BlockPos(x+6,64,z+7),Blocks.AIR);put(city,new BlockPos(x+6,65,z+7),Blocks.AIR);
-        fill(city,x+5,69,z+2,x+5,72,z+6,Blocks.SPRUCE_PLANKS);
-        for(int bx=2;bx<w-1;bx+=4) put(city,new BlockPos(x+bx,67,z+d-3),Blocks.LANTERN);
+        fill(city,x+6,g,z+1,x+6,(g+3),z+5,Blocks.CALCITE);
+        put(city,new BlockPos(x+6,g,z+4),Blocks.AIR); put(city,new BlockPos(x+6,(g+1),z+4),Blocks.AIR);
+        fill(city,x+6,g,z+6,x+6,(g+3),z+11,Blocks.CALCITE);
+        put(city,new BlockPos(x+6,g,z+7),Blocks.AIR);put(city,new BlockPos(x+6,(g+1),z+7),Blocks.AIR);
+        fill(city,x+5,(g+5),z+2,x+5,(g+8),z+6,Blocks.SPRUCE_PLANKS);
+        for(int bx=2;bx<w-1;bx+=4) put(city,new BlockPos(x+bx,(g+3),z+d-3),Blocks.LANTERN);
         // Each of the 28 lots varies its footprint, height, partition, garden, roof and balcony.
         int partition=10+h.style()%Math.max(1,w-11);
-        fill(city,x+partition,64,z+2,x+partition,66,z+5+h.style()%3,Blocks.BOOKSHELF);
-        if(h.style()%7==2) fill(city,x+w-4,64,z+d-4,x+w-2,64,z+d-2,Blocks.MOSS_BLOCK);
-        if(h.style()%7==3) fill(city,x+10,64,z+10,x+w-2,64,z+d-2,Blocks.AIR);
-        if(h.style()%7==4) fill(city,x+10,64,z+8,x+w-2,64,z+10,Blocks.SMOOTH_STONE);
-        for(int bit=0;bit<5;bit++)if((h.style()&(1<<bit))!=0)put(city,new BlockPos(x+w-2,69,z+2+bit*2),Blocks.BOOKSHELF);
-        fill(city,x+2,68,z+d,x+w-3,68,z+d+1,Blocks.SMOOTH_SANDSTONE_SLAB);
-        for(int bx=x+2;bx<x+w-2;bx++) put(city,new BlockPos(bx,69,z+d+1),Blocks.SPRUCE_FENCE);
-        put(city,new BlockPos(x+2,70,z+d),block("light_blue_banner"));
+        fill(city,x+partition,g,z+2,x+partition,(g+2),z+5+h.style()%3,Blocks.BOOKSHELF);
+        if(h.style()%7==2) fill(city,x+w-4,g,z+d-4,x+w-2,g,z+d-2,Blocks.MOSS_BLOCK);
+        if(h.style()%7==3) fill(city,x+10,g,z+10,x+w-2,g,z+d-2,Blocks.AIR);
+        if(h.style()%7==4) fill(city,x+10,g,z+8,x+w-2,g,z+10,Blocks.SMOOTH_STONE);
+        for(int bit=0;bit<5;bit++)if((h.style()&(1<<bit))!=0)put(city,new BlockPos(x+w-2,(g+5),z+2+bit*2),Blocks.BOOKSHELF);
+        fill(city,x+2,(g+4),z+d,x+w-3,(g+4),z+d+1,Blocks.SMOOTH_SANDSTONE_SLAB);
+        for(int bx=x+2;bx<x+w-2;bx++) put(city,new BlockPos(bx,(g+5),z+d+1),Blocks.SPRUCE_FENCE);
+        put(city,new BlockPos(x+2,(g+6),z+d),block("light_blue_banner"));
         furnish(city,h);
-        CityProperty.recordHome(city,new BlockPos(x,63,z),new BlockPos(x+w-1,roof,z+d+1));
+        CityProperty.recordHome(city,new BlockPos(x,(g-1),z),new BlockPos(x+w-1,roof,z+d+1));
         NapoliEmploymentMap.sign(city,h.sign(),h.name(),"€ "+h.price(),"Acquisto / affitto");
+        CityArchitecture.finishNew(city,h);
     }
     private static void furnish(ServerLevel city,NapoliMergellina.House h) {
         if(h.style()<0) {
             for(int dx:new int[]{3,4,6,7})for(int dz:new int[]{4,5}) {
-                var p=new BlockPos(h.x()+dx,68,h.z()+dz);
+                var p=new BlockPos(h.x()+dx,h.ground()+4,h.z()+dz);
                 if(city.getBlockState(p).getBlock() instanceof BedBlock)put(city,p,Blocks.AIR);
             }
             int design=NapoliMergellina.PROPERTIES.indexOf(h);
-            for(int bit=0;bit<3;bit++)put(city,new BlockPos(h.x()+9,68,h.z()+2+bit*4),(design&(1<<bit))!=0?Blocks.BOOKSHELF:Blocks.AIR);
+            for(int bit=0;bit<3;bit++)put(city,new BlockPos(h.x()+9,h.ground()+4,h.z()+2+bit*4),(design&(1<<bit))!=0?Blocks.BOOKSHELF:Blocks.AIR);
         }
         for(var p:points(h)) {
             Block block=switch(p.furniture()) {
@@ -134,11 +153,11 @@ final class CityLivingHomes {
         put(city,stove.east(),Blocks.FURNACE);
         put(city,stove.west().above(),Blocks.IRON_BLOCK);
         put(city,stove.east(2),NapoliKitchen.BLOCKS.get("forno_legna_portatile"));
-        put(city,new BlockPos(h.x()+4,64,h.z()+5),Blocks.CRAFTING_TABLE);
-        put(city,new BlockPos(h.x()+4,64,h.z()+7),Blocks.OAK_FENCE);
-        put(city,new BlockPos(h.x()+4,65,h.z()+7),block("blue_carpet"));
+        put(city,new BlockPos(h.x()+4,h.ground(),h.z()+5),Blocks.CRAFTING_TABLE);
+        put(city,new BlockPos(h.x()+4,h.ground(),h.z()+7),Blocks.OAK_FENCE);
+        put(city,new BlockPos(h.x()+4,h.ground()+1,h.z()+7),block("blue_carpet"));
         bed(city,use(h,Furniture.BED).block().east());
-        bed(city,new BlockPos(h.x()+8,h.style()>=0?69:68,h.z()+4));
+        bed(city,points(h).stream().filter(p->p.room()==Room.CHILD_BEDROOM&&p.furniture()==Furniture.BED).findFirst().orElseThrow().block().east());
         for(int dx=-1;dx<=1;dx++) put(city,use(h,Furniture.TV).block().east(dx),block("black_concrete"));
     }
     private static void bed(ServerLevel city,BlockPos foot) {
@@ -166,7 +185,7 @@ final class CityLivingHomes {
         if(city.getBlockEntity(p) instanceof net.minecraft.world.Container storage && !storage.isEmpty() && !city.getBlockState(p).is(b))return;
         city.setBlock(p,b.defaultBlockState(),Block.UPDATE_CLIENTS);
     }
-    private static Block block(String id) { return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace(id)); }
+    private static Block block(String id) { return CityBlocks.vanilla(id); }
     private static void fill(ServerLevel city,int x,int y,int z,int ex,int ey,int ez,Block b) {
         for(BlockPos p:BlockPos.betweenClosed(x,y,z,ex,ey,ez)) put(city,p,b);
     }

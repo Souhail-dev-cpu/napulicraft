@@ -39,7 +39,10 @@
       "dev.napuli.StartupAttachmentGameTest",
       "dev.napuli.WorkResourcesRegressionGameTest",
       "dev.napuli.PickpocketGameTest",
-      "dev.napuli.PhoneGameTest"
+      "dev.napuli.PhoneGameTest",
+      "dev.napuli.PhoneServicesGameTest",
+      "dev.napuli.PoliceCoordinationGameTest",
+      "dev.napuli.CityQualityGameTest"
     ]
   },
   "depends": {

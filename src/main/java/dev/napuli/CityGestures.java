@@ -40,6 +40,6 @@ public final class CityGestures {
         npc.setGesture(gesture);
     }
     static double pace(NapoliResident npc) {
-        return (.70+.15*npc.vitality()/100.0)*(npc.level().isRaining()?.88:1);
+        return (.95+.20*npc.vitality()/100.0)*(npc.level().isRaining()?.88:1);
     }
 }

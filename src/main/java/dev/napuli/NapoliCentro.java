@@ -548,5 +548,5 @@ final class NapoliCentro {
 		for (BlockPos p : BlockPos.betweenClosed(Math.min(x1, x2), y1, Math.min(z1, z2), Math.max(x1, x2), y2, Math.max(z1, z2)))
 			world.setBlock(p, st, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
 	}
-	private static Block block(String n) { return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(n)); }
+	private static Block block(String n) { return CityBlocks.vanilla(n); }
 }

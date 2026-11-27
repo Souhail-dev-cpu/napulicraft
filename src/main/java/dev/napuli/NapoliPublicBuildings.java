@@ -188,6 +188,6 @@ final class NapoliPublicBuildings {
     }
 
     private static Block block(String id) {
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(id));
+        return CityBlocks.vanilla(id);
     }
 }

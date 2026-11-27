@@ -384,7 +384,7 @@ final class NapoliCivicLife {
             if (c.spawned()) continue;
             if(CityNetwork.inTransit(city,c.id()))continue;
             BlockPos desired = CitySimulation.location(city,c);
-            var targetHome=CityLivingHomes.all().stream().filter(h->h.contains(desired)).findFirst().orElse(null);
+            var targetHome=CityLivingHomes.at(desired);
             BlockPos approach = targetHome!=null&&!HousingCapacity.canEnter(city,desired,c.id())?targetHome.approach(1):desired;
             BlockPos spawn = CityJourneys.spawn(city,approach,arrivals);
             if (spawn==null||!NapoliResidentHomes.walkable(city, spawn)

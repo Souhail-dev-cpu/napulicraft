@@ -299,8 +299,7 @@ final class NapoliInteriorLayout {
     }
 
     private static Block block(String id) {
-        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                net.minecraft.resources.Identifier.withDefaultNamespace(id));
+        return CityBlocks.vanilla(id);
     }
 
     private void put(int x, int y, int z, Block block) {

@@ -164,8 +164,7 @@ final class NapoliVedute {
     }
 
     private static Block coloured(String id) {
-        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                net.minecraft.resources.Identifier.withDefaultNamespace(id));
+        return CityBlocks.vanilla(id);
     }
 
     private void addIfAir(int x, int y, int z, Block value) {

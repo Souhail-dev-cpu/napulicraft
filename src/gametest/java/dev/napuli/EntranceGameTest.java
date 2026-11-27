@@ -41,7 +41,7 @@ public final class EntranceGameTest {
     }
     @GameTest public void olderResidentialHomesAlsoReceiveTheirMissingLintel(GameTestHelper h){
         var city=h.getLevel();var home=CityLivingHomes.PUBLIC_HOMES.getFirst();CityLivingHomes.buildHouse(city,home);var door=home.entrance().north();var chunk=city.getChunkAt(door);var marker=((AttachmentTarget)chunk).removeAttached(NapoliExpansion.ENTRANCES_FIXED);var lintel=city.getBlockState(door.above(2));
-        try{city.setBlock(door.above(2),Blocks.AIR.defaultBlockState(),18);NapoliExpansion.repairEntrances(city,chunk);h.assertTrue(city.getBlockState(door.above(2)).is(home.wall()),"The old three-block-high doorway closes above the two-block-high door");}
+        try{city.setBlock(door.above(2),Blocks.AIR.defaultBlockState(),18);NapoliExpansion.repairEntrances(city,chunk);h.assertTrue(city.getBlockState(door.above(2)).is(lintel.getBlock()),"The old doorway closes using its current authored facade material");}
         finally{city.setBlock(door.above(2),lintel,18);restore(chunk,marker);}h.succeed();
     }
     @GameTest(maxTicks=100) public void repairedDoorStillOpensAndAllowsNpcNavigation(GameTestHelper h){

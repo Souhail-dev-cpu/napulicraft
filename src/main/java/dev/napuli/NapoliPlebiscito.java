@@ -412,5 +412,5 @@ final class NapoliPlebiscito {
 		BlockState st = b.defaultBlockState();
 		for (BlockPos p : BlockPos.betweenClosed(x1, y1, z1, x2, y2, z2)) world.setBlock(p, st, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
 	}
-	private static Block block(String n) { return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(n)); }
+	private static Block block(String n) { return CityBlocks.vanilla(n); }
 }

@@ -53,6 +53,6 @@ final class DistrictCharacter {
             CityEffects.sound(city,null,at,style(d).sound(),SoundSource.AMBIENT,.08f,.85f+Math.floorMod(d.id().hashCode(),4)*.1f);
         }
     });}
-    private static Block block(String id){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace(id));}
+    private static Block block(String id){return CityBlocks.vanilla(id);}
     private DistrictCharacter(){}
 }

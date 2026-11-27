@@ -30,34 +30,34 @@ final class WorkResources {
     static BlockPos bench(){return new BlockPos(-564,NapoliExpansion.height(-564,54)+1,54);}
     static int count(ServerPlayer p,Item item){int n=0;for(int i=0;i<p.getInventory().getContainerSize();i++)if(p.getInventory().getItem(i).is(item))n+=p.getInventory().getItem(i).getCount();return n;}
     static BlockPos target(ServerPlayer p,NapoliEmployment.Contract c){
-        if(c==NapoliEmployment.Contract.CARPENTER&&count(p,Items.OAK_PLANKS)==0){
+        if(c==NapoliEmployment.Contract.CARPENTER&&count(p,Items.OAK_PLANKS)<c.quantity()){
             if(count(p,Items.OAK_LOG)>0)return bench().south();
             return trees().stream().filter(t->!p.level().hasChunkAt(t)||p.level().getBlockState(t).is(Blocks.OAK_LOG)).min(Comparator.comparingDouble(t->t.distToCenterSqr(p.position()))).orElse(bench()).south();
         }
-        if((c==NapoliEmployment.Contract.BAKER&&count(p,Items.BREAD)==0)||(c==NapoliEmployment.Contract.MERCHANT&&count(p,Items.WHEAT)==0)){
+        if((c==NapoliEmployment.Contract.BAKER&&count(p,Items.BREAD)<c.quantity())||(c==NapoliEmployment.Contract.MERCHANT&&count(p,Items.WHEAT)<c.quantity())){
             if(c==NapoliEmployment.Contract.BAKER&&count(p,Items.WHEAT)>=3)return bench().south();
             return farm().south(4);
         }
-        if(c==NapoliEmployment.Contract.FISHER&&count(p,Items.COD)==0)return c.task.east();
-        if(c==NapoliEmployment.Contract.GARDENER&&count(p,Items.OAK_SAPLING)==0)return bench().south();
+        if(c==NapoliEmployment.Contract.FISHER&&count(p,Items.COD)<c.quantity())return c.task.east();
+        if(c==NapoliEmployment.Contract.GARDENER&&count(p,Items.OAK_SAPLING)<c.quantity())return bench().south();
         if((c==NapoliEmployment.Contract.PORTER||c==NapoliEmployment.Contract.COURIER)&&!hasParcel(p,c))return DEPOT.south();
         return null;
     }
-    static boolean hasParcel(ServerPlayer p,NapoliEmployment.Contract c){for(int i=0;i<p.getInventory().getContainerSize();i++){var stack=p.getInventory().getItem(i);var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();if(stack.is(Items.PAPER)&&tag.getStringOr("work_owner","").equals(p.getUUID().toString())&&tag.getStringOr("work_contract","").equals(c.id())&&tag.getLongOr("work_day",-1)==NapoliBroadcast.day(p.level()))return true;}return false;}
-    static boolean consumeParcel(ServerPlayer p,NapoliEmployment.Contract c){for(int i=0;i<p.getInventory().getContainerSize();i++){var stack=p.getInventory().getItem(i);var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();if(stack.is(Items.PAPER)&&tag.getStringOr("work_owner","").equals(p.getUUID().toString())&&tag.getStringOr("work_contract","").equals(c.id())&&tag.getLongOr("work_day",-1)==NapoliBroadcast.day(p.level())){stack.shrink(1);return true;}}return false;}
+    static boolean hasParcel(ServerPlayer p,NapoliEmployment.Contract c){for(int i=0;i<p.getInventory().getContainerSize();i++){var stack=p.getInventory().getItem(i);var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();if(stack.is(Items.PAPER)&&tag.getStringOr("work_owner","").equals(p.getUUID().toString())&&tag.getStringOr("work_contract","").equals(c.id())&&tag.getLongOr("work_day",-1)==NapoliBroadcast.day(p.level())&&tag.getIntOr("work_sequence",0)==NapoliEmployment.progress(p))return true;}return false;}
+    static boolean consumeParcel(ServerPlayer p,NapoliEmployment.Contract c){for(int i=0;i<p.getInventory().getContainerSize();i++){var stack=p.getInventory().getItem(i);var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();if(stack.is(Items.PAPER)&&tag.getStringOr("work_owner","").equals(p.getUUID().toString())&&tag.getStringOr("work_contract","").equals(c.id())&&tag.getLongOr("work_day",-1)==NapoliBroadcast.day(p.level())&&tag.getIntOr("work_sequence",0)==NapoliEmployment.progress(p)){stack.shrink(1);return true;}}return false;}
     static int pickup(ServerPlayer p){if(p.level().dimension()!=NapoliMap.LEVEL)return 0;return processPickup(p);}
-    static int processPickup(ServerPlayer p){var work=p.getAttached(NapoliEmployment.WORK);if(work==null||work.stage()!=1||work.day()!=NapoliBroadcast.day(p.level()))return 0;var c=NapoliEmployment.find(work.contract());if(c==null||p.isSpectator()||Carabinieri.isJailed(p))return 0;
+    static int processPickup(ServerPlayer p){var work=p.getAttached(NapoliEmployment.WORK);if(work==null||work.stage()<1||work.day()!=NapoliBroadcast.day(p.level()))return 0;var c=NapoliEmployment.find(work.contract());if(c==null||p.isSpectator()||Carabinieri.isJailed(p))return 0;
         if(c==NapoliEmployment.Contract.PORTER||c==NapoliEmployment.Contract.COURIER){
-            if(DEPOT.distToCenterSqr(p.position())>36||hasParcel(p,c))return 0;String key=p.getUUID()+"/"+c.id();var receipts=new HashMap<>(p.level().getAttachedOrElse(PARCELS,Map.of()));long day=work.day();
+            if(DEPOT.distToCenterSqr(p.position())>36||hasParcel(p,c))return 0;String key=p.getUUID()+"/"+c.id()+"/"+NapoliEmployment.progress(p);var receipts=new HashMap<>(p.level().getAttachedOrElse(PARCELS,Map.of()));long day=work.day();
             boolean replacement=receipts.getOrDefault(key,-1L)>=day;if(replacement&&NapoliStreet.cash(p)<3){p.sendSystemMessage(Component.literal("Per sostituire il pacco perso servono 3 €."));return 0;}
-            var stack=new ItemStack(Items.PAPER);var tag=new CompoundTag();tag.putString("work_owner",p.getUUID().toString());tag.putString("work_contract",c.id());tag.putLong("work_day",day);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));stack.set(DataComponents.CUSTOM_NAME,Component.literal("Pacco di lavoro · "+p.getName().getString()));
-            if(!p.getInventory().add(stack))return 0;if(replacement){NapoliStreet.credit(p,-3,"parcel");WorkEconomy.revenue(p.level(),3);}receipts.put(key,day);p.level().setAttached(PARCELS,Map.copyOf(receipts));return 1;
+            var stack=new ItemStack(Items.PAPER);var tag=new CompoundTag();tag.putString("work_owner",p.getUUID().toString());tag.putString("work_contract",c.id());tag.putLong("work_day",day);tag.putInt("work_sequence",NapoliEmployment.progress(p));stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));stack.set(DataComponents.CUSTOM_NAME,Component.literal("Pacco di lavoro · "+p.getName().getString()));
+            if(!p.getInventory().add(stack))return 0;if(replacement){NapoliStreet.credit(p,-3,"parcel");WorkEconomy.revenue(p.level(),3);}receipts.put(key,day);p.level().setAttached(PARCELS,Map.copyOf(receipts));NapoliEmployment.recordActivity(p);return 1;
         }
         if(bench().distToCenterSqr(p.position())>36)return 0;
         Item input,output;int quantity,produced;
         if(c==NapoliEmployment.Contract.CARPENTER){input=Items.OAK_LOG;output=Items.OAK_PLANKS;quantity=1;produced=4;}
         else if(c==NapoliEmployment.Contract.BAKER){input=Items.WHEAT;output=Items.BREAD;quantity=3;produced=1;}
-        else if(c==NapoliEmployment.Contract.GARDENER){if(count(p,Items.OAK_SAPLING)>0||CityOccupations.supply(p.level(),"saplings")<1)return 0;var stack=new ItemStack(Items.OAK_SAPLING);if(!p.getInventory().add(stack))return 0;CityOccupations.supply(p.level(),"saplings",CityOccupations.supply(p.level(),"saplings")-1);return 1;}
+        else if(c==NapoliEmployment.Contract.GARDENER){if(count(p,Items.OAK_SAPLING)>=c.quantity()||CityOccupations.supply(p.level(),"saplings")<1)return 0;var stack=new ItemStack(Items.OAK_SAPLING);if(!p.getInventory().add(stack))return 0;CityOccupations.supply(p.level(),"saplings",CityOccupations.supply(p.level(),"saplings")-1);NapoliEmployment.recordActivity(p);return 1;}
         else return 0;
         if(!transform(p,input,quantity,new ItemStack(output,produced)))return 0;
         NapoliEmployment.recordActivity(p);return 1;

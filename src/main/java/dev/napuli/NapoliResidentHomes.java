@@ -33,7 +33,7 @@ final class NapoliResidentHomes {
     static boolean walkable(ServerLevel city, BlockPos pos) {
         if (!city.hasChunkAt(pos)) return false;
         return city.getFluidState(pos).isEmpty()
-                && city.getBlockState(pos).getCollisionShape(city, pos).isEmpty()
+                && (city.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.CarpetBlock || city.getBlockState(pos).getCollisionShape(city, pos).isEmpty())
                 && city.getBlockState(pos.above()).getCollisionShape(city, pos.above()).isEmpty()
                 && !city.getBlockState(pos.below()).getCollisionShape(city, pos.below()).isEmpty();
     }

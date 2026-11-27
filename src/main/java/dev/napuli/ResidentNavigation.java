@@ -17,7 +17,42 @@ import net.minecraft.world.phys.Vec3;
 
 /** Ground paths with real vertical ladder edges; residents still need an actual climbable block. */
 final class ResidentNavigation extends GroundPathNavigation {
+    private BlockPos requested;
+    private long nextPlan;
+    private Vec3 checkpoint;
+    private int stalled;
     ResidentNavigation(Mob mob, Level level) { super(mob, level); setMaxVisitedNodesMultiplier(1.5f); }
+
+    /** Keep useful partial paths and try a lateral detour when the direct route is blocked. */
+    void moveSmart(BlockPos target, double speed) {
+        long now = level.getGameTime();
+        if (target.equals(requested) && now < nextPlan) return;
+        if(!target.equals(requested))stalled=0;
+        else if (checkpoint != null && checkpoint.distanceToSqr(mob.position()) < .09) stalled++;
+        else stalled = 0;
+        checkpoint = mob.position();
+        requested = target.immutable();
+        nextPlan = now + 20;
+        var direct = createPath(target, 0);
+        if (stalled < 3 && direct != null && (direct.canReach() || direct.getNodeCount() > 1
+                && direct.getEndNode().asBlockPos().distToCenterSqr(mob.position()) > 2)) {
+            moveTo(direct, speed);
+            return;
+        }
+        double angle = Math.atan2(target.getZ() - mob.getZ(), target.getX() - mob.getX());
+        int side = (mob.getUUID().hashCode() & 1) == 0 ? 1 : -1;
+        for (int turn : new int[] {side, -side, 2 * side, -2 * side, 3 * side, -3 * side}) {
+            double heading = angle + turn * Math.PI / 4;
+            var candidate = mob.blockPosition().offset((int)Math.round(Math.cos(heading) * 5), 0,
+                    (int)Math.round(Math.sin(heading) * 5));
+            if (!level.hasChunkAt(candidate)) continue;
+            var detour = createPath(candidate, 1);
+            if (detour != null && detour.canReach() && detour.getNodeCount() > 1) {
+                moveTo(detour, speed); stalled = 0; nextPlan = now + 40; return;
+            }
+        }
+        stop();
+    }
 
     @Override protected PathFinder createPathFinder(int maxNodes) {
         nodeEvaluator = new LadderEvaluator();
@@ -60,7 +95,10 @@ final class ResidentNavigation extends GroundPathNavigation {
         boolean leavingColumn = Math.abs(next.x-ladder.getX()-.5) > .3 || Math.abs(next.z-ladder.getZ()-.5) > .3;
         if (leavingColumn && vertical >= -.5) {
             var previous = mob.getDeltaMovement();
-            return new ClimbMotion(new Vec3(previous.x, vertical > -.08 ? Math.max(previous.y,.22) : previous.y, previous.z),false);
+            // Keep the feet above the landing while stepping off. Faster walkers otherwise
+            // alternate between the last ladder node and the edge, losing all sideways momentum.
+            return new ClimbMotion(new Vec3(net.minecraft.util.Mth.clamp((next.x-mob.getX())*.25,-.14,.14),
+                    vertical>-.08?Math.max(previous.y,.22):previous.y,net.minecraft.util.Mth.clamp((next.z-mob.getZ())*.25,-.14,.14)),false);
         }
         if (Math.abs(vertical) <= .15) return null;
         // Ordinary walking momentum must not carry an airborne resident off the ladder column.

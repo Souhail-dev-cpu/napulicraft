@@ -59,7 +59,7 @@ final class CityAccessibility {
         var feet = city.getBlockState(at); var head = city.getBlockState(at.above());
         boolean ladder = feet.is(Blocks.LADDER) || feet.is(Blocks.VINE);
         return (ladder || !city.getBlockState(at.below()).getCollisionShape(city, at.below()).isEmpty())
-                && clear(city, at, feet) && clear(city, at.above(), head);
+                && (feet.getBlock() instanceof CarpetBlock || clear(city, at, feet)) && clear(city, at.above(), head);
     }
     private static boolean clear(ServerLevel city, BlockPos at, net.minecraft.world.level.block.state.BlockState state) {
         return state.getBlock() instanceof DoorBlock || state.is(Blocks.LADDER) || state.is(Blocks.VINE)

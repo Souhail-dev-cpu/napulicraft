@@ -7,8 +7,15 @@ Questa navigazione è disponibile anche ai residenti che seguono un giocatore, c
 
 ## Carabinieri più reattivi
 
-Ogni carabiniere si concentra sul ricercato più vicino entro 48 blocchi. Il percorso viene rivalutato ogni
-6 tick, circa 0,3 secondi, così può cambiare strada se il giocatore si sposta o piazza un ostacolo.
+Terminato un inseguimento, gli agenti riprendono subito a pattugliare dalla posizione raggiunta: la vecchia area di appartenenza non li blocca più lontano dalla caserma. Le pattuglie sono richiamabili anche dal telefono tramite **112**.
+
+I cittadini camminano più velocemente, anche nei salvataggi esistenti. La navigazione conserva i percorsi parziali utili verso destinazioni lontane e prova deviazioni laterali quando il tragitto diretto è bloccato, evitando ricalcoli continui dello stesso cammino.
+
+Le nuove pattuglie lavorano **in coppia** presso piazze, fermate, monumenti e botteghe dei quartieri, oltre alla caserma e al centro. Percorrono punti successivi della propria zona e vi rientrano dopo un inseguimento. Si attivano nelle aree già caricate vicino ai giocatori, fino a **32 agenti aggiuntivi attivi**: il limite è configurabile con `policePatrolLimit` fra 0 e 64 in `config/napulicraft-city.json`. Gli agenti del censimento e le presenze preesistenti rimangono distinti. Le pattuglie temporanee vengono ricreate per posto e numero, senza duplicazioni nei salvataggi e senza caricare quartieri lontani.
+
+La centrale distribuisce gli agenti disponibili fra i ricercati entro **80 blocchi dall'ultima segnalazione**. Una squadra comprende fino a tre agenti per un reato lieve o cinque per i più gravi. Con più sospetti, la distribuzione assegna prima un agente a ciascuno; quelli in eccesso continuano a pattugliare. I rinforzi tengono conto degli agenti già vicini.
+
+Gli avvistamenti entro **64 blocchi** sono condivisi via radio. Il caposquadra si avvicina al sospetto e i colleghi cercano posizioni sui due lati, anticipandone brevemente la corsa quando il terreno è percorribile. Dopo la perdita del contatto visivo raggiungono l'ultima posizione osservata e cercano nelle vicinanze. Il percorso viene rivalutato ogni 6 tick, circa 0,3 secondi, così può cambiare strada se il giocatore si sposta o piazza un ostacolo.
 Prima prova un percorso praticabile, usando passaggi, porte e scale. Per arrestare qualcuno deve avvicinarsi,
 vederlo e avere libero anche lo spazio fra i due corpi: un muro, anche basso, impedisce la cattura attraverso i blocchi.
 
@@ -25,8 +32,9 @@ la cui provenienza viene salvata nel mondo. Il piccone non rimuove contenitori c
 blocchi indistruttibili o blocchi che richiedono un attrezzo superiore al ferro. Le porte di legno vengono aperte.
 Lo scavo rispetta la regola del server che consente o impedisce ai mob di danneggiare i blocchi.
 
-Il ricercato continua a essere inseguito mentre gli agenti aprono una barricata individuata. Restano le normali
-regole di fuga dopo 20 secondi senza contatto e le sanzioni già presenti per i reati più gravi.
+Durante l'apertura di una barricata rimangono valide le normali regole di fuga: dopo 20 secondi senza un nuovo avvistamento termina la ricerca. Gli agenti abbandonano uno scavo legato a una segnalazione ormai vecchia e proseguono la ricerca della zona.
+
+Anche gli inseguimenti degli NPC restano attivi fra una decisione e l'altra: l'agente privilegia il sospetto visibile più vicino, si avvicina per arrestarlo e riprende la propria attività quando il caso termina. Le pattuglie chiamate con il 112 possono intervenire anche su questi incidenti.
 
 ## Vandalismo
 
@@ -45,6 +53,10 @@ posizionamenti parte da questa versione e persiste nei salvataggi. La miniera de
 Come il sistema di polizia esistente, la legge opera nella dimensione di Napoli.
 
 ## Multiplayer e verifica
+
+### Letti privati
+
+Tentare di dormire nel letto di una casa privata senza permesso è **violazione di domicilio**. Il riposo viene impedito e si applicano le normali regole dei testimoni e delle segnalazioni: una violazione lieve può comportare una multa di 15 € o la detenzione se non puoi pagarla. Sono comprese le case originali e quelle dei quartieri. Proprietari, inquilini e ospiti autorizzati all'uso degli arredi possono dormire; il solo permesso di aprire le porte non basta. I letti fuori dalle case private restano utilizzabili, così come l'alloggio dei lavoratori per chi ha un contratto.
 
 Percorsi, scavo, posizionamenti e sanzioni vengono gestiti dal server. Tutti i client vedono gli stessi movimenti,
 l'attrezzo impugnato e la distruzione dei blocchi; installa la stessa versione della mod sul server e sui client.

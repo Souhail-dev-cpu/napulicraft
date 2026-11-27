@@ -36,7 +36,7 @@ final class NapoliHomeDecor {
         if (chunk.getAttachedOrElse(FITTED, false) || CityProperty.playerBuiltInChunk(level, chunk.getPos())) return;
         var decor = new NapoliHomeDecor(level, chunk);
         var bounds = chunk.getPos();
-        for (var house : CityLivingHomes.all()) {
+        for (var house : CityLivingHomes.inChunk(bounds)) {
             if (house.x() > bounds.getMaxBlockX() || house.x() + house.width() <= bounds.getMinBlockX()
                     || house.z() > bounds.getMaxBlockZ() || house.z() + house.depth() + 1 <= bounds.getMinBlockZ()) continue;
             if (house.id().startsWith("atlas_") && NapoliExpansion.revision(chunk) < 1) return;
@@ -175,6 +175,6 @@ final class NapoliHomeDecor {
     }
 
     private static Block block(String name) {
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(name));
+        return CityBlocks.vanilla(name);
     }
 }

@@ -76,7 +76,7 @@ final class PhoneScreen extends Screen {
     private void go(String next){saveInput();app=next;query="";page=0;if(next.equals("photos"))gallery.load(minecraft);rebuildWidgets();}
     private void chat(UUID id){saveInput();peer=id;draft=drafts.getOrDefault(id,"");pendingSend=null;app="thread";query="";page=0;request("read",id.toString(),"");rebuildWidgets();}
     private void detail(UUID id){saveInput();peer=id;app="contact";query="";page=0;rebuildWidgets();}
-    private void back(){go(switch(app){case "thread","compose","confirm_delete"->"messages";case "contact","add_contact","mycard"->"contacts";case "offers"->"share";case "recents"->"calls";case "note_edit"->"notes";case "photo"->"photos";case "battery"->"settings";default->"home";});}
+    private void back(){go(switch(app){case "thread","compose","confirm_delete"->"messages";case "contact","add_contact","mycard"->"contacts";case "offers"->"share";case "recents","services"->"calls";case "taxi"->"services";case "note_edit"->"notes";case "photo"->"photos";case "battery"->"settings";default->"home";});}
     private void request(String op,String target,String body){PhoneClient.request(op,target,body);}
     private void sendMessage(){
         if(peer==null||input==null||input.getValue().isBlank()||pendingSend!=null)return;
@@ -96,7 +96,7 @@ final class PhoneScreen extends Screen {
     @Override public void extractBackground(GuiGraphicsExtractor g,int mx,int my,float dt){}
     private void build(){
         input=null;sendButton=null;
-        tap(89,483,70,16,t("phone.home"),()->go("home"),0,false);
+        tap(89,486,70,16,t("phone.home"),()->go("home"),0,false,g->{});
         if(!app.equals("home"))tap(17,43,26,25,Component.literal("‹"),this::back,0,false);
         switch(app){
             case "home"->{
@@ -178,13 +178,28 @@ final class PhoneScreen extends Screen {
                         for(int i=0;i<keys.length;i++){String key=keys[i];int bx=37+i%3*61,by=190+i/3*47;
                             tap(bx,by,51,40,Component.literal(key),()->{if(key.equals("⌫"))dial=dial.isEmpty()?"":dial.substring(0,dial.length()-1);else if(dial.length()<32)dial+=key;input.setValue(dial);},surface(),false,g->large(g,key,bx+25,by+11,ink(),1.7f));
                         }
-                        tap(70,399,108,39,t("phone.call"),()->{if(!dial.isBlank())request("call",dial,"");},0xff2caa6e,true);
+                        tap(70,399,108,39,t("phone.call"),()->{if(!dial.isBlank()){request("call",dial,"");if(PhoneNumbers.normalize(dial).equals(PhoneNumbers.normalize(PhoneServices.TAXI_NUMBER)))go("taxi");}},0xff2caa6e,true);
+                        tap(24,443,200,24,t("phone.services"),()->go("services"),surface(),false);
                     }else{
                         var history=new ArrayList<>(state.personal().history());Collections.reverse(history);int start=pageStart(history.size(),5);
                         for(int i=start;i<Math.min(start+5,history.size());i++){var h=history.get(i);contact(24,125+(i-start)*59,new PhonePacket.Contact(h.peer(),h.name(),h.number(),false,false),()->detail(h.peer()),(h.incoming()?"↙ ":"↗ ")+t("phone.call_"+h.outcome()).getString()+" · "+time(h.time()));}
                         paging(history.size(),5,438);
                     }
                 }
+            }
+            case "services"->{
+                tap(24,112,200,50,t("phone.service.pizza_button"),()->request("call",PhoneServices.PIZZA_NUMBER,""),accent(),true);
+                tap(24,183,200,50,t("phone.service.police_button"),()->request("call","112",""),surface(),false);
+                tap(24,254,200,50,t("phone.service.taxi_button"),()->go("taxi"),surface(),false);
+                tap(24,351,200,34,t("phone.service.cancel_pizza"),()->request("cancel_service","pizza",""),surface(),false);
+                tap(24,400,200,34,t("phone.service.cancel_taxi"),()->request("cancel_service","taxi",""),surface(),false);
+            }
+            case "taxi"->{
+                edit(24,84,200,27,query,64,t("phone.search"),v->{query=v;page=0;filterDirty=true;});
+                var places=filteredPlaces().stream().filter(p->p.position().getY()>=60).toList();int start=pageStart(places.size(),5);
+                for(int i=start;i<Math.min(start+5,places.size());i++){var place=places.get(i);
+                    tap(24,129+(i-start)*54,200,43,place.name(),()->request("taxi",place.id(),""),surface(),false);}
+                paging(places.size(),5,438);
             }
             case "thread"->{
                 tap(47,43,151,28,Component.literal(name(peer)),()->detail(peer),0,false);

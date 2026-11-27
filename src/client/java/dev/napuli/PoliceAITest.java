@@ -57,7 +57,10 @@ public final class PoliceAITest {
         mc.options.pauseOnLostFocus = false;
         if (mc.gui.screen() instanceof PauseScreen) mc.gui.setScreen(null);
         if (mc.level.dimension() != NapoliMap.LEVEL) return;
-        if (phase == 1 && clientStep != 1 && mc.player.getMainHandItem().is(Items.DIRT)) {
+        if (phase == 1 && mc.player.getMainHandItem().is(Items.DIRT)
+                && mc.player.position().distanceToSqr(new Vec3(-402.5,65,-400.5))<.5
+                && mc.level.getBlockState(FURNITURE).isAir() && !mc.level.getBlockState(FURNITURE.below()).isAir()
+                && (clientStep!=1||++frames%15==0)) {
             place(mc,FURNITURE.below()); clientStep = 1;
         }
         if ((phase == 2 || phase == 3) && mc.player.getMainHandItem().is(Items.IRON_PICKAXE) && !mc.level.getBlockState(FURNITURE).isAir()) {
@@ -85,6 +88,8 @@ public final class PoliceAITest {
             city.setBlock(new BlockPos(x,64,z),Blocks.STONE.defaultBlockState(),3);
             for (int y=65;y<=79;y++) city.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);
         }
+        // Preserve the disposable arena while newly visited district chunks finish their repairs.
+        for(int x=-416;x<=-388;x+=16)for(int z=-414;z<=-386;z+=16)CityProperty.placed(city,new BlockPos(x,64,z));
     }
     private static void serverTick(MinecraftServer server) {
         if (finished || server.getPlayerList().getPlayers().isEmpty()) return;
@@ -99,7 +104,19 @@ public final class PoliceAITest {
             switch (phase) {
                 case 0 -> {
                     if (player.level().dimension() != NapoliMap.LEVEL) return;
-                    var city = player.level(); clearArena(city);
+                    var city = player.level();
+                    PolicePatrols.maintain(city);
+                    var patrols=city.getEntities(Napuli.RESIDENT,PolicePatrols::managed);
+                    if(patrols.size()<2)return;
+                    check(patrols.stream().map(NapoliResident::getUUID).distinct().count()==patrols.size(),"District patrols have unique slots");
+                    check(patrols.stream().noneMatch(NapoliResident::shouldBeSaved),"Temporary district patrols cannot duplicate across saves");
+                    Napuli.LOGGER.info("[POLICEAITEST] Distributed street patrols verified: {} officers",patrols.size());
+                    // Keep the following native breach and arrest fixture focused on its own officer.
+                    CityLifeConfig.settings.policePatrolLimit=0;patrols.forEach(NapoliResident::discard);PoliceDispatch.invalidate(city);
+                    clearArena(city);
+                    var owners=new java.util.HashMap<>(city.getAttachedOrElse(NapoliProperties.OWNERS,java.util.Map.of()));
+                    for(var home:DistrictLife.homes())if(home.contains(FURNITURE)||home.contains(BARRIER)||home.contains(BlockPos.containing(INSIDE)))owners.put(home.id(),player.getUUID());
+                    city.setAttached(NapoliProperties.OWNERS,java.util.Map.copyOf(owners));
                     CityProperty.recordHome(city,new BlockPos(-416,64,-414),new BlockPos(-388,79,-386));
                     player.teleportTo(city,-402.5,65,-400.5,Set.of(),0,0,true);
                     player.getInventory().clearContent(); player.getInventory().setItem(0,new ItemStack(Items.DIRT));
@@ -159,9 +176,9 @@ public final class PoliceAITest {
                     for(int x=-406;x<=-400;x++) for(int z=-404;z<=-400;z++) if(x!=-406||z!=-402)
                         city.setBlock(new BlockPos(x,71,z),Blocks.STONE.defaultBlockState(),3);
                     officer.snapTo(-411.5,65,-402.5,0,0); officer.setDeltaMovement(Vec3.ZERO);
+                    player.teleportTo(city,-401.5,72,-401.5,Set.of(),90,45,true);
                     Carabinieri.crime(player,Carabinieri.Crime.ASSAULT);
-                    check(Carabinieri.isWanted(player),"Roof pursuit started");
-                    player.teleportTo(city,-401.5,72,-401.5,Set.of(),90,45,true); next(8);
+                    check(Carabinieri.isWanted(player),"The reported incident identifies the roof before the pursuit starts");next(8);
                 }
                 case 8 -> {
                     if(officer.getY()<71.7) return;

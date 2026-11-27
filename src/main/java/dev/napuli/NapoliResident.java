@@ -97,7 +97,7 @@ public final class NapoliResident extends PathfinderMob {
     }
 
     public static AttributeSupplier.Builder attributes() {
-        return createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.23).add(Attributes.ATTACK_DAMAGE, 3)
+        return createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.29).add(Attributes.ATTACK_DAMAGE, 3)
                 .add(Attributes.FOLLOW_RANGE, 48).add(Attributes.STEP_HEIGHT, 1);
     }
 
@@ -123,8 +123,8 @@ public final class NapoliResident extends PathfinderMob {
     }
 
     public Role role() { return Role.values()[entityData.get(ROLE)]; }
-    @Override public boolean shouldBeSaved() { return !CityJourneys.managed(this)&&super.shouldBeSaved(); }
-    @Override public boolean saveAsPassenger(ValueOutput out) { return !CityJourneys.managed(this)&&super.saveAsPassenger(out); }
+    @Override public boolean shouldBeSaved() { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.shouldBeSaved(); }
+    @Override public boolean saveAsPassenger(ValueOutput out) { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.saveAsPassenger(out); }
 
     @Override
     protected void addAdditionalSaveData(ValueOutput out) {
@@ -167,7 +167,7 @@ public final class NapoliResident extends PathfinderMob {
             npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(Napuli.BATON));
             npc.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0f);
             var speed = npc.getAttribute(Attributes.MOVEMENT_SPEED);
-            if (speed != null) speed.setBaseValue(0.27);
+            if (speed != null) speed.setBaseValue(0.32);
         }
         if (role == Role.PEPPE_FETISH) {
             npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(Napuli.CALZINI_SPORCHI));
@@ -191,6 +191,7 @@ public final class NapoliResident extends PathfinderMob {
         super.aiStep();
         if (level().isClientSide()) return;
         CityGestures.tick(this,(ServerLevel)level());
+        if (PhoneServices.tickActor(this, (ServerLevel)level())) return;
         if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
         if (role().spirit() && --spiritLife <= 0) discard();
         if ((getVehicle() instanceof CityVehicle||CityMovement.isSeat(getVehicle())) && level() instanceof ServerLevel city && role().civic()) {
@@ -201,6 +202,7 @@ public final class NapoliResident extends PathfinderMob {
         if (role() == Role.CARABINIERE && level() instanceof ServerLevel sl && Carabinieri.chasing(sl, this)) return;
         if (level() instanceof ServerLevel city) {
             if(CityPublicOrder.tickEntity(this,city))return;
+            if(PolicePatrols.tick(this,city))return;
             if (role().civic() || NapoliCivicLife.profile(city,getUUID())!=null) { NapoliCivicLife.commute(this, city); return; }
             if (NapoliHouseholds.family(role())) { NapoliHouseholds.tick(this, city); return; }
             if (runResidentialSchedule(city)) return;
@@ -209,10 +211,20 @@ public final class NapoliResident extends PathfinderMob {
         int radius = wanderRadius();
         if (radius == 0) return;
         if (!hasHome()) setHomeTo(blockPosition(), radius); // older saves had no home: their current spot becomes it
-        int every = role() == Role.PASSERBY || role() == Role.CARABINIERE ? 60 : 110;
+        int every = role() == Role.PASSERBY || role() == Role.CARABINIERE ? 40 : 70;
         if ((tickCount + getId()) % every == 0 && getNavigation().isDone() && random.nextFloat() < 0.8f) {
             var next = net.minecraft.world.entity.ai.util.DefaultRandomPos.getPos(this, Math.max(2, radius), 1);
-            if (next != null && next.y >= 63 && isWithinHome(next)) getNavigation().moveTo(next.x, next.y, next.z, role() == Role.CARABINIERE ? 0.7 : 0.6);
+            if (next != null && next.y >= 63 && isWithinHome(next)) getNavigation().moveTo(next.x, next.y, next.z, 1.0);
+        }
+    }
+
+    /** A pursuit can end far outside the old home restriction. Patrol from the new position. */
+    void resumePatrol() {
+        if (role() != Role.CARABINIERE || isNoAi() || Carabinieri.npcJailed(getUUID())) return;
+        setHomeTo(blockPosition(), wanderRadius());
+        for (int i = 0; i < 8; i++) {
+            var next = net.minecraft.world.entity.ai.util.DefaultRandomPos.getPos(this, 8, 1);
+            if (next != null && getNavigation().moveTo(next.x, next.y, next.z, 1.0)) return;
         }
     }
 
@@ -334,6 +346,7 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && PhoneServices.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && FootballPractice.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && NapoliEmployment.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role().civic() || level() instanceof ServerLevel sl && NapoliCivicLife.profile(sl,getUUID())!=null)) {

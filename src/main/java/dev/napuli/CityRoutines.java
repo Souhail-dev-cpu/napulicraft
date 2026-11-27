@@ -56,11 +56,11 @@ final class CityRoutines {
     }
     static BlockPos localGoal(ServerLevel city,NapoliResident npc,BlockPos goal){
         if(!NapoliAtlas.ORIGINAL.contains(npc.getBlockX(),npc.getBlockZ())||!NapoliAtlas.ORIGINAL.contains(goal.getX(),goal.getZ()))return DistrictLife.localGoal(city,npc,goal);
-        for(var home:CityLivingHomes.all())if(home.contains(npc.blockPosition())&&!home.contains(goal))return home.approach(1);
+        var origin=CityLivingHomes.at(npc.blockPosition());if(origin!=null&&!origin.contains(goal))return origin.approach(1);
         for(var service:CityProfessions.Category.values())if(inside(service.site(),npc.blockPosition())&&!inside(service.site(),goal))return service.site().offset(8,0,13);
         if(city.hasChunkAt(goal)&&goal.distToCenterSqr(npc.position())<40*40){var direct=npc.getNavigation().createPath(goal,0);if(direct!=null&&direct.canReach())return goal;}
         final BlockPos requested=goal;
-        var destination=CityLivingHomes.all().stream().filter(h->h.style()>=0&&h.contains(requested)).findFirst().orElse(null);
+        var destination=CityLivingHomes.at(requested);if(destination!=null&&destination.style()<0)destination=null;
         var service=Arrays.stream(CityProfessions.Category.values()).filter(c->requested.distSqr(c.site().offset(8,0,7))<4).findFirst().orElse(null);
         int arrivalZ=destination!=null?destination.z()+24:service!=null?service.site().getZ()+15:goal.getZ();
         boolean housingRow=npc.getZ()>=68&&npc.getZ()<=208||npc.getZ()>=-204&&npc.getZ()<=-56;

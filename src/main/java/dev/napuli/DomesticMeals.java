@@ -122,8 +122,7 @@ final class DomesticMeals {
             if (step == Step.DISHES) {
                 npc.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                 if (city.getBlockState(table).is(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE)) {
-                    var carpet = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                            net.minecraft.resources.Identifier.withDefaultNamespace("blue_carpet"));
+                    var carpet = CityBlocks.vanilla("blue_carpet");
                     city.setBlock(table, carpet.defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
             }
@@ -157,8 +156,7 @@ final class DomesticMeals {
         CityEffects.sound(city,null, pos, sound, SoundSource.BLOCKS, .38f, 1);
         if (step == Step.FRIDGE && city.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.BarrelBlock)
             city.setBlock(pos, city.getBlockState(pos).setValue(BlockStateProperties.OPEN, true), Block.UPDATE_CLIENTS);
-        var setting = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                net.minecraft.resources.Identifier.withDefaultNamespace("blue_carpet"));
+        var setting = CityBlocks.vanilla("blue_carpet");
         if (step == Step.TABLE && city.getBlockState(pos).is(setting))
             city.setBlock(pos, Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE.defaultBlockState(), Block.UPDATE_CLIENTS);
         if (step == Step.COOK || step == Step.DISHES || step == Step.EAT) {
@@ -169,7 +167,7 @@ final class DomesticMeals {
     }
 
     static void setTable(ServerLevel city,BlockPos pos,boolean laid){
-        var carpet=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("blue_carpet"));
+        var carpet=CityBlocks.vanilla("blue_carpet");
         if(laid&&city.getBlockState(pos).is(carpet))city.setBlock(pos,Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE.defaultBlockState(),Block.UPDATE_CLIENTS);
         else if(!laid&&city.getBlockState(pos).is(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE))city.setBlock(pos,carpet.defaultBlockState(),Block.UPDATE_CLIENTS);
     }

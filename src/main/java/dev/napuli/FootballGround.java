@@ -82,7 +82,7 @@ final class FootballGround {
     }
 
     private static Block colour(String name) {
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(name));
+        return CityBlocks.vanilla(name);
     }
 
     private static void set(ServerLevel level, BlockPos at, Block block) {

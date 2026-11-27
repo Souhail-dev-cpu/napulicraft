@@ -18,6 +18,7 @@ final class CityLifeConfig {
         int startingCash = 16;
         int maximumPopulation = 384;
         int districtPopulation = 76;
+        int policePatrolLimit = 32;
         int needsIntervalTicks = 600;
         int daysPerYear = 7;
         int retirementAge = 70;
@@ -41,6 +42,7 @@ final class CityLifeConfig {
         settings.maximumPopulation = Math.clamp(settings.maximumPopulation, 24, 512);
         settings.startingCash = Math.clamp(settings.startingCash, 8, 1000);
         settings.districtPopulation = Math.clamp(settings.districtPopulation,0,256);
+        settings.policePatrolLimit = Math.clamp(settings.policePatrolLimit,0,64);
         settings.population = Math.clamp(settings.population, 8, settings.maximumPopulation);
         settings.needsIntervalTicks = Math.clamp(settings.needsIntervalTicks, 400, 1200);
         settings.daysPerYear = Math.clamp(settings.daysPerYear, 1, 365);

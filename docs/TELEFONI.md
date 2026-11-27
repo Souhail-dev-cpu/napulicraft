@@ -1,5 +1,15 @@
 # Telefoni
 
+## Pizza, carabinieri e taxi
+
+Apri **Chiamate → Servizi cittadini**. Puoi anche comporre **081 555 0101** per la pizzeria, **112** per i carabinieri e **081 555 0202** per il taxi. I servizi operano a Napoli e richiedono un telefono carico con modalità aereo disattivata.
+
+- **Pizza a domicilio:** un ordine alla volta, consegna prevista dopo **20 minuti dell'orologio di gioco** (334 tick, circa 17 secondi reali a 20 TPS). Il fattorino raggiunge il giocatore e chiede **8 €**. Usa il tasto destro su di lui per pagare e ricevere una pizza. Senza denaro o spazio nell'inventario, conserva l'ordine senza addebiti. L'ordine e la scadenza restano dopo un riavvio.
+- **Carabinieri:** il 112 invia una pattuglia alla posizione del chiamante senza attribuirgli un reato. La pattuglia usa i normali percorsi e può intervenire sui reati rilevati. Occorre attendere un minuto reale di simulazione prima di richiamare.
+- **Taxi:** scegli una destinazione dall'elenco del telefono. La prenotazione indica punto di incontro e tariffa, da **6 a 100 €** secondo la distanza. Raggiungi il taxi e usa il tasto destro per salire e pagare. Il veicolo si muove fisicamente e lascia il passeggero vicino alla destinazione. **Shift** interrompe il viaggio; risalire nello stesso taxi non costa una seconda tariffa. La prenotazione conserva un pagamento già effettuato dopo un riavvio. I taxi non ancora utilizzati scadono dopo due minuti reali di simulazione.
+
+I servizi richiedono un punto raggiungibile; per il taxi esci vicino alla strada. Dal menu puoi annullare la pizza o il taxi. Annullare una corsa già iniziata non rimborsa la tariffa. Gli attori dei servizi sono temporanei; gli ordini e le prenotazioni sono salvati separatamente per evitare duplicazioni.
+
 Porta un telefono nella barra rapida, nello zaino o nella mano secondaria. **Tasto destro con il telefono in mano**, **P** o **`/telefono`** apre lo schermo. P si può riassegnare nei comandi di Minecraft.
 
 I cinque oggetti hanno scocche 3D sottili, materiali e gruppi fotocamera diversi. Le interfacce ricreano in Minecraft l'aspetto di **ColorOS** e **OriginOS**: cornice arrotondata, fotocamera frontale, orologio, widget, icone e applicazioni. Sono interfacce della mod, non esecuzioni di Android o delle applicazioni del produttore.

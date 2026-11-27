@@ -36,8 +36,7 @@ final class NapoliWestQuarter {
             put(level, new BlockPos(x, 64, 41), Blocks.DARK_OAK_STAIRS);
         }
         for (int x = -270; x <= -258; x++) for (int z = 45; z <= 49; z++) {
-            var cloth = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                    net.minecraft.resources.Identifier.withDefaultNamespace(x % 2 == 0 ? "white_wool" : "blue_wool"));
+            var cloth = CityBlocks.vanilla(x % 2 == 0 ? "white_wool" : "blue_wool");
             put(level, new BlockPos(x, 68, z), cloth);
         }
         for (int x : new int[]{-270, -258}) {

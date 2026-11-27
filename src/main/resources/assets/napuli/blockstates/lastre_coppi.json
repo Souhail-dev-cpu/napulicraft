@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "napuli:block/lastre_coppi"
+    },
+    "type=top": {
+      "model": "napuli:block/lastre_coppi_top"
+    },
+    "type=double": {
+      "model": "napuli:block/coppi_napoletani"
+    }
+  }
+}

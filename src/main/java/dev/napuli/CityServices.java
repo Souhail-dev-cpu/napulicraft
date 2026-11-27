@@ -41,7 +41,7 @@ final class CityServices {
         var goal=place("school");if(goal.distToCenterSqr(npc.position())>9){npc.setActivity(NapoliHouseholds.Activity.COMMUTE);CityDomestic.move(npc,CityRoutines.localGoal(city,npc,goal));}else{npc.setActivity(NapoliHouseholds.Activity.WORK);npc.getNavigation().stop();npc.animate(c.profession()==NapoliCivicLife.Job.TEACHER?CityGestures.Gesture.TEACH:CityGestures.Gesture.WRITE,50);}return true;}
     static void fixtures(ServerLevel city){
         var hospital=CityProfessions.Category.HEALTH.site();var bed=hospital.offset(10,0,4);if(city.isEmptyBlock(bed)&&city.isEmptyBlock(bed.north())&&!CityProperty.playerPlaced(city,bed)&&!CityProperty.playerPlaced(city,bed.north())){
-            var state=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("white_bed")).defaultBlockState().setValue(net.minecraft.world.level.block.BedBlock.FACING,net.minecraft.core.Direction.NORTH);
+            var state=CityBlocks.vanilla("white_bed").defaultBlockState().setValue(net.minecraft.world.level.block.BedBlock.FACING,net.minecraft.core.Direction.NORTH);
             city.setBlock(bed,state.setValue(net.minecraft.world.level.block.BedBlock.PART,net.minecraft.world.level.block.state.properties.BedPart.FOOT),2);city.setBlock(bed.north(),state.setValue(net.minecraft.world.level.block.BedBlock.PART,net.minecraft.world.level.block.state.properties.BedPart.HEAD),2);
         }
         for(int i=0;i<4;i++){var desk=CityProfessions.Category.PUBLIC.site().offset(3+i*3,0,4);if(city.isEmptyBlock(desk)&&!CityProperty.playerPlaced(city,desk))city.setBlock(desk,Blocks.OAK_SLAB.defaultBlockState(),2);}

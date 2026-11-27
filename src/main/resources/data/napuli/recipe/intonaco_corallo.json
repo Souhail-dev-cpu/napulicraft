@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:terracotta",
+    "minecraft:white_dye",
+    "minecraft:red_dye"
+  ],
+  "result": {
+    "id": "napuli:intonaco_corallo",
+    "count": 3
+  }
+}

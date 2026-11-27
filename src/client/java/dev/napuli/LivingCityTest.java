@@ -104,6 +104,7 @@ public final class LivingCityTest {
         var owners=city.getAttachedOrElse(NapoliProperties.OWNERS,java.util.Map.of());
         var accounts=city.getAttachedOrElse(CityHousingFinance.ACCOUNTS,java.util.Map.of());
         var invitations=city.getAttachedOrElse(HouseGuests.INVITATIONS,java.util.Map.of());
+        var permissions=city.getAttachedOrElse(HomePermissions.GRANTS,java.util.Map.of());
         var target=house.inside().above(2);var oldTarget=city.getBlockState(target);var oldSupport=city.getBlockState(target.below());
         var stack=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COBBLESTONE,2);
         var hit=new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(target.below()),net.minecraft.core.Direction.UP,target.below(),false);
@@ -112,17 +113,20 @@ public final class LivingCityTest {
             var changedAccounts=new java.util.HashMap<>(accounts);changedAccounts.remove(house.id());city.setAttached(CityHousingFinance.ACCOUNTS,java.util.Map.copyOf(changedAccounts));
             HouseGuests.clear(city,house.id());check(HouseGuests.grant(city,house.id(),guest,player),"The temporary host can invite the player");
             check(NapoliProperties.hasAccess(player,house)&&!CityProperty.mayBuild(city,player,target),"A guest has access without construction rights");
-            check(CityProperty.storageAllowed(player,CityLivingHomes.use(house,CityLivingHomes.Furniture.FRIDGE).block()),"Invited guests can use the fridge without a theft accusation");
+            var fridge=CityLivingHomes.use(house,CityLivingHomes.Furniture.FRIDGE).block();
+            check(!CityProperty.storageAllowed(player,fridge),"A basic invitation grants entry without access to stored items");
+            HomePermissions.put(city,house.id(),player.getUUID(),new HomePermissions.Grant(guest,"roommate",true,true,true));
+            check(CityProperty.storageAllowed(player,fridge),"The host may explicitly grant fridge access to a roommate");
             city.setBlock(target,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2);
             city.setBlock(target.below(),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),2);
             var item=(net.minecraft.world.item.BlockItem)stack.getItem();
             item.place(new net.minecraft.world.item.context.BlockPlaceContext(city,player,net.minecraft.world.InteractionHand.MAIN_HAND,stack,hit));
             check(city.isEmptyBlock(target)&&stack.getCount()==2,"Guest block placement is rejected without consuming the item");
-            city.setAttached(NapoliProperties.OWNERS,owners);city.setAttached(CityHousingFinance.ACCOUNTS,accounts);city.setAttached(HouseGuests.INVITATIONS,invitations);
+            city.setAttached(NapoliProperties.OWNERS,owners);city.setAttached(CityHousingFinance.ACCOUNTS,accounts);city.setAttached(HouseGuests.INVITATIONS,invitations);city.setAttached(HomePermissions.GRANTS,permissions);
             item.place(new net.minecraft.world.item.context.BlockPlaceContext(city,player,net.minecraft.world.InteractionHand.MAIN_HAND,stack,hit));
             check(city.getBlockState(target).is(net.minecraft.world.level.block.Blocks.COBBLESTONE)&&stack.getCount()==1,"The owner can still place blocks normally");
         }finally{
-            city.setAttached(NapoliProperties.OWNERS,owners);city.setAttached(CityHousingFinance.ACCOUNTS,accounts);city.setAttached(HouseGuests.INVITATIONS,invitations);
+            city.setAttached(NapoliProperties.OWNERS,owners);city.setAttached(CityHousingFinance.ACCOUNTS,accounts);city.setAttached(HouseGuests.INVITATIONS,invitations);city.setAttached(HomePermissions.GRANTS,permissions);
             city.setBlock(target,oldTarget,2);city.setBlock(target.below(),oldSupport,2);
         }
         check(HouseGuests.menu(player,house.id())==1,"The mortgage owner can manage invitations");

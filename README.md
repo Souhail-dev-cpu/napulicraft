@@ -6,6 +6,8 @@ Napulicraft è una mod Fabric che unisce esplorazione, simulazione cittadina e c
 
 Il progetto conserva il proprio carattere parodistico: Munaciello, motorini con radio personalizzabile, cucina napoletana e situazioni comiche convivono con economia, proprietà e conseguenze delle azioni del giocatore.
 
+La revisione delle abitazioni aggiunge intonaci ocra e corallo, maioliche, coppi costruibili, cornici, porte sui balconi e botole per le scale dei tetti. Gli aggiornamenti si applicano ai chunk caricati e rispettano le costruzioni dei giocatori. Gli NPC gestiscono letti separati, attraversamenti e code alle porte; gli spostamenti virtuali mantengono una posizione effettiva. Le texture dei telefoni sono conservate.
+
 [Scarica le beta](https://github.com/Souhail-dev-cpu/napulicraft/releases) · [Segnala un problema](https://github.com/Souhail-dev-cpu/napulicraft/issues) · [Codice sorgente](https://github.com/Souhail-dev-cpu/napulicraft)
 
 ## Indice
@@ -243,6 +245,8 @@ Il giocatore dispone di **otto contratti cittadini**: fornaio, facchino, mercant
 
 Il primo turno assegna l'attrezzatura del mestiere. La freccia segue **raccolta → preparazione → consegna → timbratura**: per il falegname indica gli alberi, poi il banco per trasformare i tronchi in assi e infine il destinatario. Sei querce dell'area artigiana ricrescono durante la notte; il campo viene ripristinato usando semi. La ricrescita rispetta costruzioni e contenitori dei giocatori.
 
+Le mansioni richiedono più lavoro: **16 assi** per il falegname, **4 pani**, **12 unità di grano**, **4 alberelli**, **3 merluzzi**, **3 viaggi** per facchini e corrieri oppure **8 zone da pulire con 5 passate ciascuna**. Dopo la prima ora, la paga cresce anche con i minuti aggiuntivi. Puoi continuare le attività per allungare il turno fino a otto ore; dopo due ore senza attività il conteggio si sospende.
+
 Presso ciascun contratto trovi un **banco CARRIERA**: esperienza e turni pagati consentono di passare da Apprendista a Qualificato, Specialista e Maestro. Sono disponibili potenziamenti, riparazioni e sostituzioni dell'attrezzo. I progressi sono separati per mestiere e persistono nei salvataggi. Stipendi e interventi pubblici usano un fondo finanziato anche da tariffe, vendite e tasse; le consegne riforniscono le scorte pertinenti.
 
 Consulta la [guida ai lavori e alle carriere](docs/LAVORI_E_CARRIERE.md) per materiali, requisiti, costi e comandi.
@@ -308,6 +312,8 @@ L'interfaccia mostra **Fame Napoletana**, che rappresenta la sazietà eccessiva,
 La [guida alla cucina](docs/CUCINA.md) e il [ricettario completo](docs/CUCINA_RICETTE.md) indicano ingredienti, quantità, effetti e durate.
 
 ## Telefoni
+
+Da **Chiamate → Servizi cittadini** puoi ordinare una pizza, chiamare i carabinieri o prenotare un taxi. La pizza arriva dopo **20 minuti di gioco**: il fattorino chiede **8 €**, pagati con il tasto destro alla consegna. Il **112** invia una pattuglia. Per il taxi scegli una destinazione, controlla la tariffa e sali sul veicolo con il tasto destro; il pagamento avviene una sola volta e il taxi percorre fisicamente il tragitto. Numeri: pizzeria **081 555 0101**, taxi **081 555 0202**.
 
 **OnePlus 16, vivo X500 Pro Max, iQOO 15, iQOO 16 e OnePlus 15** sono oggetti 3D costruibili, con hardware delle versioni cinesi e interfacce ricreate di ColorOS e OriginOS. Porta un telefono nello zaino e premi **P**, usa **`/telefono`** oppure fai tasto destro con il telefono in mano.
 
@@ -378,6 +384,10 @@ Furto, aggressione, spari, rapina, pizzo e vandalismo possono attivare segnalazi
 Gli agenti rivalutano il percorso, usano porte, scale e passaggi disponibili e devono raggiungere il sospetto con un contatto libero per arrestarlo. Se una barricata del giocatore impedisce l'inseguimento, possono usare un piccone di ferro per aprire un varco vicino, mostrando animazione, crepe e drop. Lo scavo rispetta la regola di danneggiamento dei blocchi da parte dei mob e i limiti dell'attrezzo; contenitori e strutture originali della città sono esclusi da questo comportamento.
 
 Distruggere muri o arredi originali delle case può costituire **vandalismo**. I blocchi piazzati dai giocatori sono tracciati separatamente: rimuoverli non equivale a danneggiare gli arredi originali. È presente anche `/colpo`, per tentativi di rapina presso i bersagli previsti, con attesa, ricompensa e conseguenze penali.
+
+Usare i letti delle case altrui senza permesso è **violazione di domicilio**: il riposo viene impedito e può intervenire una pattuglia. Proprietari, inquilini e ospiti con permesso di usare gli arredi possono dormire. I cittadini camminano più velocemente e cercano deviazioni quando restano bloccati; i carabinieri riprendono la pattuglia dopo la fuga del ricercato anche se sono lontani dal loro posto iniziale.
+
+Le pattuglie aggiuntive presidiano **in coppia piazze, fermate e quartieri**, fino a 32 agenti attivi nelle aree caricate. La centrale divide gli agenti fra i ricercati, con squadre di tre o cinque secondo la gravità; gli avvistamenti vengono condivisi e i colleghi coprono i lati della fuga. Dopo aver perso il sospetto cercano presso l'ultima posizione osservata. Anche gli inseguimenti dei cittadini NPC mantengono la precedenza sul normale giro di pattuglia.
 
 La [guida a polizia e navigazione](docs/IA_POLIZIA.md) descrive regole, limiti e verifiche.
 
@@ -484,6 +494,7 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
   "population": 120,
   "maximumPopulation": 384,
   "districtPopulation": 76,
+  "policePatrolLimit": 32,
   "needsIntervalTicks": 600,
   "daysPerYear": 7,
   "retirementAge": 70,
@@ -508,6 +519,7 @@ Al primo avvio viene creato `config/napulicraft-city.json`. Modifica il file a s
 | `startingCash` | Saldo dei nuovi portafogli: 16 € per impostazione predefinita, regolabile fra 8 e 1000; i saldi già salvati sono conservati |
 | `maximumPopulation` | Tetto complessivo dei cittadini, regolabile fino a 512 |
 | `districtPopulation` | Limite delle aggiunte dei quartieri; i nuclei iniziali completi richiedono 76 posti |
+| `policePatrolLimit` | Agenti aggiuntivi di pattuglia attivi nelle aree caricate: 32 predefiniti, regolabili da 0 a 64; i carabinieri preesistenti e del censimento sono separati |
 | `needsIntervalTicks` | Intervallo di aggiornamento dei bisogni, normalmente 600 tick |
 | `daysPerYear` | Giorni Minecraft per un anno di età |
 | `retirementAge` / `maximumAge` | Soglie per pensionamento e fine del ciclo di vita |
@@ -551,13 +563,14 @@ Il JAR installabile viene generato in `build/libs/napulicraft-<versione>.jar`. I
 
 `./gradlew runQolTest` esegue una prova grafica in un mondo usa e getta: menu cittadino, ricerca, preferiti, navigazione, ricettario, partenze, carriera, diario, acquisto di una casa tramite preventivo, protezione dal doppio pagamento, cronologia, economia, bacheche cooperative e scambi, ultimo motorino, preferenze degli effetti, ripristino della telecamera e cambio fra tre lingue. Le schermate sono in `.gradle/qol-client/screenshots/`; il risultato richiesto è `[QOLTEST] ALL PASSED`. La prova verifica anche quattro dimensioni dell’interfaccia (da 320 × 240 a 960 × 540), assenza di sovrapposizioni fra i controlli, ricerca senza accenti, recupero dai risultati vuoti, rotella, tastiera, conservazione del link e ritorno dalla schermata di importazione musicale. `build` include anche GameTest per percorsi attorno a muri e dislivelli, preservazione dei chunk lontani, migrazione delle mete, persistenza dei gruppi, uscita e successione del capogruppo, scadenza dei preventivi, turni conclusi e importi della cronologia.
 
-`build` include i **GameTest del server**. La suite comprende **197 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove grafiche e prolungate si avviano separatamente.
+`build` include i **GameTest del server**. La suite comprende **222 test**, con ingressi, strade, capienza, ospiti, carriere, scorte, alberi rinnovabili, guasti, pontile, accessi costieri alla metro e le protezioni per scambi, contributi cooperativi, permessi e motorini. I test di regressione verificano anche eredità con decessi simultanei, preventivi e saldi dei mutui arretrati, trasformazioni con inventario pieno e nomi duplicati dei download musicali con estensioni maiuscole. Le nuove prove controllano la chiusura dei contenitori dopo una revoca, vendite e stipendi al limite del portafoglio, successione del capogruppo senza appropriazione di premi o rimborsi e paginazione di oltre 1.300 incarichi cooperativi con decodifica dei pacchetti e riscossione dei compensi. Le prove includono anche letti distinti, viaggi iniziali, porte e risorse condivise, attraversamenti, materiali validi, tappeti, balconi e conservazione delle modifiche alle case. Le prove grafiche e prolungate si avviano separatamente.
 
 Il [rapporto dell'ecosistema cittadino](docs/VERIFICA_ECOSISTEMA_2026-11-24.md) riporta gli esiti effettivi, le misure, i problemi trovati e i limiti delle prove.
 
 | Task Gradle | Ambito |
 | --- | --- |
 | `runGameTest` | Suite automatica del server |
+| `runCityQualityTest` | Client grafico: facciate, maioliche, arredi, accessi e stanze dei palazzi rialzati; cinque schermate in `.gradle/city-quality-client/screenshots` |
 | `runPickpocketTest` | Inventario di NPC e giocatori, furto di cinque unità, limite giornaliero, dialoghi e quattro dimensioni della GUI |
 | `runPhoneTest` | Cinque telefoni, hardware, chat privata, chiamate in entrata e uscita, voce, GPS, ricarica, foto e quattro dimensioni della GUI |
 | `runWorkCareerTest` | Client grafico: raccolta nativa, preparazione, paga a tempo, otto banchi, promozione, potenziamento e ricrescita |

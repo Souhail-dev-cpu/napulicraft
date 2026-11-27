@@ -158,7 +158,7 @@ public final class NapoliHouseholds {
     }
 
     private static BlockPos tv(BlockPos house) { return house.offset(2, 1, 8); }
-    private static Block block(String name) { return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(name)); }
+    private static Block block(String name) { return CityBlocks.vanilla(name); }
     private static void put(ServerLevel level, BlockPos pos, Block block) {
         level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
     }

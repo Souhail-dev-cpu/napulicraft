@@ -130,8 +130,7 @@ final class NapoliMergellina {
             put(level, x + 7, 68, z + 8, Blocks.BARREL);
             for (int bx : new int[]{3, 4, 6, 7}) {
                 BlockPos bed = new BlockPos(x + bx, 68, z + 5);
-                Block bedBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                        net.minecraft.resources.Identifier.withDefaultNamespace("blue_bed"));
+                Block bedBlock = CityBlocks.vanilla("blue_bed");
                 level.setBlock(bed, bedBlock.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH)
                         .setValue(BedBlock.PART, BedPart.FOOT), Block.UPDATE_CLIENTS);
                 level.setBlock(bed.north(), bedBlock.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH)
@@ -163,8 +162,7 @@ final class NapoliMergellina {
         put(level, x + 2, 64, z + 3, Blocks.BARREL);
         put(level, x + 8, 64, z + 3, Blocks.CRAFTING_TABLE);
         BlockPos bed = new BlockPos(x + 2, 64, z + 5);
-        Block bedBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                net.minecraft.resources.Identifier.withDefaultNamespace("blue_bed"));
+        Block bedBlock = CityBlocks.vanilla("blue_bed");
         level.setBlock(bed, bedBlock.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH)
                 .setValue(BedBlock.PART, BedPart.FOOT), Block.UPDATE_CLIENTS);
         level.setBlock(bed.north(), bedBlock.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH)

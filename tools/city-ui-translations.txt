@@ -792,3 +792,34 @@ chat.sussurro_name|%s (sussurro)|%s (whisper)|%s (sussurro)
 chat.bisbiglio_name|%s (all'orecchio)|%s (in your ear)|%s (dint'a recchia)
 chat.urlo_name|%s (URLO)|%s (SHOUT)|%s (STRILLO)
 chat.shout_empty|Scrivi un messaggio dopo /urlo.|Write a message after /urlo.|Scrive nu messaggio doppo /urlo.
+phone.services|Servizi cittadini|City services|Servizze d'a città
+phone.taxi|Destinazione taxi|Taxi destination|Destinazione d'o taxi
+phone.service.pizza_button|Pizza a domicilio · 8 €|Pizza delivery · €8|Pizza a casa · 8 €
+phone.service.police_button|Carabinieri · 112|Carabinieri · 112|Carabiniere · 112
+phone.service.taxi_button|Chiama un taxi|Call a taxi|Chiamma nu taxi
+phone.service.cancel_pizza|Annulla ordine pizza|Cancel pizza order|Annulla 'a pizza
+phone.service.cancel_taxi|Annulla taxi / scendi|Cancel taxi / get out|Annulla taxi / scenne
+phone.service.city_only|Il servizio è disponibile a Napoli, fuori dal carcere.|This service is available in Naples, outside jail.|'O servizio sta a Napule, fora d'a galera.
+phone.service.pizza_ordered|Pizza ordinata: arriva fra 20 minuti di gioco. Pagherai %s € al fattorino con il tasto destro.|Pizza ordered: due in 20 game minutes. Right-click the courier to pay €%s.|Pizza ordinata: arriva fra 20 minute 'e juoco. Pava %s € ô fattorino cu 'o tasto destro.
+phone.service.pizza_pending|Hai già una pizza in arrivo: circa %s minuti di gioco. Se è pronta, raggiungi il fattorino.|You already have a pizza on the way: about %s game minutes. If ready, meet the courier.|Tiene già na pizza pe' via: circa %s minute 'e juoco. Si è pronta, va' dô fattorino.
+phone.service.pizza_pay|Ecco la tua pizza! Sono %s €: tasto destro per pagare e ritirarla.|Here's your pizza! That will be €%s: right-click to pay and collect it.|Ecco 'a pizza toja! So' %s €: tasto destro pe' pavà e pigliarla.
+phone.service.pizza_arrived|Il fattorino è arrivato. Tasto destro su di lui: pizza e pagamento di %s €.|The courier has arrived. Right-click them to collect your pizza and pay €%s.|'O fattorino è arrivato. Tasto destro ncopp'a isso: pizza e pagamento 'e %s €.
+phone.service.pizza_delivered|Pizza consegnata e %s € pagati. Buon appetito!|Pizza delivered and €%s paid. Enjoy!|Pizza consegnata e %s € pavate. Buon appetito!
+phone.service.courier|Fattorino delle pizze|Pizza courier|Fattorino d'e pizze
+phone.service.need_money|Servono %s €. Non è stato addebitato nulla.|You need €%s. Nothing was charged.|Servono %s €. Nun è stato pavato niente.
+phone.service.inventory_full|Libera uno spazio nell'inventario per la pizza. Il pagamento resta in attesa.|Make room in your inventory for the pizza. Payment is still pending.|Fa' spazio dint'ô zaino pe' 'a pizza. 'O pagamento aspetta.
+phone.service.police_pending|Una pattuglia è già stata avvisata. Attendi prima di richiamare.|A patrol has already been notified. Wait before calling again.|Na pattuglia è già avvisata. Aspetta primma 'e richiamma'.
+phone.service.police_sent|112: una pattuglia dei carabinieri sta raggiungendo la tua posizione.|112: a Carabinieri patrol is heading to your location.|112: na pattuglia d'e carabiniere sta venenn'a te.
+phone.service.no_access|Raggiungi un punto accessibile vicino alla strada e riprova.|Move to an accessible spot near the street and try again.|Va' a nu posto accessibile vicino â strada e riprova.
+phone.service.taxi_choose|Apri Chiamate → Servizi cittadini → Taxi e scegli la destinazione.|Open Calls → City services → Taxi and choose a destination.|Arape Chiammate → Servizze d'a città → Taxi e sceglie 'a destinazione.
+phone.service.taxi_pending|Hai già un taxi prenotato. Raggiungilo o annullalo dal telefono.|You already have a taxi booked. Meet it or cancel it on your phone.|Tiene già nu taxi prenotato. Va' ô taxi o annullalo dô telefono.
+phone.service.taxi_near|Sei già vicino alla destinazione: puoi raggiungerla a piedi.|You are already near the destination: you can walk there.|Staje già vicino â destinazione: ce puo' arrivà a ppiede.
+phone.service.taxi_booked|Taxi per %s prenotato: %s €. Ti aspetta in %s; paghi quando sali con il tasto destro.|Taxi to %s booked: €%s. Meet it at %s; right-click to board and pay.|Taxi pe' %s prenotato: %s €. T'aspetta a %s; pave quanno saglie cu 'o tasto destro.
+phone.service.taxi_name|Taxi di %s|Taxi for %s|Taxi 'e %s
+phone.service.taxi_waiting|Il taxi ti aspetta: tasto destro per salire, %s €. Shift per scendere; puoi risalire senza ripagare.|Your taxi is waiting: right-click to board, €%s. Shift to get out; reboarding is free.|'O taxi t'aspetta: tasto destro pe' saglì, %s €. Shift pe' scennere; risaglie senza ripavà.
+phone.service.taxi_boarded|In viaggio verso %s. Shift per scendere; il taxi aspetta se interrompi il viaggio.|Travelling to %s. Shift to get out; the taxi waits if you interrupt the trip.|Stamme jenno a %s. Shift pe' scennere; 'o taxi aspetta si t'arresti.
+phone.service.taxi_arrived|Taxi arrivato vicino a %s. Buona passeggiata!|Taxi arrived near %s. Enjoy your walk!|'O taxi è arrivato vicino a %s. Bona passeggiata!
+phone.service.cancelled|Servizio annullato. La corsa già iniziata resta pagata.|Service cancelled. A taxi trip already started remains paid.|Servizio annullato. 'A corsa già accumminciata resta pavata.
+sleep.trespass|Dormire nei letti altrui senza permesso è violazione di domicilio: i carabinieri possono intervenire.|Sleeping in someone else's bed without permission is trespassing: the Carabinieri may respond.|Durmì dint'ô lietto 'e n'ato senza permesso è violazione 'e domicilio: ponno arrivà 'e carabiniere.
+work.need_batch|Per completare la mansione servono %s × %s.|This task requires %s × %s.|Pe' fernì 'a fatica servono %s × %s.
+work.delivery_progress|Consegne completate: %s / %s. Torna al deposito per il prossimo pacco.|Deliveries completed: %s / %s. Return to the depot for the next parcel.|Consegne fernute: %s / %s. Torna ô deposito p'o prossimo pacco.

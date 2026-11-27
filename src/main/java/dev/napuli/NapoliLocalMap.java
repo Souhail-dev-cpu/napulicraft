@@ -99,8 +99,7 @@ final class NapoliLocalMap {
     }
 
     private static Block wool(String color) {
-        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
-                net.minecraft.resources.Identifier.withDefaultNamespace(color + "_wool"));
+        return CityBlocks.vanilla(color + "_wool");
     }
 
     private static void room(ServerLevel level, int x1, int z1, int x2, int z2, int y1, int y2) {

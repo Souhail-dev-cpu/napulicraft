@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:terracotta",
+    "minecraft:white_dye",
+    "minecraft:yellow_dye"
+  ],
+  "result": {
+    "id": "napuli:intonaco_ocra",
+    "count": 3
+  }
+}

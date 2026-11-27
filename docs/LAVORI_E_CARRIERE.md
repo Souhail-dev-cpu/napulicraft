@@ -10,24 +10,26 @@ Questa guida descrive gli otto contratti del giocatore e il loro collegamento co
 4. Segui la freccia: passa dalla materia prima alla preparazione e infine alla mansione quando cambia il contenuto dell'inventario.
 5. Completa la mansione, accumula le ore lavorate e torna al responsabile per riscuotere stipendio ed esperienza.
 
-Il turno ordinario va dalle 08:30 alle 16:30. Un'ora di lavoro equivale a 1.000 tick, circa 50 secondi a 20 TPS. Il tempo viene conteggiato nelle condizioni previste dal contratto e vicino ai luoghi dell'attività; stare lontano dal lavoro non produce ore. Una mansione completata e una paga già riscossa non possono essere riscosse nuovamente nello stesso giorno.
+Il turno ordinario va dalle 08:30 alle 16:30. Un'ora di lavoro equivale a 1.000 tick, circa 50 secondi a 20 TPS. Il tempo viene conteggiato nelle condizioni previste dal contratto e vicino ai luoghi dell'attività; stare lontano dal lavoro non produce ore. La prima riscossione durante il turno richiede almeno un'ora e la mansione completa. Dopo la prima ora sono retribuiti anche i minuti aggiuntivi: a 10 €/ora, 90 minuti valgono 15 € e tre ore valgono 30 €. A chiusura vengono pagate anche frazioni inferiori all'ora.
+
+Puoi continuare consegne, preparazioni e pulizia dopo la prima mansione per prolungare il turno, fino a otto ore. Dopo due ore senza attività riconosciuta il conteggio si ferma finché non riprendi il lavoro. Una paga già riscossa non può essere riscossa nuovamente nello stesso giorno.
 
 ## Gli otto contratti
 
 | Mestiere | Attrezzatura iniziale | Percorso della mansione |
 | --- | --- | --- |
-| Falegname | Ascia di ferro | Raggiungi gli alberi indicati, abbatti e raccogli i tronchi di quercia, trasformali al banco e consegna le assi |
-| Fornaio | Zappa di ferro | Raccogli il grano del campo, prepara il pane al banco e consegnalo |
-| Mercante | Zappa di ferro | Raccogli il grano e portalo al destinatario |
-| Netturbino | Pennello | Pulisci le aree indicate seguendo l'avanzamento della mansione |
-| Giardiniere | Pala di ferro | Ritira un alberello presso il vivaio al banco e consegnalo al responsabile |
-| Pescatore | Canna da pesca | Raggiungi il pontile, pesca un merluzzo e consegnalo |
-| Facchino | Stivali di ferro | Ritira il pacco assegnato al deposito e portalo al destinatario |
-| Corriere | Stivali di ferro | Ritira il pacco nominativo al deposito e completa la consegna |
+| Falegname | Ascia di ferro | Abbatti e raccogli 4 tronchi di quercia, trasformali al banco e consegna 16 assi |
+| Fornaio | Zappa di ferro | Raccogli 12 unità di grano, prepara 4 pani al banco e consegnali |
+| Mercante | Zappa di ferro | Raccogli 12 unità di grano e portale al destinatario |
+| Netturbino | Pennello | Pulisci 8 aree, con 5 passate per area; gli attrezzi potenziati accelerano la pulizia |
+| Giardiniere | Pala di ferro | Ritira 4 alberelli presso il vivaio al banco e consegnali al responsabile |
+| Pescatore | Canna da pesca | Raggiungi il pontile, pesca 3 merluzzi e consegnali |
+| Facchino | Stivali di ferro | Completa 3 viaggi fra deposito e destinatario, ritirando un carico alla volta |
+| Corriere | Stivali di ferro | Completa 3 consegne nominative, tornando al deposito fra un pacco e l'altro |
 
 Il falegname deve **rompere e raccogliere realmente il legno**: il puntatore non assegna tronchi a distanza. Al banco, un tronco diventa quattro assi; tre unità di grano diventano un pane. Puoi usare il tasto destro oppure `/lavoro risorse` restando vicino alla postazione. Il vivaio usa una scorta condivisa di alberelli.
 
-Il pacco è un oggetto nominativo associato a giocatore, contratto e giornata. Un altro giocatore non può consegnarlo per te. Se lo perdi, il deposito ne offre una sostituzione a 3 €; una consegna consuma il pacco.
+Il pacco è un oggetto nominativo associato a giocatore, contratto, giornata e numero della consegna. Un altro giocatore non può consegnarlo per te. Se lo perdi, il deposito ne offre una sostituzione a 3 €; una consegna consuma il pacco. La consegna successiva riceve un nuovo pacco gratuito; le copie dei pacchi precedenti non sono valide.
 
 ## Alberi e coltivazioni rinnovabili
 

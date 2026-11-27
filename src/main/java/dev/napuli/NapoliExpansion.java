@@ -316,17 +316,19 @@ public final class NapoliExpansion {
                 ||upper.getValue(DoorBlock.HALF)!=DoubleBlockHalf.UPPER
                 ||upper.getValue(DoorBlock.FACING)!=lower.getValue(DoorBlock.FACING)
                 ||!chunk.getBlockState(door.above(3)).is(wall))return 0;
-        if(wide&&(!chunk.getBlockState(door.west(2)).is(wall)||!chunk.getBlockState(door.east(2)).is(wall)))return 0;
+        boolean finished=wide&&chunk.getBlockState(door.west(2)).is(Blocks.POLISHED_ANDESITE)&&chunk.getBlockState(door.east(2)).is(Blocks.POLISHED_ANDESITE);
+        if(wide&&!finished&&(!chunk.getBlockState(door.west(2)).is(wall)||!chunk.getBlockState(door.east(2)).is(wall)))return 0;
+        Block frame=finished?Blocks.POLISHED_DEEPSLATE:wall;
         int radius=wide?1:0;
         for(int dx=-radius;dx<=radius;dx++)for(int dy=0;dy<=2;dy++){
             var p=door.offset(dx,dy,0);
             if(!ChunkPos.containing(p).equals(chunk.getPos())||CityProperty.playerPlaced(city,p)||chunk.getBlockEntity(p)!=null)return 0;
-            if((dx!=0||dy==2)&&!chunk.getBlockState(p).isAir()&&!chunk.getBlockState(p).is(wall))return 0;
+            if((dx!=0||dy==2)&&!chunk.getBlockState(p).isAir()&&!chunk.getBlockState(p).is(frame))return 0;
         }
         int changed=0;
         for(int dx=-radius;dx<=radius;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2){
             var p=door.offset(dx,dy,0);
-            if(chunk.getBlockState(p).isAir()){city.setBlock(p,wall.defaultBlockState(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);changed++;}
+            if(chunk.getBlockState(p).isAir()){city.setBlock(p,frame.defaultBlockState(),Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);changed++;}
         }
         return changed;
     }
@@ -607,7 +609,7 @@ public final class NapoliExpansion {
         void frontage(int x, int y, int z, int floors) {
             roofParapet(x, y + floors * 5, z);
             int door = x + 11, front = z + 23;
-            var masonry = facade(Math.floorDiv(x, BLOCK_SIZE) + Math.floorDiv(z, BLOCK_SIZE)).defaultBlockState();
+            var masonry = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
             for (int dx = -1; dx <= 1; dx++) {
                 frontageBlock(door + dx, y + 2, front, masonry);
                 frontageBlock(door + dx, y - 1, front, Blocks.POLISHED_ANDESITE.defaultBlockState());

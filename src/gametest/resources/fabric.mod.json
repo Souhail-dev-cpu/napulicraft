@@ -42,7 +42,8 @@
       "dev.napuli.PhoneGameTest",
       "dev.napuli.PhoneServicesGameTest",
       "dev.napuli.PoliceCoordinationGameTest",
-      "dev.napuli.CityQualityGameTest"
+      "dev.napuli.CityQualityGameTest",
+      "dev.napuli.HomeFurnitureGameTest"
     ]
   },
   "depends": {

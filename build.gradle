@@ -48,6 +48,12 @@ loom {
             runDir '.gradle/city-quality-client'
             programArgs '--width', '1280', '--height', '800'
         }
+        homeFurnitureTest {
+            client()
+            vmArg '-Dnapuli.homefurnituretest=true'
+            runDir '.gradle/home-furniture-client'
+            programArgs '--width', '1280', '--height', '800'
+        }
 		policeaitest {
 			client()
 			name "Napuli police navigation test"
@@ -399,6 +405,21 @@ tasks.named('runCityQualityTest') {
     doLast {
         if (!log.exists() || !log.text.contains('[CITYQUALITY] ALL PASSED')) throw new GradleException('City quality verification failed; see .gradle/city-quality-client/logs/latest.log')
     }
+}
+
+tasks.register('prepareHomeFurnitureTest') {
+    def directory = layout.projectDirectory.dir('.gradle/home-furniture-client').asFile
+    doLast {
+        directory.mkdirs()
+        new File(directory,'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\nrenderDistance:5\nsimulationDistance:5\nguiScale:2\nmaxFps:60\npauseOnLostFocus:false\nlang:it_it\n'
+    }
+}
+tasks.named('runHomeFurnitureTest') {
+    dependsOn 'prepareHomeFurnitureTest'
+    mustRunAfter 'runGameTest', 'runLivingCityTest'
+    jvmArgs '-Dorg.lwjgl.system.SharedLibraryExtractPath=' + layout.projectDirectory.dir('.gradle/home-furniture-natives').asFile.absolutePath
+    def log = layout.projectDirectory.file('.gradle/home-furniture-client/logs/latest.log').asFile
+    doLast { if (!log.exists() || !log.text.contains('[HOMEFURNITURE] ALL PASSED')) throw new GradleException('Domestic furniture test failed; see .gradle/home-furniture-client/logs/latest.log') }
 }
 tasks.named('runAtlasTest') {
 	mustRunAfter 'runLivingCityTest', 'runFootballTest'

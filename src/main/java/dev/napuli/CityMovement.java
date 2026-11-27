@@ -29,6 +29,12 @@ final class CityMovement {
         if(gate.holder==null)gate.holder=gate.line.keySet().iterator().next();
         if(!actor.equals(gate.holder))return false;gate.until=now+lease;return true;
     }
+    static boolean available(ServerLevel city,BlockPos resource,UUID actor){
+        var gate=GATES.getOrDefault(city,Map.of()).get(resource);if(gate==null)return true;long now=city.getGameTime();
+        if(gate.holder!=null&&gate.until>=now&&present(city,gate.holder))return actor.equals(gate.holder);
+        for(var ticket:gate.line.values())if(!ticket.actor().equals(gate.holder)&&now-ticket.seen()<=240&&present(city,ticket.actor()))return actor.equals(ticket.actor());
+        return true;
+    }
     static void release(ServerLevel city,UUID actor){
         var passages=PASSAGES.get(city);if(passages!=null)passages.remove(actor);
         var gates=GATES.get(city);if(gates==null)return;

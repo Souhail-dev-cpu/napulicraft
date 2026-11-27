@@ -238,6 +238,7 @@ public class Napuli implements ModInitializer {
 		CityHeists.register();
 		NapoliCivicLife.register();
 		CitySimulation.register();
+        CityHomeUse.register();
 		CityGestures.register();
 		CityHabits.register();
 		CityJourneys.register();

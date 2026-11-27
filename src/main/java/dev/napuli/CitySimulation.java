@@ -149,10 +149,17 @@ final class CitySimulation {
                     if((!(entity instanceof NapoliResident)||CityLivingHomes.find(person.property())==null)&&CityJourneys.at(city,person,NapoliCivicLife.home(person),12))
                         if(food>0) { n=n.change(35,0,0,3,5,0);food--; }
                 }
-                case SLEEP -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12))n=n.change(0,35,0,0,0,0);}
-                case WASH -> {if(CityJourneys.at(city,person,NapoliCivicLife.home(person),12)){n=n.change(0,0,45,0,0,45);water++;energy++;CityTraces.soiled(city,person.property());}}
+                case SLEEP -> {
+                    var entity=city.getEntity(person.id());
+                    boolean resting=entity instanceof NapoliResident npc
+                            ?npc.isSleeping()&&npc.getSleepingPos().filter(p->city.hasChunkAt(p)&&city.getBlockState(p).getBlock() instanceof BedBlock).isPresent()
+                            :CityJourneys.at(city,person,NapoliCivicLife.home(person),12);
+                    if(resting)n=n.change(0,35,0,0,0,0);
+                }
+                case WASH -> {if(!(city.getEntity(person.id()) instanceof NapoliResident)&&CityJourneys.at(city,person,NapoliCivicLife.home(person),12)){n=n.change(0,0,45,0,0,45);water++;energy++;CityTraces.soiled(city,person.property());}}
                 case SHOP -> {if(city.getEntity(person.id())==null&&CityJourneys.at(city,person,DistrictLife.resident(person)?DistrictLife.shop(person):CityProfessions.Category.TRADE.site().offset(8,0,7),8))shoppers.add(person.id());}
-                case MATCH,PLAY,REST -> n=n.change(0,0,0,20,15,0);
+                case MATCH,REST -> {if(!(city.getEntity(person.id()) instanceof NapoliResident)||CityLivingHomes.find(person.property())==null)n=n.change(0,0,0,20,15,0);}
+                case PLAY -> n=n.change(0,0,0,20,15,0);
                 case CARE -> {} // Treatment is completed by an available clinician, with medicine and a saved visit.
                 default -> {}
             }
@@ -199,7 +206,8 @@ final class CitySimulation {
         int age=c.age(NapoliBroadcast.day(city));npc.setCivicAge(age);
         if(npc.role().civic())npc.setCivicAppearance(c.profession()==NapoliCivicLife.Job.INFLUENCER?10:c.profession()==null?11:c.profession().category.ordinal());
         var l=life(city,c.id());var action=activity(city,c,l,NapoliBroadcast.time(city));npc.setActivity(action);
-        if(action!=NapoliHouseholds.Activity.MATCH&&action!=NapoliHouseholds.Activity.REST&&action!=NapoliHouseholds.Activity.SOCIAL)CityMovement.stand(npc);
+        CityHomeUse.prepare(npc,city,action);
+        if(!CityHomeUse.handles(action)&&action!=NapoliHouseholds.Activity.SOCIAL)CityMovement.stand(npc);
         if(distance>=128*128) {
             CityJourneys.withdraw(city,npc);return;
         }
@@ -223,6 +231,7 @@ final class CitySimulation {
             if(CityArrivals.waitOutside(npc,city,house))return;
             if(DomesticMeals.act(city,npc,house,l.food()))return;
         }
+        if(CityHomeUse.tick(npc,city,c,house,action))return;
         if(CityNeighborhood.tick(npc,city,c,action))return;
         if(action==NapoliHouseholds.Activity.WORK&&c.profession()!=null) target=CityOccupations.workplace(c);
         else if(action==NapoliHouseholds.Activity.CARE)target=CityProfessions.Category.HEALTH.site().offset(8,0,7);

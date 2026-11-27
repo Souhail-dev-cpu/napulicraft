@@ -15,7 +15,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 public final class EntranceGameTest {
     @GameTest public void newDistrictHomesAndShopsHaveClosedDoorFrames(GameTestHelper h){
         var city=h.getLevel();for(var house:java.util.stream.Stream.concat(DistrictLife.homes().stream(),DistrictLife.districts().stream().map(DistrictLife.District::business)).toList()){
-            generate(city,house);var door=house.entrance().north();var wall=city.getBlockState(door.west(2)).getBlock();assertFrame(h,door,wall);
+            generate(city,house);var door=house.entrance().north();assertClosedFrame(h,door);
             h.assertTrue(city.getBlockState(door).getValue(DoorBlock.HALF)==DoubleBlockHalf.LOWER&&city.getBlockState(door.above()).getValue(DoorBlock.HALF)==DoubleBlockHalf.UPPER,"Door has both halves: "+house.id());
         }h.succeed();
     }
@@ -59,11 +59,22 @@ public final class EntranceGameTest {
     }
     private record Fixture(BlockPos door,Block wall,LevelChunk chunk){}
     private static void oldOpening(GameTestHelper h,Consumer<Fixture> body){
-        var city=h.getLevel();var home=DistrictLife.homes().getFirst();generate(city,home);var door=home.entrance().north();var chunk=city.getChunkAt(door);var wall=city.getBlockState(door.west(2)).getBlock();var marker=((AttachmentTarget)chunk).removeAttached(NapoliExpansion.ENTRANCES_FIXED);var states=new LinkedHashMap<BlockPos,BlockState>();
+        opening(h,true,body);
+    }
+    @GameTest public void finishedPortalRepairsItsOwnStoneInsteadOfCopyingThePlinth(GameTestHelper h){
+        opening(h,false,fixture->{h.assertTrue(NapoliExpansion.repairEntrances(h.getLevel(),fixture.chunk())==7,"The finished portal also restores seven missing blocks");assertFrame(h,fixture.door(),Blocks.POLISHED_DEEPSLATE);});h.succeed();
+    }
+    private static void opening(GameTestHelper h,boolean legacy,Consumer<Fixture> body){
+        var city=h.getLevel();var home=DistrictLife.homes().getFirst();generate(city,home);var door=home.entrance().north();var chunk=city.getChunkAt(door);var wall=city.getBlockState(door.above(3)).getBlock();var marker=((AttachmentTarget)chunk).removeAttached(NapoliExpansion.ENTRANCES_FIXED);var states=new LinkedHashMap<BlockPos,BlockState>();
+        for(var p:List.of(door.west(2),door.east(2))){states.put(p,city.getBlockState(p));city.setBlock(p,(legacy?wall:Blocks.POLISHED_ANDESITE).defaultBlockState(),18);}
         for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++){var p=door.offset(dx,dy,0);states.put(p,city.getBlockState(p));if(dx!=0||dy==2)city.setBlock(p,Blocks.AIR.defaultBlockState(),18);}
         try{body.accept(new Fixture(door,wall,chunk));}finally{states.forEach((p,s)->city.setBlock(p,s,18));restore(chunk,marker);}
     }
     private static void restore(LevelChunk chunk,Boolean marker){if(marker==null)((AttachmentTarget)chunk).removeAttached(NapoliExpansion.ENTRANCES_FIXED);else ((AttachmentTarget)chunk).setAttached(NapoliExpansion.ENTRANCES_FIXED,marker);}
     private static void generate(ServerLevel city,NapoliMergellina.House home){for(int x=home.x()>>4;x<=(home.x()+21)>>4;x++)for(int z=home.z()>>4;z<=(home.z()+23)>>4;z++)NapoliExpansion.generate(city,city.getChunk(x,z));}
     private static void assertFrame(GameTestHelper h,BlockPos door,Block wall){for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2)h.assertTrue(h.getLevel().getBlockState(door.offset(dx,dy,0)).is(wall),"Doorframe at "+door.offset(dx,dy,0)+" expected="+wall+" actual="+h.getLevel().getBlockState(door.offset(dx,dy,0)));}
+    private static void assertClosedFrame(GameTestHelper h,BlockPos door){
+        for(int dx=-1;dx<=1;dx++)for(int dy=0;dy<=2;dy++)if(dx!=0||dy==2){var p=door.offset(dx,dy,0);var state=h.getLevel().getBlockState(p);
+            h.assertTrue(state.isFaceSturdy(h.getLevel(),p,net.minecraft.core.Direction.NORTH)&&state.isFaceSturdy(h.getLevel(),p,net.minecraft.core.Direction.SOUTH),"The generated masonry closes the frame on both faces: "+p+" / "+state);}
+    }
 }

@@ -56,6 +56,7 @@ public class NapuliClient implements ClientModInitializer {
 		TelevisionScreen.register();
 		dev.napuli.LivingCityTest.register();
         dev.napuli.CityQualityClientTest.register();
+        dev.napuli.HomeFurnitureClientTest.register();
 		dev.napuli.AtlasTest.register();
 		dev.napuli.DistrictClientTest.register();
 		dev.napuli.EntranceClientTest.register();

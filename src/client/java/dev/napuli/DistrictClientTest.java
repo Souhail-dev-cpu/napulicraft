@@ -235,6 +235,7 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (Boolean.getBoolean("napuli.legacyBagnoli")) { legacyBagnoli(mc); return; }
         if (Boolean.getBoolean("napuli.legacyCoroglio")) { legacyCoroglio(mc); return; }
         if (Boolean.getBoolean("napuli.legacyPosillipo")) { legacyPosillipo(mc); return; }
         if (Boolean.getBoolean("napuli.legacySeafrontVoices")) { legacySeafrontVoices(mc); return; }
@@ -451,6 +452,94 @@ public final class DistrictClientTest {
 
     private static int justinSounds;
     private static net.minecraft.client.resources.sounds.SoundInstance justinSound;
+
+    private static void legacyBagnoli(Minecraft mc) {
+        var steel = NapoliBagnoli.steelworks();
+        var furnace = NapoliBagnoli.blastFurnace();
+        var pier = NapoliAtlas.find("pontile");
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, steel.getX() + 8, steel.getY() + 40, steel.getZ() + 47, Set.of(), 163, 32, true);
+        });
+        if (tick == 160) shot(mc, "napoli-ex-italsider-v67");
+        if (tick == 165) server(mc, p -> {
+            var city = p.level();
+            var shop = NapoliBagnoli.workshop();
+            var station = NapoliBagnoli.powerhouse();
+            var telex = NapoliBagnoli.telex();
+            var pumps = NapoliBagnoli.pumps();
+            var lido = NapoliBagnoli.lido();
+            var exhibits = java.util.Map.of(
+                    steel.offset(9, 1, 12), Blocks.CAULDRON,
+                    steel.offset(14, 10, 12), CityBlocks.vanilla("yellow_concrete"),
+                    furnace.offset(8, 0, 6), Blocks.BLAST_FURNACE,
+                    furnace.offset(18, 17, 8), Blocks.BRICKS,
+                    shop.offset(6, 0, 9), Blocks.STONECUTTER,
+                    station.offset(5, 0, 8), Blocks.BLAST_FURNACE,
+                    telex.offset(2, 1, 5), Blocks.OBSERVER,
+                    pumps.offset(2, 0, 5), Blocks.WATER,
+                    NapoliBagnoli.coolingTower().offset(5, 0, 6), Blocks.LECTERN,
+                    lido.offset(2, 0, 16), Blocks.SMOOTH_QUARTZ_STAIRS);
+            for (var entry : exhibits.entrySet())
+                check(city.getBlockState(entry.getKey()).is(entry.getValue()), "Missing Italsider fixture at "
+                        + entry.getKey() + " expected " + entry.getValue() + " got " + city.getBlockState(entry.getKey()));
+            for (var portal : java.util.List.of(shop.offset(10, 0, 18), station.offset(12, 0, 16),
+                    telex.offset(7, 0, 12), pumps.offset(6, 0, 10), lido.offset(8, 0, 12))) {
+                check(city.getBlockState(portal).is(Blocks.SPRUCE_DOOR)
+                                && city.getBlockState(portal.above()).is(Blocks.SPRUCE_DOOR)
+                                && NapoliResidentHomes.walkable(city, portal.north())
+                                && NapoliResidentHomes.walkable(city, portal.south()),
+                        "Blocked Italsider door at " + portal);
+            }
+            for (int z = 3; z <= 27; z++) {
+                var route = steel.offset(14, 0, z);
+                check(NapoliResidentHomes.walkable(city, route), "Blocked casting hall aisle at " + route);
+            }
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(city, steel.getX() + 14.5, steel.getY(), steel.getZ() + 27.5, Set.of(), 180, 0, true);
+        });
+        if (tick >= 210 && tick < 379) mc.options.keyUp.setDown(mc.player.getZ() > steel.getZ() + 10);
+        if (tick == 380) {
+            mc.options.keyUp.setDown(false);
+            check(mc.player.getZ() <= steel.getZ() + 10, "Player walks from the square into the steelworks");
+            server(mc, p -> {
+                p.setGameMode(GameType.CREATIVE);
+                p.getAbilities().flying = true;
+                p.onUpdateAbilities();
+                p.teleportTo(p.level(), steel.getX() + 20.5, steel.getY() + 3,
+                        steel.getZ() + 19.5, Set.of(), 151, 9, true);
+            });
+        }
+        if (tick == 420) {
+            shot(mc, "napoli-italsider-interno-v67");
+            server(mc, p -> {
+                p.teleportTo(p.level(), furnace.getX() + 35, furnace.getY() + 15,
+                        furnace.getZ() + 29, Set.of(), 132, 6, true);
+            });
+        }
+        if (tick == 470) shot(mc, "napoli-italsider-altoforno-v67");
+        if (tick == 475) server(mc, p -> {
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(p.level(), pier.x() + .5, 66, pier.z() + 17.5, Set.of(), 0, 0, true);
+        });
+        if (tick >= 515 && tick < 700) mc.options.keyUp.setDown(mc.player.getZ() < pier.z() + 40);
+        if (tick == 700) {
+            mc.options.keyUp.setDown(false);
+            check(mc.player.getZ() >= pier.z() + 40 && mc.player.getY() >= 66, "Player walks to the pier lookout");
+            shot(mc, "napoli-bagnoli-pontile-v67");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Italsider interior fixtures, hall and pier walk on old save");
+            done = true;
+        }
+    }
+
 
     private static void legacyCoroglio(Minecraft mc) {
         var mouth = NapoliCoroglio.grotta();

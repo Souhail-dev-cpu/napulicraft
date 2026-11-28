@@ -235,6 +235,7 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (Boolean.getBoolean("napuli.legacyCoroglio")) { legacyCoroglio(mc); return; }
         if (Boolean.getBoolean("napuli.legacyPosillipo")) { legacyPosillipo(mc); return; }
         if (Boolean.getBoolean("napuli.legacySeafrontVoices")) { legacySeafrontVoices(mc); return; }
         if (Boolean.getBoolean("napuli.legacyWaterfront")) { legacyWaterfront(mc); return; }
@@ -450,6 +451,100 @@ public final class DistrictClientTest {
 
     private static int justinSounds;
     private static net.minecraft.client.resources.sounds.SoundInstance justinSound;
+
+    private static void legacyCoroglio(Minecraft mc) {
+        var mouth = NapoliCoroglio.grotta();
+        var lab = NapoliCoroglio.fablab();
+        var nisida = NapoliCoroglio.nisidaPavilion();
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, mouth.getX() + 10, mouth.getY() + 11, mouth.getZ() + 13, Set.of(), 140, 24, true);
+        });
+        if (tick == 120) shot(mc, "napoli-coroglio-seiano-v66");
+        if (tick == 125) server(mc, p -> {
+            var city = p.level();
+            var virgiliano = NapoliPosillipo.center("virgiliano");
+            var pier = NapoliCoroglio.pierHut();
+            var odeion = NapoliCoroglio.odeion();
+            var checks = java.util.Map.of(
+                    virgiliano.offset(0, 6, 49), Blocks.SMOOTH_SANDSTONE,
+                    virgiliano.offset(-17, 0, 36), Blocks.BOOKSHELF,
+                    lab.offset(3, 1, 7), Blocks.STONECUTTER,
+                    lab.offset(3, 1, 4), Blocks.CRAFTING_TABLE,
+                    pier.offset(2, 1, 3), Blocks.LECTERN,
+                    odeion.offset(8, 0, 3), Blocks.POLISHED_DIORITE,
+                    nisida.offset(10, 0, 6), Blocks.LECTERN,
+                    nisida.offset(1, 0, 5), Blocks.BOOKSHELF,
+                    NapoliCoroglio.chiuppino().offset(6, 0, 4), Blocks.LECTERN);
+            for (var check : checks.entrySet())
+                check(city.getBlockState(check.getKey()).is(check.getValue()), "Missing " + check.getValue()
+                        + " at " + check.getKey() + "; present " + city.getBlockState(check.getKey()));
+            for (var door : java.util.List.of(NapoliCoroglio.fablabDoor(), pier.offset(5, 0, 9),
+                    odeion.offset(9, 0, 16), nisida.offset(7, 0, 0), nisida.offset(7, 0, 12),
+                    NapoliCoroglio.chiuppino().offset(5, 0, 11))) {
+                check(city.getBlockState(door).is(Blocks.SPRUCE_DOOR) && city.getBlockState(door.above()).is(Blocks.SPRUCE_DOOR)
+                        && city.getBlockState(door.below()).isSolidRender() && city.isEmptyBlock(door.north())
+                        && city.isEmptyBlock(door.south()), "Blocked building entrance " + door);
+            }
+            for (int z = -19; z <= 6; z++) {
+                var path = mouth.south(z);
+                check(city.isEmptyBlock(path) && city.isEmptyBlock(path.above())
+                        && city.getBlockState(path.below()).isSolidRender(), "Blocked tunnel " + path);
+            }
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(city, mouth.getX() + .5, mouth.getY(), mouth.getZ() + 5.5, Set.of(), 180, 0, true);
+        });
+        if (tick >= 170 && tick < 349)
+            mc.options.keyUp.setDown(mc.player.getZ() > mouth.getZ() - 19);
+        if (tick == 260) shot(mc, "napoli-seiano-interno-v66");
+        if (tick == 349) mc.options.keyUp.setDown(false);
+        if (tick == 350) {
+            check(mc.player.getZ() <= mouth.getZ() - 19, "Player walks through Grotta di Seiano");
+            server(mc, p -> {
+                p.setGameMode(GameType.CREATIVE);
+                p.getAbilities().flying = true;
+                p.onUpdateAbilities();
+                p.teleportTo(p.level(), lab.getX() + 11, lab.getY() + 12, lab.getZ() - 10, Set.of(), 0, 22, true);
+            });
+        }
+        if (tick == 440) shot(mc, "napoli-coroglio-fablab-v66");
+        if (tick == 445) server(mc, p -> p.teleportTo(p.level(), lab.getX() + 12, lab.getY() + .15,
+                lab.getZ() + 12, Set.of(), 155, 0, true));
+        if (tick == 485) shot(mc, "napoli-coroglio-fablab-interno-v66");
+        if (tick == 490) server(mc, p -> p.teleportTo(p.level(), nisida.getX() + 9,
+                nisida.getY() + 13, nisida.getZ() - 10, Set.of(), 15, 27, true));
+        if (tick == 590) shot(mc, "napoli-nisida-v66");
+        if (tick == 595) server(mc, p -> p.teleportTo(p.level(), nisida.getX() + 7.5,
+                nisida.getY() + .15, nisida.getZ() + 10, Set.of(), 175, 0, true));
+        if (tick == 645) {
+            shot(mc, "napoli-nisida-padiglione-v66");
+            server(mc, p -> {
+                p.getAbilities().flying = false;
+                p.onUpdateAbilities();
+                p.setGameMode(GameType.ADVENTURE);
+                var bridge = new net.minecraft.core.BlockPos(-1842, 66, 292);
+                p.teleportTo(p.level(), bridge.getX() + .5, bridge.getY(), bridge.getZ() + .5,
+                        Set.of(), 21, 0, true);
+            });
+        }
+        if (tick >= 680 && tick < 895)
+            mc.options.keyUp.setDown(mc.player.getZ() < 313);
+        if (tick == 895) {
+            mc.options.keyUp.setDown(false);
+            check(mc.player.getZ() >= 313 && mc.player.getY() >= 65.5,
+                    "Player crosses the Nisida causeway on foot: " + mc.player.blockPosition());
+            shot(mc, "napoli-ponte-nisida-v66");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Coroglio interiors, Seiano walk, pier and Nisida on old save");
+            done = true;
+        }
+    }
+
 
     private static int coastalVoices;
     private static net.minecraft.client.resources.sounds.SoundInstance coastalVoice;

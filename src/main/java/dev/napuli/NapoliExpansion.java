@@ -32,6 +32,10 @@ public final class NapoliExpansion {
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_frontages_v4"));
     private static final AttachmentType<Boolean> RESIDENTIAL_FINISH = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_residential_finish"));
+    private static final AttachmentType<Boolean> NEIGHBORHOOD_FINISH = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_neighborhood_finish"));
+    private static final List<String> RESIDENTIAL_DISTRICTS = List.of(
+            "pianura", "soccavo", "secondigliano", "ponticelli", "barra", "san_giovanni");
     static final AttachmentType<Boolean> HOUSE_SECTIONS_FIXED = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_house_sections_v1"));
     private static final Map<ServerLevel,Map<Long,LevelChunk>> PENDING=new WeakHashMap<>();
@@ -374,6 +378,29 @@ public final class NapoliExpansion {
         chunk.setAttached(RESIDENTIAL_FINISH, true);
     }
 
+    private static void finishNeighborhood(ServerLevel city, LevelChunk chunk) {
+        if (!intersects(chunk) || revision(chunk) < REVISION || chunk.getAttachedOrElse(NEIGHBORHOOD_FINISH, false)
+                || CityProperty.playerBuiltInChunk(city, chunk.getPos())) return;
+        var w = new Writer(city, chunk);
+        for (int gx = Math.floorDiv(w.minX, BLOCK_SIZE) - 1; gx <= Math.floorDiv(w.maxX, BLOCK_SIZE); gx++) {
+            for (int gz = Math.floorDiv(w.minZ, BLOCK_SIZE) - 1; gz <= Math.floorDiv(w.maxZ, BLOCK_SIZE); gz++) {
+                int x = gx * BLOCK_SIZE + 9, z = gz * BLOCK_SIZE + 9;
+                if (!w.overlaps(x, z, x + 21, z + 27) || !houseAllowed(x, z)) continue;
+                for (int district = 0; district < RESIDENTIAL_DISTRICTS.size(); district++) {
+                    var place = NapoliAtlas.find(RESIDENTIAL_DISTRICTS.get(district));
+                    if (!place.near(x+11, z+12, 125)) continue;
+                    int floor = legacyHeight(x+11,z+24)+1, floors = 3 + Math.floorMod(gx * 31 + gz, 3);
+                    int civic = 11 + 2 * (gx - Math.floorDiv(place.x(), BLOCK_SIZE))
+                            + Math.floorMod(gz, 2);
+                    NapoliResidentialFinish.neighborhood(city, chunk, place.district(), district,
+                            x, floor, z, floors, civic);
+                    break;
+                }
+            }
+        }
+        chunk.setAttached(NEIGHBORHOOD_FINISH, true);
+    }
+
     private static boolean custom(LevelChunk c){for(int x=c.getPos().getMinBlockX();x<=c.getPos().getMaxBlockX();x++)for(int z=c.getPos().getMinBlockZ();z<=c.getPos().getMaxBlockZ();z++)if(writable(x,z)&&c.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15)>63)return true;return !c.getBlockEntities().isEmpty();}
     static boolean nearPlace(int x,int z,int radius){return NapoliAtlas.PLACES.stream().anyMatch(p->p.near(x,z,radius));}
     static boolean nearRoad(int x,int z,int radius){for(var r:NapoliAtlas.ROADS){var a=NapoliAtlas.find(r.from());var b=NapoliAtlas.find(r.to());if(x<Math.min(a.x(),b.x())-radius||x>Math.max(a.x(),b.x())+radius||z<Math.min(a.z(),b.z())-radius||z>Math.max(a.z(),b.z())+radius)continue;if(NapoliAtlas.distance(r,x,z)<radius)return true;}return false;}
@@ -470,6 +497,7 @@ public final class NapoliExpansion {
                 refitBuildings(city,chunk);
                 finishResidences(city, chunk);
                 repairHouseSections(city, chunk);
+                finishNeighborhood(city, chunk);
                 DistrictLife.fit(city,chunk);
                 CityArchitecture.fit(city,chunk);
                 CityRailway.fit(city,chunk);

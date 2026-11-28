@@ -21,8 +21,11 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 final class NapoliStreetMemes {
     enum Scene {
@@ -64,7 +67,11 @@ final class NapoliStreetMemes {
                         "Mo vire che pesce ce sta."), Napuli.VOCALE_SALUTO, 130),
         INDICAZIONI("indicazioni", "Turista alla calata", NapoliPosillipo.center("marechiaro").offset(0, 0, 13), 3,
                 List.of("Scusate, pe' arrivà all'acqua addò s'adda scennere?", "Siente, ce stanno cercanno pure ll'ate.",
-                        "Seguita 'a calata, se vede 'o mare."), Napuli.VOCALE_INDICAZIONI, 62);
+                        "Seguita 'a calata, se vede 'o mare."), Napuli.VOCALE_INDICAZIONI, 62),
+        MODELLO("modello", "Nu modello 'e nu metro e nuvanta",
+                NapoliDistrictLandmarks.site("mercato").south(17), 2,
+                List.of("Buonasera!", "Guè, buonasera!", "Aspè ca chiammo a n'amica mia.",
+                        "Era nu modello, alto nu metro e nuvanta!"), Napuli.VOCALE_MODELLO, 332);
 
         final String id;
         final String title;
@@ -98,6 +105,8 @@ final class NapoliStreetMemes {
             AttachmentRegistry.create(Napuli.id("street_meme_recording_playback"));
     private static final int BEAT = 100;
     private static final int INVITATION_RANGE = 28;
+    private static final int CALL_RANGE = 14;
+    private static final int APPROACH = 0, GREETING = 1, LEAVING = 2, CALLING = 3;
     private static final AttachmentType<Performance> LIVE = AttachmentRegistry.create(Napuli.id("street_meme_live"));
     private static final AttachmentType<Long> NEXT = AttachmentRegistry.create(Napuli.id("street_meme_cooldown"));
     private static final AttachmentType<Long> PERFORMED = AttachmentRegistry.<Long>builder().persistent(Codec.LONG)
@@ -115,9 +124,14 @@ final class NapoliStreetMemes {
         return scenes[Math.floorMod(day + Long.hashCode(seed), scenes.length)];
     }
 
-    static void tick(ServerLevel city) {
+    static void tick(ServerLevel city, boolean streetTick) {
         long now = city.getGameTime();
         var live = city.getAttached(LIVE);
+        if (live != null && live.scene() == Scene.MODELLO) {
+            tickModel(city, live, audience(city, live.scene()), now);
+            return;
+        }
+        if (!streetTick) return;
         if (live != null) {
             var viewers = audience(city, live.scene());
             long age = now - live.started();
@@ -199,6 +213,7 @@ final class NapoliStreetMemes {
     private static boolean start(ServerLevel city, Scene scene, boolean requested) {
         long now = city.getGameTime();
         if (city.hasAttached(LIVE) || !requested && now < city.getAttachedOrElse(NEXT, Long.MIN_VALUE)) return false;
+        if (scene == Scene.MODELLO) return startModel(city, now);
         var cast = new ArrayList<NapoliResident>();
         for (int row = 0; row < 3 && cast.size() < scene.actors; row++) {
             for (int col = 0; col < 5 && cast.size() < scene.actors; col++) {
@@ -237,6 +252,96 @@ final class NapoliStreetMemes {
         return true;
     }
 
+    private static boolean startModel(ServerLevel city, long now) {
+        var point = Scene.MODELLO.point;
+        for (int x = -6; x <= 6; x++)
+            if (!NapoliResidentHomes.walkable(city, point.east(x))) return false;
+        var woman = NapoliResident.create(city, NapoliResident.Role.SIGNORA_TELEFONATA, point.west(5), -90);
+        var model = NapoliResident.create(city, NapoliResident.Role.MODELLO_190, point.east(5), 90);
+        woman.setCustomName(Component.literal("La signora"));
+        model.setCustomName(Component.literal("Il modello"));
+        var scale = model.getAttribute(Attributes.SCALE);
+        if (scale != null) scale.setBaseValue(1.90 / model.getBbHeight());
+        var cast = List.of(woman, model);
+        for (var npc : cast) {
+            npc.addTag(ACTOR);
+            npc.setNoAi(true);
+            npc.setPermanentlyInvulnerable(true);
+            if (!city.addFreshEntity(npc)) {
+                cast.forEach(NapoliResident::discard);
+                return false;
+            }
+        }
+        city.setAttached(LIVE, new Performance(Scene.MODELLO, cast, now, APPROACH, new HashSet<>()));
+        city.setAttached(NEXT, now + 1200);
+        return true;
+    }
+
+    private static void tickModel(ServerLevel city, Performance live, List<ServerPlayer> viewers, long now) {
+        var woman = live.cast().getFirst();
+        var model = live.cast().getLast();
+        long elapsed = now - live.started();
+        int stage = live.spoken();
+        if (viewers.isEmpty() || !woman.isAlive() || !model.isAlive() || elapsed >=
+                (stage == CALLING ? live.scene().recordingTicks + 35L : 160)) {
+            live.cast().forEach(NapoliResident::discard);
+            city.removeAttached(LIVE);
+            return;
+        }
+        if (stage == APPROACH) {
+            walkAlongRow(woman, live.scene().point.getX() - .5);
+            walkAlongRow(model, live.scene().point.getX() + 1.5);
+        } else if (stage == LEAVING) {
+            walkAlongRow(model, live.scene().point.getX() + 6.5);
+        }
+        if (stage == APPROACH && woman.distanceToSqr(model) <= 6.25) {
+            face(woman, model);
+            face(model, woman);
+            woman.animate(CityGestures.Gesture.WAVE, 28);
+            model.animate(CityGestures.Gesture.WAVE, 28);
+            for (var viewer : viewers) NpcSpeech.say(viewer, model, Component.literal(live.scene().lines.get(0)));
+            advance(city, live, now, GREETING);
+        } else if (stage == GREETING && elapsed == 24) {
+            for (var viewer : viewers) NpcSpeech.say(viewer, woman, Component.literal(live.scene().lines.get(1)));
+        } else if (stage == GREETING && elapsed >= 50) {
+            woman.setGesture(CityGestures.Gesture.NONE);
+            model.setGesture(CityGestures.Gesture.NONE);
+            advance(city, live, now, LEAVING);
+        } else if (stage == LEAVING && woman.distanceToSqr(model) >= 16) {
+            var phone = Phones.ITEMS.get(PhoneModel.ONEPLUS_15);
+            if (phone != null) woman.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(phone));
+            woman.setDropChance(EquipmentSlot.MAINHAND, 0);
+            woman.animate(CityGestures.Gesture.PHONE_CALL, live.scene().recordingTicks + 30);
+            for (var viewer : viewers) if (viewer.distanceToSqr(woman) <= CALL_RANGE * CALL_RANGE)
+                NpcSpeech.say(viewer, woman, Component.literal(live.scene().lines.get(2)));
+            advance(city, live, now, CALLING);
+        } else if (stage == CALLING && elapsed >= 10 && elapsed <= 30) {
+            for (var viewer : viewers) if (viewer.distanceToSqr(woman) <= CALL_RANGE * CALL_RANGE)
+                playRecording(city, live, viewer, false);
+        }
+    }
+
+    private static void advance(ServerLevel city, Performance live, long now, int stage) {
+        city.setAttached(LIVE, new Performance(live.scene(), live.cast(), now, stage, live.heard()));
+    }
+
+    private static void walkAlongRow(NapoliResident npc, double targetX) {
+        double dx = Math.clamp(targetX - npc.getX(), -.10, .10);
+        if (Math.abs(dx) < .001) return;
+        float yaw = dx > 0 ? -90 : 90;
+        npc.setYRot(yaw);
+        npc.setYBodyRot(yaw);
+        npc.setYHeadRot(yaw);
+        npc.move(MoverType.SELF, new Vec3(dx, 0, 0));
+    }
+
+    private static void face(NapoliResident npc, NapoliResident target) {
+        float yaw = (float) Math.toDegrees(Math.atan2(npc.getX() - target.getX(), target.getZ() - npc.getZ()));
+        npc.setYRot(yaw);
+        npc.setYBodyRot(yaw);
+        npc.setYHeadRot(yaw);
+    }
+
     private static boolean playRecording(ServerLevel city, Performance scene, ServerPlayer player, boolean requested) {
         if (scene.heard().contains(player.getUUID()) || !requested && (CityEffects.flags(player) & CityEffects.QUIET) != 0)
             return false;
@@ -245,7 +350,7 @@ final class NapoliStreetMemes {
         if (playback != null && playback.city() == city && now < playback.until()) return false;
 
         var origin = scene.scene() == Scene.JUSTIN ? scene.scene().point
-                : scene.cast().get(1).blockPosition();
+                : scene.cast().get(scene.scene() == Scene.MODELLO ? 0 : 1).blockPosition();
         player.connection.send(new ClientboundSoundPacket(Holder.direct(scene.scene().recording), SoundSource.VOICE,
                 origin.getX() + .5, origin.getY() + .5, origin.getZ() + .5, 1.3f, 1f, city.getRandom().nextLong()));
         scene.heard().add(player.getUUID());
@@ -275,8 +380,8 @@ final class NapoliStreetMemes {
     static void reply(ServerPlayer player, NapoliResident actor) {
         var live = player.level().getAttached(LIVE);
         if (live == null || !live.cast().contains(actor)) return;
-        int line = Math.clamp((int) ((player.level().getGameTime() - live.started()) / BEAT),
-                0, live.scene().lines.size() - 1);
+        int line = live.scene() == Scene.MODELLO ? live.spoken() : Math.clamp(
+                (int) ((player.level().getGameTime() - live.started()) / BEAT), 0, live.scene().lines.size() - 1);
         NpcSpeech.reply(player, actor, Component.literal(live.scene().lines.get(line)));
     }
 }

@@ -49,6 +49,7 @@ run-autotest/
 *.mp3
 *.ogg
 !/src/main/resources/assets/napuli/sounds/vocale_*.ogg
+!/src/main/resources/assets/napuli/sounds/radio/*.ogg
 *.wav
 *.flac
 *.m4a

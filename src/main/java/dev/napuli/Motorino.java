@@ -43,6 +43,10 @@ public class Motorino extends Mob {
 			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
 	private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> PARADE =
 			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+	private static final net.minecraft.network.syncher.EntityDataAccessor<Long> TALK_CUE =
+			net.minecraft.network.syncher.SynchedEntityData.defineId(Motorino.class, net.minecraft.network.syncher.EntityDataSerializers.LONG);
+	private final java.util.BitSet remainingCalls = new java.util.BitSet();
+	private int previousTalkCall = -1;
 	private int paradeTicks;
 	private int lastStation = 0;
 	// the carabiniere who stopped the parade (boys without a helmet) and how long the stop has lasted
@@ -58,17 +62,38 @@ public class Motorino extends Mob {
 
 	public boolean inParade() { return entityData.get(PARADE); }
 	public int station() { return this.entityData.get(STATION); }
+	public long talkCue() { return entityData.get(TALK_CUE); }
 	int savedStation() { return lastStation; }
 	public void setStation(int s) {
+		int previous = station();
 		if (s >= 0 && s != Radio.PARADE) lastStation = s;
 		this.entityData.set(STATION, s);
+		if (!level().isClientSide() && s != previous) {
+			if (s == Radio.TALK) nextTalkCall();
+			else entityData.set(TALK_CUE, (long) RadioTalk.NO_CALL);
+		}
 	}
 	public boolean radioOn() { return station() != Radio.OFF; }
+
+	void nextTalkCall() {
+		boolean newCycle = remainingCalls.isEmpty();
+		if (newCycle) remainingCalls.set(0, RadioTalk.CALLS.size());
+		boolean excludePrevious = newCycle && previousTalkCall >= 0;
+		if (excludePrevious) remainingCalls.clear(previousTalkCall);
+		int skip = getRandom().nextInt(remainingCalls.cardinality());
+		int choice = remainingCalls.nextSetBit(0);
+		for (int i = 0; i < skip; i++) choice = remainingCalls.nextSetBit(choice + 1);
+		if (excludePrevious) remainingCalls.set(previousTalkCall);
+		remainingCalls.clear(choice);
+		previousTalkCall = choice;
+		entityData.set(TALK_CUE, RadioTalk.cue(level().getGameTime(), choice));
+	}
 
 	@Override
 	protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder b) {
 		super.defineSynchedData(b);
 		b.define(STATION, Radio.OFF);
+		b.define(TALK_CUE, (long) RadioTalk.NO_CALL);
 		b.define(PARADE, false);
 		b.define(CITIZEN,false);
         b.define(POLICE,false);
@@ -104,6 +129,12 @@ public class Motorino extends Mob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
+		if (!level().isClientSide() && station() == Radio.TALK) {
+			long cue = talkCue();
+			int call = RadioTalk.index(cue);
+			if (call < 0 || level().getGameTime() - RadioTalk.started(cue) >= RadioTalk.CALLS.get(call).length())
+				nextTalkCall();
+		}
         if(level() instanceof ServerLevel city&&VehicleTheft.tick(this,city))return;
         if(level() instanceof ServerLevel city&&PoliceVehicles.drive(this,city))return;
 		if(level() instanceof ServerLevel city&&CityMobility.drive(this,city))return;

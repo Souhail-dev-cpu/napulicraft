@@ -153,6 +153,8 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			case GUARDIANO_PRESEPE -> Set.of("coppola", "scarf");
 			case CERTOSA_GUIDE -> Set.of("bun", "bag");
 			case CERTOSA_RESTORER -> Set.of("coppola", "scarf");
+			case SIGNORA_TELEFONATA -> Set.of("bun", "earrings");
+			case MODELLO_190 -> Set.of();
 			case EMPLOYMENT_CLERK -> Set.of("bun");
 			case SHIFT_LEAD, FOOTBALL_COACH -> Set.of("cap");
 			case SHIFT_WORKER, FOOTBALL_CLERK -> Set.of("side_part");
@@ -214,6 +216,13 @@ final class NapoliResidentModel extends HumanoidModel<NapoliResidentModel.State>
 			} else {
 				leftArm.xRot = -0.50f; rightArm.xRot = -0.50f;
 			}
+		}
+		if (state.gesture == dev.napuli.CityGestures.Gesture.PHONE_CALL) {
+			rightArm.xRot = -2.62f;
+			rightArm.yRot = -.16f;
+			rightArm.zRot = -.27f;
+			head.zRot += .08f;
+			return;
 		}
 		if(CompanionOptions.current.reducedMotion)return;
 		float t=state.ageInTicks+state.animationOffset,s=(float)Math.sin(t*.22),c=(float)Math.cos(t*.22);

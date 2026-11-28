@@ -3,7 +3,6 @@ package dev.napuli.client.music;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.napuli.Radio;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +16,8 @@ import java.util.Map;
  */
 public final class RadioStations {
 	private RadioStations() {}
+	public static final String TALK_NAME = "Radio Vicoli";
+	public static final int TALK_COLOR = 0xFFE1694F;
 
 	private static final int[] COLORS = {0x29B6F6, 0xF06292, 0xEF5350, 0xFFB300, 0x66BB6A, 0xAB47BC, 0x26A69A, 0xFF7043};
 	private static List<UserMusic.Station> stations;
@@ -28,11 +29,24 @@ public final class RadioStations {
 		return stations;
 	}
 
+	public static List<UserMusic.Station> music() {
+		var all = all();
+		return all.subList(0, all.size() - 1);
+	}
+
+	public static int channelAt(int index) {
+		return index == all().size() - 1 ? Radio.TALK : index;
+	}
+
+	public static int indexOf(int channel) {
+		if (channel == Radio.TALK) return all().size() - 1;
+		return channel >= 0 && channel < music().size() ? channel : Radio.OFF;
+	}
+
 	private static List<UserMusic.Station> build() {
 		List<UserMusic.Station> out = new ArrayList<>();
 		List<UserMusic.Song> lib = UserMusic.library();
-		if (lib.isEmpty()) return out;
-		out.add(new UserMusic.Station("Radio Napulicraft", "Tutte 'e canzone toje", 0xFF000000 | COLORS[0], lib));
+		if (!lib.isEmpty()) out.add(new UserMusic.Station("Radio Napulicraft", "Tutte 'e canzone toje", 0xFF000000 | COLORS[0], lib));
 		for (JsonObject o : UserMusic.configStations()) {
 			List<UserMusic.Song> songs = new ArrayList<>();
 			if (o.has("canzoni")) for (JsonElement e : o.getAsJsonArray("canzoni")) {
@@ -51,8 +65,8 @@ public final class RadioStations {
 		}
 		for (var e : folders.entrySet())
 			out.add(new UserMusic.Station(e.getKey(), "La stazione toja", 0xFF000000 | COLORS[out.size() % COLORS.length], e.getValue()));
-		return out.size() > Radio.MAX_STATIONS ? out.subList(0, Radio.MAX_STATIONS) : out;
+		if (out.size() > Radio.MAX_STATIONS) out.subList(Radio.MAX_STATIONS, out.size()).clear();
+		out.add(new UserMusic.Station(TALK_NAME, "", TALK_COLOR, List.of()));
+		return List.copyOf(out);
 	}
-
-	@SuppressWarnings("unused") private static File unused;
 }

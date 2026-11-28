@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.BackupConfirmScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -235,6 +236,9 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (Boolean.getBoolean("napuli.modelPhoneMeme")) { modelPhoneMeme(mc); return; }
+        if (Boolean.getBoolean("napuli.legacyCivicQuarter")) { legacyCivicQuarter(mc); return; }
+        if (Boolean.getBoolean("napuli.legacyDistrictLandmarks")) { legacyDistrictLandmarks(mc); return; }
         if (Boolean.getBoolean("napuli.legacyBagnoli")) { legacyBagnoli(mc); return; }
         if (Boolean.getBoolean("napuli.legacyCoroglio")) { legacyCoroglio(mc); return; }
         if (Boolean.getBoolean("napuli.legacyPosillipo")) { legacyPosillipo(mc); return; }
@@ -452,6 +456,237 @@ public final class DistrictClientTest {
 
     private static int justinSounds;
     private static net.minecraft.client.resources.sounds.SoundInstance justinSound;
+
+    private static int modelVoices, modelRecordingTick;
+    private static net.minecraft.client.resources.sounds.SoundInstance modelVoice;
+    private static boolean sawGreeting;
+
+    private static void modelPhoneMeme(Minecraft mc) {
+        var point = NapoliStreetMemes.Scene.MODELLO.point;
+        if (++tick == 1) {
+            mc.getSoundManager().addListener((sound, weighted, range) -> {
+                if (sound.getIdentifier().equals(Napuli.id("vocale_modello"))) {
+                    modelVoices++;
+                    modelVoice = sound;
+                    modelRecordingTick = tick;
+                }
+            });
+            server(mc, p -> {
+                var city = p.level();
+                city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+                p.setAttached(GiorgiaMeloni.NEXT_VISIT, Long.MAX_VALUE);
+                p.removeAttached(GiorgiaMeloni.APPROACH_DEADLINE);
+                p.setGameMode(GameType.ADVENTURE);
+                p.teleportTo(city, point.getX()+.5, point.getY(), point.getZ()+6.5, Set.of(), 180, 0, true);
+            });
+        }
+        if (tick == 155) mc.getConnection().sendCommand("citta meme modello");
+        if (tick == 170) server(mc, p -> {
+            var city = p.level();
+            for (int x = -6; x <= 6; x++)
+                check(NapoliResidentHomes.walkable(city,point.east(x)), "Blocked model scene at " + point.east(x)
+                        + " feet=" + city.getBlockState(point.east(x)) + " floor=" + city.getBlockState(point.east(x).below()));
+            var actors = city.getEntitiesOfClass(NapoliResident.class, new net.minecraft.world.phys.AABB(point).inflate(12),
+                    NapoliStreetMemes::actor);
+            check(actors.size() == 2, "The model command starts a two-person scene near " + p.blockPosition());
+        });
+        if (tick >= 155 && tick <= 560 && modelVoice == null) {
+            for (var entity : mc.level.entitiesForRendering()) {
+                if (entity instanceof NapoliResident npc && npc.role() == NapoliResident.Role.MODELLO_190
+                        && npc.gesture() == CityGestures.Gesture.WAVE) {
+                    if (!sawGreeting) shot(mc, "napoli-modello-incontro");
+                    sawGreeting = true;
+                }
+            }
+        }
+        if (tick == 560) check(modelVoice != null, "A nearby client hears the supplied clip after the encounter");
+        if (modelVoice != null && tick == modelRecordingTick + 20) {
+            check(sawGreeting && modelVoices == 1 && mc.getSoundManager().isActive(modelVoice),
+                    "One call recording starts after the two actors greet");
+            server(mc, p -> {
+                var actors = p.level().getEntitiesOfClass(NapoliResident.class,
+                        new net.minecraft.world.phys.AABB(point).inflate(10), NapoliStreetMemes::actor);
+                var woman = actors.stream().filter(n -> n.role() == NapoliResident.Role.SIGNORA_TELEFONATA).findFirst().orElseThrow();
+                var model = actors.stream().filter(n -> n.role() == NapoliResident.Role.MODELLO_190).findFirst().orElseThrow();
+                check(Math.abs(model.getBbHeight() - 1.9) < .01, "The model is 1.90 blocks tall");
+                check(woman.distanceToSqr(model) >= 16 && woman.gesture() == CityGestures.Gesture.PHONE_CALL
+                                && Phones.model(woman.getMainHandItem()) != null,
+                        "The woman holds a phone to her ear after the model walks away");
+                check(Math.abs(modelVoice.getX() - woman.getX()) <= 1
+                                && Math.abs(modelVoice.getZ() - woman.getZ()) <= 1,
+                        "The recording comes from the woman's position");
+                p.teleportTo(p.level(), woman.getX()+2.2, woman.getY(), woman.getZ()+2.8, Set.of(), 143, 0, true);
+            });
+        }
+        if (modelVoice != null && tick == modelRecordingTick + 42) {
+            shot(mc, "napoli-modello-telefonata");
+            mc.getConnection().sendCommand("citta meme modello");
+        }
+        if (modelVoice != null && tick >= modelRecordingTick + 405) {
+            check(modelVoices == 1 && !mc.getSoundManager().isActive(modelVoice), "The phone clip ends without looping");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: tall model, greeting and local phone audio");
+            done = true;
+        }
+    }
+
+    private static void legacyCivicQuarter(Minecraft mc) {
+        var market = NapoliDistrictLandmarks.site("mercato");
+        var carmine = NapoliDistrictLandmarks.site("carmine");
+        var port = NapoliCivicQuarter.BEVERELLO;
+        var station = NapoliCivicQuarter.MARITTIMA;
+        var gregorio = NapoliCivicQuarter.GREGORIO;
+        var lorenzo = NapoliCivicQuarter.LORENZO;
+        var lower = NapoliCivicQuarter.LOWER_LIFT;
+        var upper = NapoliCivicQuarter.UPPER_LIFT;
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            NapoliMap.upgradeIfBuilt(city);
+            city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+            var paths = java.util.List.of(
+                    new CityAccessibility.Target("arco_sant_eligio", market.offset(33,0,16), market.offset(33,0,22)),
+                    new CityAccessibility.Target("carmine", carmine.south(28), carmine.south(9)),
+                    new CityAccessibility.Target("municipio_beverello", new BlockPos(212,64,10), port.south(20)),
+                    new CityAccessibility.Target("stazione_marittima", port.east(14), station.north(5)),
+                    new CityAccessibility.Target("san_gregorio", new BlockPos(30,64,-153), gregorio.north(3)),
+                    new CityAccessibility.Target("chiostro_san_gregorio", new BlockPos(53,64,-155), gregorio.offset(17,0,-4)),
+                    new CityAccessibility.Target("san_lorenzo", lorenzo.south(11), lorenzo.south(3)),
+                    new CityAccessibility.Target("macellum", lorenzo.offset(18,0,14), lorenzo.offset(18,-9,3)),
+                    new CityAccessibility.Target("convitto", new BlockPos(-4,64,-181), NapoliCivicQuarter.CONVITTO.west(15)),
+                    new CityAccessibility.Target("port_alba", new BlockPos(10,64,-167), NapoliCivicQuarter.PORT_ALBA.south(7)),
+                    new CityAccessibility.Target("santa_lucia", lower.north(15), lower.north(2)),
+                    new CityAccessibility.Target("pizzofalcone", upper.south(), upper.offset(0,0,10)));
+            for (var path : paths) {
+                var result = CityAccessibility.inspect(city, path);
+                check(result.state().equals("OK"), "Blocked civic route " + path.id() + " visited=" + result.visited());
+            }
+            check(city.getBlockState(market.offset(33,10,20)).is(Blocks.SMOOTH_QUARTZ), "Stone clock on the Sant’Eligio arch");
+            check(city.getBlockState(carmine.offset(21,26,12)).is(Blocks.BELL), "Bell in the Carmine tower");
+            check(city.isEmptyBlock(carmine.offset(-17,23,16)), "Old Carmine cornice no longer protrudes from the roof");
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(city, lower.getX()+.5, lower.getY(), lower.getZ()+1.5, Set.of(), 0, 0, true);
+            for (var landing : java.util.List.of(lower,upper)) {
+                var button = NapoliCivicQuarter.liftButton(landing);
+                var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(button),
+                        Direction.SOUTH, button, false);
+                var result = net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.invoker().interact(
+                        p,city,net.minecraft.world.InteractionHand.MAIN_HAND,hit);
+                check(result == net.minecraft.world.InteractionResult.SUCCESS, "Monte Echia lift button responds");
+                check(p.blockPosition().equals((landing.equals(lower) ? upper : lower).south()), "Lift arrives at its other landing");
+            }
+        });
+        if (tick == 140) server(mc, p -> {
+            p.setGameMode(GameType.SPECTATOR);
+            p.teleportTo(p.level(), carmine.getX()-18, carmine.getY()+18, carmine.getZ()+35, Set.of(), 207, 12, true);
+        });
+        if (tick == 270) shot(mc,"napoli-carmine-v69");
+        if (tick == 275) server(mc, p -> p.teleportTo(p.level(), port.getX()+31,
+                port.getY()+23, port.getZ()+36, Set.of(), 180, 23, true));
+        if (tick == 405) shot(mc,"napoli-porto-v69");
+        if (tick == 410) server(mc, p -> p.teleportTo(p.level(), lorenzo.getX()+24.5,
+                lorenzo.getY()-9, lorenzo.getZ()+7.5, Set.of(), 180, 0, true));
+        if (tick == 540) shot(mc,"napoli-scavi-san-lorenzo-v69");
+        if (tick == 545) server(mc, p -> p.teleportTo(p.level(), 3.5,69,-167, Set.of(), 113, 4, true));
+        if (tick == 675) shot(mc,"napoli-dante-v69");
+        if (tick == 680) server(mc, p -> p.teleportTo(p.level(), upper.getX()+21,
+                upper.getY()+12, upper.getZ()+23, Set.of(), 146, 19, true));
+        if (tick == 820) {
+            shot(mc,"napoli-monte-echia-v69");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: civic routes and Monte Echia lift on an existing save");
+            done = true;
+        }
+    }
+
+    private static void legacyDistrictLandmarks(Minecraft mc) {
+        var fontanelle = NapoliDistrictLandmarks.site("fontanelle");
+        var catacombs = NapoliDistrictLandmarks.site("san_gennaro");
+        var mostra = NapoliDistrictLandmarks.site("mostra");
+        var garden = NapoliDistrictLandmarks.site("orto");
+        var offices = NapoliDistrictLandmarks.site("direzionale");
+        var pianura = NapoliDistrictLandmarks.site("pianura");
+        var ponticelli = NapoliDistrictLandmarks.site("ponticelli");
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            NapoliMap.upgradeIfBuilt(city);
+            city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+            var entries = java.util.Map.of(
+                    fontanelle.offset(0,-9,8), fontanelle.south(28),
+                    catacombs.offset(-7,-6,6), catacombs.offset(-7,0,21),
+                    catacombs.offset(14,-12,1), catacombs.offset(14,0,27));
+            for (var route : entries.entrySet()) {
+                var result = CityAccessibility.inspect(city,
+                        new CityAccessibility.Target("ipogeo", route.getValue(), route.getKey()));
+                check(result.state().equals("OK"), "Blocked underground route "
+                        + route.getValue() + " -> " + route.getKey() + " visited=" + result.visited());
+            }
+            var features = java.util.Map.of(
+                    fontanelle.offset(0,-5,-23), Blocks.CUT_SANDSTONE,
+                    catacombs.offset(14,-11,-17), Blocks.LANTERN,
+                    mostra.offset(15,-1,22), Blocks.PRISMARINE_BRICKS,
+                    mostra.offset(-27,0,10), Blocks.CUT_SANDSTONE,
+                    mostra.offset(44,20,18), Blocks.QUARTZ_PILLAR,
+                    garden.offset(0,0,-14), Blocks.SPRUCE_DOOR,
+                    offices.offset(-42,1,-34), Blocks.LECTERN,
+                    pianura.offset(0,0,-5), Blocks.SPRUCE_DOOR,
+                    ponticelli.offset(0,0,-9), Blocks.SPRUCE_DOOR);
+            for (var feature : features.entrySet())
+                check(city.getBlockState(feature.getKey()).is(feature.getValue()), "Missing district fixture "
+                        + feature.getKey() + " expected " + feature.getValue() + " got " + city.getBlockState(feature.getKey()));
+            var metro = CityNetwork.stop("direzionale").entrance().north(2);
+            var atrium = offices.offset(0,0,27);
+            var approach = CityAccessibility.inspect(city, new CityAccessibility.Target("direzionale_atrio",metro,atrium));
+            check(approach.state().equals("OK"), "Metro exit does not reach the Direzionale atrium");
+            var streetDoors = CityAccessibility.targets(true).stream()
+                    .filter(target -> target.id().startsWith("palazzo_")).toList();
+            for (String district : java.util.List.of("pianura","soccavo","secondigliano","ponticelli","barra","san_giovanni")) {
+                var center = NapoliDistrictLandmarks.site(district);
+                var home = streetDoors.stream().min(java.util.Comparator.comparingDouble(
+                        target -> target.inside().distSqr(center))).orElseThrow();
+                var doorway = CityAccessibility.inspect(city, home);
+                check(doorway.state().equals("OK"), district + " front door is blocked at " + home.inside());
+                var firstFloor = home.inside().offset(5,5,0);
+                var stairs = CityAccessibility.inspect(city,
+                        new CityAccessibility.Target(district + "_scale", home.inside(), firstFloor));
+                check(stairs.state().equals("OK"), district + " first floor is blocked at " + firstFloor);
+            }
+        });
+        if (tick == 140) server(mc, p -> {
+            p.setGameMode(GameType.SPECTATOR);
+            p.teleportTo(p.level(), fontanelle.getX()+.5, fontanelle.getY()-9,
+                    fontanelle.getZ()-3.5, Set.of(), 180, 0, true);
+        });
+        if (tick == 290) shot(mc, "napoli-fontanelle-v68");
+        if (tick == 295) server(mc, p -> p.teleportTo(p.level(), mostra.getX()+2,
+                mostra.getY()+48, mostra.getZ()+55, Set.of(), 180, 42, true));
+        if (tick == 415) {
+            shot(mc, "napoli-mostra-v68");
+            server(mc, player -> {
+                var center = mostra.offset(15,0,22);
+                for (var pos : BlockPos.betweenClosed(mostra.offset(-43,-3,0), mostra.offset(46,2,43))) {
+                    if (!player.level().getBlockState(pos).is(Blocks.WATER)) continue;
+                    check(pos.getY() == center.getY() && pos.getZ() <= center.getZ()+7
+                                    && pos.getZ() >= center.getZ()-11
+                                    && Math.hypot(pos.getX()-center.getX(),pos.getZ()-center.getZ()) <= 12.4,
+                            "Water outside the Esedra basin at " + pos);
+                }
+            });
+        }
+        if (tick == 420) server(mc, p -> p.teleportTo(p.level(), garden.getX()+2,
+                garden.getY()+18, garden.getZ()+25, Set.of(), 180, 20, true));
+        if (tick == 545) {
+            shot(mc, "napoli-orto-v68");
+            server(mc, player -> {
+                for (var pos : BlockPos.betweenClosed(garden.offset(-26,-1,-9), garden.offset(26,2,35)))
+                    check(!player.level().getBlockState(pos).is(Blocks.WATER), "Legacy fountain water at " + pos);
+            });
+        }
+        if (tick == 550) server(mc, p -> p.teleportTo(p.level(), ponticelli.getX()+.5,
+                ponticelli.getY()+2, ponticelli.getZ()+15, Set.of(), 180, 0, true));
+        if (tick == 675) {
+            shot(mc, "napoli-ponticelli-v68");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: underground paths and rebuilt Atlas landmarks on old save");
+            done = true;
+        }
+    }
 
     private static void legacyBagnoli(Minecraft mc) {
         var steel = NapoliBagnoli.steelworks();

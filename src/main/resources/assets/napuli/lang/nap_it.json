@@ -539,7 +539,9 @@
 	"napuli.people.pizzaiolo.sold": "Ecco a te, 'na margherita fumante. Accorto, ca scotta!",
 	"napuli.people.broke": "Senza sorde nun se cantano messe.",
 	"napuli.people.buy_hint": "Accuovete e clicca pe' accattà (%s €)",
-	"napuli.radio.skip_hint": "Ddoje clic ncopp'a stessa radio: canzone appriesso",
+	"napuli.radio.skip_hint": "Ddoje clic pe' 'a canzona o 'a chiamata appriesso",
+	"napuli.ui.radio.talk": "Chiamate 'n diretta",
+  "napuli.ui.radio.listener": "Vucale 'e chi ce sente",
 	"napuli.resident.motor_dealer": "Peppe d’ 'a ll'officina",
 	"napuli.resident.armorer": "Mimmo d’ 'a l'armeria",
 	"napuli.street.motor_dealer": "Ccà truove 'o casco e 'o motorino.",
@@ -2127,5 +2129,6 @@
   "subtitles.napuli.vocale_ballo": "Un invito a ballare",
   "subtitles.napuli.vocale_giubbetto": "Qualcuno cerca un giubbetto",
   "subtitles.napuli.vocale_saluto": "Un saluto di buongiorno",
-  "subtitles.napuli.vocale_indicazioni": "Una voce chiede aiuto"
+  "subtitles.napuli.vocale_indicazioni": "Una voce chiede aiuto",
+  "subtitles.napuli.vocale_modello": "'A signora parla d''o modello ô telefono"
 }

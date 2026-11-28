@@ -31,7 +31,7 @@ public final class NapoliResident extends PathfinderMob {
         GIORGIA_MELONI, PEPPE_FETISH, MOTOR_DEALER, ARMORER,
         BUCATO, TURISTA, PESCATORE, CUSTODE_TUNNEL, CARTOMANTE, MERCATANTE, MUSICISTA, GUARDIANO_PRESEPE,
         FAMILY_MOTHER, FAMILY_FATHER, FAMILY_CHILD, FAMILY_CHILD_TWO, CIVIC_WOMAN, CIVIC_MAN, EMPLOYMENT_CLERK, SHIFT_LEAD, SHIFT_WORKER, FOOTBALL_CLERK, FOOTBALL_COACH,
-        CERTOSA_GUIDE, CERTOSA_RESTORER;
+        CERTOSA_GUIDE, CERTOSA_RESTORER, SIGNORA_TELEFONATA, MODELLO_190;
 
         boolean civic() { return this == CIVIC_WOMAN || this == CIVIC_MAN; }
 
@@ -45,7 +45,7 @@ public final class NapoliResident extends PathfinderMob {
         /** everyday Neapolitans with their own little interaction (NapoliPeople) */
         public boolean people() { return ordinal() >= NONNA.ordinal() && ordinal() <= PIZZAIOLO.ordinal(); }
         /** slimmer arms, girl faces and hairstyles in the model */
-        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN || this == EMPLOYMENT_CLERK || this == CERTOSA_GUIDE; }
+        public boolean female() { return social() || this == GIORGIA_MELONI || this == NONNA || this == PORTER || this == ADA || this == ROSA || this == MBRIANA || this == PARTENOPE || this == BUCATO || this == CARTOMANTE || this == FAMILY_MOTHER || this == FAMILY_CHILD_TWO || this == CIVIC_WOMAN || this == EMPLOYMENT_CLERK || this == CERTOSA_GUIDE || this == SIGNORA_TELEFONATA; }
         /** how many different looks this role has (passers-by are many, they must not all look the same) */
         public int variants() { return civic() ? 12 : this == PASSERBY ? 18 : this == SHIFT_LEAD || this == SHIFT_WORKER ? 3 : this == CARABINIERE ? 2 : 1; }
         Component displayName() { return Component.translatable("napuli.resident." + id()); }

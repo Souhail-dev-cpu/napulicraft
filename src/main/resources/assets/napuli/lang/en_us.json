@@ -325,7 +325,9 @@
 	"napuli.people.pizzaiolo.sold": "Here you go, a steaming margherita. Careful, it's hot!",
 	"napuli.people.broke": "No money, no party.",
 	"napuli.people.buy_hint": "Sneak and click to buy (%s €)",
-	"napuli.radio.skip_hint": "Double-click a station for its next track",
+	"napuli.radio.skip_hint": "Double-click for the next track or call",
+	"napuli.ui.radio.talk": "Live phone-ins",
+  "napuli.ui.radio.listener": "Listener voice note",
 	"napuli.resident.motor_dealer": "Peppe the mechanic",
 	"napuli.resident.armorer": "Mimmo the armorer",
 	"napuli.street.motor_dealer": "Buy a helmet or a scooter here.",
@@ -1921,5 +1923,6 @@
   "subtitles.napuli.vocale_ballo": "An invitation to dance",
   "subtitles.napuli.vocale_giubbetto": "Someone is looking for a jacket",
   "subtitles.napuli.vocale_saluto": "A cheerful morning greeting",
-  "subtitles.napuli.vocale_indicazioni": "A voice asks for help"
+  "subtitles.napuli.vocale_indicazioni": "A voice asks for help",
+  "subtitles.napuli.vocale_modello": "The woman tells her friend about the model"
 }

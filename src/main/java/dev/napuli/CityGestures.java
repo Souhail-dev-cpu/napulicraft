@@ -4,7 +4,7 @@ import net.minecraft.server.level.ServerLevel;
 
 /** Small server-selected gestures; clients animate the same pose at their own frame rate. */
 public final class CityGestures {
-    public enum Gesture { NONE, CHOP, STIR, CARRY, EAT, WASH, YAWN, WAVE, SAD, HAPPY, SWEEP, EXAMINE, WRITE, TEACH, PACK }
+    public enum Gesture { NONE, CHOP, STIR, CARRY, EAT, WASH, YAWN, WAVE, SAD, HAPPY, SWEEP, EXAMINE, WRITE, TEACH, PACK, PHONE_CALL }
     private CityGestures() {}
     static void register() {}
     static Gesture action(NapoliHouseholds.Activity activity) {

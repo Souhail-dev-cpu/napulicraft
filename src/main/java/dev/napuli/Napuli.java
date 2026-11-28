@@ -52,6 +52,7 @@ public class Napuli implements ModInitializer {
 	static final SoundEvent VOCALE_GIUBBETTO = sound("vocale_giubbetto");
 	static final SoundEvent VOCALE_SALUTO = sound("vocale_saluto");
 	static final SoundEvent VOCALE_INDICAZIONI = sound("vocale_indicazioni");
+	static final SoundEvent VOCALE_MODELLO = sound("vocale_modello");
 	static {
 		for (Music.Situation s : Music.Situation.values()) s.sound = sound(s.id());
 	}
@@ -291,6 +292,7 @@ public class Napuli implements ModInitializer {
 		CityResidentShop.register();
 		CityHousingFinance.register();
 		FabricDefaultAttributeRegistry.register(RESIDENT, NapoliResident.attributes());
+		NapoliCivicQuarter.register();
 		ServerTickEvents.END_SERVER_TICK.register(NapoliScenes::tick);
 		ServerTickEvents.END_SERVER_TICK.register(Carabinieri::tick);
 		Carabinieri.register();

@@ -16,6 +16,7 @@ public final class Radio {
 	private Radio() {}
 
 	public static final int OFF = -1, PARADE = 99, MAX_STATIONS = 16;
+	public static final int TALK = MAX_STATIONS;
 
 	/** client -> server: the driver tuned to a station (OFF to switch the radio off) */
 	public record Tune(int station) implements CustomPacketPayload {
@@ -34,8 +35,13 @@ public final class Radio {
 
 	/** All clients, including passengers, must pass this server-side driver check. */
 	static boolean tune(net.minecraft.server.level.ServerPlayer player, int station) {
-		if (station != OFF && (station < 0 || station >= MAX_STATIONS)) return false;
-		if (!(player.getVehicle() instanceof Motorino bike) || bike.getControllingPassenger() != player) return false;
+		if (station != OFF && (station < 0 || station > TALK)) return false;
+		if (!(player.getVehicle() instanceof Motorino bike) || bike.getControllingPassenger() != player
+				|| bike.inParade()) return false;
+		if (station == TALK && bike.station() == TALK) {
+			bike.nextTalkCall();
+			return true;
+		}
 		bike.setStation(station);
 		return true;
 	}

@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.WallSignBlock;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 /** Street-facing stonework and room finishes for the city's residential plans. */
 final class NapoliResidentialFinish {
@@ -50,6 +53,45 @@ final class NapoliResidentialFinish {
         work.elevation(x, y, z, 22, floors, 5, false);
         work.floor(x + 2, y - 1, z + 2, 7, 5, x + z);
         work.floor(x + 9, y - 1, z + 15, 5, 8, x + z);
+    }
+
+    static void neighborhood(ServerLevel city, LevelChunk chunk, String district, int style,
+            int x, int y, int z, int floors, int civic) {
+        var portal = new BlockPos(x+11,y,z+23);
+        var accent = switch (style) {
+            case 0 -> Blocks.SMOOTH_SANDSTONE;
+            case 1 -> Blocks.TUFF_BRICKS;
+            case 2 -> Blocks.TERRACOTTA;
+            case 3 -> Blocks.BRICKS;
+            case 4 -> Blocks.POLISHED_TUFF;
+            default -> Blocks.CUT_SANDSTONE;
+        };
+        var work = new Finish(city, pos -> chunk.getPos().equals(net.minecraft.world.level.ChunkPos.containing(pos)));
+        var masonry = Set.of(Blocks.CUT_SANDSTONE, Blocks.POLISHED_ANDESITE, Blocks.POLISHED_DEEPSLATE);
+        for (int facadeZ : new int[] {z,z+23}) for (int floor = 0; floor < floors; floor++) {
+            int base = y+floor*5;
+            for (int offset : new int[] {0,21}) for (int height = 0; height < 3; height++)
+                work.replace(new BlockPos(x+offset,base+height,facadeZ), masonry, accent);
+            for (int offset = 3; offset < 20; offset += 4) {
+                if (facadeZ == z+23 && floor == 0 && Math.abs(offset-11) < 3) continue;
+                var window = new BlockPos(x+offset,base+1,facadeZ);
+                if (!work.includes.test(window) || !GLAZING.contains(chunk.getBlockState(window).getBlock())) continue;
+                work.replace(window.below(), masonry, accent);
+                work.replace(window.above(2), masonry, accent);
+            }
+        }
+        for (int dx : new int[] {-1,1}) for (int dy = 0; dy <= 2; dy++)
+            work.replace(portal.offset(dx,dy,0), masonry, accent);
+        work.replace(portal.above(2), masonry, accent);
+        work.floor(x + 10, y - 1, z + 20, 3, 3, style);
+        var plaque = portal.offset(-1,1,1);
+        if (work.includes.test(plaque) && chunk.getBlockState(portal).getBlock() instanceof DoorBlock
+                && chunk.getBlockState(plaque.north()).isSolidRender()
+                && chunk.getBlockState(plaque).isAir() && !CityProperty.playerPlaced(city, plaque)) {
+            city.setBlock(plaque, Blocks.BIRCH_WALL_SIGN.defaultBlockState()
+                    .setValue(WallSignBlock.FACING, Direction.SOUTH), Block.UPDATE_CLIENTS);
+            NapoliEmploymentMap.text(city, plaque, new String[] { district, "CIVICO " + civic });
+        }
     }
 
     private record Finish(ServerLevel city, Predicate<BlockPos> includes) {

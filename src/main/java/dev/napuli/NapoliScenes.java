@@ -38,10 +38,11 @@ public final class NapoliScenes {
     private NapoliScenes() {}
 
     static void tick(MinecraftServer server) {
-        if (server.getTickCount() % 20 != 0) return;
         ServerLevel level = server.getLevel(NapoliMap.LEVEL);
         if (level == null) return;
-        NapoliStreetMemes.tick(level);
+        boolean streetTick = server.getTickCount() % 20 == 0;
+        NapoliStreetMemes.tick(level, streetTick);
+        if (!streetTick) return;
         long now = level.getGameTime();
         for (ServerPlayer player : server.getPlayerList().getPlayers())
             if (player.level() != level) NapoliStreet.resetWeightOutside(player);

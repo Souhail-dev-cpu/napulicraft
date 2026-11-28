@@ -1,6 +1,8 @@
 package dev.napuli.client;
 
 import dev.napuli.Radio;
+import dev.napuli.Motorino;
+import dev.napuli.client.music.RadioStations;
 import static dev.napuli.CityText.t;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -51,7 +53,7 @@ final class RadioWheelScreen extends Screen {
 		hovered = keyboardSelection == -2 ? pick(mx, my) : keyboardSelection;
 		g.fill(0, 0, width, height, 0x88000000);
 		List<dev.napuli.client.music.UserMusic.Station> st = RadioClient.stations();
-		int current = RadioClient.currentStation();
+		int current = RadioStations.indexOf(RadioClient.currentStation());
 		int r = radius();
 		// the ring
 		for (int i = 0; i < 64; i++) {
@@ -76,7 +78,15 @@ final class RadioWheelScreen extends Screen {
 		String name, line;
 		if (hovered == -2) { name = current == Radio.OFF ? t("radio.off").getString() : current >= 0 && current < st.size() ? st.get(current).name() : ""; line = t("radio.choose").getString(); }
 		else if (hovered == Radio.OFF) { name = t("radio.off").getString(); line = t("radio.silence").getString(); }
-		else { name = st.get(hovered).name(); line = t("radio.station_info", st.get(hovered).dj(), st.get(hovered).songs().size()).getString(); }
+		else {
+			name = st.get(hovered).name();
+			if (RadioStations.channelAt(hovered) == Radio.TALK) {
+				var player = minecraft.player;
+				String live = player != null && player.getVehicle() instanceof Motorino bike && bike.station() == Radio.TALK
+						? RadioTalkClient.onAir(bike) : "";
+				line = live.isEmpty() ? t("radio.talk").getString() : live;
+			} else line = t("radio.station_info", st.get(hovered).dj(), st.get(hovered).songs().size()).getString();
+		}
 		int centerWidth = Math.max(80, r * 2 - 56);
 		g.centeredText(font, NapoliScreen.fit(font, name, centerWidth), width / 2, height / 2 - 10, NapoliScreen.TEXT);
 		g.centeredText(font, NapoliScreen.fit(font, line, centerWidth), width / 2, height / 2 + 4, NapoliScreen.MUTED);
@@ -100,13 +110,16 @@ final class RadioWheelScreen extends Screen {
 
 	private void choose() {
 		int pick = keyboardSelection == -2 ? pick(mouseX, mouseY) : keyboardSelection;
-		if (pick != -2 && pick != RadioClient.currentStation()) RadioClient.tune(pick);
+		if (pick != -2) {
+			int channel = RadioStations.channelAt(pick);
+			if (channel != RadioClient.currentStation()) RadioClient.tune(channel);
+		}
 		onClose();
 	}
 	@Override public boolean keyPressed(KeyEvent event) {
 		int key = event.key();
 		if (key >= 262 && key <= 265) {
-			int current = keyboardSelection == -2 ? RadioClient.currentStation() : keyboardSelection;
+			int current = keyboardSelection == -2 ? RadioStations.indexOf(RadioClient.currentStation()) : keyboardSelection;
 			int direction = key == 263 || key == 265 ? -1 : 1;
 			keyboardSelection = Math.floorMod(current + 1 + direction, slots()) - 1;
 			hovered = keyboardSelection;
@@ -133,13 +146,14 @@ final class RadioWheelScreen extends Screen {
 		if (event.button() != 0) return false;
 		int station = pick(event.x(), event.y());
 		if (station == -2) return false;
+		int channel = RadioStations.channelAt(station);
 		long now = System.nanoTime();
 		if (station >= 0 && station == clicked && now - lastClick <= 450_000_000L) {
-			RadioClient.requestSkip(station);
+			RadioClient.requestSkip(channel);
 			lastClick = 0;
 		} else {
 			lastClick = now;
-			if (station != RadioClient.currentStation()) RadioClient.tune(station);
+			if (channel != RadioClient.currentStation()) RadioClient.tune(channel);
 		}
 		clicked = station;
 		return true;

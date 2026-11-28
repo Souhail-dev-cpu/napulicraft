@@ -100,7 +100,7 @@ final class NapoliEmploymentMap {
         text(level, pos, lines);
     }
 
-    private static void text(ServerLevel level, BlockPos pos, String[] lines) {
+    static void text(ServerLevel level, BlockPos pos, String[] lines) {
         if (!(level.getBlockEntity(pos) instanceof SignBlockEntity sign)) return;
         var text = SignText.EMPTY.asMutable();
         for (int i = 0; i < lines.length; i++) text.setLine(i, Component.literal(lines[i]));

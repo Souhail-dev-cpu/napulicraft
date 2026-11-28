@@ -490,8 +490,17 @@ public final class DistrictClientTest {
                 mc.getConnection().sendCommand("calcio esci");
             }
             if (tick == 325) server(mc, p -> p.teleportTo(p.level(), point.getX() + .5, point.getY() + .2,
-                    point.getZ() - 7.5, Set.of(), 0, 0, true));
-            if (tick == 435) {
+                    point.getZ() - 31.5, Set.of(), 0, 0, true));
+            if (tick == 422) server(mc, p -> {
+                var city = p.level();
+                check(NapoliStreetMemes.start(city, NapoliStreetMemes.Scene.JUSTIN),
+                        "The scene begins while the listener is out of audio range");
+                p.teleportTo(city, point.getX() + .5, point.getY() + .2, point.getZ() - 26.5,
+                        Set.of(), 0, 0, true);
+            });
+            if (tick == 465) {
+                check(justinSounds == 1 && justinSound != null && mc.getSoundManager().isActive(justinSound),
+                        "Approaching a crowd already in progress at 27 blocks starts the clip");
                 mc.getConnection().sendCommand("citta meme justin");
                 mc.getConnection().sendCommand("citta meme justin");
             }

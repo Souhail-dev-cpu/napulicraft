@@ -2,13 +2,18 @@ package dev.napuli;
 
 import com.mojang.serialization.Codec;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,8 +53,12 @@ final class NapoliStreetMemes {
         }
     }
 
-    private record Performance(Scene scene, List<NapoliResident> cast, long started, int spoken) {}
+    private record Performance(Scene scene, List<NapoliResident> cast, long started, int spoken, Set<UUID> heard) {}
     private static final String ACTOR = "napuli_street_meme";
+    private record JustinPlayback(ServerLevel city, long until) {}
+    private static final AttachmentType<JustinPlayback> JUSTIN_PLAYBACK =
+            AttachmentRegistry.create(Napuli.id("street_meme_justin_playback"));
+    private static final int JUSTIN_AUDIO_TICKS = 446;
     private static final int BEAT = 100;
     private static final int INVITATION_RANGE = 28;
     private static final AttachmentType<Performance> LIVE = AttachmentRegistry.create(Napuli.id("street_meme_live"));
@@ -73,15 +82,18 @@ final class NapoliStreetMemes {
         long now = city.getGameTime();
         var live = city.getAttached(LIVE);
         if (live != null) {
+            var viewers = audience(city, live.scene());
             long age = now - live.started();
-            if (age >= (live.scene().lines.size() + 1) * BEAT || audience(city, live.scene()).isEmpty()) {
+            if (age >= (live.scene().lines.size() + 1) * BEAT || viewers.isEmpty()) {
                 live.cast().forEach(NapoliResident::discard);
                 city.removeAttached(LIVE);
             } else {
+                if (live.scene() == Scene.JUSTIN)
+                    for (var viewer : viewers) playJustin(city, live, viewer, false);
                 int line = (int) (age / BEAT);
                 if (line > live.spoken() && line < live.scene().lines.size()) {
                     speak(city, live, line);
-                    city.setAttached(LIVE, new Performance(live.scene(), live.cast(), live.started(), line));
+                    city.setAttached(LIVE, new Performance(live.scene(), live.cast(), live.started(), line, live.heard()));
                 }
             }
             return;
@@ -113,7 +125,18 @@ final class NapoliStreetMemes {
                     + ", Z " + scene.point.getZ() + " · avvicinati per vedere la scena."));
             return 0;
         }
-        if (start(city, scene)) return 1;
+        var existing = city.getAttached(LIVE);
+        if (scene == Scene.JUSTIN) {
+            if (existing == null) {
+                start(city, scene, true);
+                existing = city.getAttached(LIVE);
+            }
+            if (existing != null && existing.scene() == scene) {
+                if (!playJustin(city, existing, player, true) && existing.heard().contains(player.getUUID()))
+                    NapoliNotice.show(player, Component.literal("L'audio di Justin è già partito per questa scena."));
+                return 1;
+            }
+        } else if (start(city, scene)) return 1;
         NapoliNotice.show(player, Component.literal("Aspetta un attimo: i ragazzi si stanno ancora organizzando."));
         return 0;
     }
@@ -123,9 +146,11 @@ final class NapoliStreetMemes {
                 && scene.point.distToCenterSqr(p.position()) <= INVITATION_RANGE * INVITATION_RANGE);
     }
 
-    static boolean start(ServerLevel city, Scene scene) {
+    static boolean start(ServerLevel city, Scene scene) { return start(city, scene, false); }
+
+    private static boolean start(ServerLevel city, Scene scene, boolean requested) {
         long now = city.getGameTime();
-        if (city.hasAttached(LIVE) || now < city.getAttachedOrElse(NEXT, Long.MIN_VALUE)) return false;
+        if (city.hasAttached(LIVE) || !requested && now < city.getAttachedOrElse(NEXT, Long.MIN_VALUE)) return false;
         var cast = new ArrayList<NapoliResident>();
         for (int row = 0; row < 3 && cast.size() < scene.actors; row++) {
             for (int col = 0; col < 5 && cast.size() < scene.actors; col++) {
@@ -155,13 +180,27 @@ final class NapoliStreetMemes {
             cast.forEach(NapoliResident::discard);
             return false;
         }
-        var live = new Performance(scene, List.copyOf(cast), now, 0);
+        var live = new Performance(scene, List.copyOf(cast), now, 0, new HashSet<>());
         city.setAttached(LIVE, live);
         city.setAttached(NEXT, now + 1200);
         for (var viewer : audience(city, scene)) NapoliNotice.show(viewer, Component.literal(scene.title));
-        if (scene == Scene.JUSTIN)
-            CityEffects.sound(city, null, scene.point, Napuli.JUSTIN_CROWD, SoundSource.VOICE, 1.4f, 1f);
+
         speak(city, live, 0);
+        return true;
+    }
+
+    private static boolean playJustin(ServerLevel city, Performance scene, ServerPlayer player, boolean requested) {
+        if (scene.heard().contains(player.getUUID()) || !requested && (CityEffects.flags(player) & CityEffects.QUIET) != 0)
+            return false;
+        var playback = player.getAttached(JUSTIN_PLAYBACK);
+        long now = city.getGameTime();
+        if (playback != null && playback.city() == city && now < playback.until()) return false;
+
+        var origin = scene.scene().point;
+        player.connection.send(new ClientboundSoundPacket(Holder.direct(Napuli.JUSTIN_CROWD), SoundSource.VOICE,
+                origin.getX() + .5, origin.getY() + .5, origin.getZ() + .5, 1.3f, 1f, city.getRandom().nextLong()));
+        scene.heard().add(player.getUUID());
+        player.setAttached(JUSTIN_PLAYBACK, new JustinPlayback(city, now + JUSTIN_AUDIO_TICKS));
         return true;
     }
 

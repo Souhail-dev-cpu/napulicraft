@@ -63,5 +63,14 @@
   "justin_crowd": {
     "subtitle": "subtitles.napuli.justin_crowd",
     "sounds": [{"name": "napuli:justin_crowd", "attenuation_distance": 36}]
-  }
+  },
+  "vocale_mercato": {"subtitle": "subtitles.napuli.vocale_mercato", "sounds": [{"name": "napuli:vocale_mercato", "attenuation_distance": 34}]},
+  "vocale_teatro": {"subtitle": "subtitles.napuli.vocale_teatro", "sounds": [{"name": "napuli:vocale_teatro", "attenuation_distance": 34}]},
+  "vocale_cantante": {"subtitle": "subtitles.napuli.vocale_cantante", "sounds": [{"name": "napuli:vocale_cantante", "attenuation_distance": 34}]},
+  "vocale_ordinanza": {"subtitle": "subtitles.napuli.vocale_ordinanza", "sounds": [{"name": "napuli:vocale_ordinanza", "attenuation_distance": 34}]},
+  "vocale_ricetta": {"subtitle": "subtitles.napuli.vocale_ricetta", "sounds": [{"name": "napuli:vocale_ricetta", "attenuation_distance": 34}]},
+  "vocale_ballo": {"subtitle": "subtitles.napuli.vocale_ballo", "sounds": [{"name": "napuli:vocale_ballo", "attenuation_distance": 34}]},
+  "vocale_giubbetto": {"subtitle": "subtitles.napuli.vocale_giubbetto", "sounds": [{"name": "napuli:vocale_giubbetto", "attenuation_distance": 34}]},
+  "vocale_saluto": {"subtitle": "subtitles.napuli.vocale_saluto", "sounds": [{"name": "napuli:vocale_saluto", "attenuation_distance": 34}]},
+  "vocale_indicazioni": {"subtitle": "subtitles.napuli.vocale_indicazioni", "sounds": [{"name": "napuli:vocale_indicazioni", "attenuation_distance": 34}]}
 }

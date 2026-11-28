@@ -235,6 +235,9 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (Boolean.getBoolean("napuli.legacyPosillipo")) { legacyPosillipo(mc); return; }
+        if (Boolean.getBoolean("napuli.legacySeafrontVoices")) { legacySeafrontVoices(mc); return; }
+        if (Boolean.getBoolean("napuli.legacyWaterfront")) { legacyWaterfront(mc); return; }
         if (LEGACY_FOOTBALL_STATS) { legacyFootballStats(mc); return; }
         if (LEGACY_GROUND_EVENTS) { legacyGroundAndEvents(mc); return; }
         if (LEGACY_HOUSES_MEMES) { legacyHousesAndMemes(mc); return; }
@@ -447,6 +450,256 @@ public final class DistrictClientTest {
 
     private static int justinSounds;
     private static net.minecraft.client.resources.sounds.SoundInstance justinSound;
+
+    private static int coastalVoices;
+    private static net.minecraft.client.resources.sounds.SoundInstance coastalVoice;
+
+    private static void legacyPosillipo(Minecraft mc) {
+        var villa = NapoliPosillipo.center("villa_comunale");
+        var square = NapoliPosillipo.center("sannazaro");
+        var village = NapoliPosillipo.center("marechiaro");
+        var event = NapoliStreetMemes.Scene.INDICAZIONI;
+        if (++tick == 1) {
+            mc.getSoundManager().addListener((sound, weighted, range) -> {
+                if (sound.getIdentifier().equals(Napuli.id("vocale_indicazioni"))) {
+                    coastalVoices++;
+                    coastalVoice = sound;
+                }
+            });
+            server(mc, p -> {
+                var city = p.level();
+                city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set 6000");
+                p.setGameMode(GameType.CREATIVE);
+                p.getAbilities().flying = true;
+                p.onUpdateAbilities();
+                p.teleportTo(city, villa.getX() - 1, villa.getY() + 17, villa.getZ() + 37, Set.of(), 160, 24, true);
+            });
+        }
+        if (tick == 155) shot(mc, "napoli-villa-comunale-v65");
+        if (tick == 160) server(mc, p -> {
+            var city = p.level();
+            var exhibits = java.util.Map.of(
+                    villa.offset(-33, 1, -11), Blocks.WATER,
+                    villa.offset(15, 1, -22), Blocks.DECORATED_POT,
+                    villa.offset(19, 0, 16), Blocks.DARK_OAK_PLANKS,
+                    villa.offset(-4, 2, 21), Blocks.NOTE_BLOCK,
+                    square.offset(-1, 1, -22), Blocks.CHISELED_QUARTZ_BLOCK,
+                    village.offset(-8, 1, -11), Blocks.CHISELED_QUARTZ_BLOCK,
+                    village.offset(9, 4, 5), CityBlocks.vanilla("white_bed"));
+            for (var entry : exhibits.entrySet())
+                check(city.getBlockState(entry.getKey()).is(entry.getValue()), "Interior missing at " + entry.getKey()
+                        + " expected " + entry.getValue() + " got " + city.getBlockState(entry.getKey()));
+            for (var portal : java.util.List.of(villa.offset(-23, 0, 8), villa.offset(23, 0, -12),
+                    villa.offset(25, 0, 27), square.offset(-1, 0, -9), village.offset(-8, 0, 4),
+                    village.offset(7, 0, 8))) {
+                check(city.getBlockState(portal).is(Blocks.SPRUCE_DOOR) && city.getBlockState(portal.above()).is(Blocks.SPRUCE_DOOR)
+                                && city.getBlockState(portal.below()).isSolidRender() && city.isEmptyBlock(portal.north())
+                                && city.isEmptyBlock(portal.south()), "Coastal building entrance obstructed: " + portal);
+            }
+            int shore = (int) NapoliExpansion.coast(village.getX());
+            check(city.getBlockState(new net.minecraft.core.BlockPos(village.getX(), 64, shore + 4)).is(Blocks.STONE_BRICKS),
+                    "Calata Ponticello reaches the open water");
+            int plateau = village.getY() - 1;
+            int gradeStart = shore - (plateau - 64) * 2;
+            for (int z = village.getZ() + 22; z <= shore; z++) {
+                int y = plateau - Math.max(0, (z - gradeStart + 1) / 2);
+                var tread = new net.minecraft.core.BlockPos(village.getX(), y, z);
+                var state = city.getBlockState(tread);
+                check((state.is(Blocks.POLISHED_TUFF) || state.is(Blocks.POLISHED_TUFF_STAIRS))
+                        && city.isEmptyBlock(tread.above()) && city.isEmptyBlock(tread.above(2)),
+                        "Obstruction at " + tread + " " + state + " / " + city.getBlockState(tread.above())
+                                + " / " + city.getBlockState(tread.above(2)));
+            }
+            check(city.getBlockState(new net.minecraft.core.BlockPos(village.getX() - 22, 64, shore + 11))
+                            .is(Blocks.POLISHED_TUFF), "Villa degli Spiriti floor is " + city.getBlockState(new net.minecraft.core.BlockPos(village.getX() - 22, 64, shore + 11)));
+            for (var scene : java.util.List.of(event, NapoliStreetMemes.Scene.RICETTA, NapoliStreetMemes.Scene.BALLO,
+                    NapoliStreetMemes.Scene.GIUBBETTO, NapoliStreetMemes.Scene.SALUTO)) {
+                long positions = java.util.stream.IntStream.range(0, 15).filter(i -> {
+                    var spot = scene.point.offset((i % 5 - 2) * 2 + i / 5 % 2, 0, i / 5 * 2 - 2);
+                    city.getChunkAt(spot);
+                    return NapoliResidentHomes.walkable(city, spot);
+                }).count();
+                check(positions >= scene.actors, "Not enough space for the cast of " + scene.id);
+            }
+            var pz = NapoliAtlas.find("donnanna");
+            var start = NapoliLandmarkAccess.approach(city, pz);
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(city, start.getX() + .5, start.getY(), start.getZ() + .5, Set.of(), 180, 0, true);
+        });
+        if (tick >= 180 && tick < 415 && mc.player.getX() < -1100 && mc.player.getX() > -1200) {
+            var palace = NapoliAtlas.find("donnanna");
+            if (mc.player.getZ() > palace.z() + 17.85) mc.options.keyUp.setDown(true);
+            else if (mc.options.keyUp.isDown()) {
+                mc.options.keyUp.setDown(false);
+                shot(mc, "napoli-donnanna-interno-v65");
+            }
+        }
+        if (tick == 410) {
+            mc.options.keyUp.setDown(false);
+            check(mc.player.getZ() <= NapoliAtlas.find("donnanna").z() + 17.85,
+                    "Player walked from Via Posillipo through the Donn’Anna entrance");
+            server(mc, p -> {
+                p.setGameMode(GameType.CREATIVE);
+                p.getAbilities().flying = true;
+                p.onUpdateAbilities();
+                p.teleportTo(p.level(), village.getX() + 10, village.getY() + 19, village.getZ() + 35,
+                        Set.of(), 165, 25, true);
+            });
+        }
+        if (tick == 510) shot(mc, "napoli-marechiaro-v65");
+        int shore = (int) NapoliExpansion.coast(village.getX());
+        if (tick == 515) server(mc, p -> {
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setGameMode(GameType.ADVENTURE);
+            p.teleportTo(p.level(), village.getX() + .5, village.getY(), village.getZ() + 21.5, Set.of(), 0, 3, true);
+        });
+        if (tick >= 555 && tick < 920)
+            mc.options.keyUp.setDown(mc.player.getZ() < shore + 3);
+        if (tick == 920) {
+            mc.options.keyUp.setDown(false);
+            check(mc.player.getZ() >= shore + 3 && mc.player.getY() < 66,
+                    "Player walked from the village to the quay: " + mc.player.blockPosition());
+            shot(mc, "napoli-calataponticello-v65");
+            server(mc, p -> p.teleportTo(p.level(), event.point.getX() + .5,
+                    event.point.getY(), event.point.getZ() + 4.5, Set.of(), 180, 0, true));
+        }
+        if (tick == 965) mc.getConnection().sendCommand("citta meme indicazioni");
+        if (tick == 1100) {
+            check(coastalVoices == 1 && coastalVoice != null && mc.getSoundManager().isActive(coastalVoice),
+                    "The command plays one copy of the voice clip in Marechiaro");
+            shot(mc, "napoli-marechiaro-vocale-v65");
+        }
+        if (tick == 1173) {
+            check(coastalVoices == 1 && !mc.getSoundManager().isActive(coastalVoice),
+                    "The new recording ends without repeating");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: Posillipo interiors, palace walk and Marechiaro recording on old save");
+            done = true;
+        }
+    }
+
+
+    private static int marketVoices;
+    private static net.minecraft.client.resources.sounds.SoundInstance marketVoice;
+
+    private static void legacySeafrontVoices(Minecraft mc) {
+        var event = NapoliStreetMemes.Scene.MERCATO;
+        if (++tick == 1) {
+            mc.getSoundManager().addListener((sound, weighted, range) -> {
+                if (sound.getIdentifier().equals(Napuli.id("vocale_mercato"))) {
+                    marketVoices++;
+                    marketVoice = sound;
+                }
+            });
+            server(mc, p -> {
+                var city = p.level();
+                var server = city.getServer();
+                server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "time set 6000");
+                p.setGameMode(GameType.CREATIVE);
+                p.getAbilities().flying = true;
+                p.onUpdateAbilities();
+                p.teleportTo(city, -20, 77, 25, Set.of(), -90, 14, true);
+            });
+        }
+        if (tick == 130) shot(mc, "napoli-plebiscito-palazzi-v64");
+        if (tick == 145) server(mc, p -> {
+            var city = p.level();
+            for (int z : new int[] {14, 36}) {
+                var portal = new net.minecraft.core.BlockPos(15, 64, z);
+                check(city.getBlockState(portal.above(5)).is(Blocks.SMOOTH_QUARTZ)
+                                || city.getBlockState(portal.above(5)).is(Blocks.CALCITE),
+                        "Missing side palace at " + portal);
+                check(NapoliResidentHomes.walkable(city, portal), "Side palace entrance blocked: " + portal);
+            }
+            check(city.getBlockState(new net.minecraft.core.BlockPos(-69, 101, 26)).is(Blocks.POLISHED_ANDESITE),
+                    "Dome lantern has a supporting base");
+            check(city.getBlockState(new net.minecraft.core.BlockPos(37, 87, 10)).is(Blocks.BRICKS),
+                    "Palazzo Reale roof tiles are supported");
+            for (var scene : java.util.List.of(event, NapoliStreetMemes.Scene.TEATRO,
+                    NapoliStreetMemes.Scene.CANTANTE, NapoliStreetMemes.Scene.ORDINANZA)) {
+                long spots = java.util.stream.IntStream.range(0, 15).filter(i ->
+                        NapoliResidentHomes.walkable(city, scene.point.offset((i % 5 - 2) * 2 + i / 5 % 2,
+                                0, i / 5 * 2 - 2))).count();
+                check(spots >= scene.actors, "Not enough walkable positions for " + scene.id + ": " + spots);
+            }
+            p.teleportTo(city, -153, 73, 54, Set.of(), 150, 13, true);
+        });
+        if (tick == 240) shot(mc, "napoli-case-mergellina-v64");
+        if (tick == 245) server(mc, p -> {
+            var point = event.point;
+            p.teleportTo(p.level(), point.getX() + .5, point.getY(), point.getZ() - 7, Set.of(), 0, 0, true);
+        });
+        if (tick == 290) mc.getConnection().sendCommand("citta meme mercato");
+        if (tick == 423) {
+            check(marketVoices == 1 && marketVoice != null && mc.getSoundManager().isActive(marketVoice),
+                    "The market command plays one copy of the supplied recording after the setup");
+            shot(mc, "napoli-vocale-mercato-v64");
+        }
+        if (tick == 515) {
+            check(marketVoices == 1 && !mc.getSoundManager().isActive(marketVoice),
+                    "The short clip ends without looping");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: side palaces, waterfront and proximity voice on old save");
+            done = true;
+        }
+    }
+
+
+    private static void legacyWaterfront(Minecraft mc) {
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            var server = city.getServer();
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "time set noon");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, -49, 72, 62, Set.of(), 111, 8, true);
+        });
+        if (tick == 120) shot(mc, "napoli-via-partenope-v63");
+        if (tick == 125) server(mc, p -> {
+            var city = p.level();
+            for (int x : new int[] {-106, -93}) {
+                check(city.getBlockEntity(new net.minecraft.core.BlockPos(x + 3, 64, 44))
+                        instanceof net.minecraft.world.level.block.entity.SignBlockEntity, "Waterfront hotel missing at " + x);
+                for (int z = 42; z <= 49; z++) {
+                    var path = new net.minecraft.core.BlockPos(x, 64, z);
+                    check(city.isEmptyBlock(path) && city.isEmptyBlock(path.above()), "Hotel entrance blocked: " + path);
+                }
+            }
+            check(city.getBlockState(new net.minecraft.core.BlockPos(-61, 65, 51)).is(Blocks.WATER),
+                    "Fontana del Gigante contains water");
+            for (int z = 46; z <= 67; z++) {
+                var path = new net.minecraft.core.BlockPos(0, 64, z);
+                check(city.isEmptyBlock(path) && city.getBlockState(path.below()).isSolidRender(),
+                        "Causeway path obstructed: " + path);
+            }
+            p.teleportTo(city, 12, 73, 26, Set.of(), 90, 10, true);
+        });
+        if (tick == 240) {
+            shot(mc, "napoli-plebiscito-v63");
+            mc.getSoundManager().addListener((sound, event, range) -> {
+                if (sound.getIdentifier().equals(Napuli.id("justin_crowd"))) {
+                    justinSounds++;
+                    justinSound = sound;
+                }
+            });
+            server(mc, p -> {
+                var scene = NapoliStreetMemes.Scene.JUSTIN;
+                var point = scene.point;
+                p.teleportTo(p.level(), point.getX() + .5, point.getY() + 1, point.getZ() - 9.5,
+                        Set.of(), 0, 0, true);
+                check(NapoliStreetMemes.start(p.level(), scene), "Justin event starts after map upgrade");
+            });
+        }
+        if (tick == 285) {
+            check(justinSounds == 1 && justinSound != null && mc.getSoundManager().isActive(justinSound),
+                    "The client plays the revised clip");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: waterfront hotels, fountain and causeway on old save");
+            done = true;
+        }
+    }
+
 
     private static void legacyFootballStats(Minecraft mc) {
         var point = NapoliStreetMemes.Scene.JUSTIN.point;

@@ -1912,5 +1912,14 @@
   "napuli.football.stats.recoveries": "Regains",
   "napuli.football.stats.teammates": "Teammates",
   "napuli.football.stats.opponents": "Opponents",
-  "subtitles.napuli.justin_crowd": "Crowd waiting for Justin"
+  "subtitles.napuli.justin_crowd": "Crowd waiting for Justin",
+  "subtitles.napuli.vocale_mercato": "Merchant calls out the price",
+  "subtitles.napuli.vocale_teatro": "Voice message about the show",
+  "subtitles.napuli.vocale_cantante": "Singer on the seafront",
+  "subtitles.napuli.vocale_ordinanza": "School reopening notice",
+  "subtitles.napuli.vocale_ricetta": "Voice message about lunch",
+  "subtitles.napuli.vocale_ballo": "An invitation to dance",
+  "subtitles.napuli.vocale_giubbetto": "Someone is looking for a jacket",
+  "subtitles.napuli.vocale_saluto": "A cheerful morning greeting",
+  "subtitles.napuli.vocale_indicazioni": "A voice asks for help"
 }

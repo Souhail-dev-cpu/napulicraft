@@ -48,6 +48,7 @@ run-autotest/
 # never publish music: each player brings their own (napulicraft/canzoni)
 *.mp3
 *.ogg
+!/src/main/resources/assets/napuli/sounds/vocale_*.ogg
 *.wav
 *.flac
 *.m4a

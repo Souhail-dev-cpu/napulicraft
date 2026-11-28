@@ -43,6 +43,15 @@ public class Napuli implements ModInitializer {
 	public static final SoundEvent URLO = sound("urlo");
 	public static final SoundEvent RISATA = sound("risata");
 	public static final SoundEvent JUSTIN_CROWD = sound("justin_crowd");
+	static final SoundEvent VOCALE_MERCATO = sound("vocale_mercato");
+	static final SoundEvent VOCALE_TEATRO = sound("vocale_teatro");
+	static final SoundEvent VOCALE_CANTANTE = sound("vocale_cantante");
+	static final SoundEvent VOCALE_ORDINANZA = sound("vocale_ordinanza");
+	static final SoundEvent VOCALE_RICETTA = sound("vocale_ricetta");
+	static final SoundEvent VOCALE_BALLO = sound("vocale_ballo");
+	static final SoundEvent VOCALE_GIUBBETTO = sound("vocale_giubbetto");
+	static final SoundEvent VOCALE_SALUTO = sound("vocale_saluto");
+	static final SoundEvent VOCALE_INDICAZIONI = sound("vocale_indicazioni");
 	static {
 		for (Music.Situation s : Music.Situation.values()) s.sound = sound(s.id());
 	}

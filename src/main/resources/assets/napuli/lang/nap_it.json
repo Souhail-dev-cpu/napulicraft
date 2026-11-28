@@ -2118,5 +2118,14 @@
   "napuli.football.stats.recoveries": "Recupere",
   "napuli.football.stats.teammates": "Cumpagne",
   "napuli.football.stats.opponents": "Avversarie",
-  "subtitles.napuli.justin_crowd": "Folla in attesa di Justin"
+  "subtitles.napuli.justin_crowd": "Folla in attesa di Justin",
+  "subtitles.napuli.vocale_mercato": "Il mercatante chiama il prezzo",
+  "subtitles.napuli.vocale_teatro": "Un vocale sullo spettacolo",
+  "subtitles.napuli.vocale_cantante": "Un cantante sul lungomare",
+  "subtitles.napuli.vocale_ordinanza": "Avviso sulla riapertura delle scuole",
+  "subtitles.napuli.vocale_ricetta": "Un vocale parla del pranzo",
+  "subtitles.napuli.vocale_ballo": "Un invito a ballare",
+  "subtitles.napuli.vocale_giubbetto": "Qualcuno cerca un giubbetto",
+  "subtitles.napuli.vocale_saluto": "Un saluto di buongiorno",
+  "subtitles.napuli.vocale_indicazioni": "Una voce chiede aiuto"
 }

@@ -25,6 +25,8 @@ final class DistrictLife {
     static final AttachmentType<Set<String>> SETTLED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_households_settled"));
     static final AttachmentType<Set<String>> FITTED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_fitted_chunks"));
     static final AttachmentType<Set<String>> EXTRA_FITTED=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("district_extra_homes_v1"));
+    private static final AttachmentType<Boolean> KITCHEN_STORAGE = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_kitchen_storage_v1"));
     static boolean additional(NapoliMergellina.House h){return h.id().startsWith("atlas_home_")&&!h.id().endsWith("_0")&&!h.id().endsWith("_1");}
     private static List<District> layout(){
         var anchors=new LinkedHashMap<String,NapoliAtlas.Place>();for(var p:NapoliAtlas.PLACES)if(!p.original())anchors.putIfAbsent(p.district(),p);
@@ -106,7 +108,9 @@ final class DistrictLife {
     }
     static void fit(ServerLevel city,net.minecraft.world.level.chunk.LevelChunk chunk){
         String key=chunk.getPos().x()+"/"+chunk.getPos().z();boolean legacyDone=city.getAttachedOrElse(FITTED,Set.of()).contains(key);
-        if(legacyDone&&city.getAttachedOrElse(EXTRA_FITTED,Set.of()).contains(key)||NapoliExpansion.revision(chunk)<1||CityProperty.playerBuiltInChunk(city,chunk.getPos()))return;
+        if (NapoliExpansion.revision(chunk) < 1 || CityProperty.playerBuiltInChunk(city, chunk.getPos())) return;
+        repairKitchenStorage(city, chunk);
+        if (legacyDone && city.getAttachedOrElse(EXTRA_FITTED, Set.of()).contains(key)) return;
         var furnishing=homes().stream().filter(h->!legacyDone||additional(h)).toList();
         for(var h:furnishing)if(h.x()>>4<=chunk.getPos().x()&&(h.x()+21)>>4>=chunk.getPos().x()&&h.z()>>4<=chunk.getPos().z()&&(h.z()+23)>>4>=chunk.getPos().z()){
             for(var point:CityLivingHomes.points(h)){var p=point.block();if(!net.minecraft.world.level.ChunkPos.containing(p).equals(chunk.getPos()))continue;Block b=switch(point.furniture()){case FRIDGE->Blocks.BARREL;case STOVE->Blocks.SMOKER;case SINK->Blocks.WATER_CAULDRON;case SHOWER->null;case TOILET->Blocks.CAULDRON;case SOFA->Blocks.OAK_STAIRS;case TV->CityBlocks.vanilla("black_concrete");case DESK,TABLE->Blocks.CRAFTING_TABLE;case WASHER->Blocks.IRON_BLOCK;case WARDROBE->Blocks.BARREL;case BED->null;};if(point.furniture()==CityLivingHomes.Furniture.SHOWER){if(!NapoliShower.isColumn(city,p.above()))NapoliShower.place(city,p);}else if(b!=null)city.setBlock(p,b.defaultBlockState(),2);else{var bed=CityBlocks.vanilla("white_bed").defaultBlockState().setValue(BedBlock.FACING,Direction.NORTH);city.setBlock(p,bed.setValue(BedBlock.PART,BedPart.FOOT),2);if(net.minecraft.world.level.ChunkPos.containing(p.north()).equals(chunk.getPos()))city.setBlock(p.north(),bed.setValue(BedBlock.PART,BedPart.HEAD),2);if(net.minecraft.world.level.ChunkPos.containing(p.east()).equals(chunk.getPos())){city.setBlock(p.east(),bed.setValue(BedBlock.PART,BedPart.FOOT),2);city.setBlock(p.east().north(),bed.setValue(BedBlock.PART,BedPart.HEAD),2);}}}
@@ -117,6 +121,21 @@ final class DistrictLife {
         if(!legacyDone)DistrictShops.fit(city,chunk);var all=new HashSet<>(city.getAttachedOrElse(FITTED,Set.of()));all.add(key);city.setAttached(FITTED,Set.copyOf(all));
         var extra=new HashSet<>(city.getAttachedOrElse(EXTRA_FITTED,Set.of()));extra.add(key);city.setAttached(EXTRA_FITTED,Set.copyOf(extra));
     }
+    /** Older building templates could leave a crafting table in the designated fridge slot. */
+    private static void repairKitchenStorage(ServerLevel city, net.minecraft.world.level.chunk.LevelChunk chunk) {
+        if (chunk.getAttachedOrElse(KITCHEN_STORAGE, false)) return;
+        for (var home : CityLivingHomes.inChunk(chunk.getPos())) {
+            if (!home.id().startsWith("atlas_home_")) continue;
+            var fridge = CityLivingHomes.use(home, CityLivingHomes.Furniture.FRIDGE).block();
+            if (net.minecraft.world.level.ChunkPos.containing(fridge).equals(chunk.getPos())
+                    && chunk.getBlockState(fridge).is(Blocks.CRAFTING_TABLE)
+                    && chunk.getBlockEntity(fridge) == null
+                    && chunk.getBlockState(fridge.below()).isFaceSturdy(city, fridge.below(), Direction.UP))
+                city.setBlock(fridge, Blocks.BARREL.defaultBlockState(), Block.UPDATE_CLIENTS);
+        }
+        chunk.setAttached(KITCHEN_STORAGE, true);
+    }
+
     private static void retireDecorations(ServerLevel city){for(var place:NapoliAtlas.PLACES)if(!place.original())for(int slot=0;slot<2;slot++){var id=UUID.nameUUIDFromBytes(("napuli:atlas-walker:"+place.id()+"/"+slot).getBytes(StandardCharsets.UTF_8));var entity=city.getEntity(id);if(entity instanceof NapoliResident&&NapoliCivicLife.profile(city,id)==null)entity.discard();}}
     static void register(){ServerTickEvents.END_SERVER_TICK.register(server->{if(server.getTickCount()%100!=0)return;var city=server.getLevel(NapoliMap.LEVEL);if(city==null)return;seed(city);retireDecorations(city);var census=NapoliCivicLife.census(city);if(census==null)return;for(var c:census.people())if(resident(c)&&city.getEntity(c.id())==null){var a=CitySimulation.activity(city,c,CitySimulation.life(city,c.id()),NapoliBroadcast.time(city));if(a==NapoliHouseholds.Activity.CARE||a==NapoliHouseholds.Activity.SCHOOL&&c.age(NapoliBroadcast.day(city))<18)visit(city,c,100);}for(var p:city.players())for(int x=(p.getBlockX()>>4)-2;x<=(p.getBlockX()>>4)+2;x++)for(int z=(p.getBlockZ()>>4)-2;z<=(p.getBlockZ()>>4)+2;z++){var chunk=city.getChunkSource().getChunkNow(x,z);if(chunk!=null){fit(city,chunk);NapoliFurniture.fit(city,chunk);CityArchitecture.fit(city,chunk);NapoliHomeDecor.fit(city,chunk);}}});}
     private DistrictLife(){}

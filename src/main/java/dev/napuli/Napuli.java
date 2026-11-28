@@ -42,6 +42,7 @@ public class Napuli implements ModInitializer {
 	// one sound event per situation (filled by the songs pack); urlo = the giant's scream; risata = vanilla witch giggle
 	public static final SoundEvent URLO = sound("urlo");
 	public static final SoundEvent RISATA = sound("risata");
+	public static final SoundEvent JUSTIN_CROWD = sound("justin_crowd");
 	static {
 		for (Music.Situation s : Music.Situation.values()) s.sound = sound(s.id());
 	}

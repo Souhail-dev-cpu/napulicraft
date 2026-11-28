@@ -29,6 +29,9 @@ public final class DistrictClientTest {
     private static final boolean LEGACY_MUSEUMS = Boolean.getBoolean("napuli.legacyMuseums");
     private static final boolean LEGACY_LANDMARK_WALK = Boolean.getBoolean("napuli.legacyLandmarkWalk");
     private static final boolean LEGACY_CIVIC_SITES = Boolean.getBoolean("napuli.legacyCivicSites");
+    private static final boolean LEGACY_GROUND_EVENTS = Boolean.getBoolean("napuli.legacyGroundEvents");
+    private static final boolean LEGACY_HOUSES_MEMES = Boolean.getBoolean("napuli.legacyHousesMemes");
+    private static final boolean LEGACY_FOOTBALL_STATS = Boolean.getBoolean("napuli.legacyFootballStats");
     private static int walkStage, walkTicks;
     private static int legacyLoadTicks;
     private static int museumScene, museumReadyTicks;
@@ -232,6 +235,9 @@ public final class DistrictClientTest {
             });
         }
         if (!ready || mc.player.level().dimension() != NapoliMap.LEVEL) return;
+        if (LEGACY_FOOTBALL_STATS) { legacyFootballStats(mc); return; }
+        if (LEGACY_GROUND_EVENTS) { legacyGroundAndEvents(mc); return; }
+        if (LEGACY_HOUSES_MEMES) { legacyHousesAndMemes(mc); return; }
         if (LEGACY_CIVIC_SITES) { legacyCivicSites(mc); return; }
         if (LEGACY_LANDMARK_WALK) { legacyLandmarkWalk(mc); return; }
         if (LEGACY_MUSEUMS) { legacyMuseums(mc); return; }
@@ -437,6 +443,198 @@ public final class DistrictClientTest {
             var aisle = new net.minecraft.core.BlockPos(x, 64, 26);
             check(city.isEmptyBlock(aisle) && city.isEmptyBlock(aisle.above()), "The basilica's central aisle stays clear at " + aisle);
         }
+    }
+
+    private static int justinSounds;
+    private static net.minecraft.client.resources.sounds.SoundInstance justinSound;
+
+    private static void legacyFootballStats(Minecraft mc) {
+        var point = NapoliStreetMemes.Scene.JUSTIN.point;
+        if (++tick == 1) {
+            mc.getSoundManager().addListener((sound, event, range) -> {
+                if (sound.getIdentifier().equals(Napuli.id("justin_crowd"))) {
+                    justinSounds++;
+                    justinSound = sound;
+                }
+            });
+            server(mc, p -> {
+                var server = p.level().getServer();
+                server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "time set 6000");
+                p.setGameMode(GameType.CREATIVE);
+                p.teleportTo(p.level(), 0.5, 65, -27.5, Set.of(), 0, 0, true);
+            });
+        }
+        try {
+            if (tick == 105) mc.getConnection().sendCommand("calcio statistiche");
+            if (tick == 135) {
+                check(statsScreen(mc), "The profile command opens the football statistics GUI");
+                shot(mc, "napoli-stats-carriera");
+                mc.gui.screen().onClose();
+                mc.getConnection().sendCommand("calcio gioca napoli");
+            }
+            if (tick == 255) server(mc, p -> {
+                var stats = FootballPractice.stats(p);
+                check(stats.live() && stats.lineup().size() == 10, "The live lineup includes the ten actual participants");
+                check(stats.lineup().stream().anyMatch(row -> !row.npc() && row.name().equals(stats.profile().name())),
+                        "The lineup contains the currently controlled player");
+                check(stats.lineup().stream().filter(row -> row.side() == 1).count() == 5,
+                        "Opponents have their own full roster");
+            });
+            if (tick == 258) mc.getConnection().sendCommand("calcio statistiche");
+            if (tick == 296) clickStatsTab(mc, "teammates");
+            if (tick == 305) shot(mc, "napoli-stats-compagni");
+            if (tick == 309) clickStatsTab(mc, "opponents");
+            if (tick == 318) {
+                shot(mc, "napoli-stats-avversari");
+                mc.gui.screen().onClose();
+                mc.getConnection().sendCommand("calcio esci");
+            }
+            if (tick == 325) server(mc, p -> p.teleportTo(p.level(), point.getX() + .5, point.getY() + .2,
+                    point.getZ() - 7.5, Set.of(), 0, 0, true));
+            if (tick == 435) {
+                mc.getConnection().sendCommand("citta meme justin");
+                mc.getConnection().sendCommand("citta meme justin");
+            }
+            if (tick == 485) {
+                check(justinSounds == 1 && justinSound != null && mc.getSoundManager().isActive(justinSound),
+                        "The client plays the supplied clip once from the active crowd");
+                shot(mc, "napoli-meme-justin-audio");
+                Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: real football statistics and Justin audio");
+                done = true;
+            }
+        } catch (Throwable e) {
+            failed = true;
+            Napuli.LOGGER.error("[DISTRICTTEST] FAILED", e);
+        }
+    }
+
+    private static boolean statsScreen(Minecraft mc) {
+        return mc.gui.screen() != null && mc.gui.screen().getClass().getSimpleName().equals("FootballStatsScreen");
+    }
+
+    private static void clickStatsTab(Minecraft mc, String tab) {
+        check(statsScreen(mc), "The match statistics GUI is open");
+        var label = Component.translatable("napuli.football.stats." + tab);
+        var button = mc.gui.screen().children().stream().filter(Button.class::isInstance).map(Button.class::cast)
+                .filter(b -> b.getMessage().equals(label) && b.active).findFirst().orElseThrow();
+        button.onPress(null);
+    }
+
+    private static void legacyGroundAndEvents(Minecraft mc) {
+        var field = new net.minecraft.core.BlockPos(FootballGround.MID_X, 78, FootballGround.MID_Z + 20);
+        var grass = new net.minecraft.core.BlockPos(FootballGround.MID_X, 63, -104);
+        var venue = NapoliEventCatalogue.VENUES.getFirst();
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            city.getServer().getCommands().performPrefixedCommand(city.getServer().createCommandSourceStack(), "time set noon");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, field.getX() + .5, field.getY(), field.getZ() + .5, Set.of(), 180, 22, true);
+            city.getChunkAt(grass);
+        });
+        if (tick == 230) server(mc, p -> {
+            var city = p.level();
+            check(city.getBlockState(grass).is(Blocks.GRASS_BLOCK), "Legacy exposed land near the playing field is grass");
+            check(city.getBlockState(new net.minecraft.core.BlockPos(FootballGround.MID_X, 63, FootballGround.MID_Z))
+                    .is(Blocks.CALCITE), "Pitch center line is intact");
+        });
+        if (tick == 235) shot(mc, "napoli-campo-senza-sabbia");
+        if (tick == 240) server(mc, p -> {
+            var city = p.level();
+            var server = city.getServer();
+            var commands = server.getCommands();
+            var point = venue.point();
+            commands.performPrefixedCommand(server.createCommandSourceStack(), "time set " + (venue.opens() + 20));
+            p.teleportTo(city, point.getX() + .5, point.getY(), point.getZ() + .5, Set.of(), 180, 0, true);
+        });
+        if (tick == 440) server(mc, p ->
+                p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack(), "citta eventi"));
+        if (tick == 465) {
+            try {
+                check(mc.gui.screen() instanceof net.minecraft.client.gui.screens.dialog.DialogScreen<?>,
+                        "The city agenda opens a native dialog from /citta eventi");
+                shot(mc, "napoli-programma-eventi");
+                mc.gui.screen().onClose();
+            } catch (Throwable e) {
+                failed = true;
+                Napuli.LOGGER.error("[DISTRICTTEST] FAILED", e);
+            }
+        }
+        if (tick == 475) server(mc, p -> {
+            var city = p.level();
+            var scene = venue.scene(city.getSeed(), NapoliBroadcast.day(city));
+            if (scene.donation() != null)
+                p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new net.minecraft.world.item.ItemStack(scene.donation()));
+            int before = p.getInventory().countItem(scene.reward());
+            String command = scene.quiz() == null ? "citta partecipa" : "citta partecipa " + scene.quiz().answer();
+            var commands = city.getServer().getCommands();
+            commands.performPrefixedCommand(p.createCommandSourceStack(), command);
+            commands.performPrefixedCommand(p.createCommandSourceStack(), command);
+            check(p.getInventory().countItem(scene.reward()) == before + 1,
+                    "The live event command awards the active scene's souvenir once");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: legacy ground and live neighbourhood event");
+        });
+        if (tick == 520) done = true;
+    }
+
+    private static void legacyHousesAndMemes(Minecraft mc) {
+        var home = DistrictLife.homes().stream()
+                .filter(h -> Math.floorMod(h.x(), 16) <= 3 && Math.floorMod(h.z(), 16) <= 3)
+                .findFirst().orElseThrow();
+        var origin = new net.minecraft.core.BlockPos(home.x(), home.ground(), home.z());
+        int roof = home.floors() * 5;
+        var point = NapoliStreetMemes.Scene.JUSTIN.point;
+        if (++tick == 1) server(mc, p -> {
+            var city = p.level();
+            var server = city.getServer();
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "time set 6000");
+            p.setGameMode(GameType.CREATIVE);
+            p.getAbilities().flying = true;
+            p.onUpdateAbilities();
+            p.teleportTo(city, origin.getX() - 13.5, origin.getY() + roof + 11,
+                    origin.getZ() - 15.5, Set.of(), -39, 32, true);
+        });
+        if (tick == 200) server(mc, p -> {
+            var city = p.level();
+            var chunk = city.getChunkAt(origin);
+            check(NapoliExpansion.revision(chunk) >= 1, "The existing map has generated this atlas lot");
+            check(!city.isEmptyBlock(origin.offset(5, roof, 6)), "The test starts with the saved roof");
+            for (var pos : net.minecraft.core.BlockPos.betweenClosed(origin, origin.offset(7, roof, 7)))
+                city.setBlock(pos, Blocks.AIR.defaultBlockState(), 2 | 16);
+            chunk.removeAttached(NapoliExpansion.HOUSE_SECTIONS_FIXED);
+        });
+        if (tick == 212) shot(mc, "napoli-casa-sezione-prima");
+        if (tick == 220) server(mc, p -> {
+            var city = p.level();
+            var chunk = city.getChunkAt(origin);
+            check(NapoliExpansion.repairHouseSections(city, chunk) > 0, "The old saved chunk receives the house repair");
+            check(!city.isEmptyBlock(origin.offset(0, 2, 1)) && !city.isEmptyBlock(origin.offset(5, 4, 6))
+                    && !city.isEmptyBlock(origin.offset(5, roof, 6)), "The wall, floors and roof no longer show a section cut");
+        });
+        if (tick == 245) shot(mc, "napoli-casa-sezione-riparata");
+        if (tick == 253) server(mc, p -> p.teleportTo(p.level(), point.getX() + .5, point.getY() + 0.2,
+                point.getZ() - 7.5, Set.of(), 0, 0, true));
+        if (tick == 400) server(mc, p -> {
+            var commands = p.level().getServer().getCommands();
+            commands.performPrefixedCommand(p.createCommandSourceStack(), "citta meme justin");
+            check(memeActors(p).size() >= 6, "The rumor spawns a real crowd");
+            commands.performPrefixedCommand(p.createCommandSourceStack(), "citta meme justin");
+            check(memeActors(p).size() <= 10, "Starting again does not duplicate the crowd");
+            check(memeActors(p).stream().noneMatch(NapoliResident::shouldBeSaved), "The acting NPCs are never persisted");
+        });
+        if (tick == 442) shot(mc, "napoli-meme-justin-lungomare");
+        if (tick == 470) server(mc, p -> p.teleportTo(p.level(), 0.5, 75, -28.5, Set.of(), 0, 0, true));
+        if (tick == 525) server(mc, p -> {
+            check(memeActors(p).isEmpty(), "Actors are cleared after the audience leaves");
+            Napuli.LOGGER.info("[DISTRICTTEST] ALL PASSED: repaired house section and live Justin crowd");
+            done = true;
+        });
+    }
+
+    private static java.util.List<NapoliResident> memeActors(ServerPlayer player) {
+        return player.level().getEntitiesOfClass(NapoliResident.class,
+                new net.minecraft.world.phys.AABB(NapoliStreetMemes.Scene.JUSTIN.point).inflate(20), NapoliStreetMemes::actor);
     }
 
     private static void legacyCivicSites(Minecraft mc) {

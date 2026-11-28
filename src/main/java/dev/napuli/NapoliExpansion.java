@@ -32,6 +32,8 @@ public final class NapoliExpansion {
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_frontages_v4"));
     private static final AttachmentType<Boolean> RESIDENTIAL_FINISH = AttachmentRegistry.<Boolean>builder()
             .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_residential_finish"));
+    static final AttachmentType<Boolean> HOUSE_SECTIONS_FIXED = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).buildAndRegister(Napuli.id("atlas_house_sections_v1"));
     private static final Map<ServerLevel,Map<Long,LevelChunk>> PENDING=new WeakHashMap<>();
     private static final AttachmentType<Set<String>> WALKERS=AttachmentRegistry.<Set<String>>builder().persistent(Codec.STRING.listOf().xmap(Set::copyOf,List::copyOf)).buildAndRegister(Napuli.id("atlas_walkers"));
     private static final int[][] COAST={{-2048,35},{-1920,65},{-1800,215},{-1700,455},{-1550,475},{-1400,450},{-1200,300},{-970,205},{-650,185},{-544,256},{480,135},{900,180},{1400,285},{1750,390},{2048,475}};
@@ -210,6 +212,98 @@ public final class NapoliExpansion {
         chunk.setAttached(SHELLS_FIXED,true);
     }
 
+    /**
+     * A previously skipped or interrupted chunk can leave an entire corner of a palazzo open.
+     * Restore only vacant cells from the final plan, after verifying the neighboring building or its saved bounds.
+     */
+    static int repairHouseSections(ServerLevel city, LevelChunk chunk) {
+        if (!intersects(chunk) || revision(chunk) < REVISION || chunk.getAttachedOrElse(HOUSE_SECTIONS_FIXED, false)
+                || CityProperty.playerBuiltInChunk(city, chunk.getPos())) return 0;
+        var writer = new Writer(city, chunk);
+        int count = 0;
+        boolean pendingEvidence = false;
+        for (int gx = Math.floorDiv(writer.minX, BLOCK_SIZE) - 1; gx <= Math.floorDiv(writer.maxX, BLOCK_SIZE); gx++) {
+            for (int gz = Math.floorDiv(writer.minZ, BLOCK_SIZE) - 1; gz <= Math.floorDiv(writer.maxZ, BLOCK_SIZE); gz++) {
+                int x = gx * BLOCK_SIZE + 9, z = gz * BLOCK_SIZE + 9;
+                if (!writer.overlaps(x, z, x + 21, z + 23) || !houseAllowed(x, z)) continue;
+                int y = legacyHeight(x + 11, z + 24) + 1;
+                int floors = 3 + Math.floorMod(gx * 31 + gz, 3);
+                if (!missingSection(writer, x, y, z, floors)) continue;
+                if (!houseWritten(city, x, y, z, floors)) {
+                    pendingEvidence = true;
+                    continue;
+                }
+
+                Map<BlockPos, BlockState> plan = new LinkedHashMap<>();
+                var planner = new Writer(city, chunk, plan);
+                Block wall = facade(gx + gz);
+                planner.house(x, y, z, 22, 24, floors, wall);
+                new NapoliInteriorLayout(planner::put).apartmentBlock(x, y, z, floors);
+                for (var entry : plan.entrySet()) {
+                    BlockPos pos = entry.getKey();
+                    BlockState state = entry.getValue();
+                    if (state.isAir() || !chunk.getBlockState(pos).isAir() || chunk.getBlockEntity(pos) != null) continue;
+                    writer.put(pos.getX(), pos.getY(), pos.getZ(), state);
+                    count++;
+                }
+                writer.palazzoTrim(x, y, z, floors, gx + gz);
+                writer.frontage(x, y, z, floors);
+                writer.refitPalazzo(x, y, z, floors, wall);
+                NapoliResidentialFinish.atlas(city, pos -> writer.includes(pos.getX(), pos.getZ()), x, y, z, floors);
+                for (var home : CityLivingHomes.inChunk(chunk.getPos())) {
+                    if (home.x() != x || home.z() != z) continue;
+                    CityArchitecture.fitAddedHome(city, chunk, home);
+                    NapoliHomeDecor.fitAddedHome(city, chunk, home);
+                }
+            }
+        }
+        if (!pendingEvidence) chunk.setAttached(HOUSE_SECTIONS_FIXED, true);
+        return count;
+    }
+
+    private static boolean missingSection(Writer w, int x, int y, int z, int floors) {
+        int missing = 0;
+        var cursor = new BlockPos.MutableBlockPos();
+        for (int px = Math.max(x, w.minX); px <= Math.min(x + 21, w.maxX); px++) {
+            for (int pz = Math.max(z, w.minZ); pz <= Math.min(z + 23, w.maxZ); pz++) {
+                if (w.chunk.getBlockState(cursor.set(px, y + floors * 5, pz)).isAir()
+                        && w.chunk.getBlockState(cursor.set(px, y + 4, pz)).isAir()
+                        && w.chunk.getBlockState(cursor.set(px, y + 9, pz)).isAir() && ++missing >= 4) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean houseWritten(ServerLevel city, int x, int y, int z, int floors) {
+        if (CityProperty.home(city, new BlockPos(x, y, z))) return true;
+        var chunks = city.getChunkSource();
+        for (int dx : new int[] {2, 18}) {
+            for (int dz : new int[] {2, 20}) {
+                var anchor = new BlockPos(x + dx, y + 4, z + dz);
+                var chunk = chunks.getChunkNow(anchor.getX() >> 4, anchor.getZ() >> 4);
+                if (chunk == null || !chunk.getBlockState(anchor).is(Blocks.SPRUCE_PLANKS)) continue;
+                var roof = chunk.getBlockState(anchor.atY(y + floors * 5));
+                if (roof.is(Blocks.BRICK_SLAB) || roof.is(CityMaterials.COPPI_SLAB) || roof.is(CityMaterials.COPPI))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static void revisitHouseNeighbours(ServerLevel city, LevelChunk chunk, Map<Long, LevelChunk> pending) {
+        var pos = chunk.getPos();
+        for (int x = pos.x() - 1; x <= pos.x() + 1; x++) {
+            for (int z = pos.z() - 1; z <= pos.z() + 1; z++) {
+                if (x == pos.x() && z == pos.z()) continue;
+                var neighbour = city.getChunkSource().getChunkNow(x, z);
+                if (neighbour != null && intersects(neighbour) && revision(neighbour) >= REVISION
+                        && !neighbour.getAttachedOrElse(HOUSE_SECTIONS_FIXED, false))
+                    pending.putIfAbsent(neighbour.getPos().pack(), neighbour);
+            }
+        }
+    }
+
+
     static void ensureDoor(ServerLevel city, BlockPos lower, Direction facing) {
         var upper=lower.above();
         if (CityProperty.playerPlaced(city,lower)||CityProperty.playerPlaced(city,upper)) return;
@@ -333,9 +427,18 @@ public final class NapoliExpansion {
         return changed;
     }
     static void register(){
+        NapoliGround.register();
         // CHUNK_LOAD runs before the full-chunk future is completed. Editing through Level there
         // would wait on that same future; defer until the next server tick and cap the work per tick.
-        ServerChunkEvents.CHUNK_LOAD.register((city,chunk,newlyGenerated)->{if(city.dimension()==NapoliMap.LEVEL&&NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(),chunk.getPos().getMinBlockZ()))PENDING.computeIfAbsent(city,k->new HashMap<>()).put(chunk.getPos().pack(),chunk);});
+        ServerChunkEvents.CHUNK_LOAD.register((city, chunk, newlyGenerated) -> {
+            if (city.dimension() != NapoliMap.LEVEL) return;
+            boolean atlas = NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(), chunk.getPos().getMinBlockZ());
+            if (atlas || !chunk.getAttachedOrElse(NapoliGround.FINISHED, false)) {
+                var pending = PENDING.computeIfAbsent(city, level -> new HashMap<>());
+                pending.put(chunk.getPos().pack(), chunk);
+                if (atlas) revisitHouseNeighbours(city, chunk, pending);
+            }
+        });
         ServerChunkEvents.CHUNK_UNLOAD.register((city,chunk)->{
             var pending=PENDING.get(city);
             if(pending!=null)pending.remove(chunk.getPos().pack(),chunk);
@@ -352,7 +455,11 @@ public final class NapoliExpansion {
                 if(loaded==null)continue;
                 pending.remove(chunk.getPos().pack(),chunk);
                 if(loaded!=chunk)continue;
-                generate(city,chunk);
+                if (!NapoliAtlas.EXPANDED.contains(chunk.getPos().getMinBlockX(), chunk.getPos().getMinBlockZ())) {
+                    NapoliGround.finish(city, chunk);
+                    continue;
+                }
+                if (generate(city, chunk)) revisitHouseNeighbours(city, chunk, pending);
                 repairEntrances(city,chunk);
                 // Grade saved streets before facade details can occupy the terrain being repaired.
                 CityStreets.fit(city,chunk);
@@ -362,6 +469,7 @@ public final class NapoliExpansion {
                 repairShells(city,chunk);
                 refitBuildings(city,chunk);
                 finishResidences(city, chunk);
+                repairHouseSections(city, chunk);
                 DistrictLife.fit(city,chunk);
                 CityArchitecture.fit(city,chunk);
                 CityRailway.fit(city,chunk);
@@ -369,6 +477,7 @@ public final class NapoliExpansion {
                 CityPlayerImprovements.parking(city,chunk);
                 DistrictCharacter.fit(city,chunk);
                 NapoliFootballLink.fit(city,chunk);
+                NapoliGround.finish(city, chunk);
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server->PENDING.clear());
@@ -376,7 +485,18 @@ public final class NapoliExpansion {
 
     private static final class Writer {
         final ServerLevel city;final LevelChunk chunk;final int minX,maxX,minZ,maxZ;
-        Writer(ServerLevel city,LevelChunk chunk){this.city=city;this.chunk=chunk;var p=chunk.getPos();minX=p.getMinBlockX();maxX=p.getMaxBlockX();minZ=p.getMinBlockZ();maxZ=p.getMaxBlockZ();}
+        final Map<BlockPos, BlockState> plan;
+        Writer(ServerLevel city, LevelChunk chunk) { this(city, chunk, null); }
+        Writer(ServerLevel city, LevelChunk chunk, Map<BlockPos, BlockState> plan) {
+            this.city = city;
+            this.chunk = chunk;
+            this.plan = plan;
+            var p = chunk.getPos();
+            minX = p.getMinBlockX();
+            maxX = p.getMaxBlockX();
+            minZ = p.getMinBlockZ();
+            maxZ = p.getMaxBlockZ();
+        }
         boolean includes(int x,int z){return x>=minX&&x<=maxX&&z>=minZ&&z<=maxZ;}
         boolean overlaps(int x, int z, int endX, int endZ) {
             return x <= maxX && endX >= minX && z <= maxZ && endZ >= minZ;
@@ -600,7 +720,13 @@ public final class NapoliExpansion {
         }
 
         void put(int x,int y,int z,Block b){put(x,y,z,b.defaultBlockState());}
-        void put(int x,int y,int z,BlockState s){if(!includes(x,z)||!writable(x,z))return;var p=new BlockPos(x,y,z);if(!CityProperty.playerPlaced(city,p))city.setBlock(p,s,Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE);}
+        void put(int x, int y, int z, BlockState state) {
+            if (!includes(x, z) || !writable(x, z)) return;
+            var pos = new BlockPos(x, y, z);
+            if (plan != null) plan.put(pos, state);
+            else if (!CityProperty.playerPlaced(city, pos))
+                city.setBlock(pos, state, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        }
         void fill(int x,int y,int z,int xx,int yy,int zz,Block b){if(yy<y)return;for(int px=Math.max(x,minX);px<=Math.min(xx,maxX);px++)for(int pz=Math.max(z,minZ);pz<=Math.min(zz,maxZ);pz++)for(int py=y;py<=yy;py++)put(px,py,pz,b);}
         void sign(int x,int y,int z,String... lines){put(x,y,z,Blocks.OAK_SIGN);if(!includes(x,z)||!writable(x,z))return;var pos=new BlockPos(x,y,z);if(chunk.getBlockEntity(pos) instanceof SignBlockEntity sign){var text=SignText.EMPTY.asMutable();for(int i=0;i<Math.min(4,lines.length);i++)text.setLine(i,net.minecraft.network.chat.Component.literal(lines[i]));sign.setText(text.asImmutable(),SignTextSlot.FRONT);sign.setText(text.asImmutable(),SignTextSlot.BACK);sign.setChanged();}}
         void nameSign(int x,int y,int z,String name){var lines=new ArrayList<String>();String line="";for(var word:name.split(" ")){if(!line.isEmpty()&&line.length()+word.length()+1>15){lines.add(line);line="";}line+=line.isEmpty()?word:" "+word;}if(!line.isEmpty())lines.add(line);if(lines.size()<4)lines.add("/napoli luoghi");sign(x,y,z,lines.toArray(String[]::new));}
@@ -806,7 +932,7 @@ public final class NapoliExpansion {
                 int floor=y+f*5;fill(x+1,floor-1,z+1,x+width-2,floor-1,z+depth-2,Blocks.SPRUCE_PLANKS);
                 for(int wx=x+3;wx<x+width-2;wx+=4)for(int wy=floor+1;wy<=floor+2;wy++){put(wx,wy,z,Blocks.GLASS_PANE);put(wx,wy,z+depth-1,Blocks.GLASS_PANE);}
                 for(int wz=z+4;wz<z+depth-2;wz+=5)for(int wy=floor+1;wy<=floor+2;wy++){put(x,wy,wz,Blocks.GLASS_PANE);put(x+width-1,wy,wz,Blocks.GLASS_PANE);}
-                put(x+2,floor,z+2,Blocks.CRAFTING_TABLE);put(x+3,floor,z+2,Blocks.SMOKER);put(x+4,floor,z+2,Blocks.BARREL);
+                put(x+2,floor,z+2,f==0?Blocks.BARREL:Blocks.CRAFTING_TABLE);put(x+3,floor,z+2,Blocks.SMOKER);put(x+4,floor,z+2,Blocks.BARREL);
                 put(x+width-3,floor,z+depth-3,Blocks.OAK_STAIRS);put(x+width-4,floor,z+depth-3,Blocks.OAK_STAIRS);put(x+width-3,floor+2,z+2,Blocks.LANTERN);
                 var bed=block("white_bed").defaultBlockState().setValue(BedBlock.FACING,Direction.NORTH);put(x+3,floor,z+6,bed.setValue(BedBlock.PART,BedPart.FOOT));put(x+3,floor,z+5,bed.setValue(BedBlock.PART,BedPart.HEAD));
             }

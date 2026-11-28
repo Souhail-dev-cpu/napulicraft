@@ -190,5 +190,78 @@ public final class NapoliAtlasGameTest {
         h.succeed();
     }
 
+    @GameTest public void legacySandBecomesGrassWithoutOverwritingTheCoastOrPavement(GameTestHelper helper) {
+        var city = city(helper);
+        var ground = new BlockPos(-1101, 63, -1197);
+        var playerSand = ground.east(16);
+        var sea = ground.south();
+        var pavement = ground.south().east();
+        var building = ground.east(2);
+        var chunk = city.getChunkAt(ground);
+        for (var pos : List.of(ground, playerSand, sea, pavement, building)) {
+            city.setBlock(pos.below(6), Blocks.STONE.defaultBlockState(), 2);
+            for (int depth = 1; depth <= 5; depth++) city.setBlock(pos.below(depth), Blocks.SANDSTONE.defaultBlockState(), 2);
+            city.setBlock(pos, Blocks.SAND.defaultBlockState(), 2);
+            city.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 2);
+        }
+        city.setBlock(sea.above(), Blocks.WATER.defaultBlockState(), 2);
+        city.setBlock(pavement, Blocks.POLISHED_ANDESITE.defaultBlockState(), 2);
+        city.setBlock(building.above(), Blocks.BRICKS.defaultBlockState(), 2);
+        CityProperty.placed(city, playerSand);
+        try {
+            NapoliGround.finish(city, chunk);
+            NapoliGround.finish(city, city.getChunkAt(playerSand));
+            helper.assertTrue(city.getBlockState(ground).is(Blocks.GRASS_BLOCK), "Exposed generator sand is landscaped");
+            helper.assertTrue(city.getBlockState(sea).is(Blocks.SAND) && city.getBlockState(sea.above()).is(Blocks.WATER),
+                    "The seabed and water are preserved");
+            helper.assertTrue(city.getBlockState(pavement).is(Blocks.POLISHED_ANDESITE), "Existing pavement is preserved");
+            helper.assertTrue(city.getBlockState(building).is(Blocks.SAND), "The substrate under a building is preserved");
+            helper.assertTrue(city.getBlockState(playerSand).is(Blocks.SAND), "Player-placed sand is preserved");
+            helper.assertTrue(chunk.getAttachedOrElse(NapoliGround.FINISHED, false), "The migration is recorded on the chunk");
+        } finally {
+            CityProperty.forget(city, playerSand);
+        }
+        helper.succeed();
+    }
+
+    @GameTest public void atlasHouseRestoresACutCornerAndPreservesExistingStorage(GameTestHelper helper) {
+        var city = helper.getLevel();
+        var home = DistrictLife.homes().stream()
+                .filter(h -> Math.floorMod(h.x(), 16) <= 3 && Math.floorMod(h.z(), 16) <= 3)
+                .findFirst().orElseThrow();
+        var origin = new BlockPos(home.x(), home.ground(), home.z());
+        var chunk = city.getChunkAt(origin);
+        NapoliExpansion.generate(city, chunk);
+        int roof = home.floors() * 5;
+        for (BlockPos pos : BlockPos.betweenClosed(origin, origin.offset(7, roof, 7)))
+            city.setBlock(pos, Blocks.AIR.defaultBlockState(), 2 | 16);
+
+        var barrel = origin.offset(5, 0, 6);
+        city.setBlock(barrel, Blocks.BARREL.defaultBlockState(), 2);
+        var storage = (net.minecraft.world.level.block.entity.BarrelBlockEntity) city.getBlockEntity(barrel);
+        storage.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET));
+        var wall = origin.offset(0, 2, 2);
+        var floor = origin.offset(5, 4, 6);
+        var ceiling = origin.offset(5, roof, 6);
+        var tracked = origin.offset(6, 0, 7);
+        city.setBlock(tracked, Blocks.DIAMOND_BLOCK.defaultBlockState(), 2);
+        CityProperty.placed(city, tracked);
+        chunk.removeAttached(NapoliExpansion.HOUSE_SECTIONS_FIXED);
+        try {
+            helper.assertTrue(NapoliExpansion.repairHouseSections(city, chunk) == 0 && city.isEmptyBlock(floor),
+                    "The patch leaves chunks with tracked building work alone");
+        } finally {
+            CityProperty.forget(city, tracked);
+        }
+        helper.assertTrue(NapoliExpansion.repairHouseSections(city, chunk) > 0, "The old missing building section is reconstructed");
+        helper.assertTrue(!city.isEmptyBlock(wall) && !city.isEmptyBlock(floor) && !city.isEmptyBlock(ceiling),
+                "Facade, upper floor and roof close again");
+        helper.assertTrue(city.getBlockEntity(barrel) == storage && !storage.getItem(0).isEmpty(),
+                "Existing storage and its contents survive");
+        helper.assertTrue(city.getBlockState(tracked).is(Blocks.DIAMOND_BLOCK), "Solid blocks are not replaced by the missing-block plan");
+        helper.assertTrue(NapoliExpansion.repairHouseSections(city, chunk) == 0, "The same chunk can be revisited without another rebuild");
+        helper.succeed();
+    }
+
     private static ServerLevel city(GameTestHelper h){return h.getLevel();}
 }

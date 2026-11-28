@@ -135,6 +135,7 @@ public final class FootballPractice {
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballMenu.TYPE, FootballMenu.CODEC);
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballControls.TYPE, FootballControls.CODEC);
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballAction.TYPE, FootballAction.CODEC);
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.clientboundPlay().register(FootballStats.TYPE, FootballStats.CODEC);
         FootballGym.register();
         CommandRegistrationCallback.EVENT.register((dispatcher, context, kind) -> {
             var drills = Commands.literal("esercizio");
@@ -153,7 +154,7 @@ public final class FootballPractice {
                         .then(Commands.literal("intercetta").executes(c -> offBall(c.getSource().getPlayerOrException(), true)))
                         .then(Commands.literal("ruolo").then(positionOption("attaccante", Position.ATTACCANTE))
                                 .then(positionOption("centrocampista", Position.CENTROCAMPISTA)).then(positionOption("difensore", Position.DIFENSORE)))
-                        .then(Commands.literal("statistiche").executes(c -> attributes(c.getSource().getPlayerOrException())))
+                        .then(Commands.literal("statistiche").executes(c -> profile(c.getSource().getPlayerOrException())))
                         .then(Commands.literal("roulette").executes(c -> skill(c.getSource().getPlayerOrException(), FootballAction.Move.ROULETTE)))
                         .then(Commands.literal("finta").executes(c -> skill(c.getSource().getPlayerOrException(), FootballAction.Move.FEINT)))
                         .then(Commands.literal("tocco").executes(c -> skill(c.getSource().getPlayerOrException(), FootballAction.Move.SIDE_STEP)))
@@ -358,7 +359,7 @@ public final class FootballPractice {
     }
 
     public static int overall(ServerPlayer p) {
-        return (shooting(p) + pace(p) + defending(p) + strength(p) + staminaRating(p) + 2) / 5;
+        return ratings(p).overall();
     }
 
     private static int attributes(ServerPlayer p) {
@@ -431,9 +432,67 @@ public final class FootballPractice {
     }
 
     private static int profile(ServerPlayer p) {
-        Career c = career(p);
-        say(p, "profile", roleLabel(p), overall(p), c.matches(), c.goals());
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(p, FootballStats.TYPE))
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, stats(p));
+        else
+            say(p, "attributes", roleLabel(p), shooting(p), pace(p), defending(p), strength(p), staminaRating(p), overall(p));
         return 1;
+    }
+
+    static FootballStats stats(ServerPlayer viewer) {
+        return stats(viewer, GAMES.get(viewer.level()));
+    }
+
+    static FootballStats stats(ServerPlayer viewer, Game game) {
+        var member = viewer.getAttached(CityLeague.MEMBER);
+        String club = member == null ? "" : CityLeague.name(member.team());
+        var career = career(viewer);
+        var profile = new FootballStats.Line(viewer.getGameProfile().name(), roleKey(viewer), club, -1, false,
+                career.matches(), ratings(viewer), career.goals(), -1, leaguePasses(viewer), leagueRecoveries(viewer));
+        if (game == null || !ARENA.inflate(8, 4, 8).contains(viewer.position()) && !game.controls(viewer))
+            return new FootballStats("", "", 0, 0, profile, List.of());
+        String home = "Napoli", away = "";
+        var fixture = game.leagueId.isEmpty() ? null : CityLeague.fixture(viewer.level(), game.leagueId);
+        if (fixture != null) {
+            home = CityLeague.name(fixture.home());
+            away = CityLeague.name(fixture.away());
+        }
+        var lineup = new java.util.ArrayList<FootballStats.Line>(10);
+        for (int slot = 0; slot < game.players.length; slot++) {
+            int side = slot < 5 ? 0 : 1;
+            String sideName = side == 0 ? home : away;
+            Seat seat = game.players[slot];
+            if (seat != null) {
+                var player = seat.player;
+                lineup.add(new FootballStats.Line(player.getGameProfile().name(), roleKey(player), sideName, side,
+                        false, -1, ratings(player), seat.goals, seat.shots, seat.completedPasses, seat.recoveries));
+            } else {
+                int role = slot % 5;
+                var match = game.npcStats[slot];
+                String roleKey = switch (role) {
+                    case 0 -> "napuli.football.stats.keeper";
+                    case 1 -> "napuli.football.position.difensore";
+                    case 4 -> "napuli.football.position.attaccante";
+                    default -> "napuli.football.position.centrocampista";
+                };
+                lineup.add(new FootballStats.Line(NAMES[slot], roleKey, sideName, side, true, -1,
+                        new FootballStats.Ratings(Game.npcPace(role), -1, Game.npcDefense(role), -1, -1),
+                        match.goals, match.shots, match.passes, match.recoveries));
+            }
+        }
+        return new FootballStats(home, away, game.home, game.away, profile, List.copyOf(lineup));
+    }
+
+    private static FootballStats.Ratings ratings(ServerPlayer p) {
+        return new FootballStats.Ratings(pace(p), shooting(p), defending(p), strength(p), staminaRating(p));
+    }
+
+    private static String roleKey(ServerPlayer p) {
+        return "napuli.football.position." + position(p).name().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private static final class NpcMatchStats {
+        int goals, shots, passes, recoveries;
     }
 
     private static void say(ServerPlayer p, String key, Object... args) {
@@ -453,7 +512,7 @@ public final class FootballPractice {
     static final class Seat {
         final ServerPlayer player;
         double stamina;
-        int requestUntil, nextInterception, protectedUntil, nextFoul, goals, completedPasses, recoveries, leagueTicks;
+        int requestUntil, nextInterception, protectedUntil, nextFoul, goals, shots, completedPasses, recoveries, leagueTicks;
         Vec3 previous, movement = Vec3.ZERO;
         int dribbleStarted, dribbleEnds;
         float dribbleAngle;
@@ -478,6 +537,7 @@ public final class FootballPractice {
         final Display.ItemDisplay marker;
         final Vec3[] motion = new Vec3[team.length];
         final Seat[] players = new Seat[team.length];
+        final NpcMatchStats[] npcStats = new NpcMatchStats[team.length];
         String leagueId="";
         Vec3 ball = spot(KICKOFF_SLOT).add(.55, 0, 0), velocity = Vec3.ZERO;
         int ticks, unattended, home, away, owner = -1, kicker = -1, pickupDelay, held;
@@ -511,6 +571,7 @@ public final class FootballPractice {
         }
 
         private void spawn(ServerLevel city, int slot) {
+            if (npcStats[slot] == null) npcStats[slot] = new NpcMatchStats();
             var npc = NapoliResident.spawn(city, NapoliResident.Role.PASSERBY, BlockPos.containing(spot(slot)), slot < 5 ? -90 : 90);
             npc.addTag(ACTOR);
             npc.setEmploymentAppearance(NapoliResident.Role.PASSERBY, (slot * 5 + 2) % 18);
@@ -643,6 +704,7 @@ public final class FootballPractice {
             contactSound(p, shot == Kick.PASS);
             if (shot != Kick.PASS) {
                 shots++;
+                seat.shots++;
                 int rating = shooting(p);
                 double fitnessBoost = FootballRatings.shotBoost(rating);
                 facing = aimShot(slot, facing, rating);
@@ -868,6 +930,7 @@ public final class FootballPractice {
                     if (held > (carrier == null ? 24 : 18) && players[i] == null && (carrier != null
                             ? playerDuel(carrier, i) : ball.distanceToSqr(position(i)) < .62)) {
                         interceptions++;
+                        npcStats[i].recoveries++;
                         setOwner(i);
                         return;
                     }
@@ -902,7 +965,10 @@ public final class FootballPractice {
                 if (crossed && height < 66.55 && Math.abs(z - FootballGround.MID_Z - .5) < 2.65) {
                     boolean homeScored = edge == FootballGround.MAX_X;
                     if (homeScored) home++; else away++;
-                    if (kicker >= 0 && players[kicker] != null && (kicker < 5) == homeScored) players[kicker].goals++;
+                    if (kicker >= 0 && (kicker < 5) == homeScored) {
+                        if (players[kicker] == null) npcStats[kicker].goals++;
+                        else players[kicker].goals++;
+                    }
                     ball = mid();
                     setOwner(-1);
                 } else {
@@ -925,11 +991,14 @@ public final class FootballPractice {
                 if (distance < closest) { closest = distance; best = i; }
             }
             if (best >= 0) {
-                if (passInFlight && kicker >= 0 && kicker != best && players[kicker] != null
-                        && (best < 5) == (kicker < 5)) players[kicker].completedPasses++;
+                if (passInFlight && kicker >= 0 && kicker != best && (best < 5) == (kicker < 5)) {
+                    if (players[kicker] == null) npcStats[kicker].passes++;
+                    else players[kicker].completedPasses++;
+                }
                 if (kicker >= 0 && (best < 5) != (kicker < 5)) {
                     interceptions++;
-                    if(players[best]!=null)players[best].recoveries++;
+                    if (players[best] == null) npcStats[best].recoveries++;
+                    else players[best].recoveries++;
                 }
                 setOwner(best);
             }
@@ -938,6 +1007,8 @@ public final class FootballPractice {
         private static int npcPace(int role) {
             return role == 2 || role == 3 ? 67 : role == 1 ? 54 : 60;
         }
+
+        private static int npcDefense(int role) { return role == 1 ? 66 : 50; }
 
         private boolean playerDuel(Seat carrier, int opponent) {
             if (ticks < carrier.protectedUntil) return false;
@@ -958,7 +1029,7 @@ public final class FootballPractice {
             int chasingPace = challenger == null ? npcPace(opponent % 5) : pace(challenger.player);
             if (chasingPace < pace(p) && carrier.movement.horizontalDistanceSqr() > .04
                     && carrier.movement.normalize().dot(movement(opponent).normalize()) > .65) return false;
-            int defense = challenger == null ? (opponent % 5 == 1 ? 66 : 50) : defending(challenger.player);
+            int defense = challenger == null ? npcDefense(opponent % 5) : defending(challenger.player);
             double reach = FootballRatings.tackleDistance(defense, strength(p));
             return angle > .48 && delta.lengthSqr() < reach * reach
                     && movingForward > .025;
@@ -970,6 +1041,7 @@ public final class FootballPractice {
             if (distance < 15 && Math.abs(ball.z - FootballGround.MID_Z) < 13 && owner % 5 != 0) {
                 Vec3 target = new Vec3(goal, 64, FootballGround.MID_Z + (ticks % 2 == 0 ? -1.6 : 2.4));
                 shots++;
+                npcStats[owner].shots++;
                 FootballAction.play(team[owner], FootballAction.Move.DRIVE, false);
                 contactSound(team[owner], false);
                 kick(target.subtract(ball), .98);
@@ -1014,6 +1086,7 @@ public final class FootballPractice {
             passes++;
             Vec3 direction = target.subtract(ball);
             kick(direction, Math.clamp(direction.horizontalDistance() * .035 + .36, .52, 1.08));
+            passInFlight = true;
         }
 
         private void kick(Vec3 direction, double speed) {

@@ -3,6 +3,6 @@
   "textures": {
     "top": "napuli:block/maiolica_napoletana",
     "bottom": "minecraft:block/spruce_planks",
-    "side": "minecraft:block/smooth_sandstone"
+    "side": "minecraft:block/sandstone_top"
   }
 }

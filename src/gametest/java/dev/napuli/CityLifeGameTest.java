@@ -4,12 +4,84 @@ import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import com.mojang.serialization.JsonOps;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ClientInformation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffects;
 
 public final class CityLifeGameTest {
+    @GameTest public void neighbourhoodEventsRotateAndPayOncePerVisitor(GameTestHelper helper) {
+        var venues = NapoliEventCatalogue.VENUES;
+        var titles = new HashSet<String>();
+        for (var venue : venues) {
+            helper.assertTrue(NapoliAtlas.find(venue.place()) != null && venue.scenes().size() == 10,
+                    "Each of the ten venues has ten events at an atlas destination");
+            venue.scenes().forEach(scene -> {
+                helper.assertTrue(titles.add(scene.title()), "Event titles are unique");
+                helper.assertTrue(scene.reward() != null && scene.reward() != net.minecraft.world.item.Items.AIR
+                                && scene.donation() != net.minecraft.world.item.Items.AIR, "Event items are registered");
+            });
+            for (long seed : new long[] {42, 621}) {
+                for (int cycle = 0; cycle < 6; cycle++) {
+                    var seen = new HashSet<NapoliNeighbourhoodEvents.Scene>();
+                    for (long day = cycle * 10L; day < (cycle + 1) * 10L; day++) {
+                        var scene = venue.scene(seed, day);
+                        helper.assertTrue(seen.add(scene) && !scene.equals(venue.scene(seed, day - 1)),
+                                "Every cycle visits each scene once with no consecutive repeat");
+                        helper.assertTrue(scene.equals(venue.scene(seed, day)), "Co-op players see the same shared schedule");
+                    }
+                }
+            }
+            helper.assertTrue(!venue.open(venue.opens() - 1) && venue.open(venue.opens()) && !venue.open(venue.opens() + 3500),
+                    "Events respect both ends of the time window");
+        }
+        helper.assertTrue(titles.size() == 100, "Exactly 100 unique neighbourhood events");
+        var venue = venues.getFirst();
+        var quiz = venue.scenes().stream().filter(scene -> scene.quiz() != null).findFirst().orElseThrow();
+        var trade = venue.scenes().stream().filter(scene -> scene.donation() != null).findFirst().orElseThrow();
+        var gift = venue.scenes().stream().filter(scene -> scene.donation() == null && scene.quiz() == null)
+                .findFirst().orElseThrow();
+        var level = helper.getLevel();
+        var players = level.getServer().getPlayerList();
+        var profile = new GameProfile(UUID.randomUUID(), "NapoliEventTest");
+        var first = new ServerPlayer(level.getServer(), level, profile, ClientInformation.createDefault());
+        var connection = new Connection(PacketFlow.SERVERBOUND);
+        var channel = new EmbeddedChannel(connection);
+        players.placeNewPlayer(connection, first, CommonListenerCookie.createInitial(profile, false));
+        first.setGameMode(GameType.SURVIVAL);
+        var second = helper.makeMockServerPlayerInLevel();
+        try {
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(first, venue, quiz, 50, 3 - quiz.quiz().answer()) == 0,
+                    "Wrong answers give no reward");
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(first, venue, quiz, 50, quiz.quiz().answer()) == 1,
+                    "Correct answers award the souvenir");
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(first, venue, quiz, 50, quiz.quiz().answer()) == 0,
+                    "A second claim on the same day is refused");
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(second, venue, gift, 50, 0) == 1,
+                    "The first visitor does not consume the event for others");
+            first.getInventory().clearContent();
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(first, venue, trade, 51, 0) == 0,
+                    "Trades require the requested item in hand");
+            first.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(trade.donation(), 2));
+            helper.assertTrue(NapoliNeighbourhoodEvents.takePart(first, venue, trade, 51, 0) == 1
+                    && first.getOffhandItem().getCount() == 1, "A trade consumes one item and pays once on the next day");
+        } finally {
+            players.remove(first);
+            players.remove(second);
+            channel.finishAndReleaseAll();
+        }
+        helper.succeed();
+    }
+
     @GameTest public void footballRatingsScaleToNinetyNine(GameTestHelper helper) {
         helper.assertTrue(FootballRatings.trained(38, 100, 10, false) == 99, "Any attribute can reach 99");
         helper.assertTrue(FootballRatings.trained(54, 3, 0, true) > FootballRatings.trained(54, 3, 0, false),

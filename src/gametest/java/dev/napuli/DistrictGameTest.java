@@ -33,7 +33,7 @@ public final class DistrictGameTest {
         var city=h.getLevel();for(var d:DistrictLife.districts())for(var home:d.homes()){
             for(int x=home.x()>>4;x<=(home.x()+21)>>4;x++)for(int z=home.z()>>4;z<=(home.z()+23)>>4;z++){var chunk=city.getChunk(x,z);NapoliExpansion.generate(city,chunk);DistrictLife.fit(city,chunk);}
             var bed=CityLivingHomes.use(home,CityLivingHomes.Furniture.BED).block();h.assertTrue(city.getBlockState(bed).getBlock() instanceof BedBlock&&city.getBlockState(bed.east()).getBlock() instanceof BedBlock,"Both adult partners have a bed: "+home.id());
-            var fridge=CityLivingHomes.use(home,CityLivingHomes.Furniture.FRIDGE).block();h.assertTrue(city.getBlockEntity(fridge) instanceof net.minecraft.world.Container,"The household refrigerator is actual storage");
+            var fridge=CityLivingHomes.use(home,CityLivingHomes.Furniture.FRIDGE).block();h.assertTrue(city.getBlockEntity(fridge) instanceof net.minecraft.world.Container,"The household refrigerator is actual storage in "+home.id()+" at "+fridge+": "+city.getBlockState(fridge));
         }h.succeed();
     }
     @GameTest public void shopsDoNotOversellOrShareInventories(GameTestHelper h){

@@ -50,6 +50,7 @@ public class NapuliClient implements ClientModInitializer {
         dev.napuli.WorkCareerClientTest.register();
 		FootballScreen.register();
 		FootballMenuScreen.register();
+		FootballStatsScreen.register();
 		FootballControlsClient.register();
 		FootballActionClient.register();
 		EmploymentScreen.register();

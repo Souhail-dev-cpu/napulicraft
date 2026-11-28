@@ -47,6 +47,24 @@ public final class FootballRatingsGameTest {
             h.assertTrue(eliteShot > normalShot && game.home == 1,
                     "The same input at 99 shooting gives a harder shot and scores");
 
+            var stats = FootballPractice.stats(player, game);
+            var own = stats.lineup().get(slot);
+            var rival = stats.lineup().get(6);
+            h.assertTrue(stats.live() && stats.lineup().size() == 10 && own.goals() == 1 && own.shots() == 2,
+                    "Player cards use actual shot and goal counts from this match");
+            h.assertTrue(own.ratings().shooting() == FootballPractice.shooting(player) && own.side() == 0,
+                    "The player's card uses the same ratings as the simulation");
+            h.assertTrue(rival.npc() && rival.side() == 1 && rival.ratings().defense() == 66
+                            && rival.ratings().overall() == FootballStats.Ratings.UNRATED && rival.recoveries() == 2,
+                    "Opponent cards show measured attributes and recoveries without an invented overall");
+            var buffer = io.netty.buffer.Unpooled.buffer();
+            try {
+                FootballStats.CODEC.encode(buffer, stats);
+                h.assertTrue(stats.equals(FootballStats.CODEC.decode(buffer)), "The clientbound data round trips exactly");
+            } finally {
+                buffer.release();
+            }
+
             train(player, "DIFENSORE", 0);
             prepareInterception(game, seat);
             h.assertTrue(game.tryInterception(player) == 0, "Base defense cannot reach a ball 2.8 blocks away");

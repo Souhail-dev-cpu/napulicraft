@@ -59,5 +59,9 @@
 				"type": "event"
 			}
 		]
-	}
+	},
+  "justin_crowd": {
+    "subtitle": "subtitles.napuli.justin_crowd",
+    "sounds": ["napuli:justin_crowd"]
+  }
 }

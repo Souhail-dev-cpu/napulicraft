@@ -128,8 +128,8 @@ public final class NapoliResident extends PathfinderMob {
 
     public Role role() { return Role.values()[entityData.get(ROLE)]; }
     BlockPos returnPost(){return dayPost==null?blockPosition():dayPost;}
-    @Override public boolean shouldBeSaved() { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.shouldBeSaved(); }
-    @Override public boolean saveAsPassenger(ValueOutput out) { return !PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.saveAsPassenger(out); }
+    @Override public boolean shouldBeSaved() { return !NapoliStreetMemes.actor(this)&&!PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.shouldBeSaved(); }
+    @Override public boolean saveAsPassenger(ValueOutput out) { return !NapoliStreetMemes.actor(this)&&!PolicePatrols.managed(this)&&!PhoneServices.temporary(this)&&!CityJourneys.managed(this)&&super.saveAsPassenger(out); }
 
     @Override
     protected void addAdditionalSaveData(ValueOutput out) {
@@ -196,6 +196,7 @@ public final class NapoliResident extends PathfinderMob {
         super.aiStep();
         if (level().isClientSide()) return;
         CityGestures.tick(this,(ServerLevel)level());
+        if (NapoliStreetMemes.actor(this)) return;
         if(CityResidentSafety.react(this,(ServerLevel)level()))return;
         if (PhoneServices.tickActor(this, (ServerLevel)level())) return;
         if (role() == Role.GIORGIA_MELONI) { GiorgiaMeloni.residentTick(this); return; }
@@ -354,6 +355,11 @@ public final class NapoliResident extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (NapoliStreetMemes.actor(this)) {
+            if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer viewer)
+                NapoliStreetMemes.reply(viewer, this);
+            return InteractionResult.SUCCESS;
+        }
         if (hand == InteractionHand.MAIN_HAND && PhoneServices.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && CityThieves.interact(this, player)) return InteractionResult.SUCCESS;
         if (hand == InteractionHand.MAIN_HAND && (role() == Role.CERTOSA_GUIDE || role() == Role.CERTOSA_RESTORER)) {

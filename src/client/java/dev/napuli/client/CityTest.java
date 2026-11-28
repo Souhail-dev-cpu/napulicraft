@@ -494,9 +494,8 @@ final class CityTest {
             case 523 -> {
                 assertTrue(ridersSpoke&&!ridersInChat, "scooter dialogue appears above its riders instead of chat");
                 assertTrue(!footballNoticeInChat, "football notices stay out of chat");
-                var profile = Component.translatable("napuli.football.profile", Component.translatable("napuli.football.position.attaccante"), 55, 0, 0);
-                assertTrue(mc.gui.toastManager().getToast(NapoliNoticeToast.class, profile) != null,
-                        "football profile appears as a screen notification");
+                assertTrue(mc.gui.screen() instanceof FootballStatsScreen, "Football profile opens the statistics screen");
+                mc.gui.screen().onClose();
                 AutoTest.shot(mc, "fuorigrotta-avviso-schermo");
             }
             case 530 -> mc.player.connection.sendCommand("calcio torna");

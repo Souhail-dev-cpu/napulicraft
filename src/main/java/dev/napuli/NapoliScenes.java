@@ -41,6 +41,7 @@ public final class NapoliScenes {
         if (server.getTickCount() % 20 != 0) return;
         ServerLevel level = server.getLevel(NapoliMap.LEVEL);
         if (level == null) return;
+        NapoliStreetMemes.tick(level);
         long now = level.getGameTime();
         for (ServerPlayer player : server.getPlayerList().getPlayers())
             if (player.level() != level) NapoliStreet.resetWeightOutside(player);

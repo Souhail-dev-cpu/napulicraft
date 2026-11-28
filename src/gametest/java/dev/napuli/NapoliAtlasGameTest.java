@@ -192,13 +192,22 @@ public final class NapoliAtlasGameTest {
 
     @GameTest public void legacySandBecomesGrassWithoutOverwritingTheCoastOrPavement(GameTestHelper helper) {
         var city = city(helper);
-        var ground = new BlockPos(-1101, 63, -1197);
+        var fixture = helper.absolutePos(BlockPos.ZERO).south(4096);
+        var ground = new BlockPos((fixture.getX() & ~15) + 3, 63, (fixture.getZ() & ~15) + 3);
         var playerSand = ground.east(16);
         var sea = ground.south();
         var pavement = ground.south().east();
         var building = ground.east(2);
         var chunk = city.getChunkAt(ground);
+        var playerChunk = city.getChunkAt(playerSand);
+        chunk.removeAttached(NapoliGround.FINISHED);
+        playerChunk.removeAttached(NapoliGround.FINISHED);
         for (var pos : List.of(ground, playerSand, sea, pavement, building)) {
+            var column = city.getChunkAt(pos);
+            int top = column.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
+                    pos.getX() & 15, pos.getZ() & 15);
+            for (int y = 64; y <= top; y++)
+                city.setBlock(pos.atY(y), Blocks.AIR.defaultBlockState(), 2 | 16);
             city.setBlock(pos.below(6), Blocks.STONE.defaultBlockState(), 2);
             for (int depth = 1; depth <= 5; depth++) city.setBlock(pos.below(depth), Blocks.SANDSTONE.defaultBlockState(), 2);
             city.setBlock(pos, Blocks.SAND.defaultBlockState(), 2);
@@ -210,7 +219,7 @@ public final class NapoliAtlasGameTest {
         CityProperty.placed(city, playerSand);
         try {
             NapoliGround.finish(city, chunk);
-            NapoliGround.finish(city, city.getChunkAt(playerSand));
+            NapoliGround.finish(city, playerChunk);
             helper.assertTrue(city.getBlockState(ground).is(Blocks.GRASS_BLOCK), "Exposed generator sand is landscaped");
             helper.assertTrue(city.getBlockState(sea).is(Blocks.SAND) && city.getBlockState(sea.above()).is(Blocks.WATER),
                     "The seabed and water are preserved");
